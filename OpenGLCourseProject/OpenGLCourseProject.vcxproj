@@ -31,7 +31,6 @@
     <ClCompile Include="Equirectangular_to_CubeMap_Framebuffer.cpp" />
     <ClCompile Include="Equirectangular_to_CubeMap_Shader.cpp" />
     <ClCompile Include="Framebuffer.cpp" />
-    <ClCompile Include="GameObjectClass.cpp" />
     <ClCompile Include="HDR_Framebuffer.cpp" />
     <ClCompile Include="HDR_Shader.cpp" />
     <ClCompile Include="InputManager.cpp" />
@@ -64,6 +63,7 @@
     <ClCompile Include="Static_Mesh.cpp" />
     <ClCompile Include="Static_Model.cpp" />
     <ClCompile Include="Model_Shader.cpp" />
+    <ClCompile Include="Static_Object.cpp" />
     <ClCompile Include="Terrain_PreZPass_Shader.cpp" />
     <ClCompile Include="Terrain_Shader.cpp" />
     <ClCompile Include="Texture.cpp" />
@@ -84,7 +84,6 @@
     <ClInclude Include="Equirectangular_to_CubeMap_Framebuffer.h" />
     <ClInclude Include="Equirectangular_to_CubeMap_Shader.h" />
     <ClInclude Include="Framebuffer.h" />
-    <ClInclude Include="GameObjectClass.h" />
     <ClInclude Include="HDR_Framebuffer.h" />
     <ClInclude Include="HDR_Shader.h" />
     <ClInclude Include="InputManager.h" />
@@ -116,6 +115,7 @@
     <ClInclude Include="Static_Mesh.h" />
     <ClInclude Include="Static_Model.h" />
     <ClInclude Include="Model_Shader.h" />
+    <ClInclude Include="Static_Object.h" />
     <ClInclude Include="Terrain_PreZPass_Shader.h" />
     <ClInclude Include="Terrain_Shader.h" />
     <ClInclude Include="Texture.h" />

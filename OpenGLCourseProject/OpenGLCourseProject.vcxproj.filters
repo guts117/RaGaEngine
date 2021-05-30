@@ -162,7 +162,7 @@
     <ClCompile Include="BRDF_Framebuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GameObjectClass.cpp">
+    <ClCompile Include="Static_Object.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -314,7 +314,7 @@
     <ClInclude Include="BRDF_Framebuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GameObjectClass.h">
+    <ClInclude Include="Static_Object.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

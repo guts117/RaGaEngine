@@ -29,7 +29,7 @@ void Game::init()
 	CreateObject();
 	CreateShaders();
 
-	camera = std::make_unique<Camera>(glm::vec3(-terrainScaleFactor, 30.0f, -terrainScaleFactor), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f, 50.0f, 0.2f);
+	camera = std::make_shared<Camera>(glm::vec3(-terrainScaleFactor, 30.0f, -terrainScaleFactor), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f, 50.0f, 0.2f);
 
 	environmentTexture = std::make_unique<Texture>("Textures/HDR/GCanyon_C_YumaPoint_3k.hdr");
 	environmentTexture->LoadTextureHDR();
@@ -110,7 +110,7 @@ void Game::init()
 	terrainTexturePara->LoadTextureArray(false, true);
 
 
-	shinyMaterialGlow = std::make_unique<Material>(1, 6, 7, 11, 12, 13);
+	shinyMaterialGlow = std::make_shared<Material>(1, 6, 7, 11, 12, 13);
 	dullMaterialGlow = std::make_unique<Material>(1, 6, 7, 11, 12, 13);
 
 	shinyMaterialPara = std::make_unique<Material>(1, 6, 7, 11,12);
@@ -180,11 +180,11 @@ void Game::init()
 	motionBlur = std::make_unique < Motion_Blur_FrameBuffer>();
 	motionBlur->Init(ScreenWidth, ScreenHeight);
 
-	mainLight = std::make_unique < DirectionalLight>(2048, 2048,
+	mainLight = std::make_shared < DirectionalLight>(2048, 2048,
 		3.0f, 3.0f, 3.0f,
 		5500.0f, -5500.0f, -10000.0f);
 
-	pointLights[0] = std::make_unique < PointLight>(1024, 1024,
+	pointLights[0] = std::make_shared < PointLight>(1024, 1024,
 		0.1f, 100.0f,
 		0.1f, 0.1f, 0.1f,
 		6.0f - terrainScaleFactor, 40.0f, 10.0f - terrainScaleFactor);
@@ -198,7 +198,7 @@ void Game::init()
 
 	pointLightCount++;*/
 
-	spotLights[0] = std::make_unique < SpotLight>(1024, 1024,
+	spotLights[0] = std::make_shared < SpotLight>(1024, 1024,
 		0.1f, 100.0f,
 		1.0f, 1.0f, 1.0f,
 		0.0f, 0.0f, 0.0f,
@@ -256,6 +256,9 @@ void Game::init()
 	IrradianceConvolutionPass();
 	PrefilterPass();
 	BRDFPass();
+
+	Bulb = std::make_unique<Static_Object>();
+	Bulb->SetUpImportedModelData("Models/Free_Antique_Bulb.obj");
 }
 
 void Game::update(float fps) {
@@ -632,12 +635,10 @@ void Game::RenderEnvCubeMap(bool is_cubeMap)
 	mesh_cube->RenderCube();
 }
 
-void Game::RenderScene(glm::mat4 projectionMatrix, glm::mat4 viewMatrix) {
-
-	glm::mat4 model;
+void Game::RenderScene(std::shared_ptr<Shader> shader, glm::mat4 projectionMatrix, glm::mat4 viewMatrix) {
+	glm::mat4 model = glm::mat4();;
 	glm::mat4 prevPVM = glm::mat4();
 
-	model = glm::mat4();
 	model = glm::translate(model, glm::vec3(-terrainScaleFactor, 34.0f, -2.5f - terrainScaleFactor));
 	/*model = glm::rotate(model, curAngle * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));*/
 	//model = glm::scale(model,glm::vec3(0.4f,0.4f,1.0f));
@@ -653,8 +654,8 @@ void Game::RenderScene(glm::mat4 projectionMatrix, glm::mat4 viewMatrix) {
 	shinyMaterialGlow->UseMaterial(uniformAlbedoMap, uniformMetallicMap, uniformNormalMap, uniformRoughnessMap, uniformParallaxMap, uniformGlowMap);
 	meshList[0]->RenderMesh();
 	meshList[0]->prevMesh = model;
-
 	model = glm::mat4();
+
 	//model = glm::rotate(model, -aircraftAngle * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));
 	model = glm::translate(model, glm::vec3(curScale - terrainScaleFactor, 32.0f, 4.5f - terrainScaleFactor));
 	//model = glm::rotate(model, curAngle * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));  //if you put the rotate at the last place(i.e on the top) it will have a bouncy effect
@@ -670,8 +671,8 @@ void Game::RenderScene(glm::mat4 projectionMatrix, glm::mat4 viewMatrix) {
 	shinyMaterialGlow->UseMaterial(uniformAlbedoMap, uniformMetallicMap, uniformNormalMap, uniformRoughnessMap, uniformParallaxMap, uniformGlowMap);
 	cube->RenderModel();
 	cube->prevModel = model;
-
 	model = glm::mat4();
+
 	model = glm::translate(model, glm::vec3(-terrainScaleFactor, 35.0f, 5.5f - terrainScaleFactor));
 	model = glm::rotate(model, curAngle * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));
 	model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
@@ -680,9 +681,9 @@ void Game::RenderScene(glm::mat4 projectionMatrix, glm::mat4 viewMatrix) {
 	glUniformMatrix4fv(uniformPrevPVM, 1, GL_FALSE, glm::value_ptr(prevPVM));
 	shinyMaterialGlow->UseMaterial(uniformAlbedoMap, uniformMetallicMap, uniformNormalMap, uniformRoughnessMap, uniformParallaxMap, uniformGlowMap);
 	sphere->RenderModel();
-	sphere->prevModel = model;
-	
+	sphere->prevModel = model;	
 	model = glm::mat4();
+
 	model = glm::translate(model, glm::vec3(-terrainScaleFactor, 30.0f, -2.5f - terrainScaleFactor));
 	//model = glm::rotate(model, curAngle * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));  //if you put the rotate at the last place(i.e on the top) it will have a bouncy effect
 	//model = glm::scale(model, glm::vec3(0.4f, 0.4f, 1.0f));
@@ -698,8 +699,8 @@ void Game::RenderScene(glm::mat4 projectionMatrix, glm::mat4 viewMatrix) {
 	dullMaterialGlow->UseMaterial(uniformAlbedoMap, uniformMetallicMap, uniformNormalMap, uniformRoughnessMap, uniformParallaxMap, uniformGlowMap);
 	meshList[1]->RenderMesh();
 	meshList[1]->prevMesh = model;
-
 	model = glm::mat4();
+
 	model = glm::translate(model, glm::vec3(-15.0f - terrainScaleFactor, 43.0f, -terrainScaleFactor));
 	model = glm::rotate(model, 90.0f * toRadians, glm::vec3(1.0f, 0.0f, 0.0f));
 	model = glm::rotate(model, -90.0f * toRadians, glm::vec3(0.0f, 0.0f, 1.0f));
@@ -717,8 +718,8 @@ void Game::RenderScene(glm::mat4 projectionMatrix, glm::mat4 viewMatrix) {
 	shinyMaterialGlow->UseMaterial(uniformAlbedoMap, uniformMetallicMap, uniformNormalMap, uniformRoughnessMap, uniformParallaxMap, uniformGlowMap);
 	meshList[2]->RenderMesh();
 	meshList[2]->prevMesh = model;
-
 	model = glm::mat4();
+
 	model = glm::translate(model, glm::vec3(-terrainScaleFactor, 43.0f, -15.0f - terrainScaleFactor));
 	model = glm::rotate(model, -90.0f * toRadians, glm::vec3(1.0f, 0.0f, 0.0f));
 	model = glm::rotate(model, 180.0f * toRadians, glm::vec3(0.0f, 0.0f, 1.0f));
@@ -823,8 +824,8 @@ void Game::RenderScene(glm::mat4 projectionMatrix, glm::mat4 viewMatrix) {
 	shinyMaterialGlow->UseMaterial(uniformAlbedoMap, uniformMetallicMap, uniformNormalMap, uniformRoughnessMap, uniformParallaxMap, uniformGlowMap);
 	sniper->RenderModel();
 	sniper->prevModel = model;
-
 	model = glm::mat4();
+
 	//model = glm::rotate(model, -aircraftAngle * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));
 	model = glm::translate(model, glm::vec3(5.0f-terrainScaleFactor, 33.0f, 10.0f - terrainScaleFactor));
 	model = glm::rotate(model, curAngle * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));  //if you put the rotate at the last place(i.e on the top) it will have a bouncy effect
@@ -837,8 +838,8 @@ void Game::RenderScene(glm::mat4 projectionMatrix, glm::mat4 viewMatrix) {
 	shinyMaterialGlow->UseMaterial(uniformAlbedoMap, uniformMetallicMap, uniformNormalMap, uniformRoughnessMap, uniformParallaxMap, uniformGlowMap);
 	gun->RenderModel();
 	gun->prevModel = model;
-
 	model = glm::mat4();
+
 	model = glm::translate(model, glm::vec3(pointLights[0]->GetPosition().x, pointLights[0]->GetPosition().y+1.0f, pointLights[0]->GetPosition().z));
 	//model = glm::rotate(model, curAngle * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));  //if you put the rotate at the last place(i.e on the top) it will have a bouncy effect
 	//model = glm::rotate(model, 180.0f * toRadians, glm::vec3(1.0f, 0.0f, 0.0f));
@@ -849,8 +850,11 @@ void Game::RenderScene(glm::mat4 projectionMatrix, glm::mat4 viewMatrix) {
 	shinyMaterialGlow->UseMaterial(uniformAlbedoMap, uniformMetallicMap, uniformNormalMap, uniformRoughnessMap, uniformParallaxMap, uniformGlowMap);
 	bulb->RenderModel();
 	bulb->prevModel = model;
-
 	model = glm::mat4();
+
+	Bulb->DrawImportedObject(shader, prevProjView, model, glm::vec3(pointLights[0]->GetPosition().x, pointLights[0]->GetPosition().y + 3.0f, pointLights[0]->GetPosition().z), glm::vec3(10.0f, 10.0f, 10.0f));
+	model = glm::mat4();
+
 	model = glm::translate(model, glm::vec3(-terrainScaleFactor, 37.0f, 1.0f - terrainScaleFactor));
 	//model = glm::rotate(model, curAngle * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));  //if you put the rotate at the last place(i.e on the top) it will have a bouncy effect
 	model = glm::scale(model, glm::vec3(0.7f, 0.7f, 0.7f));
@@ -1030,10 +1034,9 @@ void Game::DirectionalShadowMapPass(glm::mat4 viewMatrix, DirectionalLight* ligh
 		uniformModel = directionalShadowShader->GetModelLocation();
 
 		directionalShadowShader->SetDirectionalLightTransform(&projView);
-
 		directionalShadowShader->Validate();
 
-		RenderScene();
+		RenderScene(directionalShadowShader);
 
 
 		animDirectionalShadowShader->UseShader();
@@ -1079,8 +1082,7 @@ void Game::OmniShadowMapPass(PointLight* light) {
 	omniShadowShader->SetLightMatrices(light->CalculateLightTransform());
 
 	omniShadowShader->Validate();
-
-	RenderScene();
+	RenderScene(omniShadowShader);
 
 	animOmniShadowShader->UseShader();
 
@@ -1132,7 +1134,7 @@ void Game::PreZPass(glm::mat4 projectionMatrix, glm::mat4 viewMatrix, GLfloat de
 
 	static_preZPassShader->Validate();
 
-	RenderScene();
+	RenderScene(static_preZPassShader);
 
 	anim_preZPassShader->UseShader();
 	uniformModel1 = anim_preZPassShader->GetModelLocation();
@@ -1271,7 +1273,7 @@ void Game::RenderPass(glm::mat4 projectionMatrix, glm::mat4 viewMatrix, GLfloat 
 
 	shaderList[0]->Validate();
 
-	RenderScene(projectionMatrix, viewMatrix);
+	RenderScene(shaderList[0], projectionMatrix, viewMatrix);
 
 	animShaderList[0]->UseShader();
 

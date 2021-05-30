@@ -56,6 +56,8 @@
 #include "Static_Model.h"
 #include "Animated_Model.h"
 
+#include "Static_Object.h"
+
 #include "ParticleSystem.h"
 #include "Skybox.h"
 
@@ -91,7 +93,7 @@ private:
 	void RenderParticlesScene(GLfloat deltaTime);
 	void RenderTerrain(bool  shadow, bool depth);
 	void RenderEnvCubeMap(bool is_cubeMap);
-	void RenderScene(glm::mat4 projectionMatrix = glm::mat4(), glm::mat4 viewMatrix = glm::mat4());
+	void RenderScene(std::shared_ptr<Shader> shader, glm::mat4 projectionMatrix = glm::mat4(), glm::mat4 viewMatrix = glm::mat4());
 	void RenderAnimScene(bool shadow, bool depth);
 
 	void EnvironmentMapPass();
@@ -153,33 +155,33 @@ private:
 	std::unique_ptr < BRDF_Shader > brdfShader = std::make_unique<BRDF_Shader>();
 	std::unique_ptr < BRDF_Framebuffer > brdfMap;
 
-	std::unique_ptr < Model_Shader > directionalShadowShader = std::make_unique<Model_Shader>();
-	std::unique_ptr < Model_Shader > omniShadowShader = std::make_unique<Model_Shader>();
+	std::shared_ptr < Model_Shader > directionalShadowShader = std::make_shared<Model_Shader>();
+	std::shared_ptr < Model_Shader > omniShadowShader = std::make_shared<Model_Shader>();
 
-	std::unique_ptr < Model_Shader > animDirectionalShadowShader = std::make_unique<Model_Shader>();
-	std::unique_ptr < Model_Shader > animOmniShadowShader = std::make_unique<Model_Shader>();
+	std::shared_ptr < Model_Shader > animDirectionalShadowShader = std::make_shared<Model_Shader>();
+	std::shared_ptr < Model_Shader > animOmniShadowShader = std::make_shared<Model_Shader>();
 
-	std::unique_ptr < Terrain_Shader> terrainDirectionalShadowShader = std::make_unique<Terrain_Shader>();
-	std::unique_ptr < Terrain_Shader> terrainOmniDirectionalShadowShader = std::make_unique<Terrain_Shader>();
+	std::shared_ptr < Terrain_Shader> terrainDirectionalShadowShader = std::make_shared<Terrain_Shader>();
+	std::shared_ptr < Terrain_Shader> terrainOmniDirectionalShadowShader = std::make_shared<Terrain_Shader>();
 
-	std::unique_ptr < PreZPass_Shader> static_preZPassShader = std::make_unique<PreZPass_Shader>();
-	std::unique_ptr < PreZPass_Shader> anim_preZPassShader = std::make_unique<PreZPass_Shader>();
-	std::unique_ptr < Terrain_PreZPass_Shader> terrain_preZPassShader = std::make_unique<Terrain_PreZPass_Shader>();
+	std::shared_ptr < PreZPass_Shader> static_preZPassShader = std::make_shared<PreZPass_Shader>();
+	std::shared_ptr < PreZPass_Shader> anim_preZPassShader = std::make_shared<PreZPass_Shader>();
+	std::shared_ptr < Terrain_PreZPass_Shader> terrain_preZPassShader = std::make_unique<Terrain_PreZPass_Shader>();
 	std::unique_ptr < Depth_Framebuffer> depth = nullptr;
 
-	std::unique_ptr < SSAO_Shader> ssaoShader = std::make_unique<SSAO_Shader>();
+	std::shared_ptr < SSAO_Shader> ssaoShader = std::make_unique<SSAO_Shader>();
 	std::unique_ptr < SSAO_Framebuffer> ssao = nullptr;
 
-	std::unique_ptr < SSAOBlur_Shader > ssaoBlurShader = std::make_unique<SSAOBlur_Shader>();
+	std::shared_ptr < SSAOBlur_Shader > ssaoBlurShader = std::make_shared<SSAOBlur_Shader>();
 	std::unique_ptr < SSAOBlur_Framebuffer > ssaoBlur = nullptr;
 
 	std::vector< std::shared_ptr < Model_Shader>> shaderList;
 	std::vector< std::shared_ptr < Model_Shader>> animShaderList;
 
-	std::unique_ptr < Terrain_Shader> terrainShader = std::make_unique<Terrain_Shader>();
+	std::shared_ptr < Terrain_Shader> terrainShader = std::make_shared<Terrain_Shader>();
 
-	std::unique_ptr < Billboard_Shader> billboardShader = std::make_unique<Billboard_Shader>();
-	std::unique_ptr < Particle_Shader> particleShader = std::make_unique<Particle_Shader>();
+	std::shared_ptr < Billboard_Shader> billboardShader = std::make_shared<Billboard_Shader>();
+	std::shared_ptr < Particle_Shader> particleShader = std::make_shared<Particle_Shader>();
 
 	std::unique_ptr < HDR_Shader> hdrShader = std::make_unique<HDR_Shader>();
 	std::unique_ptr < HDR_Framebuffer> hdr = nullptr;
@@ -196,11 +198,11 @@ private:
 	std::unique_ptr < Static_Mesh> quad;
 	std::unique_ptr < Static_Mesh> mesh_cube;
 
-	std::unique_ptr < Camera> camera;
+	std::shared_ptr < Camera> camera;
 
-	std::unique_ptr < DirectionalLight> mainLight;
-	std::unique_ptr < PointLight> pointLights[MAX_POINT_LIGHTS];
-	std::unique_ptr < SpotLight> spotLights[MAX_SPOT_LIGHTS];
+	std::shared_ptr < DirectionalLight> mainLight;
+	std::shared_ptr < PointLight> pointLights[MAX_POINT_LIGHTS];
+	std::shared_ptr < SpotLight> spotLights[MAX_SPOT_LIGHTS];
 
 	unsigned int pointLightCount = 0;
 	unsigned int spotLightCount = 0;
@@ -248,7 +250,7 @@ private:
 	std::unique_ptr < Texture> plainTexture;
 	std::unique_ptr < Texture> grassTexture;
 
-	std::unique_ptr < Material> shinyMaterialGlow;
+	std::shared_ptr < Material> shinyMaterialGlow;
 	std::unique_ptr < Material> dullMaterialGlow;
 	std::unique_ptr < Material> shinyMaterialPara;
 	std::unique_ptr < Material> dullMaterialPara;
@@ -272,6 +274,8 @@ private:
 	std::unique_ptr < Static_Model> sphere = std::make_unique<Static_Model>();
 	std::unique_ptr < Animated_Model> anim = std::make_unique<Animated_Model>();
 	std::unique_ptr < Animated_Model> anim2 = std::make_unique<Animated_Model>();
+	
+	std::unique_ptr<Static_Object> Bulb = std::make_unique<Static_Object>();
 
 	GLfloat deltaTime = 0.0f;
 	GLfloat lastTime = 0.0f;
