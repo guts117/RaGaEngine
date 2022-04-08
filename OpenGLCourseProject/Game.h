@@ -210,31 +210,6 @@ private:
 	std::unique_ptr < Texture> environmentTexture;
 	std::unique_ptr < Texture> skyboxTexture;
 
-	std::unique_ptr < Texture> brickTexture;
-	std::unique_ptr < Texture> brickTextureMetal;
-	std::unique_ptr < Texture> brickTextureNorm;
-	std::unique_ptr < Texture> brickTextureRough;
-	std::unique_ptr < Texture> brickTexturePara;
-	std::unique_ptr < Texture> brickTextureGlow;
-	std::unique_ptr < Texture> metalDebrisTexture;
-	std::unique_ptr < Texture> metalDebrisTextureMetal;
-	std::unique_ptr < Texture> metalDebrisTextureNorm;
-	std::unique_ptr < Texture> metalDebrisTextureRough;
-	std::unique_ptr < Texture> metalDebrisTexturePara;
-	std::unique_ptr < Texture> metalDebrisTextureGlow;
-	std::unique_ptr < Texture> floorTexture;
-	std::unique_ptr < Texture> floorTextureMetal;
-	std::unique_ptr < Texture> floorTextureNorm;
-	std::unique_ptr < Texture> floorTextureRough;
-	std::unique_ptr < Texture> floorTexturePara;
-	std::unique_ptr < Texture> floorTextureGlow;
-	std::unique_ptr < Texture> rustedMetal;
-	std::unique_ptr < Texture> rustedMetalMetal;
-	std::unique_ptr < Texture> rustedMetalNorm;
-	std::unique_ptr < Texture> rustedMetalRough;
-	std::unique_ptr < Texture> rustedMetalPara;
-	std::unique_ptr < Texture> rustedMetalGlow;
-
 	std::unique_ptr < Texture> terrainTextureDisp;
 	std::unique_ptr < Texture> terrainTextureBlend;
 	std::unique_ptr < Texture>	terrainTexture;

@@ -35,13 +35,6 @@ void Game::init()
 	environmentTexture = std::make_unique<Texture>("Textures/HDR/GCanyon_C_YumaPoint_3k.hdr");
 	environmentTexture->LoadTextureHDR();
 
-	brickTexture = std::make_unique <Texture>("Textures/brick.jpg");
-	brickTexture->LoadTextureSRGB();
-	metalDebrisTexture = std::make_unique <Texture>("Textures/small_metal_debris.jpg");
-	metalDebrisTexture->LoadTextureSRGB();
-	floorTexture = std::make_unique <Texture>("Textures/brick_floor.png");
-	floorTexture->LoadTextureSRGB();
-
 	plainTexture = std::make_unique <Texture>("Textures/plain.png");
 	plainTexture->LoadTextureSRGB();
 	
@@ -64,7 +57,7 @@ void Game::init()
 	rectangle2 = std::make_unique<Static_Object>();
 	rectangle2->SetUpNativeModelData(meshList[3], "Textures/brick_floor.png", "Textures/Metallic/brick_floor.png",
 									"Textures/Roughness/brick_floor.png", "Textures/Normal/brick_floor.png",
-									"Textures/Parallax/brick_floor.png", "Textures/Glow/brick_floor.jpg");
+									"Textures/Parallax/brick_floor.png", "Textures/Glow/brick_floor.png");
 
 
 	terrainTextureDisp = std::make_unique <Texture>("Textures/Displacement/terrain.jpg");
