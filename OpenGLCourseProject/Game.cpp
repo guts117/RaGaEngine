@@ -29,7 +29,8 @@ void Game::init()
 	CreateObject();
 	CreateShaders();
 
-	camera = std::make_shared<Camera>(glm::vec3(-terrainScaleFactor, 30.0f, -terrainScaleFactor), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f, 50.0f, 0.2f);
+	auto projectionMatrix = glm::perspective(glm::radians(60.0f), (GLfloat)mainWindow.getBufferWidth() / (GLfloat)mainWindow.getBufferHeight(), 0.1f, 10000.0f);
+	camera = std::make_shared<Camera>(projectionMatrix, glm::vec3(-terrainScaleFactor, 30.0f, -terrainScaleFactor), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f, 50.0f, 0.2f);
 
 	environmentTexture = std::make_unique<Texture>("Textures/HDR/GCanyon_C_YumaPoint_3k.hdr");
 	environmentTexture->LoadTextureHDR();
@@ -40,8 +41,6 @@ void Game::init()
 	metalDebrisTexture->LoadTextureSRGB();
 	floorTexture = std::make_unique <Texture>("Textures/brick_floor.png");
 	floorTexture->LoadTextureSRGB();
-	rustedMetal = std::make_unique <Texture>("Textures/rustediron2.png");
-	rustedMetal->LoadTextureSRGBA();
 
 	plainTexture = std::make_unique <Texture>("Textures/plain.png");
 	plainTexture->LoadTextureSRGB();
@@ -49,50 +48,24 @@ void Game::init()
 	grassTexture = std::make_unique <Texture>("Textures/grass.png");
 	grassTexture->LoadTextureSRGBA();
 
-	brickTextureMetal = std::make_unique <Texture>("Textures/Metallic/brick.jpg");
-	brickTextureMetal->LoadTexture();
-	metalDebrisTextureMetal = std::make_unique <Texture>("Textures/Metallic/small_metal_debris.jpg");
-	metalDebrisTextureMetal->LoadTexture();
-	floorTextureMetal = std::make_unique <Texture>("Textures/Metallic/brick_floor.png");
-	floorTextureMetal->LoadTexture();
-	rustedMetalMetal = std::make_unique <Texture>("Textures/Metallic/rustediron2.png");
-	rustedMetalMetal->LoadTexture();
 
-	brickTextureNorm = std::make_unique <Texture>("Textures/Normal/brick.jpg");
-	brickTextureNorm->LoadTexture();
-	metalDebrisTextureNorm = std::make_unique <Texture>("Textures/Normal/small_metal_debris.jpg");
-	metalDebrisTextureNorm->LoadTexture();
-	floorTextureNorm = std::make_unique <Texture>("Textures/Normal/brick_floor.png");
-	floorTextureNorm->LoadTexture();
-	rustedMetalNorm = std::make_unique <Texture>("Textures/Normal/rustediron2.png");
-	rustedMetalNorm->LoadTexture();
+	pyramid1 = std::make_unique<Static_Object>();
+	pyramid1->SetUpNativeModelData(meshList[0],"Textures/rustediron2.png","Textures/Metallic/rustediron2.png", 
+									"Textures/Roughness/rustediron2.png", "Textures/Normal/rustediron2.png",
+									"Textures/Parallax/rustediron2.png", "Textures/Glow/rock.jpg");
+	pyramid2 = std::make_unique<Static_Object>();
+	pyramid2->SetUpNativeModelData(meshList[1], "Textures/small_metal_debris.jpg", "Textures/Metallic/small_metal_debris.jpg",
+									"Textures/Roughness/small_metal_debris.jpg", "Textures/Normal/small_metal_debris.jpg",
+									"Textures/Parallax/small_metal_debris.jpg", "Textures/Glow/small_metal_debris.jpg");
+	rectangle1 = std::make_unique<Static_Object>();
+	rectangle1->SetUpNativeModelData(meshList[2], "Textures/brick.jpg", "Textures/Metallic/brick.jpg",
+									"Textures/Roughness/brick.jpg", "Textures/Normal/brick.jpg",
+									"Textures/Parallax/brick.jpg", "Textures/Glow/brick.jpg");
+	rectangle2 = std::make_unique<Static_Object>();
+	rectangle2->SetUpNativeModelData(meshList[3], "Textures/brick_floor.png", "Textures/Metallic/brick_floor.png",
+									"Textures/Roughness/brick_floor.png", "Textures/Normal/brick_floor.png",
+									"Textures/Parallax/brick_floor.png", "Textures/Glow/brick_floor.jpg");
 
-	brickTextureRough = std::make_unique <Texture>("Textures/Roughness/brick.jpg");
-	brickTextureRough->LoadTexture();
-	metalDebrisTextureRough = std::make_unique <Texture>("Textures/Roughness/small_metal_debris.jpg");
-	metalDebrisTextureRough->LoadTexture();
-	floorTextureRough = std::make_unique <Texture>("Textures/Roughness/brick_floor.png");
-	floorTextureRough->LoadTexture();
-	rustedMetalRough = std::make_unique <Texture>("Textures/Roughness/rustediron2.png");
-	rustedMetalRough->LoadTexture();
-
-	brickTexturePara = std::make_unique <Texture>("Textures/Parallax/brick.jpg");
-	brickTexturePara->LoadTexture();
-	metalDebrisTexturePara = std::make_unique <Texture>("Textures/Parallax/small_metal_debris.jpg");
-	metalDebrisTexturePara->LoadTexture();
-	floorTexturePara = std::make_unique <Texture>("Textures/Parallax/brick_floor.png");
-	floorTexturePara->LoadTexture();
-	rustedMetalPara = std::make_unique <Texture>("Textures/Parallax/rustediron2.png");
-	rustedMetalPara->LoadTexture();
-
-	brickTextureGlow = std::make_unique <Texture>("Textures/Glow/brick.jpg");
-	brickTextureGlow->LoadTexture();
-	metalDebrisTextureGlow = std::make_unique <Texture>("Textures/Glow/small_metal_debris.jpg");
-	metalDebrisTextureGlow->LoadTexture();
-	floorTextureGlow = std::make_unique <Texture>("Textures/Glow/brick_floor.png");
-	floorTextureGlow->LoadTexture();
-	rustedMetalGlow = std::make_unique <Texture>("Textures/Glow/rock.jpg");
-	rustedMetalGlow->LoadTexture();
 
 	terrainTextureDisp = std::make_unique <Texture>("Textures/Displacement/terrain.jpg");
 	terrainTextureDisp->LoadTexture();
@@ -130,21 +103,21 @@ void Game::init()
 	
 	shinyTerrainMaterial = std::make_unique<Material>(12, 13, 15, 16, 17);
 	dullTerrainMaterial = std::make_unique<Material>(12, 13, 15, 16, 17);
-	
-	cube->LoadModel("Models/cube.obj");
 
-	sphere->LoadModel("Models/sphere.obj");
-	
-	sniper->LoadModel("Models/Sniper_rifle_KSR-29.fbx");
-
-	gun->LoadModel("Models/Cerberus_LP.fbx");
-
-	anymodel->LoadModel("Models/Intergalactic_Spaceship-(Wavefront).obj");
-
-	bulb->LoadModel("Models/Free_Antique_Bulb.obj");
+	bulb = std::make_unique<Static_Object>();
+	bulb->SetUpImportedModelData("Models/Free_Antique_Bulb.obj");
+	sphere = std::make_unique<Static_Object>();
+	sphere->SetUpImportedModelData("Models/sphere.obj");
+	cube = std::make_unique<Static_Object>();
+	cube->SetUpImportedModelData("Models/cube.obj");
+	sniper = std::make_unique<Static_Object>();
+	sniper->SetUpImportedModelData("Models/Sniper_rifle_KSR-29.fbx");
+	gun = std::make_unique<Static_Object>();
+	gun->SetUpImportedModelData("Models/Cerberus_LP.fbx");
+	anymodel = std::make_unique<Static_Object>();
+	anymodel->SetUpImportedModelData("Models/Intergalactic_Spaceship-(Wavefront).obj");
 
 	anim->LoadModel("Models/boblampclean.md5mesh");
-
 	anim2->LoadModel("Models/model.dae");
 
 	environmentMap = std::make_unique<Equirectangular_to_CubeMap_Framebuffer>();
@@ -226,16 +199,13 @@ void Game::init()
 
 	//skyboxTexture.LoadCubeMapSRGB(skyboxFaces);
 
-	projection = glm::perspective(glm::radians(60.0f), (GLfloat)mainWindow.getBufferWidth() / (GLfloat)mainWindow.getBufferHeight(), 0.1f, 10000.0f);
-
-
 	//SSAO initialization
 	ssaoShader->UseShader();
 
 	uniformSampleRadius = ssaoShader->GetSampleRadiusLocation();
 	uniformProjectionAO = ssaoShader->GetProjectionLocation();
 
-	glUniformMatrix4fv(uniformProjectionAO, 1, GL_FALSE, glm::value_ptr(projection));
+	glUniformMatrix4fv(uniformProjectionAO, 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
 	glUniform1f(uniformSampleRadius, 0.1f);
 
 	ssaoShader->GenKernel();
@@ -247,7 +217,7 @@ void Game::init()
 	for (size_t i = 0; i < NUM_CASCADES; ++i)
 	{
 		glm::vec4 vView(0.0f, 0.0f, mainLight->GetShadowMap()->GetCascadeEnd(i+1), 1.0f);
-		glm::vec4 vClip = projection * vView;
+		glm::vec4 vClip = camera->GetProjectionMatrix() * vView;
 		printf("%F \n", vClip.z);
 		terrainShader->SetCascadeEndClipSpace(i, -vClip.z);
 	}
@@ -256,9 +226,6 @@ void Game::init()
 	IrradianceConvolutionPass();
 	PrefilterPass();
 	BRDFPass();
-
-	Bulb = std::make_unique<Static_Object>();
-	Bulb->SetUpImportedModelData("Models/Free_Antique_Bulb.obj");
 }
 
 void Game::update(float fps) {
@@ -303,7 +270,7 @@ void Game::update(float fps) {
 	}
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	DirectionalShadowMapPass(camera->calculateViewMatrix(), mainLight.get());
+	DirectionalShadowMapPass(mainLight.get());
 
 	for (size_t i = 0; i < pointLightCount; i++) {
 		OmniShadowMapPass(pointLights[i].get());
@@ -312,17 +279,19 @@ void Game::update(float fps) {
 		OmniShadowMapPass(spotLights[i].get());
 	}
 
-	PreZPass(projection, camera->calculateViewMatrix(), deltaTime);
-	SSAOPass(projection);
+	PreZPass(deltaTime);
+	SSAOPass();
 	SSAOBlurPass();
-	RenderPass(projection, camera->calculateViewMatrix(), deltaTime);
+	RenderPass(deltaTime);
 	BlurPass();
 	MotionBlurPass(fps);
 	BloomPass();
 
-	prevProjView = projection *camera->calculateViewMatrix();
-	prevProj = projection;
-	prevView = camera->calculateViewMatrix();
+
+	//prevProjView = projection *camera->CalculateViewMatrix();
+	//prevProj = projection;
+	//prevView = camera->CalculateViewMatrix();
+	camera->UpdatePreviousMatrices();
 	glUseProgram(0);
 
 	mainWindow.swapBuffers();
@@ -568,7 +537,7 @@ void Game::RenderBillboardScene()
 	glUniform3f(uniformPos, 6.0f - terrainScaleFactor, 29.0f, -terrainScaleFactor);
 	glUniform2f(uniformSize, 2.0f, 2.0f/*0.125f*/);
 
-	prevPV = prevProjView;
+	prevPV = camera->GetPreviousProjectionViewMatrix();
 	glUniformMatrix4fv(uniformPrevPV0, 1, GL_FALSE, glm::value_ptr(prevPV));
 
 	grassTexture->UseTexture(0);
@@ -594,7 +563,7 @@ void Game::RenderTerrain(bool shadow, bool depth)
 	//model = glm::rotate(model, curAngle * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));  //if you put the rotate at the last place(i.e on the top) it will have a bouncy effect
 	//model = glm::scale(model,glm::vec3(terrainScaleFactor, 1.0f, terrainScaleFactor));
 	glUniformMatrix4fv(uniformModel2, 1, GL_FALSE, glm::value_ptr(model));
-	prevPVM = prevProjView * terrainList[0]->prevMesh;
+	prevPVM = camera->GetPreviousProjectionViewMatrix() * terrainList[0]->prevMesh;
 	glUniformMatrix4fv(uniformPrevPVM2, 1, GL_FALSE, glm::value_ptr(prevPVM));
 	terrainTextureDisp->UseTexture(0);
 	terrainTextureBlend->UseTexture(10);
@@ -635,235 +604,62 @@ void Game::RenderEnvCubeMap(bool is_cubeMap)
 	mesh_cube->RenderCube();
 }
 
-void Game::RenderScene(std::shared_ptr<Shader> shader, glm::mat4 projectionMatrix, glm::mat4 viewMatrix) {
-	glm::mat4 model = glm::mat4();;
+void Game::RenderScene(std::shared_ptr<Shader> shader) {
+	glm::mat4 model = glm::mat4();
 	glm::mat4 prevPVM = glm::mat4();
 
-	model = glm::translate(model, glm::vec3(-terrainScaleFactor, 34.0f, -2.5f - terrainScaleFactor));
-	/*model = glm::rotate(model, curAngle * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));*/
-	//model = glm::scale(model,glm::vec3(0.4f,0.4f,1.0f));
-	glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
-	prevPVM = prevProjView * meshList[0]->prevMesh;
-	glUniformMatrix4fv(uniformPrevPVM, 1, GL_FALSE, glm::value_ptr(prevPVM));
-	rustedMetal->UseTexture(0);
-	rustedMetalMetal->UseTexture(5);
-	rustedMetalNorm->UseTexture(6);
-	rustedMetalRough->UseTexture(10);
-	rustedMetalPara->UseTexture(11);
-	rustedMetalGlow->UseTexture(12);
-	shinyMaterialGlow->UseMaterial(uniformAlbedoMap, uniformMetallicMap, uniformNormalMap, uniformRoughnessMap, uniformParallaxMap, uniformGlowMap);
-	meshList[0]->RenderMesh();
-	meshList[0]->prevMesh = model;
-	model = glm::mat4();
+	pyramid1->Translate(-terrainScaleFactor, 34.0f, -2.5f - terrainScaleFactor);
+	//pyramid1->Rotate(curAngle, 0.0f, 1.0f, 0.0f);
+	//pyramid1->Scale(0.4f, 0.4f, 1.0f);
+	pyramid1->DrawNativeObject(shader, camera);
 
-	//model = glm::rotate(model, -aircraftAngle * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));
-	model = glm::translate(model, glm::vec3(curScale - terrainScaleFactor, 32.0f, 4.5f - terrainScaleFactor));
-	//model = glm::rotate(model, curAngle * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));  //if you put the rotate at the last place(i.e on the top) it will have a bouncy effect
-	model = glm::rotate(model, curAngle * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));
-	model = glm::rotate(model, 90.0f * toRadians, glm::vec3(1.0f, 0.0f, 0.0f));
-	//model = glm::rotate(model, 180.0f * toRadians, glm::vec3(1.0f, 0.0f, 0.0f));
-	//model = glm::rotate(model, -20.0f * toRadians, glm::vec3(0.0f, 0.0f, 1.0f));
-	//model = glm::rotate(model, toRadians, glm::vec3(0.0f, 1.0f, 0.0f));  //if you put the rotate at the last place(i.e on the top) it will have a bouncy effect
-	model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
-	glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
-	prevPVM = prevProjView*cube->prevModel;
-	glUniformMatrix4fv(uniformPrevPVM, 1, GL_FALSE, glm::value_ptr(prevPVM));
-	shinyMaterialGlow->UseMaterial(uniformAlbedoMap, uniformMetallicMap, uniformNormalMap, uniformRoughnessMap, uniformParallaxMap, uniformGlowMap);
-	cube->RenderModel();
-	cube->prevModel = model;
-	model = glm::mat4();
+	pyramid2->Translate(-terrainScaleFactor, 30.0f, -2.5f - terrainScaleFactor);
+	//pyramid2->Rotate(curAngle, 0.0f, 1.0f, 0.0f);
+	//pyramid2->Scale(0.4f, 0.4f, 1.0f);
+	pyramid2->DrawNativeObject(shader, camera);
 
-	model = glm::translate(model, glm::vec3(-terrainScaleFactor, 35.0f, 5.5f - terrainScaleFactor));
-	model = glm::rotate(model, curAngle * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));
-	model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
-	glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
-	prevPVM = prevProjView * sphere->prevModel;
-	glUniformMatrix4fv(uniformPrevPVM, 1, GL_FALSE, glm::value_ptr(prevPVM));
-	shinyMaterialGlow->UseMaterial(uniformAlbedoMap, uniformMetallicMap, uniformNormalMap, uniformRoughnessMap, uniformParallaxMap, uniformGlowMap);
-	sphere->RenderModel();
-	sphere->prevModel = model;	
-	model = glm::mat4();
+	rectangle1->Translate(-15.0f - terrainScaleFactor, 43.0f, -terrainScaleFactor);
+	rectangle1->Rotate(90, 1.0f, 0.0f, 0.0f);
+	rectangle1->Rotate(-90, 0.0f, 0.0f, 1.0f);
+	rectangle1->DrawNativeObject(shader, camera);
 
-	model = glm::translate(model, glm::vec3(-terrainScaleFactor, 30.0f, -2.5f - terrainScaleFactor));
-	//model = glm::rotate(model, curAngle * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));  //if you put the rotate at the last place(i.e on the top) it will have a bouncy effect
-	//model = glm::scale(model, glm::vec3(0.4f, 0.4f, 1.0f));
-	glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
-	prevPVM = prevProjView * meshList[1]->prevMesh;
-	glUniformMatrix4fv(uniformPrevPVM, 1, GL_FALSE, glm::value_ptr(prevPVM));
-	metalDebrisTexture->UseTexture(0);
-	metalDebrisTextureMetal->UseTexture(5);
-	metalDebrisTextureNorm->UseTexture(6);
-	metalDebrisTextureRough->UseTexture(10);
-	metalDebrisTexturePara->UseTexture(11);
-	metalDebrisTextureGlow->UseTexture(12);
-	dullMaterialGlow->UseMaterial(uniformAlbedoMap, uniformMetallicMap, uniformNormalMap, uniformRoughnessMap, uniformParallaxMap, uniformGlowMap);
-	meshList[1]->RenderMesh();
-	meshList[1]->prevMesh = model;
-	model = glm::mat4();
+	rectangle2->Translate(-terrainScaleFactor, 43.0f, -15.0f - terrainScaleFactor);
+	rectangle2->Rotate(-90, 1.0f, 0.0f, 0.0f);
+	rectangle2->Rotate(180.0f, 0.0f, 0.0f, 1.0f);
+	rectangle2->DrawNativeObject(shader, camera);
 
-	model = glm::translate(model, glm::vec3(-15.0f - terrainScaleFactor, 43.0f, -terrainScaleFactor));
-	model = glm::rotate(model, 90.0f * toRadians, glm::vec3(1.0f, 0.0f, 0.0f));
-	model = glm::rotate(model, -90.0f * toRadians, glm::vec3(0.0f, 0.0f, 1.0f));
-	//model = glm::rotate(model, curAngle * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));  //if you put the rotate at the last place(i.e on the top) it will have a bouncy effect
-	//model = glm::scale(model, glm::vec3(0.4f, 0.4f, 1.0f));
-	glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
-	prevPVM = prevProjView * meshList[2]->prevMesh;
-	glUniformMatrix4fv(uniformPrevPVM, 1, GL_FALSE, glm::value_ptr(prevPVM));
-	floorTexture->UseTexture(0);
-	floorTextureMetal->UseTexture(5);
-	floorTextureNorm->UseTexture(6);
-	floorTextureRough->UseTexture(10);
-	floorTexturePara->UseTexture(11);
-	floorTextureGlow->UseTexture(12);
-	shinyMaterialGlow->UseMaterial(uniformAlbedoMap, uniformMetallicMap, uniformNormalMap, uniformRoughnessMap, uniformParallaxMap, uniformGlowMap);
-	meshList[2]->RenderMesh();
-	meshList[2]->prevMesh = model;
-	model = glm::mat4();
+	cube->Translate(curScale - terrainScaleFactor, 32.0f, 4.5f - terrainScaleFactor);
+	//cube->Rotate(curAngle, 0.0f, 1.0f, 0.0f);
+	cube->Rotate(90.0f, 1.0f, 0.0f, 0.0f);
+	cube->Scale(0.1f, 0.1f, 0.1f);
+	cube->DrawImportedObject(shader, camera);
 
-	model = glm::translate(model, glm::vec3(-terrainScaleFactor, 43.0f, -15.0f - terrainScaleFactor));
-	model = glm::rotate(model, -90.0f * toRadians, glm::vec3(1.0f, 0.0f, 0.0f));
-	model = glm::rotate(model, 180.0f * toRadians, glm::vec3(0.0f, 0.0f, 1.0f));
-	glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
-	prevPVM = prevProjView * meshList[3]->prevMesh;
-	glUniformMatrix4fv(uniformPrevPVM, 1, GL_FALSE, glm::value_ptr(prevPVM));
-	brickTexture->UseTexture(0);
-	brickTextureMetal->UseTexture(5);
-	brickTextureNorm->UseTexture(6);
-	brickTextureRough->UseTexture(10);
-	brickTexturePara->UseTexture(11);
-	brickTextureGlow->UseTexture(12);
-	shinyMaterialGlow->UseMaterial(uniformAlbedoMap, uniformMetallicMap, uniformNormalMap, uniformRoughnessMap, uniformParallaxMap, uniformGlowMap);
-	meshList[3]->RenderMesh();
-	meshList[3]->prevMesh = model;
+	sphere->Translate(-terrainScaleFactor, 35.0f, 5.5f - terrainScaleFactor);
+	//sphere->Rotate(curAngle, 0.0f, 1.0f, 0.0f);
+	sphere->Scale(1.0f, 1.0f, 1.0f);
+	sphere->DrawImportedObject(shader, camera);
 
-				/*model = glm::mat4();
-					model = glm::translate(model, glm::vec3(15.0f, 13.0f, 0.0f));
-					model = glm::rotate(model, 90.0f * toRadians, glm::vec3(1.0f, 0.0f, 0.0f));
-					model = glm::rotate(model, 90.0f * toRadians, glm::vec3(0.0f, 0.0f, 1.0f));
-					//model = glm::rotate(model, curAngle * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));  //if you put the rotate at the last place(i.e on the top) it will have a bouncy effect
-					//model = glm::scale(model, glm::vec3(0.4f, 0.4f, 1.0f));
-					glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
+	sniper->Translate(-terrainScaleFactor, 33.0f, 10.0f - terrainScaleFactor);
+	//sniper->Rotate(curAngle, 0.0f, 1.0f, 0.0f);
+	sniper->Rotate(90.0f, 1.0f, 0.0f, 0.0f);
+	sniper->Rotate(180.0f, 1.0f, 0.0f, 0.0f);
+	sniper->Scale(0.5f, 0.5f, 0.5f);
+	sniper->DrawImportedObject(shader, camera);
 
-					brickTexture.UseTexture(0);
-					brickTextureSpec.UseTexture(5);
-					brickTextureNorm.UseTexture(6);
-					brickTextureRefl.UseTexture(8);
-					brickTexturePara.UseTexture(9);
-					brickTextureGlow.UseTexture(10);
-					shinyMaterialGlow.UseMaterial(uniformSpecularIntensity, uniformShininess, uniformDiffuse, uniformSpecular, uniformNormalMap, uniformReflectMap, uniformParallaxMap, uniformGlowMap);
-					meshList[3]->RenderMesh();
+	gun->Translate(5.0f - terrainScaleFactor, 33.0f, 10.0f - terrainScaleFactor);
+	//gun->Rotate(curAngle, 0.0f, 1.0f, 0.0f);
+	gun->Rotate(180.0f, 0.0f, 1.0f, 0.0f);
+	gun->Rotate(-90.0f, 1.0f, 0.0f, 0.0f);
+	gun->Scale(0.02f, 0.02f, 0.02f);
+	gun->DrawImportedObject(shader, camera);
 
-					model = glm::mat4();
-					model = glm::translate(model, glm::vec3(0.0f, 15.0f+13.0f, 0.0f));
-					model = glm::rotate(model, 180.0f * toRadians, glm::vec3(1.0f, 0.0f, 0.0f));
-					//model = glm::rotate(model, 90.0f * toRadians, glm::vec3(0.0f, 0.0f, 1.0f));
-					//model = glm::rotate(model, curAngle * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));  //if you put the rotate at the last place(i.e on the top) it will have a bouncy effect
-					//model = glm::scale(model, glm::vec3(0.4f, 0.4f, 1.0f));
-					glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
+	bulb->Translate(pointLights[0]->GetPosition().x, pointLights[0]->GetPosition().y, pointLights[0]->GetPosition().z);
+	bulb->Scale(10.0f, 10.f, 10.0f);
+	bulb->DrawImportedObject(shader, camera);
 
-					brickTexture.UseTexture(0);
-					brickTextureSpec.UseTexture(5);
-					brickTextureNorm.UseTexture(6);
-					brickTextureRefl.UseTexture(8);
-					brickTexturePara.UseTexture(9);
-					brickTextureGlow.UseTexture(10);
-					shinyMaterialGlow.UseMaterial(uniformSpecularIntensity, uniformShininess, uniformDiffuse, uniformSpecular, uniformNormalMap, uniformReflectMap, uniformParallaxMap, uniformGlowMap);
-					meshList[3]->RenderMesh();
-
-					model = glm::mat4();
-					model = glm::translate(model, glm::vec3(0.0f, 13.0f, 15.0f));
-					model = glm::rotate(model, 90.0f * toRadians, glm::vec3(1.0f, 0.0f, 0.0f));
-					model = glm::rotate(model, 180.0f * toRadians, glm::vec3(0.0f, 0.0f, 1.0f));
-					//model = glm::rotate(model, curAngle * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));  //if you put the rotate at the last place(i.e on the top) it will have a bouncy effect
-					//model = glm::scale(model, glm::vec3(0.4f, 0.4f, 1.0f));
-					glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
-
-					brickTexture.UseTexture(0);
-					brickTextureSpec.UseTexture(5);
-					brickTextureNorm.UseTexture(6);
-					brickTextureRefl.UseTexture(8);
-					brickTexturePara.UseTexture(9);
-					brickTextureGlow.UseTexture(10);
-					shinyMaterialGlow.UseMaterial(uniformSpecularIntensity, uniformShininess, uniformDiffuse, uniformSpecular, uniformNormalMap, uniformReflectMap, uniformParallaxMap, uniformGlowMap);
-					meshList[3]->RenderMesh();
-
-					model = glm::mat4();
-					model = glm::translate(model, glm::vec3(0.0f, 13.0f, -15.0f));
-					model = glm::rotate(model, 90.0f * toRadians, glm::vec3(1.0f, 0.0f, 0.0f));
-					//model = glm::rotate(model, 180.0f * toRadians, glm::vec3(0.0f, 0.0f, 1.0f));
-					//model = glm::rotate(model, curAngle * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));  //if you put the rotate at the last place(i.e on the top) it will have a bouncy effect
-					//model = glm::scale(model, glm::vec3(0.4f, 0.4f, 1.0f));
-					glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
-
-					brickTexture.UseTexture(0);
-					brickTextureSpec.UseTexture(5);
-					brickTextureNorm.UseTexture(6);
-					brickTextureRefl.UseTexture(8);
-					brickTexturePara.UseTexture(9);
-					brickTextureGlow.UseTexture(10);
-					shinyMaterialGlow.UseMaterial(uniformSpecularIntensity, uniformShininess, uniformDiffuse, uniformSpecular, uniformNormalMap, uniformReflectMap, uniformParallaxMap, uniformGlowMap);
-					meshList[3]->RenderMesh();*/
-
-	//aircraftAngle += 0.05f;
-	//if (aircraftAngle > 360.0f) {
-	//	aircraftAngle = 0.05f;
-	//}
-
-	model = glm::mat4();
-	//model = glm::rotate(model, -aircraftAngle * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));
-	model = glm::translate(model, glm::vec3(-terrainScaleFactor, 33.0f, 10.0f - terrainScaleFactor));
-	model = glm::rotate(model, curAngle * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));  //if you put the rotate at the last place(i.e on the top) it will have a bouncy effect
-	model = glm::rotate(model, 90.0f * toRadians, glm::vec3(1.0f, 0.0f, 0.0f));
-	model = glm::rotate(model, 180.0f * toRadians, glm::vec3(1.0f, 0.0f, 0.0f));
-	//model = glm::rotate(model, -20.0f * toRadians, glm::vec3(0.0f, 0.0f, 1.0f));
-	//model = glm::rotate(model, toRadians, glm::vec3(0.0f, 1.0f, 0.0f));  //if you put the rotate at the last place(i.e on the top) it will have a bouncy effect
-	model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
-	glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
-	prevPVM = prevProjView * sniper->prevModel;
-	glUniformMatrix4fv(uniformPrevPVM, 1, GL_FALSE, glm::value_ptr(prevPVM));
-	shinyMaterialGlow->UseMaterial(uniformAlbedoMap, uniformMetallicMap, uniformNormalMap, uniformRoughnessMap, uniformParallaxMap, uniformGlowMap);
-	sniper->RenderModel();
-	sniper->prevModel = model;
-	model = glm::mat4();
-
-	//model = glm::rotate(model, -aircraftAngle * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));
-	model = glm::translate(model, glm::vec3(5.0f-terrainScaleFactor, 33.0f, 10.0f - terrainScaleFactor));
-	model = glm::rotate(model, curAngle * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));  //if you put the rotate at the last place(i.e on the top) it will have a bouncy effect
-	model = glm::rotate(model, 180.0f * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));
-	model = glm::rotate(model, -90.0f * toRadians, glm::vec3(1.0f, 0.0f, 0.0f));
-	model = glm::scale(model, glm::vec3(0.02f, 0.02f, 0.02f));
-	glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
-	prevPVM = prevProjView * gun->prevModel;
-	glUniformMatrix4fv(uniformPrevPVM, 1, GL_FALSE, glm::value_ptr(prevPVM));
-	shinyMaterialGlow->UseMaterial(uniformAlbedoMap, uniformMetallicMap, uniformNormalMap, uniformRoughnessMap, uniformParallaxMap, uniformGlowMap);
-	gun->RenderModel();
-	gun->prevModel = model;
-	model = glm::mat4();
-
-	model = glm::translate(model, glm::vec3(pointLights[0]->GetPosition().x, pointLights[0]->GetPosition().y+1.0f, pointLights[0]->GetPosition().z));
-	//model = glm::rotate(model, curAngle * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));  //if you put the rotate at the last place(i.e on the top) it will have a bouncy effect
-	//model = glm::rotate(model, 180.0f * toRadians, glm::vec3(1.0f, 0.0f, 0.0f));
-	model = glm::scale(model, glm::vec3(10.0f, 10.0f, 10.0f));
-	glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
-	prevPVM = prevProjView * bulb->prevModel;
-	glUniformMatrix4fv(uniformPrevPVM, 1, GL_FALSE, glm::value_ptr(prevPVM));
-	shinyMaterialGlow->UseMaterial(uniformAlbedoMap, uniformMetallicMap, uniformNormalMap, uniformRoughnessMap, uniformParallaxMap, uniformGlowMap);
-	bulb->RenderModel();
-	bulb->prevModel = model;
-	model = glm::mat4();
-
-	Bulb->DrawImportedObject(shader, prevProjView, model, glm::vec3(pointLights[0]->GetPosition().x, pointLights[0]->GetPosition().y + 3.0f, pointLights[0]->GetPosition().z), glm::vec3(10.0f, 10.0f, 10.0f));
-	model = glm::mat4();
-
-	model = glm::translate(model, glm::vec3(-terrainScaleFactor, 37.0f, 1.0f - terrainScaleFactor));
-	//model = glm::rotate(model, curAngle * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));  //if you put the rotate at the last place(i.e on the top) it will have a bouncy effect
-	model = glm::scale(model, glm::vec3(0.7f, 0.7f, 0.7f));
-	glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
-	prevPVM = prevProjView * anymodel->prevModel;
-	glUniformMatrix4fv(uniformPrevPVM, 1, GL_FALSE, glm::value_ptr(prevPVM));
-	shinyMaterialGlow->UseMaterial(uniformAlbedoMap, uniformMetallicMap, uniformNormalMap, uniformRoughnessMap, uniformParallaxMap, uniformGlowMap);
-	anymodel->RenderModel();
-	anymodel->prevModel = model;
+	anymodel->Translate(-terrainScaleFactor, 37.0f, 1.0f - terrainScaleFactor);
+	anymodel->Scale(0.7f, 0.7f, 0.7f);
+	anymodel->DrawImportedObject(shader, camera);
 }
 
 void Game::RenderAnimScene(bool shadow, bool depth) {
@@ -875,7 +671,7 @@ void Game::RenderAnimScene(bool shadow, bool depth) {
 	model = glm::rotate(model, -90 * toRadians, glm::vec3(1.0f, 0.0f, 0.0f));  //if you put the rotate at the last place(i.e on the top) it will have a bouncy effect
 	model = glm::scale(model, glm::vec3(0.1, 0.1f, 0.1f));
 	glUniformMatrix4fv(uniformModel1, 1, GL_FALSE, glm::value_ptr(model));
-	prevPVM = prevProjView * anim->prevModel;
+	prevPVM = camera->GetPreviousProjectionViewMatrix() * anim->prevModel;
 	glUniformMatrix4fv(uniformPrevPVM1, 1, GL_FALSE, glm::value_ptr(prevPVM));
 	shinyMaterialGlow->UseMaterial(uniformAlbedoMap1, uniformMetallicMap1, uniformNormalMap1, uniformRoughnessMap1, uniformParallaxMap1, uniformGlowMap1);
 
@@ -898,7 +694,7 @@ void Game::RenderAnimScene(bool shadow, bool depth) {
 	model = glm::rotate(model, -90 * toRadians, glm::vec3(1.0f, 0.0f, 0.0f));  //if you put the rotate at the last place(i.e on the top) it will have a bouncy effect
 	model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
 	glUniformMatrix4fv(uniformModel1, 1, GL_FALSE, glm::value_ptr(model));
-	prevPVM = prevProjView * anim2->prevModel;
+	prevPVM = camera->GetPreviousProjectionViewMatrix() * anim2->prevModel;
 	glUniformMatrix4fv(uniformPrevPVM1, 1, GL_FALSE, glm::value_ptr(prevPVM));
 	shinyMaterialGlow->UseMaterial(uniformAlbedoMap1, uniformMetallicMap1, uniformNormalMap1, uniformRoughnessMap1, uniformParallaxMap1, uniformGlowMap1);
 
@@ -1013,10 +809,10 @@ void Game::BRDFPass()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Game::DirectionalShadowMapPass(glm::mat4 viewMatrix, DirectionalLight* light) {
+void Game::DirectionalShadowMapPass(DirectionalLight* light) {
 	
 	testLitView[0] = light->CalculateCascadeLightTransform();
-	mainLight->GetShadowMap()->CalcOrthProjs(camera->calculateViewMatrix(), testLitView, 60.0f);
+	mainLight->GetShadowMap()->CalcOrthProjs(camera->CalculateViewMatrix(), testLitView, 60.0f);
 
 	for (unsigned int i = 0; i < NUM_CASCADES; ++i)
 	{
@@ -1101,8 +897,10 @@ void Game::OmniShadowMapPass(PointLight* light) {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Game::PreZPass(glm::mat4 projectionMatrix, glm::mat4 viewMatrix, GLfloat deltaTime)
+void Game::PreZPass(GLfloat deltaTime)
 {
+	auto projectionMatrix = camera->GetProjectionMatrix();
+	auto viewMatrix = camera->CalculateViewMatrix();
 	glViewport(0, 0,depth->GetWidth(), depth->GetHeight());
 	
 	depth->Write();
@@ -1133,7 +931,6 @@ void Game::PreZPass(glm::mat4 projectionMatrix, glm::mat4 viewMatrix, GLfloat de
 	glUniformMatrix4fv(uniformView, 1, GL_FALSE, glm::value_ptr(viewMatrix));
 
 	static_preZPassShader->Validate();
-
 	RenderScene(static_preZPassShader);
 
 	anim_preZPassShader->UseShader();
@@ -1151,8 +948,10 @@ void Game::PreZPass(glm::mat4 projectionMatrix, glm::mat4 viewMatrix, GLfloat de
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Game::SSAOPass(glm::mat4 projectionMatrix)
+void Game::SSAOPass()
 {
+	auto projectionMatrix = camera->GetProjectionMatrix();
+
 	glViewport(0, 0, ssao->GetWidth(), ssao->GetHeight());
 	ssao->Write();
 	glClear(GL_COLOR_BUFFER_BIT); 
@@ -1184,8 +983,13 @@ void Game::SSAOBlurPass()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Game::RenderPass(glm::mat4 projectionMatrix, glm::mat4 viewMatrix, GLfloat deltaTime)
+void Game::RenderPass(GLfloat deltaTime)
 {
+	auto projectionMatrix = camera->GetProjectionMatrix();
+	auto viewMatrix = camera->CalculateViewMatrix();
+	auto prevProj = camera->GetPreviousProjectionMatrix();
+	auto prevView = camera->GetPreviousViewMatrix();
+
 	glViewport(0, 0, hdr->GetWidth(), hdr->GetHeight());
 
 	hdr->Write(); 
@@ -1273,7 +1077,7 @@ void Game::RenderPass(glm::mat4 projectionMatrix, glm::mat4 viewMatrix, GLfloat 
 
 	shaderList[0]->Validate();
 
-	RenderScene(shaderList[0], projectionMatrix, viewMatrix);
+	RenderScene(shaderList[0]);
 
 	animShaderList[0]->UseShader();
 

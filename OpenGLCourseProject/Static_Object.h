@@ -27,34 +27,31 @@ public:
 		std::string parallaxPath = "",
 		std::string glowPath = "");
 
-	void DrawNativeObject(glm::mat4 projectionMatrix,
-		glm::mat4 viewMatrix,
-		int pointLightCount,
-		int spotLightCount, glm::mat4 prevProjView,
-						float terrainScaleFactor = 0.0f,
-						float rotationAngle = 0.0f,
-						glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f),
-						glm::vec3 rotationAxis = glm::vec3(0.0f, 0.0f, 0.0f),
-						glm::vec3 scale = glm::vec3(0.0f, 0.0f, 0.0f));
-
 	void SetUpImportedModelData(std::string modelPath = "");
 
-	void DrawImportedObject(std::shared_ptr<Shader> shader, glm::mat4 prevProjView, glm::mat4 model);
-	void DrawImportedObject(std::shared_ptr<Shader> shader, glm::mat4 prevProjView, glm::mat4 model, glm::vec3 position, glm::vec3 scale);
+	void Translate(float x, float y, float z);
 
-	std::shared_ptr <Static_Model> StaticModel = std::make_shared<Static_Model>();
+	void Rotate(float angleInDegrees, float x, float y, float z);
+
+	void Scale(float x, float y, float z);
+
+	void DrawNativeObject(std::shared_ptr<Shader> shader, std::shared_ptr<Camera> camera);
+
+	void DrawImportedObject(std::shared_ptr<Shader> shader, std::shared_ptr<Camera> camera);
 
 	~Static_Object() = default;
 private:
-	void LoadTexture(Texture* texture, std::string path, bool isSRGB = false);
-	void SetUniformLocations(std::shared_ptr<Shader> shader);
+	void LoadTexture(std::unique_ptr<Texture>&  texture, std::string path, bool isSRGB = false);
+	void SetUniformLocations(std::shared_ptr<Shader> shader, std::shared_ptr<Camera> camera);
 
-	std::shared_ptr <Texture> m_albedoTexture = std::make_unique<Texture>();
-	std::shared_ptr <Texture> m_metallicTexture = std::make_unique<Texture>();
-	std::shared_ptr <Texture> m_roughTexture = std::make_unique<Texture>();
-	std::shared_ptr <Texture> m_normalTexture = std::make_unique<Texture>();
-	std::shared_ptr <Texture> m_parallaxTexture = std::make_unique<Texture>();
-	std::shared_ptr <Texture> m_glowTexture = std::make_unique<Texture>();
+	std::shared_ptr <Static_Model> StaticModel = std::make_shared<Static_Model>();
+
+	std::unique_ptr <Texture> m_albedoTexture = nullptr;
+	std::unique_ptr <Texture> m_metallicTexture = nullptr;
+	std::unique_ptr <Texture> m_roughTexture = nullptr;
+	std::unique_ptr <Texture> m_normalTexture = nullptr;
+	std::unique_ptr <Texture> m_parallaxTexture = nullptr;
+	std::unique_ptr <Texture> m_glowTexture = nullptr;
 
 	std::unique_ptr <Material> m_material = std::make_unique<Material>();
 
@@ -64,11 +61,12 @@ private:
 	std::shared_ptr<SpotLight> m_firstSpotLight = std::make_shared<SpotLight>();
 	std::shared_ptr<PointLight> m_firstPointLight = std::make_shared<PointLight>();
 
-	GLuint m_uniformModel = 0, m_uniformProjection = 0, m_uniformView = 0, m_uniformPrevPVM = 0, m_uniformEyePosition = 0, m_uniformHeightScale = 0,
-		m_uniformAlbedoMap = 0, m_uniformMetallicMap = 0, m_uniformNormalMap = 0, m_uniformRoughnessMap = 0, m_uniformParallaxMap = 0, m_uniformGlowMap = 0,
-		m_uniformOmniLightPos = 0, m_uniformFarPlane = 0;
+	GLuint m_uniformModel = -1, m_uniformProjection = -1, m_uniformView = -1, m_uniformPrevPVM = -1, m_uniformEyePosition = -1, m_uniformHeightScale = -1,
+		m_uniformAlbedoMap = -1, m_uniformMetallicMap = -1, m_uniformNormalMap = -1, m_uniformRoughnessMap = -1, m_uniformParallaxMap = -1, m_uniformGlowMap = -1,
+		m_uniformOmniLightPos = -1, m_uniformFarPlane = -1;
 
 	glm::mat4 m_prevPVM = glm::mat4();
+	glm::mat4 m_model = glm::mat4();
 };
 #endif STATIC_OBJECT// ! 
 

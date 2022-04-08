@@ -71,12 +71,12 @@ protected:
 	int pointLightCount = 0;
 	int spotLightCount = 0;
 
-	GLuint shaderID = 0, uniformProjection = 0, uniformModel = 0, uniformView = 0, uniformPrevPVM = 0, uniformEyePosition = 0, uniformHeightScale = 0,
-		uniformSkybox = 0, uniformIrradiance = 0, uniformPrefilter = 0, uniformBRDF= 0,
-		uniformAlbedo= 0, uniformMetallic = 0, uniformNormal = 0, uniformRoughness = 0, uniformParallax = 0, uniformGlow = 0, uniformAO = 0,
-		uniformTexture = 0,
-		uniformDirectionalLightTransform = 0, uniformDirectionalShadowMap = 0,
-		uniformOmniLightPos = 0, uniformFarPlane = 0;
+	GLuint shaderID = 0, uniformProjection = -1, uniformModel = -1, uniformView = -1, uniformPrevPVM = -1, uniformEyePosition = -1, uniformHeightScale = -1,
+		uniformSkybox = -1, uniformIrradiance = -1, uniformPrefilter = -1, uniformBRDF= -1,
+		uniformAlbedo= -1, uniformMetallic = -1, uniformNormal = -1, uniformRoughness = -1, uniformParallax = -1, uniformGlow = -1, uniformAO = -1,
+		uniformTexture = -1,
+		uniformDirectionalLightTransform = -1, uniformDirectionalShadowMap = -1,
+		uniformOmniLightPos = -1, uniformFarPlane = -1;
 
 
 	GLuint uniformLightMatrices[6]{0};

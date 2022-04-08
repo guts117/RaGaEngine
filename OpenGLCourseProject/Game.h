@@ -93,19 +93,19 @@ private:
 	void RenderParticlesScene(GLfloat deltaTime);
 	void RenderTerrain(bool  shadow, bool depth);
 	void RenderEnvCubeMap(bool is_cubeMap);
-	void RenderScene(std::shared_ptr<Shader> shader, glm::mat4 projectionMatrix = glm::mat4(), glm::mat4 viewMatrix = glm::mat4());
+	void RenderScene(std::shared_ptr<Shader> shader);
 	void RenderAnimScene(bool shadow, bool depth);
 
 	void EnvironmentMapPass();
 	void IrradianceConvolutionPass();
 	void PrefilterPass();
 	void BRDFPass();
-	void PreZPass(glm::mat4 projectionMatrix, glm::mat4 viewMatrix, GLfloat deltaTime);
-	void SSAOPass(glm::mat4 projectionMatrix);
+	void PreZPass(GLfloat deltaTime);
+	void SSAOPass();
 	void SSAOBlurPass();
-	void DirectionalShadowMapPass(glm::mat4 viewMatrix, DirectionalLight* light);
+	void DirectionalShadowMapPass(DirectionalLight* light);
 	void OmniShadowMapPass(PointLight* light);
-	void RenderPass(glm::mat4 projectionMatrix, glm::mat4 viewMatrix, GLfloat deltaTime);
+	void RenderPass(GLfloat deltaTime);
 	void MotionBlurPass(float fps);
 	void BlurPass();
 	void BloomPass();
@@ -140,8 +140,6 @@ private:
 	GLuint uniformHorizontal = 0, uniformWeight = 0;
 
 	GLuint uniformVelocityScale = 0;
-
-	glm::mat4 projection = glm::mat4();
 
 	std::unique_ptr<Equirectangular_to_CubeMap_Shader> environmentMapShader = std::make_unique<Equirectangular_to_CubeMap_Shader>();
 	std::unique_ptr<Equirectangular_to_CubeMap_Framebuffer> environmentMap;
@@ -266,17 +264,21 @@ private:
 	std::unique_ptr < Material> shinyTerrainMaterial;
 	std::unique_ptr < Material> dullTerrainMaterial;
 
-	std::unique_ptr < Static_Model> sniper = std::make_unique<Static_Model>();
-	std::unique_ptr < Static_Model> gun = std::make_unique<Static_Model>();
-	std::unique_ptr < Static_Model> anymodel = std::make_unique<Static_Model>();
-	std::unique_ptr < Static_Model> bulb = std::make_unique<Static_Model>();
-	std::unique_ptr < Static_Model> cube = std::make_unique<Static_Model>();
-	std::unique_ptr < Static_Model> sphere = std::make_unique<Static_Model>();
 	std::unique_ptr < Animated_Model> anim = std::make_unique<Animated_Model>();
 	std::unique_ptr < Animated_Model> anim2 = std::make_unique<Animated_Model>();
 	
-	std::unique_ptr<Static_Object> Bulb = std::make_unique<Static_Object>();
+	std::unique_ptr <Static_Object> pyramid1 = std::make_unique<Static_Object>();
+	std::unique_ptr <Static_Object> pyramid2 = std::make_unique<Static_Object>();
+	std::unique_ptr <Static_Object> rectangle1 = std::make_unique<Static_Object>();
+	std::unique_ptr <Static_Object> rectangle2 = std::make_unique<Static_Object>();
 
+	std::unique_ptr <Static_Object> sniper = std::make_unique<Static_Object>();
+	std::unique_ptr <Static_Object> gun = std::make_unique<Static_Object>();
+	std::unique_ptr <Static_Object> anymodel = std::make_unique<Static_Object>();
+	std::unique_ptr <Static_Object> cube = std::make_unique<Static_Object>();
+	std::unique_ptr <Static_Object> sphere = std::make_unique<Static_Object>();
+	std::unique_ptr <Static_Object> bulb = std::make_unique<Static_Object>();
+	
 	GLfloat deltaTime = 0.0f;
 	GLfloat lastTime = 0.0f;
 
@@ -291,11 +293,6 @@ private:
 	const std::string avShader = "Shaders/animated_shader.vert";
 
 	std::vector<glm::vec3> ssaoNoiseData{16, glm::vec3(0.0f, 0.0f, 0.0f) };
-
-	glm::mat4 prevProjView = glm::mat4();
-
-	glm::mat4 prevProj = glm::mat4();
-	glm::mat4 prevView = glm::mat4();
 
 	glm::mat4 vView[NUM_CASCADES] = { glm::mat4() };
 	glm::mat4 testLitView[1] = { glm::mat4() };
