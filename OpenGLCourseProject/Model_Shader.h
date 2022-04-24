@@ -7,8 +7,8 @@ public:
 	Model_Shader() = default;
 
 	void SetDirectionalLight(DirectionalLight* dLight);
-	void SetPointLight(PointLight* pLight, unsigned int lightCount, unsigned int textureUnit, unsigned int offset);
-	void SetSpotLight(SpotLight* sLight, unsigned int lightCount, unsigned int textureUnit, unsigned int offset);
+	void SetPointLight(std::shared_ptr<PointLight>* pLight, unsigned int lightCount, unsigned int textureUnit, unsigned int offset);
+	void SetSpotLight(std::shared_ptr<SpotLight>* sLight, unsigned int lightCount, unsigned int textureUnit, unsigned int offset);
 	void SetSkybox(GLuint txtureUnit);
 	void SetIrradianceMap(GLuint textureUnit);
 	void SetPrefilterMap(GLuint textureUnit);

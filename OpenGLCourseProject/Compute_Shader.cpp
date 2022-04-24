@@ -13,8 +13,8 @@ void Compute_Shader::CompileProgram()
 		return;
 	}
 
-	uniformNearZ = glGetUniformLocation(shaderID, "zNear");
-	uniformFarZ = glGetUniformLocation(shaderID, "zFar");
+	uniformZNear = glGetUniformLocation(shaderID, "zNear");
+	uniformZFar = glGetUniformLocation(shaderID, "zFar");
 	uniformView = glGetUniformLocation(shaderID, "View");
 }
 
@@ -22,16 +22,6 @@ void Compute_Shader::Dispatch(unsigned int x, unsigned int y, unsigned int z) co
 {
 	glDispatchCompute(x, y, z);
 	glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-}
-
-void Compute_Shader::SetNearZ(float value) 
-{
-	glUniform1f(uniformNearZ, value);
-}
-
-void Compute_Shader::SetFarZ(float value)
-{
-	glUniform1f(uniformFarZ, value);
 }
 
 Compute_Shader::~Compute_Shader()

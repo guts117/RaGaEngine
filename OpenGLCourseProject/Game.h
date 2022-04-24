@@ -34,6 +34,8 @@
 #include "HDR_Shader.h"
 #include "Blur_Shader.h"
 #include "MotionBlur_Shader.h"
+#include "Compute_Shader.h"
+
 #include "Mesh.h"
 #include "Camera.h"
 #include "Texture.h"
@@ -84,6 +86,7 @@ private:
 		GLfloat* vertices, unsigned int verticesCount,
 		unsigned int vLength, unsigned int tangentOffset);
 
+	void initSSBOs();
 	void CreateBillboard();
 	void CreateParticles();
 	void CreateTerrain();
@@ -98,9 +101,11 @@ private:
 
 	void EnvironmentMapPass();
 	void IrradianceConvolutionPass();
+	void PreProcess();
 	void PrefilterPass();
 	void BRDFPass();
 	void PreZPass(GLfloat deltaTime);
+	void CullLight();
 	void SSAOPass();
 	void SSAOBlurPass();
 	void DirectionalShadowMapPass(DirectionalLight* light);
@@ -140,6 +145,9 @@ private:
 	GLuint uniformHorizontal = 0, uniformWeight = 0;
 
 	GLuint uniformVelocityScale = 0;
+
+	std::unique_ptr<Compute_Shader> buildAABBGridCompShader = std::make_unique<Compute_Shader>();
+	std::unique_ptr<Compute_Shader> cullLightsCompShader = std::make_unique <Compute_Shader>();
 
 	std::unique_ptr<Equirectangular_to_CubeMap_Shader> environmentMapShader = std::make_unique<Equirectangular_to_CubeMap_Shader>();
 	std::unique_ptr<Equirectangular_to_CubeMap_Framebuffer> environmentMap;
@@ -199,7 +207,7 @@ private:
 	std::shared_ptr < Camera> camera;
 
 	std::shared_ptr < DirectionalLight> mainLight;
-	std::shared_ptr < PointLight> pointLights[MAX_POINT_LIGHTS];
+	std::shared_ptr < PointLight> pointLights[MAX_POINT_LIGHTS_WITH_SHADOW];
 	std::shared_ptr < SpotLight> spotLights[MAX_SPOT_LIGHTS];
 
 	unsigned int pointLightCount = 0;
@@ -252,7 +260,8 @@ private:
 	std::unique_ptr <Static_Object> anymodel = std::make_unique<Static_Object>();
 	std::unique_ptr <Static_Object> cube = std::make_unique<Static_Object>();
 	std::unique_ptr <Static_Object> sphere = std::make_unique<Static_Object>();
-	std::unique_ptr <Static_Object> bulb = std::make_unique<Static_Object>();
+	std::unique_ptr <Static_Object> bulbWhite = std::make_unique<Static_Object>();
+	std::unique_ptr <Static_Object> bulbRed = std::make_unique<Static_Object>();
 	
 	GLfloat deltaTime = 0.0f;
 	GLfloat lastTime = 0.0f;

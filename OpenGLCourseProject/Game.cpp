@@ -29,7 +29,7 @@ void Game::init()
 	CreateObject();
 	CreateShaders();
 
-	auto projectionMatrix = glm::perspective(glm::radians(60.0f), (GLfloat)mainWindow.getBufferWidth() / (GLfloat)mainWindow.getBufferHeight(), 0.1f, 10000.0f);
+	auto projectionMatrix = glm::perspective(glm::radians(60.0f), (GLfloat)mainWindow.getBufferWidth() / (GLfloat)mainWindow.getBufferHeight(), camNearZ, camFarZ);
 	camera = std::make_shared<Camera>(projectionMatrix, glm::vec3(-terrainScaleFactor, 30.0f, -terrainScaleFactor), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f, 50.0f, 0.2f);
 
 	environmentTexture = std::make_unique<Texture>("Textures/HDR/GCanyon_C_YumaPoint_3k.hdr");
@@ -97,8 +97,10 @@ void Game::init()
 	shinyTerrainMaterial = std::make_unique<Material>(12, 13, 15, 16, 17);
 	dullTerrainMaterial = std::make_unique<Material>(12, 13, 15, 16, 17);
 
-	bulb = std::make_unique<Static_Object>();
-	bulb->SetUpImportedModelData("Models/Free_Antique_Bulb.obj");
+	bulbWhite = std::make_unique<Static_Object>();
+	bulbWhite->SetUpImportedModelData("Models/Free_Antique_Bulb.obj");
+	bulbRed = std::make_unique<Static_Object>();
+	bulbRed->SetUpImportedModelData("Models/Free_Antique_Bulb.obj");
 	sphere = std::make_unique<Static_Object>();
 	sphere->SetUpImportedModelData("Models/sphere.obj");
 	cube = std::make_unique<Static_Object>();
@@ -107,8 +109,9 @@ void Game::init()
 	sniper->SetUpImportedModelData("Models/Sniper_rifle_KSR-29.fbx");
 	gun = std::make_unique<Static_Object>();
 	gun->SetUpImportedModelData("Models/Cerberus_LP.fbx");
-	anymodel = std::make_unique<Static_Object>();
-	anymodel->SetUpImportedModelData("Models/Intergalactic_Spaceship-(Wavefront).obj");
+	//anymodel = std::make_unique<Static_Object>();
+	////anymodel->SetUpImportedModelData("Models/Intergalactic_Spaceship-(Wavefront).obj");
+	//anymodel->SetUpImportedModelData("Models/Sponza.gltf");
 
 	anim->LoadModel("Models/boblampclean.md5mesh");
 	anim2->LoadModel("Models/model.dae");
@@ -147,22 +150,29 @@ void Game::init()
 	motionBlur->Init(ScreenWidth, ScreenHeight);
 
 	mainLight = std::make_shared < DirectionalLight>(2048, 2048,
-		3.0f, 3.0f, 3.0f,
+		0.1f, 0.1f, 0.1f,
 		5500.0f, -5500.0f, -10000.0f);
 
 	pointLights[0] = std::make_shared < PointLight>(1024, 1024,
 		0.1f, 100.0f,
-		0.1f, 0.1f, 0.1f,
-		6.0f - terrainScaleFactor, 40.0f, 10.0f - terrainScaleFactor);
+		3.0f, 3.0f, 3.0f,
+		12.0f - terrainScaleFactor, 40.0f, 10.0f - terrainScaleFactor);
 
 	pointLightCount++;
 
-	/*pointLights[1] = PointLight(1024, 1024,
+	pointLights[1] = std::make_shared < PointLight>(1024, 1024,
 		0.1f, 100.0f,
-		0.0f, 1.0f, 0.0f,
-		-3.0f, 4.0f, 0.0f);
+		3.0f, .0f, 0.0f,
+		-12.0f - terrainScaleFactor, 40.0f, 10.0f - terrainScaleFactor);
 
-	pointLightCount++;*/
+	pointLightCount++;
+
+	//pointLights[2] = std::make_shared < PointLight>(1024, 1024,
+	//	0.1f, 100.0f,
+	//	0.0f, 10.0f, 0.0f,
+	//	-6.0f - terrainScaleFactor, 40.0f, 10.0f - terrainScaleFactor);
+
+	//pointLightCount++;
 
 	spotLights[0] = std::make_shared < SpotLight>(1024, 1024,
 		0.1f, 100.0f,
@@ -215,10 +225,182 @@ void Game::init()
 		terrainShader->SetCascadeEndClipSpace(i, -vClip.z);
 	}
 
+	initSSBOs();
+	PreProcess();
 	EnvironmentMapPass();
 	IrradianceConvolutionPass();
 	PrefilterPass();
 	BRDFPass();
+}
+      
+unsigned int AABBvolumeGridSSBO, screenToViewSSBO;
+unsigned int lightSSBO, lightIndexListSSBO, lightGridSSBO, lightIndexGlobalCountSSBO;
+
+//The variables that determine the size of the cluster grid. They're hand picked for now, but
+//there is some space for optimization and tinkering as seen on the Olsson paper and the ID tech6
+//presentation.
+const unsigned int gridSizeX = 16;
+const unsigned int gridSizeY = 9;
+const unsigned int gridSizeZ = 24;
+const unsigned int numClusters = gridSizeX * gridSizeY * gridSizeZ;
+unsigned int sizeX, sizeY;
+
+unsigned int numLights;
+const unsigned int maxLights = 1000; // pretty overkill for sponza, but ok for testing
+const unsigned int maxLightsPerTile = 50;
+
+struct VolumeTileAABB {
+	glm::vec4 minPoint;
+	glm::vec4 maxPoint;
+} frustrum;
+
+struct ScreenToView {
+	glm::mat4 inverseProjectionMat;
+	unsigned int tileSizes[4];
+	unsigned int screenWidth;
+	unsigned int screenHeight;
+	float sliceScalingFactor;
+	float sliceBiasFactor;
+}screen2View;
+
+//Currently only used in the generation of SSBO's for light culling and rendering
+//I think it potentially would be a good idea to just have one overall light struct for all light types
+//and move all light related calculations to the gpu via compute or frag shaders. This should reduce the
+//number of Api calls we're currently making and also unify the current lighting path that is split between 
+//compute shaders and application based calculations for the matrices.
+struct GPULight {
+	glm::vec4 position;
+	glm::vec4 color;
+	unsigned int enabled;
+	float intensity;
+	float range;
+	float padding;
+};
+
+void Game::initSSBOs() {
+	//Setting up tile size on both X and Y 
+	sizeX = (unsigned int)std::ceilf(ScreenWidth / (float)gridSizeX);
+
+	float zFar = camFarZ;
+	float zNear = camNearZ;
+
+	//Buffer containing all the clusters
+	{
+		glGenBuffers(1, &AABBvolumeGridSSBO);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, AABBvolumeGridSSBO);
+
+		//We generate the buffer but don't populate it yet.
+		glBufferData(GL_SHADER_STORAGE_BUFFER, numClusters * sizeof(struct VolumeTileAABB), NULL, GL_STATIC_COPY);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, AABBvolumeGridSSBO);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+	}
+
+	//Setting up screen2View ssbo
+	{
+		glGenBuffers(1, &screenToViewSSBO);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, screenToViewSSBO);
+
+		//Setting up contents of buffer
+		screen2View.inverseProjectionMat = glm::inverse(camera->GetProjectionMatrix());
+
+		screen2View.tileSizes[0] = gridSizeX;
+		screen2View.tileSizes[1] = gridSizeY;
+		screen2View.tileSizes[2] = gridSizeZ;
+		screen2View.tileSizes[3] = sizeX;
+		screen2View.screenWidth = ScreenWidth;
+		screen2View.screenHeight = ScreenHeight;
+		//Basically reduced a log function into a simple multiplication an addition by pre-calculating these
+		screen2View.sliceScalingFactor = (float)gridSizeZ / std::log2f(zFar / zNear);
+		screen2View.sliceBiasFactor = -((float)gridSizeZ * std::log2f(zNear) / std::log2f(zFar / zNear));
+
+		//Generating and copying data to memory in GPU
+		glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(struct ScreenToView), &screen2View, GL_STATIC_COPY);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, screenToViewSSBO);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+	}
+
+	//Setting up lights buffer that contains all the lights in the scene
+	{
+		glGenBuffers(1, &lightSSBO);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, lightSSBO);
+		glBufferData(GL_SHADER_STORAGE_BUFFER, maxLights * sizeof(struct GPULight), NULL, GL_DYNAMIC_DRAW);
+
+		GLint bufMask = GL_READ_WRITE;
+
+		struct GPULight* lights = (struct GPULight*)glMapBuffer(GL_SHADER_STORAGE_BUFFER, bufMask);
+		PointLight* light;
+		for (unsigned int i = 0; i < pointLightCount; ++i) {
+			//Fetching the light from the current scene
+			light = pointLights[i].get();
+			lights[i].position = glm::vec4(light->GetPosition(), 1.0f);
+			lights[i].color = glm::vec4(light->GetColor(), 1.0f);
+			lights[i].enabled = 1;
+			lights[i].intensity = 1.0f;
+			lights[i].range = 3000.0f;
+		}
+		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, lightSSBO);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+	}
+
+	//A list of indices to the lights that are active and intersect with a cluster
+	{
+		unsigned int totalNumLights = numClusters * maxLightsPerTile; //50 lights per tile max
+		glGenBuffers(1, &lightIndexListSSBO);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, lightIndexListSSBO);
+
+		//We generate the buffer but don't populate it yet.
+		glBufferData(GL_SHADER_STORAGE_BUFFER, totalNumLights * sizeof(unsigned int), NULL, GL_STATIC_COPY);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, lightIndexListSSBO);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+	}
+
+	//Every tile takes two unsigned ints one to represent the number of lights in that grid
+	//Another to represent the offset to the light index list from where to begin reading light indexes from
+	//This implementation is straight up from Olsson paper
+	{
+		glGenBuffers(1, &lightGridSSBO);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, lightGridSSBO);
+
+		glBufferData(GL_SHADER_STORAGE_BUFFER, numClusters * 2 * sizeof(unsigned int), NULL, GL_STATIC_COPY);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, lightGridSSBO);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+	}
+
+	//Setting up simplest ssbo in the world
+	{
+		glGenBuffers(1, &lightIndexGlobalCountSSBO);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, lightIndexGlobalCountSSBO);
+
+		//Every tile takes two unsigned ints one to represent the number of lights in that grid
+		//Another to represent the offset 
+		glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(unsigned int), NULL, GL_STATIC_COPY);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, lightIndexGlobalCountSSBO);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+	}
+}
+
+void Game::PreProcess() {
+	//Building the grid of AABB enclosing the view frustum clusters
+	buildAABBGridCompShader->UseShader();
+	buildAABBGridCompShader->SetNearZPlane(camNearZ);
+	buildAABBGridCompShader->SetFarZPlane(camFarZ);
+	buildAABBGridCompShader->Dispatch(gridSizeX, gridSizeY, gridSizeZ);
+
+	//print cluster data
+	//VolumeTileAABB cluster[numClusters];
+	//for (int i = 0; i < numClusters - 1; i++) {
+	//	cluster->minPoint = glm::vec4(0, 0, 0, 0);
+	//	cluster->maxPoint = glm::vec4(0, 0, 0, 0);
+	//}
+
+	//glGetNamedBufferSubData(AABBvolumeGridSSBO, 0, numClusters * sizeof(struct VolumeTileAABB), cluster);
+
+	//for (int i = 0; i < numClusters - 1; i++) {
+	//	printf("cluster[%d] : minPoint (%f, %f, %f, %f) , maxPoint (%f, %f, %f, %f) \n", 
+	//		i, cluster[i].minPoint.x, cluster[i].minPoint.y, cluster[i].minPoint.z, cluster[i].minPoint.w, 
+	//		cluster[i].maxPoint.x, cluster[i].maxPoint.y, cluster[i].maxPoint.z, cluster[i].maxPoint.w);
+	//}
 }
 
 void Game::update(float fps) {
@@ -273,6 +455,7 @@ void Game::update(float fps) {
 	}
 
 	PreZPass(deltaTime);
+	CullLight();
 	SSAOPass();
 	SSAOBlurPass();
 	RenderPass(deltaTime);
@@ -479,6 +662,9 @@ void Game::CreateObject() {
 
 void Game::CreateShaders() {
 
+	buildAABBGridCompShader->CreateFromFiles("Shaders/clusterShader.comp");
+	cullLightsCompShader->CreateFromFiles("Shaders/clusterCullLightShader.comp");
+
 	environmentMapShader->CreateFromFiles("Shaders/cubemap.vert", "Shaders/equirectangular_to_cubemap.frag");
 	irradianceConvolutionShader->CreateFromFiles("Shaders/cubemap.vert", "Shaders/irradiance_covolution.frag");
 	prefilterShader->CreateFromFiles("Shaders/cubemap.vert", "Shaders/prefilter.frag");
@@ -646,13 +832,17 @@ void Game::RenderScene(std::shared_ptr<Shader> shader) {
 	gun->Scale(0.02f, 0.02f, 0.02f);
 	gun->DrawImportedObject(shader, camera);
 
-	bulb->Translate(pointLights[0]->GetPosition().x, pointLights[0]->GetPosition().y, pointLights[0]->GetPosition().z);
-	bulb->Scale(10.0f, 10.f, 10.0f);
-	bulb->DrawImportedObject(shader, camera);
+	bulbWhite->Translate(pointLights[0]->GetPosition().x, pointLights[0]->GetPosition().y, pointLights[0]->GetPosition().z);
+	bulbWhite->Scale(10.0f, 10.f, 10.0f);
+	bulbWhite->DrawImportedObject(shader, camera);
 
-	anymodel->Translate(-terrainScaleFactor, 37.0f, 1.0f - terrainScaleFactor);
-	anymodel->Scale(0.7f, 0.7f, 0.7f);
-	anymodel->DrawImportedObject(shader, camera);
+	bulbRed->Translate(pointLights[1]->GetPosition().x, pointLights[1]->GetPosition().y, pointLights[1]->GetPosition().z);
+	bulbRed->Scale(10.0f, 10.f, 10.0f);
+	bulbRed->DrawImportedObject(shader, camera);
+
+	//anymodel->Translate(-terrainScaleFactor, 37.0f, 1.0f - terrainScaleFactor);
+	//anymodel->Scale(1.0f, 1.0f, 1.0f);
+	//anymodel->DrawImportedObject(shader, camera);
 }
 
 void Game::RenderAnimScene(bool shadow, bool depth) {
@@ -890,6 +1080,14 @@ void Game::OmniShadowMapPass(PointLight* light) {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+void Game::CullLight()
+{
+	//4-Light assignment
+	cullLightsCompShader->UseShader();
+	glUniformMatrix4fv(cullLightsCompShader->GetViewLocation(), 1, GL_FALSE, glm::value_ptr(camera->CalculateViewMatrix()));
+	cullLightsCompShader->Dispatch(1, 1, 6);
+}
+
 void Game::PreZPass(GLfloat deltaTime)
 {
 	auto projectionMatrix = camera->GetProjectionMatrix();
@@ -1018,8 +1216,8 @@ void Game::RenderPass(GLfloat deltaTime)
 	glUniform1f(uniformHeightScale2, 0.02f);
 
 	terrainShader->SetDirectionalLight(mainLight.get());
-	terrainShader->SetPointLight(pointLights[0].get(), pointLightCount, 5, 0);
-	terrainShader->SetSpotLight(spotLights[0].get(), spotLightCount, 5 + pointLightCount, pointLightCount);
+	terrainShader->SetPointLight(pointLights, pointLightCount, 5, 0);
+	terrainShader->SetSpotLight(spotLights, spotLightCount, 5 + pointLightCount, pointLightCount);
 
 	for (size_t i = 0; i < NUM_CASCADES; ++i)
 	{
@@ -1058,8 +1256,8 @@ void Game::RenderPass(GLfloat deltaTime)
 	glUniform1f(uniformHeightScale, 0.02f);
 
 	shaderList[0]->SetDirectionalLight(mainLight.get());
-	shaderList[0]->SetPointLight(pointLights[0].get(), pointLightCount, 3, 0);
-	shaderList[0]->SetSpotLight(spotLights[0].get(), spotLightCount, 3 + pointLightCount, pointLightCount);
+	shaderList[0]->SetPointLight(pointLights, pointLightCount, 3, 0);
+	shaderList[0]->SetSpotLight(spotLights, spotLightCount, 3 + pointLightCount, pointLightCount);
 	shaderList[0]->SetDirectionalLightTransform(mainLight->CalculateLightTransform());
 
 	shaderList[0]->SetDirectionalShadowMap(2);
@@ -1094,8 +1292,8 @@ void Game::RenderPass(GLfloat deltaTime)
 	glUniform1f(uniformHeightScale1, 0.0f);
 
 	animShaderList[0]->SetDirectionalLight(mainLight.get());
-	animShaderList[0]->SetPointLight(pointLights[0].get(), pointLightCount, 3, 0);
-	animShaderList[0]->SetSpotLight(spotLights[0].get(), spotLightCount, 3 + pointLightCount, pointLightCount);
+	animShaderList[0]->SetPointLight(pointLights, pointLightCount, 3, 0);
+	animShaderList[0]->SetSpotLight(spotLights, spotLightCount, 3 + pointLightCount, pointLightCount);
 	animShaderList[0]->SetDirectionalLightTransform(mainLight->CalculateLightTransform());
 
 	animShaderList[0]->SetDirectionalShadowMap(2);

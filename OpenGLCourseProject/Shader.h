@@ -62,6 +62,8 @@ public:
 	virtual void SetAOMap(GLuint textureUnit);
 	virtual void SetDirectionalLightTransform(glm::mat4* lTransform);
 	virtual void SetLightMatrices(std::vector<glm::mat4> lightMatrices);
+	virtual void SetNearZPlane(float nearZ);
+	virtual void SetFarZPlane(float farZ);
 
 	void UseShader();
 	void ClearShader();
@@ -96,7 +98,7 @@ protected:
 		GLuint uniformColor;
 
 		GLuint uniformPosition;
-	} uniformPointLight[MAX_POINT_LIGHTS];
+	} uniformPointLight[MAX_POINT_LIGHTS_WITH_SHADOW];
 
 	GLuint uniformSpotLightCount;
 
@@ -113,7 +115,7 @@ protected:
 		GLuint shadowMap;
 		GLuint farPlane;
 
-	}uniformOmniShadowMap[MAX_POINT_LIGHTS + MAX_SPOT_LIGHTS];
+	}uniformOmniShadowMap[MAX_POINT_LIGHTS_WITH_SHADOW + MAX_SPOT_LIGHTS];
 
 	void CompileShader(const char* vertexCode, const char* fragmentCode);
 	void CompileShader(const char* vertexCode, const char* geometryCode, const char* fragmentCode);

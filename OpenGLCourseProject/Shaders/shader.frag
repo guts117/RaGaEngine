@@ -15,7 +15,7 @@ layout(location = 0)out vec4 color;
 layout(location = 1)out vec4 BrightColor;
 layout(location = 2)out vec4 MotionVector;										
 
-const int MAX_POINT_LIGHTS = 3;
+const int MAX_POINT_LIGHTS_SHADOW = 3;
 const int MAX_SPOT_LIGHTS = 3;
 const float MAX_REFLECTION_LOD = 4.0;
 
@@ -42,15 +42,39 @@ struct DirectionalLight
 	vec3 direction;
 };
 
-struct PointLight
-{
-	Light base;
-	vec3 position;
+//Cluster shading structs and buffers
+struct PointLight{
+    vec4 position;
+    vec4 color;
+	bool enabled;
+    float intensity;
+    float range;
+};
+struct LightGrid{
+    uint offset;
+    uint count;
+};
+layout (std430, binding = 2) buffer screenToView{
+    mat4 inverseProjection;
+    uvec4 tileSizes;
+    uvec2 screenDimensions;
+    float scale;
+    float bias;
+};
+layout (std430, binding = 3) buffer lightSSBO{
+    PointLight pointLight[];
+};
+layout (std430, binding = 4) buffer lightIndexSSBO{
+    uint globalLightIndexList[];
+};
+layout (std430, binding = 5) buffer lightGridSSBO{
+    LightGrid lightGrid[];
 };
 
 struct SpotLight
 {
-	PointLight base;
+	Light base;
+    vec3 position;
 	vec3 direction;
 	float edge;
 };
@@ -71,11 +95,10 @@ struct Material
 	sampler2D albedoMap;
 };
 
-uniform int PointLightCount;
+uint PointLightCount;
 uniform int SpotLightCount;
 
 uniform DirectionalLight directionalLight;
-uniform PointLight pointLights[MAX_POINT_LIGHTS];
 uniform SpotLight spotLights[MAX_SPOT_LIGHTS];
 
 uniform samplerCube irradianceMap;
@@ -83,13 +106,21 @@ uniform samplerCube prefilterMap;
 uniform sampler2D brdfLUT;
 uniform sampler2D DirectionalShadowMap;
 uniform sampler2D AOMap;
-uniform OmniShadowMap omniShadowMaps[MAX_POINT_LIGHTS + MAX_SPOT_LIGHTS];
+uniform OmniShadowMap omniShadowMaps[MAX_POINT_LIGHTS_SHADOW + MAX_SPOT_LIGHTS];
 
 uniform Material material;
 
 uniform vec3 eyePosition;
 
 uniform float height_scale;
+
+uniform float camNearZ;
+uniform float camFarZ;
+
+//debug
+uniform bool showAO;
+uniform bool showLightSlices;
+uniform bool showMotionBlur;
 
 vec3 sampleOffsetDirections[20] = vec3[]
 (
@@ -102,7 +133,7 @@ vec3 sampleOffsetDirections[20] = vec3[]
 
 vec2 CalcScreenTexCoord()
 {
-    return gl_FragCoord.xy / vec2(1920, 1080);
+    return gl_FragCoord.xy / screenDimensions;
 }
 
 float CalcDirectionalShadowFactor(DirectionalLight light)
@@ -139,9 +170,9 @@ float CalcDirectionalShadowFactor(DirectionalLight light)
 	return shadow;
 }
 
-float CalcOmniShadowFactor(PointLight light, int shadowIndex, float bias)
+float CalcOmniShadowFactor(vec3 lightPos, uint shadowIndex, float bias)
 {
-	vec3 fragToLight = FragPos - light.position;
+	vec3 fragToLight = FragPos - lightPos;
 	float current = length(fragToLight);
 	
 	float shadow = 0.0;
@@ -246,55 +277,122 @@ vec4 CalcLightByDirection(Light light, vec3 direction, float shadowFactor, bool 
 	
 }
 
+vec4 CalcLightByDirectionAndRange(vec3 lightColor, vec3 direction, float shadowFactor, float radius)
+{
+	float distance = 0.0f;
+
+	distance= length(direction);
+	vec3 L = normalize(direction);
+
+	vec3 H = normalize(V+L);
+	float attenuation = pow(clamp(1 - pow((distance / radius), 4.0), 0.0, 1.0), 2.0)/(1.0  + (distance * distance) );
+	vec3 radiance = lightColor * attenuation;
+	
+	float NDF = DistributionGGX(N, H, roughness);
+	float G = GeometrySmith(N, V, L, roughness);
+	vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);    //0.0
+	
+	vec3 nominator = NDF*G*F;
+	float denominator = 4* max(dot(N,V),0.0)*max(dot(N,L), 0.0);
+	vec3 specular = nominator/max(denominator,0.5);    //0.001-has banding issues 
+	
+	vec3 kS = F;
+	vec3 kD = vec3(1.0)-kS;
+	kD*=1.0-metallic;
+	
+	float NdotL = max(dot(N, L),0.0);
+
+	vec3 Lo =(kD*albedo/PI+specular)*radiance* NdotL;
+	
+	return vec4((1.0-shadowFactor)*Lo, 1.0);
+	
+}
+
 vec4 CalcDirectionalLight()
 {
 	float shadowFactor = CalcDirectionalShadowFactor(directionalLight);
 	return CalcLightByDirection(directionalLight.base, directionalLight.direction, shadowFactor, true);
 }
 
-vec4 CalcPointLight(PointLight pLight, int shadowIndex)
+vec4 CalcPointLight(PointLight pLight, uint shadowIndex)
 {
-	vec3 direction = FragPos - pLight.position;
+	vec3 direction = FragPos - pLight.position.xyz;
 	direction = normalize(direction);
 	
 	vec3 normal = normalize(NewNormal);
 	float bias = max(0.5 * (1 - dot(normal, direction)), 0.1);
 	
-	float shadowFactor = CalcOmniShadowFactor(pLight, shadowIndex, bias);
-		
-	vec4 color = CalcLightByDirection(pLight.base, direction, shadowFactor, false);
-	
+	float shadowFactor = CalcOmniShadowFactor(pLight.position.xyz, shadowIndex, bias);
+	vec4 color = CalcLightByDirectionAndRange(pLight.color.rgb, direction, shadowFactor, pLight.range);
 	return color;
 }
 
-vec4 CalcSpotLight(SpotLight sLight, int shadowIndex)
+vec4 CalcSpotLight(SpotLight sLight, uint shadowIndex)
 {
-	vec3 rayDirection = normalize(FragPos-sLight.base.position);
+	vec3 rayDirection = normalize(FragPos - sLight.position);
 	float slFactor = dot(rayDirection, sLight.direction);
 
 	if(slFactor > sLight.edge)
 	{
-		vec4 color = CalcPointLight(sLight.base, shadowIndex);
+		vec3 direction = FragPos - sLight.position;
+		direction = normalize(direction);
+		
+		vec3 normal = normalize(NewNormal);
+		float bias = max(0.5 * (1 - dot(normal, direction)), 0.1);
+		
+		float shadowFactor = CalcOmniShadowFactor(sLight.position, shadowIndex, bias);
+		vec4 color = CalcLightByDirection(sLight.base, direction, shadowFactor, false);
 		return color * (1.0f - (1.0f- slFactor)*(1.0f/(1.0f -sLight.edge)));
 	}else{
 		return vec4(0, 0, 0, 1);
 	}
 }
 
+float linearDepth(float depthSample){
+    float depthRange = 2.0 * depthSample - 1.0;
+    // Near... Far... wherever you are...
+    float linear = 2.0 * camNearZ * camFarZ / (camFarZ + camNearZ - depthRange * (camFarZ - camNearZ));
+    return linear;
+}
+
+vec3 colors[8] = vec3[](
+   vec3(0, 0, 0),    vec3( 0,  0,  1), vec3( 0, 1, 0),  vec3(0, 1,  1),
+   vec3(1,  0,  0),  vec3( 1,  0,  1), vec3( 1, 1, 0),  vec3(1, 1, 1)
+);
+
 vec4 CalcPointLights()
 {
+	PointLightCount = 2;
+
 	vec4 totalColor = vec4(0, 0, 0, 1);		//set alpha to 1 when using blending
-	for(int i = 0; i < PointLightCount; i++)
+	
+	//Locating which cluster you are a part of
+    uint zTile     = uint(max(log2(linearDepth(gl_FragCoord.z)) * scale + bias, 0.0));
+    uvec3 tiles    = uvec3( uvec2( gl_FragCoord.xy / tileSizes[3] ), zTile);
+    uint tileIndex = tiles.x +
+                     tileSizes.x * tiles.y +
+                     (tileSizes.x * tileSizes.y) * tiles.z;  
+	
+    uint lightCount       = lightGrid[tileIndex].count;
+    uint lightIndexOffset = lightGrid[tileIndex].offset;
+
+    //Reading from the global light list and calculating the radiance contribution of each light.
+    for(int i = 0; i < lightCount; i++){
+        uint lightVectorIndex = globalLightIndexList[lightIndexOffset + i];
+        totalColor += CalcPointLight(pointLight[lightVectorIndex], lightVectorIndex);
+    }
+	
+	if(showLightSlices)
 	{
-		totalColor += CalcPointLight(pointLights[i], i);
+		float zTile_f = float(zTile);
+		totalColor = vec4(colors[uint(mod(zTile_f, 8.0))], 1.0);
 	}
 	
 	return totalColor;
 }
 
 vec4 CalcSpotLights()
-{
-	
+{	
 	vec4 totalColor = vec4(0, 0, 0, 1); //set alpha to 1 when using blending
 	for(int i = 0; i < SpotLightCount; i++)
 	{

@@ -57,6 +57,11 @@ glm::vec3 PointLight::GetPosition()
 	return position;
 }
 
+glm::vec3 PointLight::GetColor() 
+{
+	return color;
+}
+
 PointLight::~PointLight() {
 	if (shadowMap != nullptr)
 	{

@@ -344,6 +344,16 @@ void Shader::SetLightMatrices(std::vector<glm::mat4> lightMatrices)
 
 }
 
+void Shader::SetNearZPlane(float nearZ)
+{
+	glUniform1f(uniformZNear, nearZ);
+}
+
+void Shader::SetFarZPlane(float farZ)
+{
+	glUniform1f(uniformZFar, farZ);
+}
+
 void Shader::UseShader() 
 {
 	glUseProgram(shaderID);
