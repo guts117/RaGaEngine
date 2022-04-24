@@ -165,6 +165,9 @@
     <ClCompile Include="Static_Object.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Compute_Shader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Window.h">
@@ -315,6 +318,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Static_Object.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Compute_Shader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

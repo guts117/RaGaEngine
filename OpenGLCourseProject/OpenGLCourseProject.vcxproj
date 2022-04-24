@@ -27,6 +27,7 @@
     <ClCompile Include="BRDF_Framebuffer.cpp" />
     <ClCompile Include="BRDF_Shader.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Compute_Shader.cpp" />
     <ClCompile Include="DirectionalLight.cpp" />
     <ClCompile Include="Equirectangular_to_CubeMap_Framebuffer.cpp" />
     <ClCompile Include="Equirectangular_to_CubeMap_Shader.cpp" />
@@ -80,6 +81,7 @@
     <ClInclude Include="BRDF_Shader.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="CommonValues.h" />
+    <ClInclude Include="Compute_Shader.h" />
     <ClInclude Include="DirectionalLight.h" />
     <ClInclude Include="Equirectangular_to_CubeMap_Framebuffer.h" />
     <ClInclude Include="Equirectangular_to_CubeMap_Shader.h" />
@@ -173,20 +175,24 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(SolutionDir)deps/include/;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)deps/lib/;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)deps/$(Platform)/lib/;$(LibraryPath)</LibraryPath>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(SolutionDir)deps/include/;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)deps/lib/;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)deps/$(Platform)/lib/;$(LibraryPath)</LibraryPath>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)deps/include/;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)deps/lib/;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)deps/$(Platform)/lib/;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir)deps/include/;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)deps/lib/;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)deps/$(Platform)/lib/;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -197,7 +203,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>opengl32.lib;glew32.lib;glew32s.lib;glfw3.lib;glfw3dll.lib;assimp-vc140-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;glew32.lib;glew32s.lib;glfw3.lib;glfw3dll.lib;assimp-vc140-mt.lib</AdditionalDependencies>
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
   </ItemDefinitionGroup>
@@ -210,8 +216,8 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>opengl32.lib;glew32.lib;glew32s.lib;glfw3.lib;glfw3dll.lib;assimp-vc140-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <TargetMachine>MachineX86</TargetMachine>
+      <AdditionalDependencies>opengl32.lib;glew32.lib;glew32s.lib;glfw3.lib;assimp-vc142-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <TargetMachine>MachineX64</TargetMachine>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -222,12 +228,13 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <TranslateIncludes>true</TranslateIncludes>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>opengl32.lib;glew32.lib;glew32s.lib;glfw3.lib;glfw3dll.lib;assimp-vc140-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;glew32.lib;glew32s.lib;glfw3.lib;glfw3dll.lib;assimp-vc140-mt.lib</AdditionalDependencies>
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
   </ItemDefinitionGroup>
@@ -244,8 +251,8 @@
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>opengl32.lib;glew32.lib;glew32s.lib;glfw3.lib;glfw3dll.lib;assimp-vc140-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <TargetMachine>MachineX86</TargetMachine>
+      <AdditionalDependencies>opengl32.lib;glew32.lib;glew32s.lib;glfw3.lib;assimp-vc142-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <TargetMachine>MachineX64</TargetMachine>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

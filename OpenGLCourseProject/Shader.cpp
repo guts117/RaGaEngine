@@ -59,6 +59,13 @@ void Shader::CreateFromFiles(const char* vertexLocation, const char* tesscontrol
 	CompileShader(vertexCode, tesscontrolCode, tessevaluationCode,geometryCode, fragmentCode);
 }
 
+void Shader::CreateFromFiles(const char* computeLocation) {
+	std::string computeString = ReadFile(computeLocation);
+	const char* computeCode = computeString.c_str();
+
+	CompileShader(computeCode);
+}
+
 std::string Shader::ReadFile(const char* fileLocation) {
 	std::string content;
 	std::ifstream fileStream(fileLocation, std::ios::in);
@@ -78,7 +85,7 @@ std::string Shader::ReadFile(const char* fileLocation) {
 
 void Shader::AddShader(GLuint theProgram, const char* shaderCode, GLenum shaderType) 
 {
-	GLuint theShader = glCreateShader(shaderType);
+	theShader = glCreateShader(shaderType);
 
 	const GLchar* theCode[1];
 	theCode[0] = shaderCode;
@@ -115,6 +122,7 @@ void Shader::CompileShader(const char* vertexCode, const char* fragmentCode)
 	AddShader(shaderID, fragmentCode, GL_FRAGMENT_SHADER);
 
 	CompileProgram();
+	glDeleteShader(theShader);
 }
 
 void Shader::CompileShader(const char* vertexCode, const char* geometryCode, const char* fragmentCode)
@@ -131,6 +139,7 @@ void Shader::CompileShader(const char* vertexCode, const char* geometryCode, con
 	AddShader(shaderID, fragmentCode, GL_FRAGMENT_SHADER);
 
 	CompileProgram();
+	glDeleteShader(theShader);
 }
 
 void Shader::CompileShader(const char* vertexCode, const char* tessellationControlCode, const char* tessellationEvaluationCode, const char* fragmentCode)
@@ -148,6 +157,7 @@ void Shader::CompileShader(const char* vertexCode, const char* tessellationContr
 	AddShader(shaderID, fragmentCode, GL_FRAGMENT_SHADER);
 
 	CompileProgram();
+	glDeleteShader(theShader);
 }
 
 void Shader::CompileShader(const char* vertexCode, const char* tessellationControlCode, const char* tessellationEvaluationCode, const char* geometryCode, const char* fragmentCode)
@@ -166,6 +176,22 @@ void Shader::CompileShader(const char* vertexCode, const char* tessellationContr
 	AddShader(shaderID, fragmentCode, GL_FRAGMENT_SHADER);
 
 	CompileProgram();
+	glDeleteShader(theShader);
+}
+
+void Shader::CompileShader(const char* computeCode)
+{
+	shaderID = glCreateProgram();
+
+	if (!shaderID) {
+		printf("Error creating shader program!\n");
+		glfwTerminate();
+		return;
+	}
+	AddShader(shaderID, computeCode, GL_COMPUTE_SHADER);
+
+	CompileProgram();
+	glDeleteShader(theShader);
 }
 
 void Shader::Validate()
