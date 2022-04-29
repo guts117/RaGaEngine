@@ -44,7 +44,7 @@ void main()
 	
 	float Displacement = texture(displacementMap, (TexCoord.xy)/(dispFactor/0.2f)).x;     
 	
-	vec3 FragPos = Normal * Displacement * -dispFactor;
+	vec3 FragPos = Normal * Displacement * dispFactor;
 	
 	float u = gl_TessCoord.x;
     float v = gl_TessCoord.y;
