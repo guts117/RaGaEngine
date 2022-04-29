@@ -28,6 +28,6 @@ const int irradianceTexUnit = 8;
 const int prefilterTexUnit	= 9;
 const int brdflutTexUnit	= 10;
 const int aoTexUnit			= 14;
-const float camNearZ		= 1.0f;
-const float camFarZ			= 300.0f;
+const float camNearZ		= 0.1f;
+const float camFarZ			= 1000.0f;
 #endif

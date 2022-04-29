@@ -27,12 +27,12 @@ mat3 CalcTBN(vec3 Normal, vec3 Tangent)
 {
 	vec3 normal = normalize(Normal);
     vec3 tangent = normalize(Tangent);
-	tangent = normalize(tangent - normal*dot(normal, tangent));
-	vec3 Bitangent = cross(normal, tangent);
+	tangent = normalize(tangent - dot(tangent, normal)* normal);
+	vec3 Bitangent = cross(tangent, normal);
 	
-	if (dot(cross(normal, tangent), Bitangent) < 0.0f){
+	/*if (dot(cross(tangent, normal), Bitangent) < 0.0f){
 		tangent = tangent * -1.0f;
-	}
+	}*/
 	
 	mat3 TBN = mat3(tangent, Bitangent, normal);
 	

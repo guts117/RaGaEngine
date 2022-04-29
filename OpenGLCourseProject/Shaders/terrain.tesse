@@ -56,10 +56,10 @@ vec3 GetNormal(vec2 uv)
 {
   vec2 tex_off = 1.0 / textureSize(displacementMap, 0);
   
-  float u = texture2D(displacementMap, uv + tex_off * vec2(0.0, -1.0)).r * -dispFactor;
-  float r = texture2D(displacementMap, uv + tex_off * vec2(1.0, 0.0)).r * -dispFactor;
-  float l = texture2D(displacementMap, uv + tex_off * vec2(-1.0, 0.0)).r * -dispFactor;
-  float d = texture2D(displacementMap, uv + tex_off * vec2(0.0, 1.0)).r * -dispFactor;
+  float u = texture2D(displacementMap, uv + tex_off * vec2(0.0, -1.0)).r * dispFactor;
+  float r = texture2D(displacementMap, uv + tex_off * vec2(1.0, 0.0)).r * dispFactor;
+  float l = texture2D(displacementMap, uv + tex_off * vec2(-1.0, 0.0)).r * dispFactor;
+  float d = texture2D(displacementMap, uv + tex_off * vec2(0.0, 1.0)).r * dispFactor;
   
   vec3 n;
   n.z = u - d;
@@ -72,12 +72,12 @@ vec3 GetNormal(vec2 uv)
 {
 	vec3 normal = normalize(Normal);
     vec3 tangent = normalize(Tangent);
-	tangent = normalize(tangent - normal*dot(normal, tangent));
-	vec3 Bitangent = cross(normal, tangent);
+	tangent = normalize(tangent - dot(tangent, normal)* normal);
+	vec3 Bitangent = cross(tangent, normal);
 	
-	if (dot(cross(normal, tangent), Bitangent) < 0.0f){
+	/*if (dot(cross(tangent, normal), Bitangent) < 0.0f){
 		tangent = tangent * -1.0f;
-	}
+	}*/
 	
 	mat3 TBN = mat3(tangent, Bitangent, normal);
 	
@@ -94,7 +94,7 @@ void main()
 	TexCoordTerr = TexCoord.xy/(dispFactor/0.2f);
 	
 	float Displacement = texture(displacementMap, (TexCoord.xy)/(dispFactor/0.2f)).x;     
-	FragPos = Normal * Displacement * -dispFactor;
+	FragPos = Normal * Displacement * dispFactor;
 	
 	 float u = gl_TessCoord.x;
     float v = gl_TessCoord.y;

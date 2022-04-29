@@ -17,7 +17,7 @@ void Terrain_Shader::CompileProgram()
 	uniformProjection = glGetUniformLocation(shaderID, "Projection");
 	uniformView = glGetUniformLocation(shaderID, "View");
 	uniformPrevPVM = glGetUniformLocation(shaderID, "prevPVM");
-	uniformDirectionalLight.uniformColor = glGetUniformLocation(shaderID, "directionalLight.base.color");
+	uniformDirectionalLight.uniformColor = glGetUniformLocation(shaderID, "directionalLight.color");
 	uniformDirectionalLight.uniformDirection = glGetUniformLocation(shaderID, "directionalLight.direction");
 	uniformEyePosition = glGetUniformLocation(shaderID, "eyePosition");
 	uniformDispFactor = glGetUniformLocation(shaderID, "dispFactor");
@@ -38,7 +38,7 @@ void Terrain_Shader::CompileProgram()
 
 		char locBuff[100] = { '\0' };
 
-		snprintf(locBuff, sizeof(locBuff), "spotLights[%d].base.color", i);
+		snprintf(locBuff, sizeof(locBuff), "spotLights[%d].color", i);
 		uniformSpotLight[i].uniformColor = glGetUniformLocation(shaderID, locBuff);
 
 		snprintf(locBuff, sizeof(locBuff), "spotLights[%d].position", i);

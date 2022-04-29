@@ -48,7 +48,7 @@ void Animated_Model::RenderModel() {
 void Animated_Model::LoadModel(const std::string& fileName)
 {
 	static Assimp::Importer importer;
-	scene = new aiScene(*importer.ReadFile(fileName, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace));
+	scene = new aiScene(*importer.ReadFile(fileName, aiProcess_Triangulate | aiProcess_OptimizeMeshes | aiProcess_FlipUVs | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace));
 	importer.GetOrphanedScene();
 	if (!scene || scene->mFlags == AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 	{
@@ -134,14 +134,14 @@ void Animated_Model::LoadMesh(aiMesh* mesh, const aiScene* scene)
 		}
 		if (mesh->mNormals != NULL)
 		{
-			vertices.insert(vertices.end(), { -mesh->mNormals[i].x, -mesh->mNormals[i].y,  -mesh->mNormals[i].z });
+			vertices.insert(vertices.end(), { mesh->mNormals[i].x, mesh->mNormals[i].y,  mesh->mNormals[i].z });
 		}
 		else
 		{
 			vertices.insert(vertices.end(), { 0.0f, 0.0f, 0.0f });
 		}
 		if (mesh->mTangents != NULL) {
-			vertices.insert(vertices.end(), { -mesh->mTangents[i].x, -mesh->mTangents[i].y, -mesh->mTangents[i].z });
+			vertices.insert(vertices.end(), { mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z });
 		}
 		else {
 			vertices.insert(vertices.end(), { 0.0f, 0.0f, 0.0f });

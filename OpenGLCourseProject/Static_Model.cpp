@@ -22,7 +22,7 @@ void Static_Model::RenderModel()
 void Static_Model::LoadModel(const std::string& fileName)
 {
 	Assimp::Importer importer;
-	scene = importer.ReadFile(fileName, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenSmoothNormals | aiProcess_JoinIdenticalVertices | aiProcess_CalcTangentSpace);
+	scene = importer.ReadFile(fileName, aiProcess_Triangulate | aiProcess_OptimizeMeshes | aiProcess_FlipUVs | aiProcess_GenSmoothNormals | aiProcess_JoinIdenticalVertices | aiProcess_CalcTangentSpace);
 
 	if (!scene) {
 		printf("Model (%s) failed to load: %s", fileName.c_str(), importer.GetErrorString());
@@ -58,8 +58,8 @@ void Static_Model::LoadMesh(aiMesh* mesh, const aiScene* scene)
 		else {
 			vertices.insert(vertices.end(), { 0.0f, 0.0f });
 		}
-		vertices.insert(vertices.end(), { -mesh->mNormals[i].x, -mesh->mNormals[i].y,  -mesh->mNormals[i].z });
-		vertices.insert(vertices.end(), { -mesh->mTangents[i].x, -mesh->mTangents[i].y, -mesh->mTangents[i].z });
+		vertices.insert(vertices.end(), { mesh->mNormals[i].x, mesh->mNormals[i].y,  mesh->mNormals[i].z });
+		vertices.insert(vertices.end(), { mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z });
 		//vertices.insert(vertices.end(), { -mesh->mBitangents[i].x, -mesh->mBitangents[i].y, -mesh->mBitangents[i].z });
 	}
 
