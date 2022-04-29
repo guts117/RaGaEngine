@@ -28,6 +28,7 @@
     <ClCompile Include="BRDF_Shader.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Compute_Shader.cpp" />
+    <ClCompile Include="Debug.cpp" />
     <ClCompile Include="DirectionalLight.cpp" />
     <ClCompile Include="Equirectangular_to_CubeMap_Framebuffer.cpp" />
     <ClCompile Include="Equirectangular_to_CubeMap_Shader.cpp" />
@@ -82,6 +83,7 @@
     <ClInclude Include="Camera.h" />
     <ClInclude Include="CommonValues.h" />
     <ClInclude Include="Compute_Shader.h" />
+    <ClInclude Include="Debug.h" />
     <ClInclude Include="DirectionalLight.h" />
     <ClInclude Include="Equirectangular_to_CubeMap_Framebuffer.h" />
     <ClInclude Include="Equirectangular_to_CubeMap_Shader.h" />

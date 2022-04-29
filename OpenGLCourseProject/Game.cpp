@@ -150,7 +150,7 @@ void Game::init()
 	motionBlur->Init(ScreenWidth, ScreenHeight);
 
 	mainLight = std::make_shared < DirectionalLight>(2048, 2048,
-		0.1f, 0.1f, 0.1f,
+		1.0f, 1.0f, 1.0f,
 		5500.0f, -5500.0f, -10000.0f);
 
 	pointLights[0] = std::make_shared < PointLight>(1024, 1024,
@@ -176,7 +176,7 @@ void Game::init()
 
 	spotLights[0] = std::make_shared < SpotLight>(1024, 1024,
 		0.1f, 100.0f,
-		1.0f, 1.0f, 1.0f,
+		10.0f, 10.0f, 10.0f,
 		0.0f, 0.0f, 0.0f,
 		0.0f, -1.0f, 0.0f,
 		10.0f);
@@ -336,7 +336,7 @@ void Game::initSSBOs() {
 			lights[i].color = glm::vec4(light->GetColor(), 1.0f);
 			lights[i].enabled = 1;
 			lights[i].intensity = 1.0f;
-			lights[i].range = 3000.0f;
+			lights[i].range = 65.0f;
 		}
 		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, lightSSBO);
@@ -488,9 +488,9 @@ void Game::calcAverageNormals(unsigned int* indices, unsigned int indicesCount,
 
 		in0 += normalOffset; in1 += normalOffset; in2 += normalOffset;
 		
-		vertices[in0] += -normal.x; vertices[in0 + 1] += -normal.y; vertices[in0 + 2] += -normal.z;
-		vertices[in1] += -normal.x; vertices[in1 + 1] += -normal.y; vertices[in1 + 2] += -normal.z;
-		vertices[in2] += -normal.x; vertices[in2 + 1] = -normal.y; vertices[in2 + 2] = -normal.z;
+		vertices[in0] += normal.x; vertices[in0 + 1] += normal.y; vertices[in0 + 2] += normal.z;
+		vertices[in1] += normal.x; vertices[in1 + 1] += normal.y; vertices[in1 + 2] += normal.z;
+		vertices[in2] += normal.x; vertices[in2 + 1] += normal.y; vertices[in2 + 2] += normal.z;
 
 	}
 
@@ -532,9 +532,9 @@ void Game::calcAverageTangents(unsigned int* indices, unsigned int indicesCount,
 		Bitangent.z = f * (-DeltaU2 * Edge1.z - DeltaU1 * Edge2.z);*/
 
 		in0 += tangentOffset; in1 += tangentOffset; in2 += tangentOffset;
-		vertices[in0] += -Tangent.x; vertices[in0 + 1] += -Tangent.y; vertices[in0 + 2] += -Tangent.z;
-		vertices[in1] += -Tangent.x; vertices[in1 + 1] += -Tangent.y; vertices[in1 + 2] += -Tangent.z;
-		vertices[in2] += -Tangent.x; vertices[in2 + 1] += -Tangent.y; vertices[in2 + 2] += -Tangent.z;
+		vertices[in0] += Tangent.x; vertices[in0 + 1] += Tangent.y; vertices[in0 + 2] += Tangent.z;
+		vertices[in1] += Tangent.x; vertices[in1 + 1] += Tangent.y; vertices[in1 + 2] += Tangent.z;
+		vertices[in2] += Tangent.x; vertices[in2 + 1] += Tangent.y; vertices[in2 + 2] += Tangent.z;
 	}
 
 	for (size_t i = 0; i < verticesCount / vLength; i++) {
@@ -603,6 +603,9 @@ void Game::CreateTerrain()
 
 	calcAverageNormals(terrainIndices, 6, terrainVertices, 44, 11, 5);
 	calcAverageTangents(terrainIndices, 6, terrainVertices, 44, 11, 8);
+
+	//Debug::DebugPrintReferenceTBN("ReferenceTBN", terrainVertices, 11, glm::vec3(0.0f, 1.0f, 0.0f));
+	//Debug::DebugPrintTBN("TerrainTBN", terrainVertices, 5, 8);
 
 	std::shared_ptr < Static_Mesh> obj = std::make_shared< Static_Mesh>();
 	obj->CreateMeshNorm(terrainVertices, terrainIndices, 44, 6);
