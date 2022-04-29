@@ -498,14 +498,16 @@ void main()
 	vec3 specular 			= prefilteredColor * (F * brdf.x + brdf.y); //multiplying by irradiance fixes all problems
 	
     vec3 ambient 			= vec3(0.0, 0.0, 0.0);
+	float aoFactor 			= texture(AOMap, CalcScreenTexCoord()).r;
+	
 	if(showAO)
 	{
-		finalColor			= vec4(texture(AOMap, CalcScreenTexCoord()).r, 0, 0, 0);
+		ambient 			= vec3(1.0, 1.0, 1.0);
+		finalColor			= vec4(ambient * aoFactor, 1.0);
 	}
 	else
 	{
-		float aoColor 		= texture(AOMap, CalcScreenTexCoord()).r;
-		ambient 			= (kD * diffuse + specular) * aoColor;
+		ambient 			= (kD * diffuse + specular) * aoFactor;
 	}
 	
 	color 					= vec4(ambient, 1.0) + finalColor;
@@ -528,7 +530,7 @@ void main()
 	}	
 	
 	float brightness 		= dot(color.rgb, vec3(0.2126, 0.7152, 0.0722));
-	if(brightness>1.0f)
+	if(brightness > 1.0f && !showAO)
 	{
 		BrightColor 		= vec4(color.rgb, 1.0f);
 	}

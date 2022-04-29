@@ -118,10 +118,8 @@ uniform float camFarZ;
 
 //Debug from here
 uniform bool showAO;
-uniform bool showLightSlices;
 uniform bool showMotionBlur;
 uniform bool showShadowSlices;
-vec4 cascadeCol 			= vec4(0.0, 0.0, 0.0, 0.0);
 
 vec3 colors[8] 				= vec3[](
    vec3(0, 0, 0),    vec3( 0,  0,  1), vec3( 0, 1, 0),  vec3(0, 1,  1),
@@ -460,23 +458,20 @@ void main()
 	vec3 specular 			= prefilteredColor * (F * brdf.x + brdf.y); //multiplying by irradiance fixes all problems
 	
     vec3 ambient 			= vec3(0.0, 0.0, 0.0);
+	float aoFactor 			= texture(AOMap, CalcScreenTexCoord()).r;
+
 	if(showAO)
 	{
-		finalColor			= vec4(texture(AOMap, CalcScreenTexCoord()).r, 0, 0, 0);
+		ambient 			= vec3(1.0, 1.0, 1.0);
+		finalColor			= vec4(ambient * aoFactor, 1.0);
 	}
 	else
 	{
 		vec3 glowColor 		= texture(material.glowMap, newTexCoord).rgb;
-		float aoFactor 		= texture(AOMap, CalcScreenTexCoord()).r;
 		ambient 			= (kD * diffuse + specular) * aoFactor + glowColor;
 	}
 	
 	color 					= vec4(ambient, 1.0) + finalColor;
-
-	if(showShadowSlices)
-	{
-		color 				+= cascadeCol;
-	}
 	
 	if(showLightSlices)
 	{
@@ -491,7 +486,7 @@ void main()
 	}	
 	
 	float brightness 		= dot(color.rgb, vec3(0.2126, 0.7152, 0.0722));
-	if(brightness>1.0f)
+	if(brightness > 1.0f && !showAO)
 	{
 		BrightColor 		= vec4(color.rgb, 1.0f);
 	}
