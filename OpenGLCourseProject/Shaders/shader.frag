@@ -335,7 +335,7 @@ vec4 CalcPointLights(vec3 viewDir, vec3 normal, vec3 F0, vec3 albedo, float meta
 	//Locating which cluster you are a part of
     uint zTile     			= uint(max(log2(LinearDepth(gl_FragCoord.z)) * scale + bias, 0.0));
     uvec3 tiles    			= uvec3( uvec2( gl_FragCoord.xy / tileSizes[3] ), zTile);
-    uint tileIndex 			= tiles.x + tileSizes.x * tiles.y + tileSizes.x * tileSizes.y) * tiles.z;  
+    uint tileIndex 			= tiles.x + tileSizes.x * tiles.y + (tileSizes.x * tileSizes.y) * tiles.z;
 	
     uint lightCount       	= lightGrid[tileIndex].count;
     uint lightIndexOffset 	= lightGrid[tileIndex].offset;
