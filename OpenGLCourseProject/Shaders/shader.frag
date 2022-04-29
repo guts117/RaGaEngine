@@ -118,8 +118,8 @@ uniform float camFarZ;
 
 //Debug from here
 uniform bool showAO;
+uniform bool showLightSlices;
 uniform bool showMotionBlur;
-uniform bool showShadowSlices;
 
 vec3 colors[8] 				= vec3[](
    vec3(0, 0, 0),    vec3( 0,  0,  1), vec3( 0, 1, 0),  vec3(0, 1,  1),
