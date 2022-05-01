@@ -40,8 +40,7 @@ vec3 NormalFromDepth(vec2 Coords) {
   vec3 p2 = vec3(offset2, depth2 - depth);
   
   vec3 normal = cross(p1, p2);
-  normal.z = -normal.z;
-  
+
   return normalize(normal);
 }
 
@@ -54,7 +53,7 @@ void main()
 	
     // create TBN change-of-basis matrix: from tangent-space to view-space
     vec3 tangent = normalize(randomVec - Normal * dot(randomVec, Normal));
-    vec3 bitangent = cross(Normal, tangent);
+    vec3 bitangent = cross(tangent, Normal);
     mat3 TBN = mat3(tangent, bitangent, Normal);
 
 	// iterate over the sample kernel and calculate occlusion factor
