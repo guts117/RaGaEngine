@@ -62,8 +62,6 @@ public:
 	virtual void SetAOMap(GLuint textureUnit);
 	virtual void SetDirectionalLightTransform(glm::mat4* lTransform);
 	virtual void SetLightMatrices(std::vector<glm::mat4> lightMatrices);
-	virtual void SetNearZPlane(float nearZ);
-	virtual void SetFarZPlane(float farZ);
 
 	void UseShader();
 	void ClearShader();
@@ -79,8 +77,7 @@ protected:
 		uniformAlbedo = -1, uniformMetallic = -1, uniformNormal = -1, uniformRoughness = -1, uniformParallax = -1, uniformGlow = -1, uniformAO = -1,
 		uniformTexture = -1,
 		uniformDirectionalLightTransform = -1, uniformDirectionalShadowMap = -1,
-		uniformOmniLightPos = -1, uniformFarPlane = -1,
-		uniformZNear = -1, uniformZFar = -1;
+		uniformOmniLightPos = -1, uniformFarPlane = -1;
 
 
 	GLuint uniformLightMatrices[6]{0};

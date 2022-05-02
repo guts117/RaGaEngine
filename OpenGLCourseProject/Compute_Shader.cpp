@@ -13,8 +13,6 @@ void Compute_Shader::CompileProgram()
 		return;
 	}
 
-	uniformZNear = glGetUniformLocation(shaderID, "zNear");
-	uniformZFar = glGetUniformLocation(shaderID, "zFar");
 	uniformView = glGetUniformLocation(shaderID, "View");
 }
 

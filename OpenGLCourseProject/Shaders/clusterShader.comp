@@ -13,11 +13,10 @@ layout (std430, binding = 2) buffer screenToView{
     mat4 inverseProjection;
     uvec4 tileSizes;
     uvec2 screenDimensions;
+    float scale;
+	float zNear;
+	float zFar;
 };
-
-//Shared between all clusters
-uniform float zNear;
-uniform float zFar;
 
 //Function prototypes
 vec4 clipToView(vec4 clip);

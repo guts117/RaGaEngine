@@ -27,8 +27,6 @@ void Model_Shader::CompileProgram()
 	uniformRoughness= glGetUniformLocation(shaderID, "material.roughnessMap");
 	uniformParallax = glGetUniformLocation(shaderID, "material.parallaxMap");
 	uniformGlow = glGetUniformLocation(shaderID, "material.glowMap");
-	uniformZNear = glGetUniformLocation(shaderID, "camNearZ");
-	uniformZFar = glGetUniformLocation(shaderID, "camFarZ");
 
 	uniformSpotLightCount = glGetUniformLocation(shaderID, "SpotLightCount");
 
@@ -57,7 +55,6 @@ void Model_Shader::CompileProgram()
 	uniformDirectionalShadowMap = glGetUniformLocation(shaderID, "DirectionalShadowMap");
 
 	uniformOmniLightPos = glGetUniformLocation(shaderID, "lightPos");
-	uniformFarPlane = glGetUniformLocation(shaderID, "farPlane");
 
 	for (size_t i = 0; i < 6; i++) {
 		char locBuff[100] = { '\0' };
@@ -89,9 +86,6 @@ void Model_Shader::SetDirectionalLight(DirectionalLight* dLight) {
 void Model_Shader::SetPointLight(std::shared_ptr<PointLight>* pLight, unsigned int lightCount, unsigned int textureUnit, unsigned int offset) {
 
 	if (lightCount > MAX_POINT_LIGHTS_WITH_SHADOW) lightCount = MAX_POINT_LIGHTS_WITH_SHADOW;
-
-	SetNearZPlane(camNearZ);
-	SetFarZPlane(camFarZ);
 
 	for (size_t i = 0; i < lightCount; i++) {																									//pLight is already a pointer 
 		pLight[i]->GetShadowMap()->Read(0, GL_TEXTURE0 + textureUnit + i);

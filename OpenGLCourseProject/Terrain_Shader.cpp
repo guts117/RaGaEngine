@@ -29,8 +29,6 @@ void Terrain_Shader::CompileProgram()
 	uniformParallax = glGetUniformLocation(shaderID, "material.parallaxMap");
 	uniformDisplacement = glGetUniformLocation(shaderID, "displacementMap");
 	uniformRoughness = glGetUniformLocation(shaderID, "material.roughnessMap");
-	uniformZNear = glGetUniformLocation(shaderID, "camNearZ");
-	uniformZFar = glGetUniformLocation(shaderID, "camFarZ");
 
 	uniformSpotLightCount = glGetUniformLocation(shaderID, "SpotLightCount");
 
@@ -56,7 +54,6 @@ void Terrain_Shader::CompileProgram()
 	uniformBRDF = glGetUniformLocation(shaderID, "brdfLUT");
 	uniformDirectionalLightTransform = glGetUniformLocation(shaderID, "DirectionalLightTransform");
 	uniformOmniLightPos = glGetUniformLocation(shaderID, "lightPos");
-	uniformFarPlane = glGetUniformLocation(shaderID, "farPlane");
 
 	for (size_t i = 0; i < NUM_CASCADES; i++) {
 		char locBuff[100] = { '\0' };
@@ -120,9 +117,6 @@ void Terrain_Shader::SetDirectionalLight(DirectionalLight* dLight) {
 void Terrain_Shader::SetPointLight(std::shared_ptr<PointLight>* pLight, unsigned int lightCount, unsigned int textureUnit, unsigned int offset) {
 
 	if (lightCount > MAX_POINT_LIGHTS_WITH_SHADOW) lightCount = MAX_POINT_LIGHTS_WITH_SHADOW;
-
-	SetNearZPlane(camNearZ);
-	SetFarZPlane(camFarZ);
 
 	for (size_t i = 0; i < lightCount; i++) {																									//pLight is already a pointer 
 		pLight[i]->GetShadowMap()->Read(0, GL_TEXTURE0 + textureUnit + i);

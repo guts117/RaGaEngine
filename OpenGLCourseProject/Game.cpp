@@ -260,7 +260,8 @@ struct ScreenToView {
 	unsigned int screenWidth;
 	unsigned int screenHeight;
 	float sliceScalingFactor;
-	float sliceBiasFactor;
+	float zNear;
+	float zFar;
 }screen2View;
 
 //Currently only used in the generation of SSBO's for light culling and rendering
@@ -316,9 +317,9 @@ void Game::initSSBOs() {
 		screen2View.screenWidth = ScreenWidth;
 		screen2View.screenHeight = ScreenHeight;
 		//Basically reduced a log function into a simple multiplication an addition by pre-calculating these
-		screen2View.sliceScalingFactor = (float)gridSizeZ / std::log2f(zFar / zNear);
-		screen2View.sliceBiasFactor = -((float)gridSizeZ * std::log2f(zNear) / std::log2f(zFar / zNear));
-
+		screen2View.sliceScalingFactor = (float)gridSizeZ / std::log(zFar / zNear);
+		screen2View.zNear = camNearZ;
+		screen2View.zFar = camFarZ;
 		//Generating and copying data to memory in GPU
 		glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(struct ScreenToView), &screen2View, GL_STATIC_COPY);
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, screenToViewSSBO);
@@ -411,21 +412,11 @@ void Game::initSSBOs() {
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 9, activeClusterCountSSBO);
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 	}
-	{
-		glGenBuffers(1, &debugssbo);
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, debugssbo);
-
-		glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(unsigned int), NULL, GL_STATIC_COPY);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 10, debugssbo);
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-	}
 }
 
 void Game::PreProcess() {
 	//Building the grid of AABB enclosing the view frustum clusters
 	buildAABBGridCompShader->UseShader();
-	buildAABBGridCompShader->SetNearZPlane(camNearZ);
-	buildAABBGridCompShader->SetFarZPlane(camFarZ);
 	buildAABBGridCompShader->Dispatch(gridSizeX, gridSizeY, gridSizeZ);
 
 	//print cluster data
@@ -1130,60 +1121,20 @@ void Game::CullLight()
 {
 	visibleClusterCompShader->UseShader();
 	depth->Read(GL_TEXTURE0);
-	visibleClusterCompShader->SetNearZPlane(camNearZ);
-	visibleClusterCompShader->SetFarZPlane(camFarZ);
 	visibleClusterCompShader->Dispatch(ScreenWidth, ScreenHeight, 1);
-	
-	unsigned int count1;
-	glGetNamedBufferSubData(debugssbo, 0, sizeof(unsigned int), &count1);
-	std::cout << count1 << " times Invoked " << std::endl;
 
-	//std::cout  << "Begin" << std::endl;
-	//for (int i = 0; i < numClusters; i++)
-	//{
-	//	std::cout << "ClusterID: " << i << "->" << count1[i].x << ", " << count1[i].y << ", " << count1[i].z << std::endl;
-	//}
-	//std::cout << "End" << std::endl;
 	uniqueClusterCompShader->UseShader();
 	uniqueClusterCompShader->Dispatch(gridSizeX, gridSizeY, gridSizeZ);
 
 	unsigned int count;
 	glGetNamedBufferSubData(activeClusterCountSSBO, 0, sizeof(unsigned int), &count);
 
-	std::cout << count << " Clusters are Active" << std::endl;
+	//std::cout << count << " Clusters are Active" << std::endl;
 
 	//4-Light assignment
 	cullLightsCompShader->UseShader();
 	glUniformMatrix4fv(cullLightsCompShader->GetViewLocation(), 1, GL_FALSE, glm::value_ptr(camera->CalculateViewMatrix()));
 	cullLightsCompShader->Dispatch(count, 1, 1);
-
-	//unsigned int count[numClusters * 2];
-	//glGetNamedBufferSubData(lightGridSSBO, 0, numClusters * 2 * sizeof(unsigned int), &count);
-
-	//int num = 0;
-	//for (int i = 0; i < numClusters * 2; i+=2) 
-	//{
-	//	if (count[i+1] > 0)
-	//	{
-	//		num++;
-	//		//std::cout << "Cluster: " << i << "  is Active" << std::endl;
-	//	}
-	//}
-	//std::cout << num << " Cluster0 are Active" << std::endl;
-
-	//int num1 = 0;
-	//unsigned int count1[numClusters];
-	//glGetNamedBufferSubData(visibleClusterSSBO, 0, numClusters * sizeof(unsigned int), &count1);
-
-	//for (int i = 0; i < numClusters ; i++)
-	//{
-	//	if (count1[i] == 1)
-	//	{
-	//		num1++;
-	//		//std::cout << "Cluster: " << i << "  is Active" << std::endl;
-	//	}
-	//}
-	//std::cout << num1 << " Cluster1 are Active" << std::endl;
 }
 
 void Game::PreZPass(GLfloat deltaTime)

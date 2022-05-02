@@ -27,6 +27,9 @@ layout (std430, binding = 2) buffer screenToView{
     mat4 inverseProjection;
     uvec4 tileSizes;
     uvec2 screenDimensions;
+    float scale;
+	float zNear;
+	float zFar;
 };
 
 layout (std430, binding = 3) buffer lightSSBO{

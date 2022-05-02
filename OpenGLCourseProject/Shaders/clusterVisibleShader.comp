@@ -1,4 +1,5 @@
 #version 460 core
+
 layout(local_size_x = 1, local_size_y = 1) in;
 
 layout (std430, binding = 2) buffer screenToView{
@@ -6,20 +7,15 @@ layout (std430, binding = 2) buffer screenToView{
     uvec4 tileSizes;
     uvec2 screenDimensions;
     float scale;
-    float bias;
+	float zNear;
+	float zFar;
 };
 
 layout (std430, binding = 7) buffer visibleClusterSSBO{
     bool clusterActive[ ];
 };
 
-layout (std430, binding = 10) buffer threadsSSBO{
-    uint invokeCount;
-};
-
 layout (binding = 0) uniform sampler2D depthTexture;
-uniform float zNear;
-uniform float zFar;
 
 float LinearDepth(float depthSample){
     float depthRange 			= 2.0 * depthSample - 1.0;
@@ -28,12 +24,31 @@ float LinearDepth(float depthSample){
     return linear;
 }
 
-uint GetClusterIndex(vec3 pixelCoord)
+uint ComputeClusterIndex1D(uvec3 clusterIndex3D)
 {
-    uint zTile     			    = uint(max(log2(LinearDepth(pixelCoord.z)) * scale + bias, 0.0));
-    uvec3 tiles    			    = uvec3(uvec2(pixelCoord.xy / tileSizes[3]), zTile);
-    uint tileIndex 			    = tiles.x + tileSizes.x * tiles.y + (tileSizes.x * tileSizes.y) * tiles.z;
-	return tileIndex;
+    return clusterIndex3D.x + ( tileSizes.x * ( clusterIndex3D.y + tileSizes.y * clusterIndex3D.z ) );
+}
+
+uvec3 ComputeClusterIndex3D(vec2 clipSpacePos, float z)
+{
+    uint i 						= uint(clipSpacePos.x / tileSizes.x);
+    uint j 						= uint(clipSpacePos.y / tileSizes.y);
+    uint k 						= uint(max(log(z / zNear) * scale, 0.0));
+
+    return uvec3( i, j, k );
+}
+
+vec3 PositionFromDepth(vec2 texCoords, float depth)
+{
+	vec3 ndc 					= vec3(texCoords, depth) * 2.0 - vec3(1.0);
+	vec4 view 					= inverseProjection * vec4(ndc, 1.0);
+	vec3 clipSpace 				= view.xyz / view.w;
+	return clipSpace.xyz;
+}
+
+uint GetClusterIndex(vec2 clipSpaceXY, float depth)
+{
+	return ComputeClusterIndex1D(ComputeClusterIndex3D(clipSpaceXY, depth));
 }
 
 void MarkActiveClusters()
@@ -42,7 +57,8 @@ void MarkActiveClusters()
     //Getting the depth value
 	float z 					= texelFetch(depthTexture, pos, 0).r;
     //Getting the linear cluster index value
-	uint clusterID				= GetClusterIndex(vec3(pos.xy, z));
+	vec3 clipSpacePos 			= PositionFromDepth(vec2(pos / screenDimensions), z);	
+	uint clusterID				= GetClusterIndex(pos.xy + vec2(0.5, 0.5), z);
 	clusterActive[clusterID] 	= true;
 }
 

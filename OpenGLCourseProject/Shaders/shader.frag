@@ -53,7 +53,8 @@ layout (std430, binding = 2) buffer screenToView{
     uvec4 tileSizes;
     uvec2 screenDimensions;
     float scale;
-    float bias;
+	float zNear;
+	float zFar;
 };
 layout (std430, binding = 3) buffer lightSSBO{
     PointLight pointLight[];
@@ -112,9 +113,6 @@ uniform Material material;
 uniform vec3 eyePosition;
 
 uniform float height_scale;
-
-uniform float camNearZ;
-uniform float camFarZ;
 
 //Debug from here
 uniform bool showAO;
@@ -318,11 +316,23 @@ vec4 CalcSpotLight(SpotLight sLight, vec3 viewDir, vec3 normal, vec3 F0, vec3 al
 	}
 }
 
-float LinearDepth(float depthSample){
-    float depthRange = 2.0 * depthSample - 1.0;
-    // Near... Far... wherever you are...
-    float linear 			= 2.0 * camNearZ * camFarZ / (camFarZ + camNearZ - depthRange * (camFarZ - camNearZ));
-    return linear;
+uint ComputeClusterIndex1D(uvec3 clusterIndex3D)
+{
+    return clusterIndex3D.x + ( tileSizes.x * ( clusterIndex3D.y + tileSizes.y * clusterIndex3D.z ) );
+}
+
+uvec3 ComputeClusterIndex3D(vec2 clipSpacePos, float z)
+{
+    uint i 					= uint(clipSpacePos.x / tileSizes.x);
+    uint j 					= uint(clipSpacePos.y / tileSizes.y);
+    uint k 					= uint(max(log(z / zNear) * scale, 0.0));
+
+    return uvec3(i, j, k);
+}
+
+uint GetClusterIndex(vec2 clipSpaceXY, float depth)
+{
+	return ComputeClusterIndex1D(ComputeClusterIndex3D(clipSpaceXY, depth));
 }
 
 vec4 CalcPointLights(vec3 viewDir, vec3 normal, vec3 F0, vec3 albedo, float metallic, float roughness)
@@ -333,10 +343,7 @@ vec4 CalcPointLights(vec3 viewDir, vec3 normal, vec3 F0, vec3 albedo, float meta
 	vec4 totalColor 		= vec4(0, 0, 0, 1);		//set alpha to 1 when using blending
 	
 	//Locating which cluster you are a part of
-    uint zTile     			= uint(max(log2(LinearDepth(gl_FragCoord.z)) * scale + bias, 0.0));
-    uvec3 tiles    			= uvec3( uvec2( gl_FragCoord.xy / tileSizes[3] ), zTile);
-    uint tileIndex 			= tiles.x + tileSizes.x * tiles.y + (tileSizes.x * tileSizes.y) * tiles.z;
-	
+    uint tileIndex 			= GetClusterIndex(ClipSpacePos.xy, gl_FragCoord.z);
     uint lightCount       	= lightGrid[tileIndex].count;
     uint lightIndexOffset 	= lightGrid[tileIndex].offset;
 
@@ -473,8 +480,8 @@ void main()
 	
 	if(showLightSlices)
 	{
-		float zTile     	= float(max(log2(LinearDepth(gl_FragCoord.z)) * scale + bias, 0.0));
-		color				+= vec4(colors[uint(mod(zTile, 8.0))], 1.0);
+		//float zTile     	= float(max(log2(LinearDepth(gl_FragCoord.z)) * scale + bias, 0.0));
+		//color				+= vec4(colors[uint(mod(zTile, 8.0))], 1.0);
 	}
 	
 	if(color.a > 1.0f)
