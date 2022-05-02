@@ -1,0 +1,51 @@
+#version 460 core
+layout(local_size_x = 1, local_size_y = 1) in;
+
+layout (std430, binding = 2) buffer screenToView{
+    mat4 inverseProjection;
+    uvec4 tileSizes;
+    uvec2 screenDimensions;
+    float scale;
+    float bias;
+};
+
+layout (std430, binding = 7) buffer visibleClusterSSBO{
+    bool clusterActive[ ];
+};
+
+layout (std430, binding = 10) buffer threadsSSBO{
+    uint invokeCount;
+};
+
+layout (binding = 0) uniform sampler2D depthTexture;
+uniform float zNear;
+uniform float zFar;
+
+float LinearDepth(float depthSample){
+    float depthRange 			= 2.0 * depthSample - 1.0;
+    // Near... Far... wherever you are...
+    float linear 				= 2.0 * zNear * zFar / (zFar + zNear - depthRange * (zFar - zNear));
+    return linear;
+}
+
+uint GetClusterIndex(vec3 pixelCoord)
+{
+    uint zTile     			    = uint(max(log2(LinearDepth(pixelCoord.z)) * scale + bias, 0.0));
+    uvec3 tiles    			    = uvec3(uvec2(pixelCoord.xy / tileSizes[3]), zTile);
+    uint tileIndex 			    = tiles.x + tileSizes.x * tiles.y + (tileSizes.x * tileSizes.y) * tiles.z;
+	return tileIndex;
+}
+
+void MarkActiveClusters()
+{
+	ivec2 pos 					= ivec2(gl_GlobalInvocationID.xy);     
+    //Getting the depth value
+	float z 					= texelFetch(depthTexture, pos, 0).r;
+    //Getting the linear cluster index value
+	uint clusterID				= GetClusterIndex(vec3(pos.xy, z));
+	clusterActive[clusterID] 	= true;
+}
+
+void main(){
+	MarkActiveClusters();
+}

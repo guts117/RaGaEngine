@@ -234,7 +234,7 @@ void Game::init()
 }
       
 unsigned int AABBvolumeGridSSBO, screenToViewSSBO;
-unsigned int lightSSBO, lightIndexListSSBO, lightGridSSBO, lightIndexGlobalCountSSBO;
+unsigned int lightSSBO, lightIndexListSSBO, lightGridSSBO, lightIndexGlobalCountSSBO, visibleClusterSSBO, uniqueClusterSSBO, activeClusterCountSSBO, debugssbo;
 
 //The variables that determine the size of the cluster grid. They're hand picked for now, but
 //there is some space for optimization and tinkering as seen on the Olsson paper and the ID tech6
@@ -275,6 +275,12 @@ struct GPULight {
 	float intensity;
 	float range;
 	float padding;
+};
+
+struct TexData {
+	float x;
+	float y;
+	float z;
 };
 
 void Game::initSSBOs() {
@@ -376,6 +382,41 @@ void Game::initSSBOs() {
 		//Another to represent the offset 
 		glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(unsigned int), NULL, GL_STATIC_COPY);
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, lightIndexGlobalCountSSBO);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+	}
+
+	{
+		glGenBuffers(1, &visibleClusterSSBO);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, visibleClusterSSBO);
+
+		glBufferData(GL_SHADER_STORAGE_BUFFER, numClusters * sizeof(bool), NULL, GL_STATIC_COPY);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, visibleClusterSSBO);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+	}
+
+	{
+		glGenBuffers(1, &uniqueClusterSSBO);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, uniqueClusterSSBO);
+
+		glBufferData(GL_SHADER_STORAGE_BUFFER, numClusters * sizeof(unsigned int), NULL, GL_STATIC_COPY);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, uniqueClusterSSBO);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+	}
+
+	{
+		glGenBuffers(1, &activeClusterCountSSBO);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, activeClusterCountSSBO);
+
+		glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(unsigned int), NULL, GL_STATIC_COPY);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 9, activeClusterCountSSBO);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+	}
+	{
+		glGenBuffers(1, &debugssbo);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, debugssbo);
+
+		glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(unsigned int), NULL, GL_STATIC_COPY);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 10, debugssbo);
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 	}
 }
@@ -666,6 +707,8 @@ void Game::CreateObject() {
 void Game::CreateShaders() {
 
 	buildAABBGridCompShader->CreateFromFiles("Shaders/clusterShader.comp");
+	visibleClusterCompShader->CreateFromFiles("Shaders/clusterVisibleShader.comp");
+	uniqueClusterCompShader->CreateFromFiles("Shaders/clusterUniqueShader.comp");
 	cullLightsCompShader->CreateFromFiles("Shaders/clusterCullLightShader.comp");
 
 	environmentMapShader->CreateFromFiles("Shaders/cubemap.vert", "Shaders/equirectangular_to_cubemap.frag");
@@ -1085,10 +1128,62 @@ void Game::OmniShadowMapPass(PointLight* light) {
 
 void Game::CullLight()
 {
+	visibleClusterCompShader->UseShader();
+	depth->Read(GL_TEXTURE0);
+	visibleClusterCompShader->SetNearZPlane(camNearZ);
+	visibleClusterCompShader->SetFarZPlane(camFarZ);
+	visibleClusterCompShader->Dispatch(ScreenWidth, ScreenHeight, 1);
+	
+	unsigned int count1;
+	glGetNamedBufferSubData(debugssbo, 0, sizeof(unsigned int), &count1);
+	std::cout << count1 << " times Invoked " << std::endl;
+
+	//std::cout  << "Begin" << std::endl;
+	//for (int i = 0; i < numClusters; i++)
+	//{
+	//	std::cout << "ClusterID: " << i << "->" << count1[i].x << ", " << count1[i].y << ", " << count1[i].z << std::endl;
+	//}
+	//std::cout << "End" << std::endl;
+	uniqueClusterCompShader->UseShader();
+	uniqueClusterCompShader->Dispatch(gridSizeX, gridSizeY, gridSizeZ);
+
+	unsigned int count;
+	glGetNamedBufferSubData(activeClusterCountSSBO, 0, sizeof(unsigned int), &count);
+
+	std::cout << count << " Clusters are Active" << std::endl;
+
 	//4-Light assignment
 	cullLightsCompShader->UseShader();
 	glUniformMatrix4fv(cullLightsCompShader->GetViewLocation(), 1, GL_FALSE, glm::value_ptr(camera->CalculateViewMatrix()));
-	cullLightsCompShader->Dispatch(1, 1, 6);
+	cullLightsCompShader->Dispatch(count, 1, 1);
+
+	//unsigned int count[numClusters * 2];
+	//glGetNamedBufferSubData(lightGridSSBO, 0, numClusters * 2 * sizeof(unsigned int), &count);
+
+	//int num = 0;
+	//for (int i = 0; i < numClusters * 2; i+=2) 
+	//{
+	//	if (count[i+1] > 0)
+	//	{
+	//		num++;
+	//		//std::cout << "Cluster: " << i << "  is Active" << std::endl;
+	//	}
+	//}
+	//std::cout << num << " Cluster0 are Active" << std::endl;
+
+	//int num1 = 0;
+	//unsigned int count1[numClusters];
+	//glGetNamedBufferSubData(visibleClusterSSBO, 0, numClusters * sizeof(unsigned int), &count1);
+
+	//for (int i = 0; i < numClusters ; i++)
+	//{
+	//	if (count1[i] == 1)
+	//	{
+	//		num1++;
+	//		//std::cout << "Cluster: " << i << "  is Active" << std::endl;
+	//	}
+	//}
+	//std::cout << num1 << " Cluster1 are Active" << std::endl;
 }
 
 void Game::PreZPass(GLfloat deltaTime)

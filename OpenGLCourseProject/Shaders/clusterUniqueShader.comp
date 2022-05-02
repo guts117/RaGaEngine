@@ -1,0 +1,30 @@
+#version 460 core
+layout(local_size_x = 1, local_size_y = 1) in;
+
+layout (std430, binding = 7) buffer visibleClusterSSBO{
+    bool clusterActive[ ];
+};
+
+layout (std430, binding = 8) buffer uniqueClusterSSBO{
+    uint uniqueActiveClusters[ ];
+};
+
+layout (std430, binding = 9) buffer globalActiveClusterCountSSBO{
+    uint globalActiveClusterCount;
+};
+
+void BuildCompactClusterList(){
+    uint clusterIndex  				= 	gl_WorkGroupID.x +
+										gl_WorkGroupID.y * gl_NumWorkGroups.x +
+										gl_WorkGroupID.z * (gl_NumWorkGroups.x * gl_NumWorkGroups.y);
+			
+    if(clusterActive[clusterIndex])
+	{
+       uint offset 						= atomicAdd(globalActiveClusterCount, 1);
+       uniqueActiveClusters[offset] 	= clusterIndex;
+    }
+}
+
+void main(){
+    BuildCompactClusterList();
+}
