@@ -260,6 +260,7 @@ struct ScreenToView {
 	unsigned int screenWidth;
 	unsigned int screenHeight;
 	float sliceScalingFactor;
+	float sliceBiasFactor;
 	float zNear;
 	float zFar;
 }screen2View;
@@ -317,7 +318,9 @@ void Game::initSSBOs() {
 		screen2View.screenWidth = ScreenWidth;
 		screen2View.screenHeight = ScreenHeight;
 		//Basically reduced a log function into a simple multiplication an addition by pre-calculating these
-		screen2View.sliceScalingFactor = (float)gridSizeZ / std::log(zFar / zNear);
+		auto factor = (float)gridSizeZ / std::log(zFar / zNear);
+		screen2View.sliceScalingFactor = factor;
+		screen2View.sliceBiasFactor = -(std::log(zNear) * factor);
 		screen2View.zNear = camNearZ;
 		screen2View.zFar = camFarZ;
 		//Generating and copying data to memory in GPU
@@ -1129,7 +1132,7 @@ void Game::CullLight()
 	unsigned int count;
 	glGetNamedBufferSubData(activeClusterCountSSBO, 0, sizeof(unsigned int), &count);
 
-	//std::cout << count << " Clusters are Active" << std::endl;
+	std::cout << count << " Clusters are Active" << std::endl;
 
 	//4-Light assignment
 	cullLightsCompShader->UseShader();

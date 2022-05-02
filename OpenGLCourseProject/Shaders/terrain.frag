@@ -56,6 +56,7 @@ layout (std430, binding = 2) buffer screenToView{
     uvec4 tileSizes;
     uvec2 screenDimensions;
     float scale;
+	float bias;
 	float zNear;
 	float zFar;
 };
@@ -352,25 +353,6 @@ float LinearDepth(float depthSample){
     return linear;
 }
 
-uint ComputeClusterIndex1D(uvec3 clusterIndex3D)
-{
-    return clusterIndex3D.x + ( tileSizes.x * ( clusterIndex3D.y + tileSizes.y * clusterIndex3D.z ) );
-}
-
-uvec3 ComputeClusterIndex3D(vec2 clipSpacePos, float z)
-{
-    uint i 					= uint(clipSpacePos.x / tileSizes.x);
-    uint j 					= uint(clipSpacePos.y / tileSizes.y);
-    uint k 					= uint(max(log(z / zNear) * scale, 0.0));
-
-    return uvec3(i, j, k);
-}
-
-uint GetClusterIndex(vec2 clipSpaceXY, float depth)
-{
-	return ComputeClusterIndex1D(ComputeClusterIndex3D(clipSpaceXY, depth));
-}
-
 vec4 CalcPointLights(vec3 viewDir, vec3 normal, vec3 F0, vec3 albedo, float metallic, float roughness)
 {
 	//ToDo:
@@ -379,7 +361,9 @@ vec4 CalcPointLights(vec3 viewDir, vec3 normal, vec3 F0, vec3 albedo, float meta
 	vec4 totalColor 		= vec4(0, 0, 0, 1);		//set alpha to 1 when using blending
 	
 	//Locating which cluster you are a part of
-    uint tileIndex 			= GetClusterIndex(ClipSpacePos.xy, gl_FragCoord.z);
+	uint zTile     			= uint(max(log(gl_FragCoord.z) * scale + bias, 0.0));
+    uvec3 tiles    			= uvec3(uvec2( gl_FragCoord.xy / tileSizes[3]), zTile);
+    uint tileIndex 			= tiles.x + tileSizes.x * tiles.y + (tileSizes.x * tileSizes.y) * tiles.z;
     uint lightCount       	= lightGrid[tileIndex].count;
     uint lightIndexOffset 	= lightGrid[tileIndex].offset;
 
