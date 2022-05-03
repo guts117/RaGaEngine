@@ -333,7 +333,7 @@ vec4 CalcPointLight(PointLight pLight, vec3 viewDir, vec3 normal, vec3 F0, vec3 
 	vec3 lightDir 			= pLight.position.xyz - FragPos;		
 	float bias 				= max(0.5 * (1 - dot(normal, normalize(lightDir))), 0.1);
 	float shadowFactor 		= CalcOmniShadowFactor(pLight.position.xyz, shadowIndex, bias);		
-	vec4 color 				= CalcLightByDirection(pLight.color.rgb * 100.0, lightDir, viewDir, normal, F0, albedo, metallic, roughness, shadowFactor, false, pLight.range);	
+	vec4 color 				= CalcLightByDirection(pLight.color.rgb * pLight.intensity, lightDir, viewDir, normal, F0, albedo, metallic, roughness, shadowFactor, false, pLight.range);	
 	return color;
 }
 

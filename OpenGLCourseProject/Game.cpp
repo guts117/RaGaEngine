@@ -342,7 +342,7 @@ void Game::initSSBOs() {
 			lights[i].position = glm::vec4(light->GetPosition(), 1.0f);
 			lights[i].color = glm::vec4(light->GetColor(), 1.0f);
 			lights[i].enabled = 1;
-			lights[i].intensity = 1.0f;
+			lights[i].intensity = 100.0f;
 			lights[i].range = camFarZ;
 		}
 		glBufferData(GL_SHADER_STORAGE_BUFFER, maxLights * sizeof(struct GPULight), lights, GL_DYNAMIC_DRAW);
