@@ -11,7 +11,7 @@ uniform sampler2D noise;
 uniform float SampleRad;
 uniform mat4 Projection;
 
-const int MAX_KERNEL_SIZE =8;
+const int MAX_KERNEL_SIZE = 64;
 uniform vec3 Kernel[MAX_KERNEL_SIZE];
 
 
