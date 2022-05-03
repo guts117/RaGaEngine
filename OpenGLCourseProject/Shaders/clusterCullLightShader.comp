@@ -1,5 +1,5 @@
 #version 460 core
-layout(local_size_x = 32, local_size_y = 32) in;
+layout(local_size_x = 1, local_size_y = 1) in;
 
 struct PointLight{
     vec4 position;

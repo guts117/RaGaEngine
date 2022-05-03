@@ -1070,8 +1070,7 @@ void Game::CullLight()
 	//4-Light assignment
 	cullLightsCompShader->UseShader();
 	glUniformMatrix4fv(cullLightsCompShader->GetViewLocation(), 1, GL_FALSE, glm::value_ptr(camera->CalculateViewMatrix()));
-	unsigned int x = static_cast<unsigned int> (std::max(static_cast<int>(count - 32), 1));
-	cullLightsCompShader->Dispatch(x / 32, 1, 1);
+	cullLightsCompShader->Dispatch(count, 1, 1);
 }
 
 void Game::PreZPass(GLfloat deltaTime)
