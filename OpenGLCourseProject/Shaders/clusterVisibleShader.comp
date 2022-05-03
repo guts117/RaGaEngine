@@ -2,7 +2,7 @@
 
 layout(local_size_x = 1, local_size_y = 1) in;
 
-layout (std430, binding = 2) buffer screenToView{
+layout (std430, binding = 2) readonly buffer screenToView{
     mat4 inverseProjection;
     uvec4 tileSizes;
     uvec2 screenDimensions;
@@ -17,13 +17,6 @@ layout (std430, binding = 7) buffer visibleClusterSSBO{
 };
 
 layout (binding = 0) uniform sampler2D depthTexture;
-
-float LinearDepth(float depthSample){
-    float depthRange 			= 2.0 * depthSample - 1.0;
-    // Near... Far... wherever you are...
-    float linear 				= 2.0 * zNear * zFar / (zFar + zNear - depthRange * (zFar - zNear));
-    return linear;
-}
 
 void MarkActiveClusters()
 {

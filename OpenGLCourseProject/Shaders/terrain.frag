@@ -51,7 +51,7 @@ struct LightGrid{
     uint offset;
     uint count;
 };
-layout (std430, binding = 2) buffer screenToView{
+layout (std430, binding = 2) readonly buffer screenToView{
     mat4 inverseProjection;
     uvec4 tileSizes;
     uvec2 screenDimensions;
@@ -60,7 +60,7 @@ layout (std430, binding = 2) buffer screenToView{
 	float zNear;
 	float zFar;
 };
-layout (std430, binding = 3) buffer lightSSBO{
+layout (std430, binding = 3) readonly buffer lightSSBO{
     PointLight pointLight[];
 };
 layout (std430, binding = 4) buffer lightIndexSSBO{
@@ -241,13 +241,17 @@ float GeometrySmith(float NdotV, float NdotL, float roughness)
 
 vec3 FresnelSchlick(float cosTheta, vec3 F0)
 {
-	return max(F0 + (1.0 - F0) * pow(1.0 - min(cosTheta, 1.0), 5.0), 0.0);
+	float angle 			= 1.0 - min(cosTheta, 1.0);
+	float angle5 			= angle * angle * angle * angle * angle;
+	return max(F0 + (1.0 - F0) * angle5, 0.0);
 	//return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
 }
 
 vec3 FresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
 {
-	return max(F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(1.0 - min(cosTheta, 1.0), 5.0), 0.0);
+	float angle 			= 1.0 - min(cosTheta, 1.0);	
+	float angle5 			= angle * angle * angle * angle * angle;
+	return max(F0 + (max(vec3(1.0 - roughness), F0) - F0) * angle5, 0.0);
 	//return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(1.0 - min(cosTheta, 1.0), 5.0);
 }
 
@@ -264,7 +268,11 @@ vec4 CalcLightByDirection(vec3 lightColor, vec3 lightDir, vec3 viewDir, vec3 nor
 	}
 	else
 	{
-		attenuation 		= pow(clamp(1 - pow((distance / radius), 4.0), 0.0, 1.0), 2.0)/(1.0  + (distance * distance)); 
+		float dByR 			= distance / radius;
+		float dByR4			= dByR * dByR * dByR * dByR;
+		float dByR4C 		= clamp(1 - dByR4, 0.0, 1.0);
+		float dByR4C2 		= dByR4C * dByR4C;
+		attenuation 		= dByR4C2 / (1.0  + (distance * distance)); 
 	}	
 	
 	vec3 radiance			= vec3(0.0, 0.0, 0.0);
@@ -350,7 +358,6 @@ vec4 CalcSpotLight(SpotLight sLight, vec3 viewDir, vec3 normal, vec3 F0, vec3 al
 
 float LinearDepth(float depthSample){
     float depthRange		= 2.0 * depthSample - 1.0;
-    // Near... Far... wherever you are...
     float linear 			= 2.0 * zNear * zFar / (zFar + zNear - depthRange * (zFar - zNear));
     return linear;
 }
@@ -367,10 +374,10 @@ vec4 CalcPointLights(vec3 viewDir, vec3 normal, vec3 F0, vec3 albedo, float meta
 
     //Reading from the global light list and calculating the radiance contribution of each light.
     for(int i = 0; i < lightCount; i++){
-        uint lightVectorIndex = globalLightIndexList[lightIndexOffset + i];
-        totalColor 			+= CalcPointLight(pointLight[lightVectorIndex], viewDir, normal, F0, albedo, metallic, roughness, lightVectorIndex);
+        uint lightIndex		= globalLightIndexList[lightIndexOffset + i];
+        totalColor 			+= CalcPointLight(pointLight[lightIndex], viewDir, normal, F0, albedo, metallic, roughness, lightIndex);
     }
-	
+
 	return totalColor;
 }
 
@@ -519,15 +526,14 @@ void main()
 	
 	if(showLightSlices)
 	{
-		//float zTile     	= float(max(log2(LinearDepth(gl_FragCoord.z)) * scale + bias, 0.0));
-		//color				+= vec4(colors[uint(mod(zTile, 8.0))], 1.0);
+		float zTile_f     	= float(zTile);
+		color				+= vec4(colors[uint(mod(zTile_f, 8.0))], 1.0);
 	}
 	
 	if(showDepth)
 	{
-		float z 			= texture(depthMap, CalcScreenTexCoord()).r;
-		//color 				= vec4(vec3(LinearDepth(z)/ zFar), 1.0);
-		color 				= vec4(vec3(z), 1.0);
+		color 				= vec4(vec3(LinearDepth(z)/ zFar), 1.0);
+		//color 				= vec4(vec3(z), 1.0);
 	}
 	
 	if(color.a > 1.0f)

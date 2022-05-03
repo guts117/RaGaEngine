@@ -23,7 +23,7 @@ layout (std430, binding = 1) buffer clusterAABB{
     VolumeTileAABB cluster[ ];
 };
 
-layout (std430, binding = 2) buffer screenToView{
+layout (std430, binding = 2) readonly buffer screenToView{
     mat4 inverseProjection;
     uvec4 tileSizes;
     uvec2 screenDimensions;
@@ -33,7 +33,7 @@ layout (std430, binding = 2) buffer screenToView{
 	float zFar;
 };
 
-layout (std430, binding = 3) buffer lightSSBO{
+layout (std430, binding = 3) readonly buffer lightSSBO{
     PointLight pointLight[];
 };
 
@@ -70,71 +70,76 @@ bool testSphereAABB(uint light, uint tile);
 float sqDistPointAABB(vec3 point, uint tile);
 
 void main(){
-	globalActiveClusterCount = 0;
-    globalIndexCount = 0;
-    uint threadCount = gl_WorkGroupSize.x * gl_WorkGroupSize.y * gl_WorkGroupSize.z;
-    uint lightCount  = pointLight.length();
-    uint numBatches = (lightCount + threadCount -1) / threadCount;
+	globalActiveClusterCount 					= 0;
+    globalIndexCount 							= 0;
+    uint threadCount 							= gl_WorkGroupSize.x * gl_WorkGroupSize.y * gl_WorkGroupSize.z;
+    uint lightCount  							= pointLight.length();
+    uint numBatches 							= (lightCount + threadCount -1) / threadCount;
 
-    uint tileIndex = uniqueActiveClusters[gl_GlobalInvocationID.x];
-    
-	clusterActive[tileIndex] 		= false;
-    uint visibleLightCount = 0;
-    uint visibleLightIndices[100];
+    uint tileIndex 								= uniqueActiveClusters[gl_GlobalInvocationID.x];
 	
-	for( uint batch = 0; batch < numBatches; ++batch){
-			uint lightIndex = batch * threadCount + gl_LocalInvocationIndex;
+	//visible lights temp buffer for the loop
+    uint vLightCnt 								= 0;								
+    uint vLightIndices[100];
+	
+	for(uint batch = 0; batch < numBatches; ++batch)
+	{
+		uint lightIndex 						= batch * threadCount + gl_LocalInvocationIndex;
 
-			//Prevent overflow by clamping to last light which is always null
-			lightIndex = min(lightIndex, lightCount);
+		//Prevent overflow by clamping to last light which is always null
+		lightIndex 								= min(lightIndex, lightCount);
 
-			//Populating shared light array
-			sharedLights[gl_LocalInvocationIndex] = pointLight[lightIndex];
-			barrier();
+		//Populating shared light array
+		sharedLights[gl_LocalInvocationIndex] 	= pointLight[lightIndex];
+		barrier();
 
-			//Iterating within the current batch of lights
-			for( uint light = 0; light < threadCount; ++light){
-				if( sharedLights[light].enabled  == 1){
-					if( testSphereAABB(light, tileIndex)){
-						visibleLightIndices[visibleLightCount] = batch * threadCount + light;
-						visibleLightCount += 1;
-					}
+		//Iterating within the current batch of lights
+		for(uint light = 0; light < threadCount; ++light)
+		{
+			if(sharedLights[light].enabled  == 1)
+			{
+				if(testSphereAABB(light, tileIndex))
+				{
+					vLightIndices[vLightCnt] 	= batch * threadCount + light;
+					vLightCnt 					+= 1;
 				}
 			}
-		}	
+		}
+	}	
 
     //We want all thread groups to have completed the light tests before continuing
     barrier();
 
-    uint offset = atomicAdd(globalIndexCount, visibleLightCount);
+    uint offset 								= atomicAdd(globalIndexCount, vLightCnt);
 
-    for(uint i = 0; i < visibleLightCount; ++i){
-        globalLightIndexList[offset + i] = visibleLightIndices[i];
+    for(uint i = 0; i < vLightCnt; ++i){
+        globalLightIndexList[offset + i] 		= vLightIndices[i];
     }
 
-    lightGrid[tileIndex].offset = offset;
-    lightGrid[tileIndex].count = visibleLightCount;
+    lightGrid[tileIndex].offset 				= offset;
+    lightGrid[tileIndex].count 					= vLightCnt;
 }
 
 bool testSphereAABB(uint light, uint tile){
-	float radius = sharedLights[light].range;
-	vec3 center  = vec3(View * sharedLights[light].position);
-	float squaredDistance = sqDistPointAABB(center, tile);
+	float radius 								= sharedLights[light].range;
+	vec3 center  								= vec3(View * sharedLights[light].position);
+	float squaredDistance 						= sqDistPointAABB(center, tile);
 
 	return squaredDistance <= (radius * radius);
 }
 
 float sqDistPointAABB(vec3 point, uint tile){
-    float sqDist = 0.0;
-    VolumeTileAABB currentCell = cluster[tile];
-    cluster[tile].maxPoint[3] = tile;
-    for(int i = 0; i < 3; ++i){
-        float v = point[i];
+    float sqDist 								= 0.0;
+    VolumeTileAABB currentCell 					= cluster[tile];
+    cluster[tile].maxPoint[3] 					= tile;
+    for(int i = 0; i < 3; ++i)
+	{
+        float v 								= point[i];
         if(v < currentCell.minPoint[i]){
-            sqDist += (currentCell.minPoint[i] - v) * (currentCell.minPoint[i] - v);
+            sqDist 								+= (currentCell.minPoint[i] - v) * (currentCell.minPoint[i] - v);
         }
         if(v > currentCell.maxPoint[i]){
-            sqDist += (v - currentCell.maxPoint[i]) * (v - currentCell.maxPoint[i]);
+            sqDist 								+= (v - currentCell.maxPoint[i]) * (v - currentCell.maxPoint[i]);
         }
     }
 
