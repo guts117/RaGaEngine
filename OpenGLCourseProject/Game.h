@@ -294,8 +294,8 @@ private:
 		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))
 	};
 
-	unsigned int AABBvolumeGridSSBO, screenToViewSSBO;
-	unsigned int lightSSBO, lightIndexListSSBO, lightGridSSBO, lightIndexGlobalCountSSBO, visibleClusterSSBO, uniqueClusterSSBO, activeClusterCountSSBO, debugssbo;
+	unsigned int AABBvolumeGridSSBO, screenToViewSSBO, lightSSBO, lightIndexListSSBO, lightGridSSBO, 
+				lightIndexGlobalCountSSBO, visibleClusterSSBO, uniqueClusterSSBO, activeClusterCountSSBO;
 
 	const int gridSizeX = 16;
 	const int gridSizeY = 9;

@@ -1412,6 +1412,52 @@ void Game::BloomPass()
 
 Game::~Game()
 {
+	if (AABBvolumeGridSSBO != 0) 
+	{
+		glDeleteBuffers(1, &AABBvolumeGridSSBO);
+		AABBvolumeGridSSBO = 0;
+	}
+	if (screenToViewSSBO != 0)
+	{
+		glDeleteBuffers(1, &screenToViewSSBO);
+		screenToViewSSBO = 0;
+	}
+	if (lightSSBO != 0)
+	{
+		glDeleteBuffers(1, &lightSSBO);
+		lightSSBO = 0;
+	}
+	if (lightIndexListSSBO != 0)
+	{
+		glDeleteBuffers(1, &lightIndexListSSBO);
+		lightIndexListSSBO = 0;
+	}
+	if (lightGridSSBO != 0)
+	{
+		glDeleteBuffers(1, &lightGridSSBO);
+		lightGridSSBO = 0;
+	}
+	if (lightIndexGlobalCountSSBO != 0)
+	{
+		glDeleteBuffers(1, &lightIndexGlobalCountSSBO);
+		lightIndexGlobalCountSSBO = 0;
+	}
+	if (visibleClusterSSBO != 0)
+	{
+		glDeleteBuffers(1, &visibleClusterSSBO);
+		visibleClusterSSBO = 0;
+	}
+	if (uniqueClusterSSBO != 0)
+	{
+		glDeleteBuffers(1, &uniqueClusterSSBO);
+		uniqueClusterSSBO = 0;
+	}
+	if (activeClusterCountSSBO != 0)
+	{
+		glDeleteBuffers(1, &activeClusterCountSSBO);
+		activeClusterCountSSBO = 0;
+	}
+
 	/*for (auto a : meshList) {
 		delete a;
 		a = nullptr;
