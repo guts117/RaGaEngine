@@ -225,67 +225,15 @@ void Game::init()
 		terrainShader->SetCascadeEndClipSpace(i, -vClip.z);
 	}
 
-	initSSBOs();
-	PreProcess();
+	InitSSBOs();
+	CreateClusters();
 	EnvironmentMapPass();
 	IrradianceConvolutionPass();
 	PrefilterPass();
 	BRDFPass();
 }
-      
-unsigned int AABBvolumeGridSSBO, screenToViewSSBO;
-unsigned int lightSSBO, lightIndexListSSBO, lightGridSSBO, lightIndexGlobalCountSSBO, visibleClusterSSBO, uniqueClusterSSBO, activeClusterCountSSBO, debugssbo;
 
-//The variables that determine the size of the cluster grid. They're hand picked for now, but
-//there is some space for optimization and tinkering as seen on the Olsson paper and the ID tech6
-//presentation.
-const unsigned int gridSizeX = 16;
-const unsigned int gridSizeY = 9;
-const unsigned int gridSizeZ = 24;
-const unsigned int numClusters = gridSizeX * gridSizeY * gridSizeZ;
-unsigned int sizeX, sizeY;
-
-unsigned int numLights;
-const unsigned int maxLights = 1000; // pretty overkill for sponza, but ok for testing
-const unsigned int maxLightsPerTile = 50;
-
-struct VolumeTileAABB {
-	glm::vec4 minPoint;
-	glm::vec4 maxPoint;
-} frustrum;
-
-struct ScreenToView {
-	glm::mat4 inverseProjectionMat;
-	unsigned int tileSizes[4];
-	unsigned int screenWidth;
-	unsigned int screenHeight;
-	float sliceScalingFactor;
-	float sliceBiasFactor;
-	float zNear;
-	float zFar;
-}screen2View;
-
-//Currently only used in the generation of SSBO's for light culling and rendering
-//I think it potentially would be a good idea to just have one overall light struct for all light types
-//and move all light related calculations to the gpu via compute or frag shaders. This should reduce the
-//number of Api calls we're currently making and also unify the current lighting path that is split between 
-//compute shaders and application based calculations for the matrices.
-struct GPULight {
-	glm::vec4 position;
-	glm::vec4 color;
-	unsigned int enabled;
-	float intensity;
-	float range;
-	float padding;
-};
-
-struct TexData {
-	float x;
-	float y;
-	float z;
-};
-
-void Game::initSSBOs() {
+void Game::InitSSBOs() {
 	//Setting up tile size on both X and Y 
 	sizeX = (unsigned int)std::ceilf(ScreenWidth / (float)gridSizeX);
 
@@ -308,6 +256,7 @@ void Game::initSSBOs() {
 		glGenBuffers(1, &screenToViewSSBO);
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, screenToViewSSBO);
 
+		ScreenToView screen2View;
 		//Setting up contents of buffer
 		screen2View.inverseProjectionMat = glm::inverse(camera->GetProjectionMatrix());
 
@@ -334,18 +283,20 @@ void Game::initSSBOs() {
 		glGenBuffers(1, &lightSSBO);
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, lightSSBO);
 
-		GPULight lights[maxLights];
+		auto tempGpuLight = GPULight();
+		std::unique_ptr<std::vector<GPULight>> lightList = std::make_unique<std::vector<GPULight>>(maxLights, tempGpuLight);
 		PointLight* light;
 		for (unsigned int i = 0; i < pointLightCount; ++i) {
 			//Fetching the light from the current scene
 			light = pointLights[i].get();
-			lights[i].position = glm::vec4(light->GetPosition(), 1.0f);
-			lights[i].color = glm::vec4(light->GetColor(), 1.0f);
-			lights[i].enabled = 1;
-			lights[i].intensity = 100.0f;
-			lights[i].range = camFarZ;
+			lightList.get()->at(i).position = glm::vec4(light->GetPosition(), 1.0f);
+			lightList.get()->at(i).color = glm::vec4(light->GetColor(), 1.0f);
+			lightList.get()->at(i).enabled = 1;
+			lightList.get()->at(i).intensity = 100.0f;
+			lightList.get()->at(i).range = camFarZ;
 		}
-		glBufferData(GL_SHADER_STORAGE_BUFFER, maxLights * sizeof(struct GPULight), lights, GL_DYNAMIC_DRAW);
+
+		glBufferData(GL_SHADER_STORAGE_BUFFER, maxLights * sizeof(struct GPULight), &(lightList.get()->at(0)), GL_DYNAMIC_DRAW);
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, lightSSBO);
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 	}
@@ -414,25 +365,10 @@ void Game::initSSBOs() {
 	}
 }
 
-void Game::PreProcess() {
+void Game::CreateClusters() {
 	//Building the grid of AABB enclosing the view frustum clusters
 	buildAABBGridCompShader->UseShader();
 	buildAABBGridCompShader->Dispatch(gridSizeX, gridSizeY, gridSizeZ);
-
-	//print cluster data
-	//VolumeTileAABB cluster[numClusters];
-	//for (int i = 0; i < numClusters - 1; i++) {
-	//	cluster->minPoint = glm::vec4(0, 0, 0, 0);
-	//	cluster->maxPoint = glm::vec4(0, 0, 0, 0);
-	//}
-
-	//glGetNamedBufferSubData(AABBvolumeGridSSBO, 0, numClusters * sizeof(struct VolumeTileAABB), cluster);
-
-	//for (int i = 0; i < numClusters - 1; i++) {
-	//	printf("cluster[%d] : minPoint (%f, %f, %f, %f) , maxPoint (%f, %f, %f, %f) \n", 
-	//		i, cluster[i].minPoint.x, cluster[i].minPoint.y, cluster[i].minPoint.z, cluster[i].minPoint.w, 
-	//		cluster[i].maxPoint.x, cluster[i].maxPoint.y, cluster[i].maxPoint.z, cluster[i].maxPoint.w);
-	//}
 }
 
 void Game::update(float fps) {

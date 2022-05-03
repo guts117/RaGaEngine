@@ -86,7 +86,7 @@ private:
 		GLfloat* vertices, unsigned int verticesCount,
 		unsigned int vLength, unsigned int tangentOffset);
 
-	void initSSBOs();
+	void InitSSBOs();
 	void CreateBillboard();
 	void CreateParticles();
 	void CreateTerrain();
@@ -101,7 +101,7 @@ private:
 
 	void EnvironmentMapPass();
 	void IrradianceConvolutionPass();
-	void PreProcess();
+	void CreateClusters();
 	void PrefilterPass();
 	void BRDFPass();
 	void PreZPass(GLfloat deltaTime);
@@ -292,5 +292,43 @@ private:
 		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)),
 		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
 		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))
+	};
+
+	unsigned int AABBvolumeGridSSBO, screenToViewSSBO;
+	unsigned int lightSSBO, lightIndexListSSBO, lightGridSSBO, lightIndexGlobalCountSSBO, visibleClusterSSBO, uniqueClusterSSBO, activeClusterCountSSBO, debugssbo;
+
+	const int gridSizeX = 16;
+	const int gridSizeY = 9;
+	const int gridSizeZ = 24;
+	const int numClusters = gridSizeX * gridSizeY * gridSizeZ;
+	unsigned int sizeX, sizeY;
+
+	unsigned int numLights;
+	const unsigned int maxLights = 1000;
+	const unsigned int maxLightsPerTile = 50;
+
+	struct VolumeTileAABB {
+		glm::vec4 minPoint;
+		glm::vec4 maxPoint;
+	};
+
+	struct ScreenToView {
+		glm::mat4 inverseProjectionMat;
+		unsigned int tileSizes[4];
+		unsigned int screenWidth;
+		unsigned int screenHeight;
+		float sliceScalingFactor;
+		float sliceBiasFactor;
+		float zNear;
+		float zFar;
+	};
+
+	struct GPULight {
+		glm::vec4 position = glm::vec4();
+		glm::vec4 color = glm::vec4();
+		unsigned int enabled = 0;
+		float intensity = 0;
+		float range = 0;
+		float padding = 0;
 	};
 };
