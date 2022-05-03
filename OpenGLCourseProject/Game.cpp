@@ -1057,7 +1057,7 @@ void Game::CullLight()
 {
 	visibleClusterCompShader->UseShader();
 	depth->Read(GL_TEXTURE0);
-	visibleClusterCompShader->Dispatch(ScreenWidth, ScreenHeight, 1);
+	visibleClusterCompShader->Dispatch(ScreenWidth / 32, ScreenHeight / 30, 1);
 
 	uniqueClusterCompShader->UseShader();
 	uniqueClusterCompShader->Dispatch(gridSizeX, gridSizeY, gridSizeZ);
@@ -1070,7 +1070,8 @@ void Game::CullLight()
 	//4-Light assignment
 	cullLightsCompShader->UseShader();
 	glUniformMatrix4fv(cullLightsCompShader->GetViewLocation(), 1, GL_FALSE, glm::value_ptr(camera->CalculateViewMatrix()));
-	cullLightsCompShader->Dispatch(count, 1, 1);
+	unsigned int x = static_cast<unsigned int> (std::max(static_cast<int>(count - 32), 1));
+	cullLightsCompShader->Dispatch(x / 32, 1, 1);
 }
 
 void Game::PreZPass(GLfloat deltaTime)
