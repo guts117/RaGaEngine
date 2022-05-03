@@ -35,12 +35,12 @@ int Window::Initialise() {
 
 	//Setup GLFW window properties
 	//OpenGL version
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);// sets OpenGl 3._
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);// sets OpenGl _.3
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);// sets OpenGl 3._
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);// sets OpenGl _.3
 	//core profile means no backwards compatibility 
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	//glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	///allow forward compatibility
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+	//glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
 	mainWindow = glfwCreateWindow(width, height, "Test Window", NULL, NULL);
 

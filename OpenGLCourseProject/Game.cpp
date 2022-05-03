@@ -150,19 +150,19 @@ void Game::init()
 	motionBlur->Init(ScreenWidth, ScreenHeight);
 
 	mainLight = std::make_shared < DirectionalLight>(2048, 2048,
-		1.0f, 1.0f, 1.0f,
+		0.1f, 0.1f, 0.1f,
 		5500.0f, -5500.0f, -10000.0f);
 
 	pointLights[0] = std::make_shared < PointLight>(1024, 1024,
 		0.1f, 100.0f,
-		3.0f, 3.0f, 3.0f,
+		0.0f, 0.0f, 3.0f,
 		12.0f - terrainScaleFactor, 40.0f, 10.0f - terrainScaleFactor);
 
 	pointLightCount++;
 
 	pointLights[1] = std::make_shared < PointLight>(1024, 1024,
 		0.1f, 100.0f,
-		3.0f, .0f, 0.0f,
+		3.0f, 0.0f, 0.0f,
 		-12.0f - terrainScaleFactor, 40.0f, 10.0f - terrainScaleFactor);
 
 	pointLightCount++;
@@ -333,11 +333,8 @@ void Game::initSSBOs() {
 	{
 		glGenBuffers(1, &lightSSBO);
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, lightSSBO);
-		glBufferData(GL_SHADER_STORAGE_BUFFER, maxLights * sizeof(struct GPULight), NULL, GL_DYNAMIC_DRAW);
 
-		GLint bufMask = GL_READ_WRITE;
-
-		struct GPULight* lights = (struct GPULight*)glMapBuffer(GL_SHADER_STORAGE_BUFFER, bufMask);
+		GPULight lights[maxLights];
 		PointLight* light;
 		for (unsigned int i = 0; i < pointLightCount; ++i) {
 			//Fetching the light from the current scene
@@ -346,9 +343,9 @@ void Game::initSSBOs() {
 			lights[i].color = glm::vec4(light->GetColor(), 1.0f);
 			lights[i].enabled = 1;
 			lights[i].intensity = 1.0f;
-			lights[i].range = 65.0f;
+			lights[i].range = camFarZ;
 		}
-		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+		glBufferData(GL_SHADER_STORAGE_BUFFER, maxLights * sizeof(struct GPULight), lights, GL_DYNAMIC_DRAW);
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, lightSSBO);
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 	}
@@ -1132,7 +1129,7 @@ void Game::CullLight()
 	unsigned int count;
 	glGetNamedBufferSubData(activeClusterCountSSBO, 0, sizeof(unsigned int), &count);
 
-	std::cout << count << " Clusters are Active" << std::endl;
+	//std::cout << count << " Clusters are Active" << std::endl;
 
 	//4-Light assignment
 	cullLightsCompShader->UseShader();
