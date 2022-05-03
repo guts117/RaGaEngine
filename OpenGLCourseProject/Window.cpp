@@ -106,6 +106,5 @@ GLfloat  Window::getYChange() {
 
 Window::~Window() {
 	glfwDestroyWindow(mainWindow);
-	delete mainWindow;
 	glfwTerminate();
 }
