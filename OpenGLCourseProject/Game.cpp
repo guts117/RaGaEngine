@@ -22,14 +22,14 @@ Game::Game()
 
 void Game::init()
 {
-	mainWindow.Initialise();
+	mainWindow->Initialise();
 	CreateBillboard();
 	CreateParticles();
 	CreateTerrain();
 	CreateObject();
 	CreateShaders();
 
-	auto projectionMatrix = glm::perspective(glm::radians(60.0f), (GLfloat)mainWindow.getBufferWidth() / (GLfloat)mainWindow.getBufferHeight(), camNearZ, camFarZ);
+	auto projectionMatrix = glm::perspective(glm::radians(60.0f), (GLfloat)mainWindow->getBufferWidth() / (GLfloat)mainWindow->getBufferHeight(), camNearZ, camFarZ);
 	camera = std::make_shared<Camera>(projectionMatrix, glm::vec3(-terrainScaleFactor, 30.0f, -terrainScaleFactor), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f, 50.0f, 0.2f);
 
 	environmentTexture = std::make_unique<Texture>("Textures/HDR/GCanyon_C_YumaPoint_3k.hdr");
@@ -378,8 +378,8 @@ void Game::update(float fps) {
 
 	//get + handle user input events
 	glfwPollEvents();
-	camera->keyControl(mainWindow.getKeys(), deltaTime);
-	camera->mouseControl(mainWindow.getXChange(), mainWindow.getYChange());
+	camera->keyControl(mainWindow->getKeys(), deltaTime);
+	camera->mouseControl(mainWindow->getXChange(), mainWindow->getYChange());
 
 	if (direction) {
 		triOffset += triIncrement;
@@ -407,9 +407,9 @@ void Game::update(float fps) {
 		tooSmall = !tooSmall;
 	}
 
-	if (mainWindow.getKeys()[GLFW_KEY_L]) {
+	if (mainWindow->getKeys()[GLFW_KEY_L]) {
 		spotLights[0]->Toggle();
-		mainWindow.getKeys()[GLFW_KEY_L] = false;
+		mainWindow->getKeys()[GLFW_KEY_L] = false;
 	}
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -438,7 +438,7 @@ void Game::update(float fps) {
 	camera->UpdatePreviousMatrices();
 	glUseProgram(0);
 
-	mainWindow.swapBuffers();
+	mainWindow->swapBuffers();
 }
 
 void Game::calcAverageNormals(unsigned int* indices, unsigned int indicesCount,

@@ -25,7 +25,7 @@ int main()
 		//loop until window closed
 
 		
-	} while (!game.mainWindow.getShouldClose());
+	} while (!game.mainWindow->getShouldClose());
 
 	return 0;
 }

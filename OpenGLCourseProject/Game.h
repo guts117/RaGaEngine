@@ -75,7 +75,7 @@ public:
 	void init();
 
 	void update(float fps);
-	Window mainWindow = Window(ScreenWidth, ScreenHeight);
+	std::unique_ptr<Window> mainWindow = std::make_unique<Window>(ScreenWidth, ScreenHeight);
 	~Game();
 private:
 	void calcAverageNormals(unsigned int* indices, unsigned int indicesCount,
