@@ -334,6 +334,10 @@ void Shader::SetAOMap(GLuint textureUnit)
 {
 }
 
+void Shader::SetDepthMap(GLuint textureUnit)
+{
+}
+
 void Shader::SetDirectionalLightTransform(glm::mat4* lTransform)
 {
 

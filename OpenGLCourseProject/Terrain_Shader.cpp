@@ -49,6 +49,7 @@ void Terrain_Shader::CompileProgram()
 		uniformSpotLight[i].uniformEdge = glGetUniformLocation(shaderID, locBuff);
 	}
 	uniformAO = glGetUniformLocation(shaderID, "AOMap");
+	uniformDepth = glGetUniformLocation(shaderID, "depthMap");
 	uniformIrradiance = glGetUniformLocation(shaderID, "irradianceMap");
 	uniformPrefilter = glGetUniformLocation(shaderID, "prefilterMap");
 	uniformBRDF = glGetUniformLocation(shaderID, "brdfLUT");
@@ -164,6 +165,11 @@ void Terrain_Shader::SetDisplacementMap(GLuint textureUnit)
 void Terrain_Shader::SetAOMap(GLuint textureUnit)
 {
 	glUniform1i(uniformAO, textureUnit);
+}
+
+void Terrain_Shader::SetDepthMap(GLuint textureUnit)
+{
+	glUniform1i(uniformDepth, textureUnit);
 }
 
 void Terrain_Shader::SetIrradianceMap(GLuint textureUnit)

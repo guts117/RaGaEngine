@@ -318,9 +318,9 @@ void Game::initSSBOs() {
 		screen2View.screenWidth = ScreenWidth;
 		screen2View.screenHeight = ScreenHeight;
 		//Basically reduced a log function into a simple multiplication an addition by pre-calculating these
-		auto factor = (float)gridSizeZ / std::log(zFar / zNear);
+		float factor = gridSizeZ / glm::log(zFar / zNear);
 		screen2View.sliceScalingFactor = factor;
-		screen2View.sliceBiasFactor = -(std::log(zNear) * factor);
+		screen2View.sliceBiasFactor = -(glm::log(zNear) * factor);
 		screen2View.zNear = camNearZ;
 		screen2View.zFar = camFarZ;
 		//Generating and copying data to memory in GPU
@@ -1244,6 +1244,7 @@ void Game::RenderPass(GLfloat deltaTime)
 	prefilterMap->Read(GL_TEXTURE9);
 	brdfMap->Read(GL_TEXTURE10);
 	ssaoBlur->Read(GL_TEXTURE14);
+	depth->Read(GL_TEXTURE18);
 
 	skybox->DrawHDRSkybox(viewMatrix, projectionMatrix, prevProj, prevView, environmentMap.get()); //should be at the end to prevent overdraw,here becoz of blending issues
 
@@ -1279,6 +1280,7 @@ void Game::RenderPass(GLfloat deltaTime)
 
 	terrainShader->SetDirectionalShadowMaps(mainLight.get(), NUM_CASCADES, 2);
 	terrainShader->SetAOMap(14);
+	terrainShader->SetDepthMap(18);
 	terrainShader->SetIrradianceMap(8);
 	terrainShader->SetPrefilterMap(9);
 	terrainShader->SetBRDFLUT(10);
@@ -1317,6 +1319,7 @@ void Game::RenderPass(GLfloat deltaTime)
 	shaderList[0]->SetPrefilterMap(9);
 	shaderList[0]->SetBRDFLUT(10);
 	shaderList[0]->SetAOMap(14);
+	shaderList[0]->SetDepthMap(18);
 
 	shaderList[0]->Validate();
 
@@ -1350,6 +1353,7 @@ void Game::RenderPass(GLfloat deltaTime)
 
 	animShaderList[0]->SetDirectionalShadowMap(2);
 	animShaderList[0]->SetAOMap(14);
+	animShaderList[0]->SetDepthMap(18);
 	animShaderList[0]->SetIrradianceMap(8);
 	animShaderList[0]->SetPrefilterMap(9);
 	animShaderList[0]->SetBRDFLUT(10);

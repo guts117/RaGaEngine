@@ -48,6 +48,7 @@ void Model_Shader::CompileProgram()
 	}
 	uniformSkybox = glGetUniformLocation(shaderID, "skybox");
 	uniformAO = glGetUniformLocation(shaderID, "AOMap");
+	uniformDepth = glGetUniformLocation(shaderID, "depthMap");
 	uniformIrradiance = glGetUniformLocation(shaderID, "irradianceMap");
 	uniformPrefilter = glGetUniformLocation(shaderID, "prefilterMap");
 	uniformBRDF = glGetUniformLocation(shaderID, "brdfLUT");
@@ -139,6 +140,11 @@ void Model_Shader::SetDirectionalShadowMap(GLuint textureUnit)
 void Model_Shader::SetAOMap(GLuint textureUnit)
 {
 	glUniform1i(uniformAO, textureUnit);
+}
+
+void Model_Shader::SetDepthMap(GLuint textureUnit)
+{
+	glUniform1i(uniformDepth, textureUnit);
 }
 
 void Model_Shader::SetDirectionalLightTransform(glm::mat4* lTransform)

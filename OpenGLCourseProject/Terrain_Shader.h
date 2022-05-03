@@ -17,6 +17,7 @@ public:
 	void SetBlendMap(GLuint textureUnit);
 	void SetDisplacementMap(GLuint textureUnit);
 	void SetAOMap(GLuint textureUnit);
+	void SetDepthMap(GLuint textureUnit);
 	void SetIrradianceMap(GLuint textureUnit);
 	void SetPrefilterMap(GLuint textureUnit);
 	void SetBRDFLUT(GLuint textureUnit);

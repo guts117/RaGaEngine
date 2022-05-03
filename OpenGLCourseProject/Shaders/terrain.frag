@@ -110,6 +110,7 @@ uniform sampler2D brdfLUT;
 uniform float CascadeEndClipSpace[NUM_CASCADES];
 uniform DirectionalShadowMaps directionalShadowMaps[NUM_CASCADES];
 uniform sampler2D AOMap;
+uniform sampler2D depthMap;
 uniform sampler2D blendMap;
 uniform OmniShadowMap omniShadowMaps[MAX_POINT_LIGHTS_SHADOW + MAX_SPOT_LIGHTS];
 
@@ -121,6 +122,7 @@ uniform float height_scale;
 
 //Debug from here
 uniform bool showAO;
+uniform bool showDepth;
 uniform bool showLightSlices;
 uniform bool showMotionBlur;
 uniform bool showShadowSlices;
@@ -353,17 +355,13 @@ float LinearDepth(float depthSample){
     return linear;
 }
 
-vec4 CalcPointLights(vec3 viewDir, vec3 normal, vec3 F0, vec3 albedo, float metallic, float roughness)
+vec4 CalcPointLights(vec3 viewDir, vec3 normal, vec3 F0, vec3 albedo, float metallic, float roughness, uint tileIndex)
 {
 	//ToDo:
 	PointLightCount 		= 2;
 
 	vec4 totalColor 		= vec4(0, 0, 0, 1);		//set alpha to 1 when using blending
 	
-	//Locating which cluster you are a part of
-	uint zTile     			= uint(max(log(gl_FragCoord.z) * scale + bias, 0.0));
-    uvec3 tiles    			= uvec3(uvec2( gl_FragCoord.xy / tileSizes[3]), zTile);
-    uint tileIndex 			= tiles.x + tileSizes.x * tiles.y + (tileSizes.x * tileSizes.y) * tiles.z;
     uint lightCount       	= lightGrid[tileIndex].count;
     uint lightIndexOffset 	= lightGrid[tileIndex].offset;
 
@@ -475,8 +473,14 @@ void main()
 	vec3 F0 				= vec3(0.04);
 	F0 						= mix(F0, albedo, metallic);
 	
+	//Locating which cluster you are a part of
+	float z 				= texture(depthMap, CalcScreenTexCoord()).r;
+	uint zTile     			= uint(max(log(z) * scale + bias, 0.0));
+    uvec3 tiles    			= uvec3(uvec2(gl_FragCoord.xy / tileSizes[3]), zTile);
+    uint tileIndex 			= tiles.x + tileSizes.x * tiles.y + (tileSizes.x * tileSizes.y) * tiles.z;
+
 	vec4 finalColor 		=  CalcDirectionalLight(viewDir, newNormal, F0, albedo, metallic, roughness);
-	finalColor 				+= CalcPointLights(viewDir, newNormal, F0, albedo, metallic, roughness);
+	finalColor 				+= CalcPointLights(viewDir, newNormal, F0, albedo, metallic, roughness, tileIndex);
 	finalColor 				+= CalcSpotLights(viewDir, newNormal, F0, albedo, metallic, roughness);
 	
 	 // ambient lighting (we now use IBL as the ambient term)
@@ -519,6 +523,13 @@ void main()
 		//color				+= vec4(colors[uint(mod(zTile, 8.0))], 1.0);
 	}
 	
+	if(showDepth)
+	{
+		float z 			= texture(depthMap, CalcScreenTexCoord()).r;
+		//color 				= vec4(vec3(LinearDepth(z)/ zFar), 1.0);
+		color 				= vec4(vec3(z), 1.0);
+	}
+	
 	if(color.a > 1.0f)
 	{
         //discard;
@@ -526,12 +537,12 @@ void main()
 	}	
 	
 	float brightness 		= dot(color.rgb, vec3(0.2126, 0.7152, 0.0722));
-	if(brightness > 1.0f && !showAO)
+	if(brightness > 1.0f && !showAO && !showDepth)
 	{
 		BrightColor 		= vec4(color.rgb, 1.0f);
 	}
 	else
-	{
+	{	
 		BrightColor 		= vec4(0.0, 0.0, 0.0, 1.0);
 	}
 	

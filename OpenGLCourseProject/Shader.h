@@ -60,6 +60,7 @@ public:
 	virtual void SetBRDFLUT(GLuint textureUnit);
 	virtual void SetDirectionalShadowMap(GLuint textureUnit);
 	virtual void SetAOMap(GLuint textureUnit);
+	virtual void SetDepthMap(GLuint textureUnit);
 	virtual void SetDirectionalLightTransform(glm::mat4* lTransform);
 	virtual void SetLightMatrices(std::vector<glm::mat4> lightMatrices);
 
@@ -74,7 +75,7 @@ protected:
 
 	GLuint shaderID = 0, theShader = 0, uniformProjection = -1, uniformModel = -1, uniformView = -1, uniformPrevPVM = -1, uniformEyePosition = -1, uniformHeightScale = -1,
 		uniformSkybox = -1, uniformIrradiance = -1, uniformPrefilter = -1, uniformBRDF = -1,
-		uniformAlbedo = -1, uniformMetallic = -1, uniformNormal = -1, uniformRoughness = -1, uniformParallax = -1, uniformGlow = -1, uniformAO = -1,
+		uniformAlbedo = -1, uniformMetallic = -1, uniformNormal = -1, uniformRoughness = -1, uniformParallax = -1, uniformGlow = -1, uniformAO = -1, uniformDepth = -1,
 		uniformTexture = -1,
 		uniformDirectionalLightTransform = -1, uniformDirectionalShadowMap = -1,
 		uniformOmniLightPos = -1, uniformFarPlane = -1;
