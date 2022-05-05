@@ -124,8 +124,8 @@ uniform float height_scale;
 uniform bool showAO;
 uniform bool showDepth;
 uniform bool showLightSlices;
-uniform bool showMotionBlur;
 uniform bool showShadowSlices;
+
 vec4 cascadeCol 			= vec4(0.0, 0.0, 0.0, 0.0);
 
 vec3 colors[8] 				= vec3[](
@@ -261,20 +261,8 @@ vec4 CalcLightByDirection(vec3 lightColor, vec3 lightDir, vec3 viewDir, vec3 nor
 	lightDir 				= normalize(lightDir);
 
 	vec3 halfway 			= normalize(viewDir + lightDir);
-	float attenuation 		= 0.0f;
-	if (radius == -1) 
-	{
-		attenuation 		= 1.0 / (distance * distance);
-	}
-	else
-	{
-		float dByR 			= distance / radius;
-		float dByR4			= dByR * dByR * dByR * dByR;
-		float dByR4C 		= clamp(1 - dByR4, 0.0, 1.0);
-		float dByR4C2 		= dByR4C * dByR4C;
-		attenuation 		= dByR4C2 / (1.0  + (distance * distance)); 
-	}	
 	
+	float attenuation 		= 0.0f;
 	vec3 radiance			= vec3(0.0, 0.0, 0.0);
 	if(is_DirectionLight) 
 	{ 
@@ -282,6 +270,18 @@ vec4 CalcLightByDirection(vec3 lightColor, vec3 lightDir, vec3 viewDir, vec3 nor
 	}
 	else					
 	{ 
+		if (radius == -1) 
+		{
+			attenuation 	= 1.0 / (distance * distance);
+		}
+		else
+		{
+			float dByR 		= distance / radius;
+			float dByR4		= dByR * dByR * dByR * dByR;
+			float dByR4C 	= clamp(1 - dByR4, 0.0, 1.0);
+			float dByR4C2 	= dByR4C * dByR4C;
+			attenuation 	= dByR4C2 / (1.0  + (distance * distance)); 
+		}
 		radiance 			= lightColor * attenuation; 	
 	}
 	

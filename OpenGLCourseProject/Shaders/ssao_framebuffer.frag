@@ -14,21 +14,26 @@ uniform mat4 Projection;
 const int MAX_KERNEL_SIZE = 64;
 uniform vec3 Kernel[MAX_KERNEL_SIZE];
 
+layout (std430, binding = 2) readonly buffer screenToView{
+    mat4 inverseProjection;
+    uvec4 tileSizes;
+    uvec2 screenDimensions;
+};
 
-float bias = 0.025;
+const float bias = 0.025;
 // tile noise texture over screen based on screen dimensions divided by noise size
-const vec2 noiseScale = vec2(1920.0/4.0, 1080.0/4.0); 
+const vec2 noiseScale = vec2(float(screenDimensions)/4.0);
 
 vec3 PositionFromDepth(vec2 Coords)
 {
 	float depth = texture(theTexture, Coords).r;
 	vec3 ndc = vec3(Coords, depth) * 2.0 - vec3(1.0);
-	vec4 view = inverse(Projection) * vec4(ndc, 1.0);
+	vec4 view = inverseProjection * vec4(ndc, 1.0);
 	return view.xyz / view.w;
 }
 
-vec3 NormalFromDepth(vec2 Coords) {
-  
+vec3 NormalFromDepth(vec2 Coords) 
+{ 
   const vec2 offset1 = vec2(0.0,0.001);
   const vec2 offset2 = vec2(0.001,0.0);
   
@@ -40,14 +45,13 @@ vec3 NormalFromDepth(vec2 Coords) {
   vec3 p2 = vec3(offset2, depth2 - depth);
   
   vec3 normal = cross(p1, p2);
-
+  
   return normalize(normal);
 }
 
 void main()
-{
-	vec3 Pos = PositionFromDepth(TexCoord);
-	
+{ 
+	vec3 Pos = PositionFromDepth(TexCoord);	
 	vec3 Normal = NormalFromDepth(TexCoord);
     vec3 randomVec = normalize(texture(noise, TexCoord * noiseScale).xyz);
 	

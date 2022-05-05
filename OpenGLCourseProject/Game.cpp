@@ -431,10 +431,6 @@ void Game::update(float fps) {
 	MotionBlurPass(fps);
 	BloomPass();
 
-
-	//prevProjView = projection *camera->CalculateViewMatrix();
-	//prevProj = projection;
-	//prevView = camera->CalculateViewMatrix();
 	camera->UpdatePreviousMatrices();
 	glUseProgram(0);
 
