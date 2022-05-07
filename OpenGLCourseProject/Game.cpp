@@ -15,11 +15,6 @@ float scaleMin = -1.0f;
 float terrainScaleFactor = 0.0f;
 float terrainScaleFactor1 = 1000.0f;
 
-Game::Game()
-{
- //empty
-}
-
 void Game::init()
 {
 	mainWindow->Initialise();
