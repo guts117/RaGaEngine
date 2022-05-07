@@ -38,7 +38,7 @@ int Window::Initialise() {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);// sets OpenGl 3._
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);// sets OpenGl _.3
 	//core profile means no backwards compatibility 
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	//glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	///allow forward compatibility
 	//glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
