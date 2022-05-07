@@ -1,13 +1,16 @@
 #include "NarakaKarEngine.h"
+#include  <memory>
+
 int main()
 {
-	NarakaKarEngine NarakaKarEngine;
-	NarakaKarEngine.Init();
+	std::unique_ptr<NarakaKarEngine> engine = std::make_unique<NarakaKarEngine>();
+	
+	engine->Init();
 
 	do 
 	{
-		NarakaKarEngine.Update();		
-	} while (!NarakaKarEngine.mainWindow->getShouldClose());
+		engine->Update();
+	} while (!engine->IsEnd());
 
 	return 0;
 }
