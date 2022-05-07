@@ -338,6 +338,7 @@ private:
 
 	GLfloat lastTime = 0.0f;
 	GLfloat framesPerSec = 0.0f;
+	GLfloat lastFrameTime = 0.0f;
 	GLfloat deltaTime = 0.0f;
 };
 #endif

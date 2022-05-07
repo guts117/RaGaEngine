@@ -1,5 +1,4 @@
 #include "NarakaKarEngine.h"
-#define STB_IMAGE_IMPLEMENTATION
 
 bool direction = true;
 float triOffset = 0.0f;
@@ -19,7 +18,7 @@ float terrainScaleFactor1 = 1000.0f;
 
 void NarakaKarEngine::Init()
 {
-	lastTime = static_cast<GLfloat>(glfwGetTime());
+	lastFrameTime = static_cast<GLfloat>(glfwGetTime());
 
 	mainWindow->Initialise();
 	CreateBillboard();
@@ -359,17 +358,16 @@ void NarakaKarEngine::Update()
 	// Measure speed
 	GLfloat now = static_cast<GLfloat>(glfwGetTime());
 	deltaTime = now - lastTime;
-	lastTime = now;
 	framesPerSec++;
-	if (deltaTime - lastTime >= 1.0) {
-		// printf and reset timer
-		printf("%f ms/fps\n", framesPerSec);      //1000.0/double(nbFrames)for frametime/ nbFrames for fps
-		printf("%f ms/frameTime\n", 1000.0 / deltaTime);      //1000.0/double(nbFrames)for frametime/ nbFrames for fps
-		deltaTime = 0.0f;
-		framesPerSec = 0.0f;
-		lastTime += 1.0;
-	}
+	lastTime = now;
 	
+	if (now - lastFrameTime >= 1.0) {
+		// printf and reset timer
+		printf("%f  fps, %f  spf \n", framesPerSec, 1000.0 / (double)framesPerSec);
+		framesPerSec = 0.0f;
+		lastFrameTime += 1.0;
+	}
+
 	//get + handle user input events
 	glfwPollEvents();
 	camera->keyControl(mainWindow->getKeys(), deltaTime);
