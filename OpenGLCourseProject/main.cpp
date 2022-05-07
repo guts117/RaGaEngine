@@ -1,11 +1,11 @@
 #pragma once
 #define STB_IMAGE_IMPLEMENTATION
-#include "Game.h"
+#include "NarakaKarEngine.h"
 
 int main()
 {
-	Game game;
-	game.init();
+	NarakaKarEngine NarakaKarEngine;
+	NarakaKarEngine.init();
 
 	double lastTime = glfwGetTime();
 	float nbFrames = 0.0f;
@@ -21,11 +21,11 @@ int main()
 			nbFrames = 0;
 			lastTime += 1.0;
 		}
-		game.update(nbFrames);
+		NarakaKarEngine.update(nbFrames);
 		//loop until window closed
 
 		
-	} while (!game.mainWindow->getShouldClose());
+	} while (!NarakaKarEngine.mainWindow->getShouldClose());
 
 	return 0;
 }

@@ -67,16 +67,16 @@
 #include "Debug.h"
 
 
-class Game {
+class NarakaKarEngine {
 
 public:
-	Game() = default;
+	NarakaKarEngine() = default;
 
 	void init();
 
 	void update(float fps);
 	std::unique_ptr<Window> mainWindow = std::make_unique<Window>(ScreenWidth, ScreenHeight);
-	~Game();
+	~NarakaKarEngine();
 private:
 	void calcAverageNormals(unsigned int* indices, unsigned int indicesCount,
 		GLfloat* vertices, unsigned int verticesCount,

@@ -66,7 +66,7 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Game.cpp">
+    <ClCompile Include="NarakaKarEngine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Static_Model.cpp">
@@ -224,7 +224,7 @@
     <ClInclude Include="Static_Mesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Game.h">
+    <ClInclude Include="NarakaKarEngine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Static_Model.h">

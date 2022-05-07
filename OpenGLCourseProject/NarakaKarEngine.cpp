@@ -1,4 +1,4 @@
-#include "Game.h"
+#include "NarakaKarEngine.h"
 bool direction = true;
 float triOffset = 0.0f;
 float triMaxOffset = 0.6f;
@@ -15,7 +15,7 @@ float scaleMin = -1.0f;
 float terrainScaleFactor = 0.0f;
 float terrainScaleFactor1 = 1000.0f;
 
-void Game::init()
+void NarakaKarEngine::init()
 {
 	mainWindow->Initialise();
 	CreateBillboard();
@@ -221,7 +221,7 @@ void Game::init()
 	BRDFPass();
 }
 
-void Game::InitSSBOs() {
+void NarakaKarEngine::InitSSBOs() {
 	//Setting up tile size on both X and Y 
 	sizeX = (unsigned int)std::ceilf(ScreenWidth / (float)gridSizeX);
 
@@ -344,13 +344,13 @@ void Game::InitSSBOs() {
 	}
 }
 
-void Game::CreateClusters() {
+void NarakaKarEngine::CreateClusters() {
 	//Building the grid of AABB enclosing the view frustum clusters
 	buildAABBGridCompShader->UseShader();
 	buildAABBGridCompShader->Dispatch(gridSizeX, gridSizeY, gridSizeZ);
 }
 
-void Game::update(float fps) {
+void NarakaKarEngine::update(float fps) {
 	GLfloat now = static_cast<GLfloat>(glfwGetTime()); //SDL_GetPerformanceCounter();
 	deltaTime = now - lastTime;	//(now-lastTime)*1000/SDL_GetPerfomnaceFrequency(); //for seconds
 	lastTime = now;
@@ -416,7 +416,7 @@ void Game::update(float fps) {
 	mainWindow->swapBuffers();
 }
 
-void Game::calcAverageNormals(unsigned int* indices, unsigned int indicesCount,
+void NarakaKarEngine::calcAverageNormals(unsigned int* indices, unsigned int indicesCount,
 	GLfloat* vertices, unsigned int verticesCount,
 	unsigned int vLength, unsigned int normalOffset)
 {
@@ -445,7 +445,7 @@ void Game::calcAverageNormals(unsigned int* indices, unsigned int indicesCount,
 	}
 }
 
-void Game::calcAverageTangents(unsigned int* indices, unsigned int indicesCount,
+void NarakaKarEngine::calcAverageTangents(unsigned int* indices, unsigned int indicesCount,
 	GLfloat* vertices, unsigned int verticesCount,
 	unsigned int vLength, unsigned int tangentOffset)
 {
@@ -488,7 +488,7 @@ void Game::calcAverageTangents(unsigned int* indices, unsigned int indicesCount,
 	}
 }
 
-void Game::CreateBillboard() {
+void NarakaKarEngine::CreateBillboard() {
 
 	unsigned int billboardIndices[] = {
 		0, 1, 2,
@@ -509,7 +509,7 @@ void Game::CreateBillboard() {
 
 }
 
-void Game::CreateParticles()
+void NarakaKarEngine::CreateParticles()
 {
 	unsigned int particlesIndices[] = {
 		0, 1, 2,
@@ -530,7 +530,7 @@ void Game::CreateParticles()
 	particleList.push_back(obj);
 }
 
-void Game::CreateTerrain()
+void NarakaKarEngine::CreateTerrain()
 {
 	unsigned int terrainIndices[] = {
 		0, 2, 1,
@@ -555,7 +555,7 @@ void Game::CreateTerrain()
 	terrainList.push_back(obj);
 }
 
-void Game::CreateObject() {
+void NarakaKarEngine::CreateObject() {
 	unsigned int indices[] = {
 		1,3,0,
 		2,3,1,
@@ -606,7 +606,7 @@ void Game::CreateObject() {
 	meshList.push_back(obj4);
 }
 
-void Game::CreateShaders() {
+void NarakaKarEngine::CreateShaders() {
 
 	buildAABBGridCompShader->CreateFromFiles("Shaders/clusterShader.comp");
 	visibleClusterCompShader->CreateFromFiles("Shaders/clusterVisibleShader.comp");
@@ -658,7 +658,7 @@ void Game::CreateShaders() {
 	shader2 = nullptr;
 }
 
-void Game::RenderBillboardScene()
+void NarakaKarEngine::RenderBillboardScene()
 {
 	glm::mat4 prevPV = glm::mat4();
 	glUniform3f(uniformPos, 6.0f - terrainScaleFactor, 29.0f, -terrainScaleFactor);
@@ -671,7 +671,7 @@ void Game::RenderBillboardScene()
 	billboardList[0]->RenderMesh();
 }
 
-void Game::RenderParticlesScene(GLfloat deltaTime)
+void NarakaKarEngine::RenderParticlesScene(GLfloat deltaTime)
 {
 	particleList[0]->GenerateParticlesCPU(deltaTime, glm::vec3(10.0f - terrainScaleFactor, 33.0f, -terrainScaleFactor));
 	particleList[0]->SimulateParticlesCPU(camera->getCameraPosition(), deltaTime);
@@ -680,7 +680,7 @@ void Game::RenderParticlesScene(GLfloat deltaTime)
 	particleList[0]->RenderParticlesMeshCPU();
 }
 
-void Game::RenderTerrain(bool shadow, bool depth)
+void NarakaKarEngine::RenderTerrain(bool shadow, bool depth)
 {
 	glUniform1f(uniformDispFactor,(0.2f*terrainScaleFactor1));
 
@@ -718,7 +718,7 @@ void Game::RenderTerrain(bool shadow, bool depth)
 	terrainList[0]->prevMesh = model;	
 }
 
-void Game::RenderEnvCubeMap(bool is_cubeMap)
+void NarakaKarEngine::RenderEnvCubeMap(bool is_cubeMap)
 {
 	if(is_cubeMap)
 	{
@@ -731,7 +731,7 @@ void Game::RenderEnvCubeMap(bool is_cubeMap)
 	mesh_cube->RenderCube();
 }
 
-void Game::RenderScene(std::shared_ptr<Shader> shader) {
+void NarakaKarEngine::RenderScene(std::shared_ptr<Shader> shader) {
 	glm::mat4 model = glm::mat4();
 	glm::mat4 prevPVM = glm::mat4();
 
@@ -793,7 +793,7 @@ void Game::RenderScene(std::shared_ptr<Shader> shader) {
 	//anymodel->DrawImportedObject(shader, camera);
 }
 
-void Game::RenderAnimScene(bool shadow, bool depth) {
+void NarakaKarEngine::RenderAnimScene(bool shadow, bool depth) {
 	glm::mat4 model;
 	glm::mat4 prevPVM = glm::mat4();
 
@@ -846,7 +846,7 @@ void Game::RenderAnimScene(bool shadow, bool depth) {
 	anim2->prevModel = model;
 }
 
-void Game::EnvironmentMapPass()
+void NarakaKarEngine::EnvironmentMapPass()
 {
 	environmentMapShader->UseShader();
 	environmentMapShader->SetTexture(1);
@@ -871,7 +871,7 @@ void Game::EnvironmentMapPass()
 	environmentMap->CreateFirstMipFace();
 }
 
-void Game::IrradianceConvolutionPass()
+void NarakaKarEngine::IrradianceConvolutionPass()
 {
 	irradianceConvolutionShader->UseShader();
 	irradianceConvolutionShader->SetSkybox(1);
@@ -894,7 +894,7 @@ void Game::IrradianceConvolutionPass()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Game::PrefilterPass()
+void NarakaKarEngine::PrefilterPass()
 {
 	prefilterShader->UseShader();
 	prefilterShader->SetSkybox(1);
@@ -927,7 +927,7 @@ void Game::PrefilterPass()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Game::BRDFPass()
+void NarakaKarEngine::BRDFPass()
 {
 	glViewport(0, 0, brdfMap->GetWidth(), brdfMap->GetHeight());
 
@@ -940,7 +940,7 @@ void Game::BRDFPass()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Game::DirectionalShadowMapPass(DirectionalLight* light) {
+void NarakaKarEngine::DirectionalShadowMapPass(DirectionalLight* light) {
 	
 	testLitView[0] = light->CalculateCascadeLightTransform();
 	mainLight->GetShadowMap()->CalcOrthProjs(camera->CalculateViewMatrix(), testLitView, 60.0f);
@@ -991,7 +991,7 @@ void Game::DirectionalShadowMapPass(DirectionalLight* light) {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Game::OmniShadowMapPass(PointLight* light) {
+void NarakaKarEngine::OmniShadowMapPass(PointLight* light) {
 
 	omniShadowShader->UseShader();
 
@@ -1028,7 +1028,7 @@ void Game::OmniShadowMapPass(PointLight* light) {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Game::CullLight()
+void NarakaKarEngine::CullLight()
 {
 	visibleClusterCompShader->UseShader();
 	depth->Read(GL_TEXTURE0);
@@ -1048,7 +1048,7 @@ void Game::CullLight()
 	cullLightsCompShader->Dispatch(count, 1, 1);
 }
 
-void Game::PreZPass(GLfloat deltaTime)
+void NarakaKarEngine::PreZPass(GLfloat deltaTime)
 {
 	auto projectionMatrix = camera->GetProjectionMatrix();
 	auto viewMatrix = camera->CalculateViewMatrix();
@@ -1099,7 +1099,7 @@ void Game::PreZPass(GLfloat deltaTime)
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Game::SSAOPass()
+void NarakaKarEngine::SSAOPass()
 {
 	auto projectionMatrix = camera->GetProjectionMatrix();
 
@@ -1119,7 +1119,7 @@ void Game::SSAOPass()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Game::SSAOBlurPass()
+void NarakaKarEngine::SSAOBlurPass()
 {
 	glViewport(0, 0, ssaoBlur->GetWidth(), ssaoBlur->GetHeight());
 	
@@ -1134,7 +1134,7 @@ void Game::SSAOBlurPass()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Game::RenderPass(GLfloat deltaTime)
+void NarakaKarEngine::RenderPass(GLfloat deltaTime)
 {
 	auto projectionMatrix = camera->GetProjectionMatrix();
 	auto viewMatrix = camera->CalculateViewMatrix();
@@ -1316,7 +1316,7 @@ void Game::RenderPass(GLfloat deltaTime)
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Game::BlurPass()
+void NarakaKarEngine::BlurPass()
 {
 	bool horizontal = true;
 	int amount = 10;
@@ -1342,7 +1342,7 @@ void Game::BlurPass()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Game::MotionBlurPass(float fps)
+void NarakaKarEngine::MotionBlurPass(float fps)
 {
 	glViewport(0, 0, motionBlur->GetWidth(), motionBlur->GetHeight());
 
@@ -1362,7 +1362,7 @@ void Game::MotionBlurPass(float fps)
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Game::BloomPass()
+void NarakaKarEngine::BloomPass()
 {
 	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
@@ -1385,7 +1385,7 @@ void Game::BloomPass()
 	quad->RenderQuad();
 }
 
-Game::~Game()
+NarakaKarEngine::~NarakaKarEngine()
 {
 	if (AABBvolumeGridSSBO != 0) 
 	{
