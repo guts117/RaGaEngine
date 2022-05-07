@@ -295,7 +295,7 @@ private:
 	};
 
 	unsigned int AABBvolumeGridSSBO, screenToViewSSBO, lightSSBO, lightIndexListSSBO, lightGridSSBO, 
-				lightIndexGlobalCountSSBO, visibleClusterSSBO, uniqueClusterSSBO, activeClusterCountSSBO;
+				lightIndexGlobalCountSSBO, visibleUniqueClusterSSBO, activeClusterCountSSBO;
 
 	const int gridSizeX = 16;
 	const int gridSizeY = 9;
@@ -330,5 +330,11 @@ private:
 		float intensity = 0;
 		float range = 0;
 		float padding = 0;
+	};
+
+	struct VisibleUniqueCluster
+	{
+		unsigned int isActive;
+		unsigned int uniqueIndex;
 	};
 };

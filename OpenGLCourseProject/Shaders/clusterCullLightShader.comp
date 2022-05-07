@@ -49,56 +49,49 @@ layout (std430, binding = 6) buffer globalIndexCountSSBO{
     uint globalIndexCount;
 };
 
-layout (std430, binding = 8) buffer uniqueClusterSSBO{
-    uint uniqueActiveClusters[ ];
+struct VisibleUniqueCluster
+{
+	uint isActive;
+	uint uniqueIndex;
 };
 
-layout (std430, binding = 9) buffer globalActiveClusterCountSSBO{
+layout (std430, binding = 7) buffer visibleUniqueClusterSSBO{
+    VisibleUniqueCluster visibleUniqueCluster[ ];
+};
+
+layout (std430, binding = 8) buffer globalActiveClusterCountSSBO{
     uint globalActiveClusterCount;
 };
-
-//Shared variables 
-shared PointLight sharedLights[16*9*4];
 
 uniform mat4 View;
 
 bool testSphereAABB(uint light, uint tile);
 float sqDistPointAABB(vec3 point, uint tile);
 
-void main(){
-	globalActiveClusterCount 					= 0;
-    globalIndexCount 							= 0;
-    uint threadCount 							= gl_WorkGroupSize.x * gl_WorkGroupSize.y * gl_WorkGroupSize.z;
-    uint lightCount  							= pointLight.length();
-    uint numBatches 							= (lightCount + threadCount -1) / threadCount;
+void main()
+{
+	if(gl_GlobalInvocationID.x == 0)
+	{
+		globalActiveClusterCount = 0;
+	}
 
-    uint tileIndex 								= uniqueActiveClusters[gl_GlobalInvocationID.x];
+    globalIndexCount 							= 0;
+    uint lightCount  							= pointLight.length();
+    uint tileIndex 								= visibleUniqueCluster[gl_GlobalInvocationID.x].uniqueIndex;
 	
 	//visible lights temp buffer for the loop
     uint vLightCnt 								= 0;								
     uint vLightIndices[100];
 	
-	for(uint batch = 0; batch < numBatches; ++batch)
+	//Iterating within the current batch of lights
+	for(uint light = 0; light < lightCount; ++light)
 	{
-		uint lightIndex 						= batch * threadCount + gl_LocalInvocationIndex;
-
-		//Prevent overflow by clamping to last light which is always null
-		lightIndex 								= min(lightIndex, lightCount);
-
-		//Populating shared light array
-		sharedLights[gl_LocalInvocationIndex] 	= pointLight[lightIndex];
-		barrier();
-
-		//Iterating within the current batch of lights
-		for(uint light = 0; light < threadCount; ++light)
+		if(pointLight[light].enabled  == 1)
 		{
-			if(sharedLights[light].enabled  == 1)
+			if(testSphereAABB(light, tileIndex))
 			{
-				if(testSphereAABB(light, tileIndex))
-				{
-					vLightIndices[vLightCnt] 	= batch * threadCount + light;
-					vLightCnt 					+= 1;
-				}
+				vLightIndices[vLightCnt] 		= light;
+				vLightCnt 						+= 1;
 			}
 		}
 	}	
@@ -117,8 +110,8 @@ void main(){
 }
 
 bool testSphereAABB(uint light, uint tile){
-	float radius 								= sharedLights[light].range;
-	vec3 center  								= vec3(View * sharedLights[light].position);
+	float radius 								= pointLight[light].range;
+	vec3 center  								= vec3(View * pointLight[light].position);
 	float squaredDistance 						= sqDistPointAABB(center, tile);
 
 	return squaredDistance <= (radius * radius);

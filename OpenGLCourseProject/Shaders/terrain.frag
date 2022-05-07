@@ -281,6 +281,7 @@ vec4 CalcLightByDirection(vec3 lightColor, vec3 lightDir, vec3 viewDir, vec3 nor
 			float dByR4C 	= clamp(1 - dByR4, 0.0, 1.0);
 			float dByR4C2 	= dByR4C * dByR4C;
 			attenuation 	= dByR4C2 / (1.0  + (distance * distance)); 
+			//attenuation 	= 1.0f - smoothstep(radius * 0.75f, radius, distance); 
 		}
 		radiance 			= lightColor * attenuation; 	
 	}
@@ -421,7 +422,7 @@ vec2 CalcParallaxMapping(vec3 viewDir, vec2 texCoord, vec3 Color, float Amnt)
     // depth of current layer
     float currLayerDepth 	= 0.0;
     // the amount to shift the texture coordinates per layer (from vector P)
-    vec2 P 						= viewDir.xy * height_scale; 
+    vec2 P 					= viewDir.xy * height_scale; 
     vec2 deltaTexCoords 	= P / numLayers;
 	
 	// get initial values
@@ -481,9 +482,10 @@ void main()
 	F0 						= mix(F0, albedo, metallic);
 	
 	//Locating which cluster you are a part of
-	float z 				= texture(depthMap, CalcScreenTexCoord()).r;
+	ivec2 pixelPos 			= ivec2(gl_FragCoord.xy);
+	float z 				= LinearDepth(texelFetch(depthMap, pixelPos, 0).r);
 	uint zTile     			= uint(max(log(z) * scale + bias, 0.0));
-    uvec3 tiles    			= uvec3(uvec2(gl_FragCoord.xy / tileSizes[3]), zTile);
+    uvec3 tiles    			= uvec3(uvec2(pixelPos.xy / tileSizes[3]), zTile);
     uint tileIndex 			= tiles.x + tileSizes.x * tiles.y + (tileSizes.x * tileSizes.y) * tiles.z;
 
 	vec4 finalColor 		=  CalcDirectionalLight(viewDir, newNormal, F0, albedo, metallic, roughness);
@@ -532,7 +534,7 @@ void main()
 	
 	if(showDepth)
 	{
-		color 				= vec4(vec3(LinearDepth(z)/ zFar), 1.0);
+		color 				= vec4(vec3(z / zFar), 1.0);
 		//color 				= vec4(vec3(z), 1.0);
 	}
 	

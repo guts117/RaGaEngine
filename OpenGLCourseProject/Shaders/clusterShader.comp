@@ -35,7 +35,7 @@ void main(){
 									gl_WorkGroupID.z * (gl_NumWorkGroups.x * gl_NumWorkGroups.y);
 
     //Calculating the min and max point in screen space
-    vec4 maxPoint_sS 			= vec4(vec2(gl_WorkGroupID.x + 1, gl_WorkGroupID.y + 1) * tileSizePx, -1.0, 1.0); // Top Right
+    vec4 maxPoint_sS 			= vec4(vec2(gl_WorkGroupID.xy + 1) * tileSizePx, -1.0, 1.0); // Top Right
     vec4 minPoint_sS 			= vec4(gl_WorkGroupID.xy * tileSizePx, -1.0, 1.0); // Bottom left
     
     //Pass min and max to view space

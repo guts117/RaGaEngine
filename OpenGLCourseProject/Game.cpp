@@ -149,32 +149,25 @@ void Game::init()
 	motionBlur = std::make_unique < Motion_Blur_FrameBuffer>();
 	motionBlur->Init(ScreenWidth, ScreenHeight);
 
-	mainLight = std::make_shared < DirectionalLight>(2048, 2048,
+	mainLight = std::make_shared < DirectionalLight>(1024, 1024,
 		0.1f, 0.1f, 0.1f,
 		5500.0f, -5500.0f, -10000.0f);
 
-	pointLights[0] = std::make_shared < PointLight>(1024, 1024,
+	pointLights[0] = std::make_shared < PointLight>(512, 512,
 		0.1f, 100.0f,
 		0.0f, 0.0f, 3.0f,
 		12.0f - terrainScaleFactor, 40.0f, 10.0f - terrainScaleFactor);
 
 	pointLightCount++;
 
-	pointLights[1] = std::make_shared < PointLight>(1024, 1024,
+	pointLights[1] = std::make_shared < PointLight>(512, 512,
 		0.1f, 100.0f,
 		3.0f, 0.0f, 0.0f,
 		-12.0f - terrainScaleFactor, 40.0f, 10.0f - terrainScaleFactor);
 
 	pointLightCount++;
 
-	//pointLights[2] = std::make_shared < PointLight>(1024, 1024,
-	//	0.1f, 100.0f,
-	//	0.0f, 10.0f, 0.0f,
-	//	-6.0f - terrainScaleFactor, 40.0f, 10.0f - terrainScaleFactor);
-
-	//pointLightCount++;
-
-	spotLights[0] = std::make_shared < SpotLight>(1024, 1024,
+	spotLights[0] = std::make_shared < SpotLight>(512, 512,
 		0.1f, 100.0f,
 		10.0f, 10.0f, 10.0f,
 		0.0f, 0.0f, 0.0f,
@@ -293,7 +286,7 @@ void Game::InitSSBOs() {
 			lightList.get()->at(i).color = glm::vec4(light->GetColor(), 1.0f);
 			lightList.get()->at(i).enabled = 1;
 			lightList.get()->at(i).intensity = 100.0f;
-			lightList.get()->at(i).range = camFarZ;
+			lightList.get()->at(i).range = 65.0f;
 		}
 
 		glBufferData(GL_SHADER_STORAGE_BUFFER, maxLights * sizeof(struct GPULight), &(lightList.get()->at(0)), GL_DYNAMIC_DRAW);
@@ -338,20 +331,11 @@ void Game::InitSSBOs() {
 	}
 
 	{
-		glGenBuffers(1, &visibleClusterSSBO);
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, visibleClusterSSBO);
+		glGenBuffers(1, &visibleUniqueClusterSSBO);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, visibleUniqueClusterSSBO);
 
-		glBufferData(GL_SHADER_STORAGE_BUFFER, numClusters * sizeof(bool), NULL, GL_STATIC_COPY);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, visibleClusterSSBO);
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-	}
-
-	{
-		glGenBuffers(1, &uniqueClusterSSBO);
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, uniqueClusterSSBO);
-
-		glBufferData(GL_SHADER_STORAGE_BUFFER, numClusters * sizeof(unsigned int), NULL, GL_STATIC_COPY);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, uniqueClusterSSBO);
+		glBufferData(GL_SHADER_STORAGE_BUFFER, numClusters * sizeof(VisibleUniqueCluster), NULL, GL_STATIC_COPY);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, visibleUniqueClusterSSBO);
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 	}
 
@@ -360,7 +344,7 @@ void Game::InitSSBOs() {
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, activeClusterCountSSBO);
 
 		glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(unsigned int), NULL, GL_STATIC_COPY);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 9, activeClusterCountSSBO);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, activeClusterCountSSBO);
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 	}
 }
@@ -1438,15 +1422,10 @@ Game::~Game()
 		glDeleteBuffers(1, &lightIndexGlobalCountSSBO);
 		lightIndexGlobalCountSSBO = 0;
 	}
-	if (visibleClusterSSBO != 0)
+	if (visibleUniqueClusterSSBO != 0)
 	{
-		glDeleteBuffers(1, &visibleClusterSSBO);
-		visibleClusterSSBO = 0;
-	}
-	if (uniqueClusterSSBO != 0)
-	{
-		glDeleteBuffers(1, &uniqueClusterSSBO);
-		uniqueClusterSSBO = 0;
+		glDeleteBuffers(1, &visibleUniqueClusterSSBO);
+		visibleUniqueClusterSSBO = 0;
 	}
 	if (activeClusterCountSSBO != 0)
 	{
