@@ -1,4 +1,6 @@
-#pragma once
+#ifndef IRRADIANCE_CONVOLUTION_SHADER
+#define IRRADIANCE_CONVOLUTION_SHADER
+
 #include "Shader.h"
 class Irradiance_Convolution_Shader :
     public Shader
@@ -13,3 +15,4 @@ private:
 	void CompileProgram();
 };
 
+#endif

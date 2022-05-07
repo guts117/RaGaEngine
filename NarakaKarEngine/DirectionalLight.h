@@ -1,4 +1,6 @@
-#pragma once
+#ifndef DIRECTIONALLIGHT
+#define DIRECTIONALLIGHT
+
 #include "Light.h"
 
 class DirectionalLight :
@@ -23,3 +25,4 @@ private:
 	glm::vec3 up{glm::vec3(0.0f, 1.0f, 0.0f)};
 };
 
+#endif

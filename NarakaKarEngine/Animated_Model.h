@@ -1,4 +1,6 @@
-#pragma once
+#ifndef ANIMATED_MODEL
+#define ANIMATED_MODEL
+
 #include "Model.h"
 
 class Animated_Model :public Model
@@ -52,3 +54,4 @@ private:
 
 	glm::quat rotate_head_xz = glm::quat(cos(glm::radians(0.0f)), sin(glm::radians(0.0f)) * glm::vec3(1.0f, 0.0f, 0.0f));
 };
+#endif

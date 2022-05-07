@@ -1,4 +1,6 @@
-#pragma once
+#ifndef MODEL
+#define MODEL
+
 #include <cstdio>
 #include <vector>
 #include <string>
@@ -66,3 +68,4 @@ protected:
 	const aiScene *scene = nullptr;
 };
 
+#endif

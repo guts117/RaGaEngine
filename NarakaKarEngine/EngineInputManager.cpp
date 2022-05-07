@@ -1,11 +1,11 @@
-#include "InputManager.h"
+#include "EngineInputManager.h"
 
-InputManager::InputManager()
+EngineInputManager::EngineInputManager()
 {
 	//empty
 }
 
-void InputManager::handleKeys(GLFWwindow* window, int key, int code, int action, int mode) {
+void EngineInputManager::handleKeys(GLFWwindow* window, int key, int code, int action, int mode) {
 	Window* theWindow = static_cast<Window*>(glfwGetWindowUserPointer(window)); // grabbing that user pointer and casting it to Window*
 
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
@@ -21,7 +21,7 @@ void InputManager::handleKeys(GLFWwindow* window, int key, int code, int action,
 		}
 	}
 }
-void InputManager::handleMouse(GLFWwindow* window, double xPos, double yPos) {
+void EngineInputManager::handleMouse(GLFWwindow* window, double xPos, double yPos) {
 	Window* theWindow = static_cast<Window*>(glfwGetWindowUserPointer(window)); // grabbing that user pointer and casting it to Window*
 
 	if (theWindow->mouseFirstMoved) {
@@ -37,7 +37,7 @@ void InputManager::handleMouse(GLFWwindow* window, double xPos, double yPos) {
 	theWindow->lastY = static_cast<float>(yPos);
 }
 
-InputManager::~InputManager()
+EngineInputManager::~EngineInputManager()
 {
 	//empty
 }

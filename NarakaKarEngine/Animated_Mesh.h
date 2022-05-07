@@ -1,4 +1,6 @@
-#pragma once
+#ifndef ANIMATED_MESH
+#define ANIMATED_MESH
+
 #include "Mesh.h"
 
 class Animated_Mesh : public Mesh
@@ -13,4 +15,4 @@ public:
 private:
 	void ClearMesh();
 };
-
+#endif

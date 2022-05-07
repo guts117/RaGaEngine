@@ -1,4 +1,6 @@
-#pragma once
+#ifndef PARTICLE_SHADER
+#define PARTICLE_SHADER
+
 #include "Shader.h"
 class Particle_Shader :
 	public Shader
@@ -22,3 +24,4 @@ private:
 
 };
 
+#endif

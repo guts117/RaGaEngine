@@ -1,4 +1,6 @@
-#pragma once
+#ifndef SPOTLIGHT
+#define SPOTLIGHT
+
 #include "PointLight.h"
 class SpotLight :
 	public PointLight
@@ -31,3 +33,4 @@ private:
 
 };
 
+#endif

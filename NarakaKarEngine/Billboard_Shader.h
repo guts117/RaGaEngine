@@ -1,4 +1,5 @@
-#pragma once
+#ifndef BILLBOARD_SHADER
+#define BILLBOARD_SHADER
 #include "Shader.h"
 class Billboard_Shader :
 	public Shader
@@ -22,3 +23,4 @@ private:
 	GLuint uniformSize = 0;
 };
 
+#endif

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef MATERIAL
+#define MATERIAL
 
 #include <GL/glew.h>
 
@@ -33,3 +34,4 @@ private:
 	GLuint glow = 0;
 };
 
+#endif

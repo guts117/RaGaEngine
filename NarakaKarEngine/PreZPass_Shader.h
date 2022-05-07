@@ -1,4 +1,6 @@
-#pragma once
+#ifndef PREZPASS_SHADER
+#define PREZPASS_SHADER
+
 #include "Shader.h"
 class PreZPass_Shader :
 	public Shader
@@ -12,3 +14,4 @@ class PreZPass_Shader :
 		void CompileProgram();
 };
 
+#endif

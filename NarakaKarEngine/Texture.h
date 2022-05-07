@@ -1,4 +1,6 @@
-#pragma once
+#ifndef TEXTURE
+#define TEXTURE
+
 #include <GL/glew.h>
 
 #include <glm/glm.hpp>
@@ -38,3 +40,4 @@ private:
 	const char* fileLocation;
 };
 
+#endif

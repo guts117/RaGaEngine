@@ -1,4 +1,6 @@
-#pragma once
+#ifndef PARTICLESYSTEM
+#define PARTICLESYSTEM
+
 #include "Mesh.h"
 #include "Particle.h"
 #include <glm/gtx/norm.hpp>
@@ -36,3 +38,4 @@ private:
 	Particle* ParticlesContainer;
 };
 
+#endif

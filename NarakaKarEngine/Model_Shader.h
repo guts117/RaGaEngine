@@ -1,4 +1,6 @@
-#pragma once
+#ifndef MODEL_SHADER
+#define MODEL_SHADER
+
 #include "Shader.h"
 class Model_Shader :
 	public Shader
@@ -25,3 +27,4 @@ private:
 	void CompileProgram();
 };
 
+#endif

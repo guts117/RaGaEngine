@@ -1,4 +1,6 @@
-#pragma once
+#ifndef	OMNISHADOWMAP_FRAMEBUFFER
+#define OMNISHADOWMAP_FRAMEBUFFER
+
 #include "ShadowMap_Framebuffer.h"
 class OmniShadowMap_Framebuffer :
 	public ShadowMap_Framebuffer
@@ -13,3 +15,4 @@ public:
 	~OmniShadowMap_Framebuffer();
 
 };
+#endif

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SKYBOX
+#define SKYBOX
 
 #include <vector>
 #include <string>
@@ -36,3 +37,4 @@ private:
 
 };
 
+#endif

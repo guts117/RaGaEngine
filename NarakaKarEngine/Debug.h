@@ -1,4 +1,6 @@
-#pragma once
+#ifndef DEBUG
+#define DEBUG
+
 #include <glm/glm.hpp>
 #include <GL/glew.h>
 #include <stdio.h>
@@ -14,3 +16,4 @@ public:
 private:
 	~Debug() = default;
 };
+#endif

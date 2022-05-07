@@ -1,4 +1,5 @@
-#pragma once
+#ifndef	SSAOBLUR_FRAMEBUFFER
+#define SSAOBLUR_FRAMEBUFFER
 
 #include "Framebuffer.h"
 
@@ -12,3 +13,4 @@ public:
 	~SSAOBlur_Framebuffer();
 };
 
+#endif

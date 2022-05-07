@@ -1,4 +1,6 @@
-#pragma once
+#ifndef BLUR_SHADER
+#define BLUR_SHADER
+
 #include "Shader.h"
 class Blur_Shader :
 	public Shader
@@ -18,3 +20,4 @@ private:
 	GLuint uniformWeight = 0;
 };
 
+#endif

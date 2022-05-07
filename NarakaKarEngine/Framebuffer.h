@@ -1,4 +1,5 @@
-#pragma once
+#ifndef FRAMEBUFFER
+#define FRAMEBUFFER
 
 #include <stdio.h>
 #include "CommonValues.h"
@@ -28,3 +29,4 @@ protected:
 	GLuint src_width, src_height;
 };
 
+#endif

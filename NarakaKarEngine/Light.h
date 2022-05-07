@@ -1,4 +1,6 @@
-#pragma once
+#ifndef LIGHT
+#define LIGHT
+
 #include <GL/glew.h>
 #include <glm/glm.hpp> 
 #include <glm/gtc/matrix_transform.hpp> 
@@ -24,3 +26,4 @@ protected:
 	ShadowMap_Framebuffer* shadowMap = nullptr;
 };
 
+#endif

@@ -1,6 +1,6 @@
-#include "Motion_Blur_FrameBuffer.h"
+#include "MotionBlur_FrameBuffer.h"
 
-bool Motion_Blur_FrameBuffer::Init(GLuint width, GLuint height)
+bool MotionBlur_FrameBuffer::Init(GLuint width, GLuint height)
 {
 	src_width = width; src_height = height;
 
@@ -37,7 +37,7 @@ bool Motion_Blur_FrameBuffer::Init(GLuint width, GLuint height)
 	return true;
 }
 
-Motion_Blur_FrameBuffer::~Motion_Blur_FrameBuffer()
+MotionBlur_FrameBuffer::~MotionBlur_FrameBuffer()
 {
 	if (FBO) {
 		glDeleteFramebuffers(1, &FBO);

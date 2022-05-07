@@ -1,4 +1,6 @@
-#pragma once
+#ifndef TERRAIN_SHADER
+#define TERRAIN_SHADER
+
 #include "Shader.h"
 class Terrain_Shader :
 	public Shader
@@ -39,3 +41,4 @@ private:
 	} uniformDirectionalShadowMaps[NUM_CASCADES];
 };
 
+#endif

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SHADER
+#define SHADER
 
 #include <stdio.h>
 #include <string>
@@ -125,3 +126,4 @@ protected:
 	virtual void CompileProgram();
 };
 
+#endif

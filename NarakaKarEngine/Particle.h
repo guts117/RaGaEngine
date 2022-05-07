@@ -1,4 +1,6 @@
-#pragma once
+#ifndef PARTICLE
+#define PARTICLE
+
 #include <glm/glm.hpp>
 class Particle
 {
@@ -15,3 +17,4 @@ public:
 	~Particle();
 };
 
+#endif

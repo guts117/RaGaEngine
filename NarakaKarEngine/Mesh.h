@@ -1,4 +1,6 @@
-#pragma once
+#ifndef MESH
+#define MESH
+
 #include <GL/glew.h>
 #include "CommonValues.h"
 #include <vector>
@@ -29,3 +31,4 @@ protected:
 	GLuint VBO_bones;
 };
 
+#endif

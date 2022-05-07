@@ -1,4 +1,6 @@
-#pragma once
+#ifndef COMPUTE_SHADER
+#define COMPUTE_SHADER
+
 #include "Shader.h"
 class Compute_Shader :
     public Shader
@@ -11,3 +13,4 @@ public:
 private:
 	void CompileProgram();
 };
+#endif

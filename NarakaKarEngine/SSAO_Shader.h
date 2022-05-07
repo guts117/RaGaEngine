@@ -1,4 +1,6 @@
-#pragma once
+#ifndef	SSAO_SHADER
+#define SSAO_SHADER
+
 #include "Shader.h"
 #include <Random>
 class SSAO_Shader :
@@ -29,3 +31,4 @@ private:
 	}
 };
 
+#endif

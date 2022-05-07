@@ -1,4 +1,6 @@
-#pragma once
+#ifndef	SSAOBLUR_SHADER
+#define SSAOBLUR_SHADER
+
 #include "Shader.h"
 class SSAOBlur_Shader :
 	public Shader
@@ -14,3 +16,4 @@ private:
 	void CompileProgram();
 };
 
+#endif

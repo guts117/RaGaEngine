@@ -1,4 +1,6 @@
-#pragma once
+#ifndef PREFILTER_FRAMEBUFFER
+#define PREFILTER_FRAMEBUFFER
+
 #include "Framebuffer.h"
 class PreFilter_Framebuffer :
     public Framebuffer
@@ -15,3 +17,4 @@ private:
 	GLuint rboDepth = 0;
 };
 
+#endif

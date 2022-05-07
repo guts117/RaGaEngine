@@ -1,5 +1,5 @@
-#pragma once
-
+#ifndef	SHADOWMAP_FRAMEBUFFER
+#define SHADOWMAP_FRAMEBUFFER
 #include "Framebuffer.h"
 
 class ShadowMap_Framebuffer:public Framebuffer
@@ -27,3 +27,4 @@ private:
 	glm::mat4 shadowOrthoProjInfo[NUM_CASCADES];
 	glm::vec4 modeldFrusCorns[NUM_CASCADES][NUM_FRUSTUM_CORNERS];
 };
+#endif

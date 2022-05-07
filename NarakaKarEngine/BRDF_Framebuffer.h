@@ -1,4 +1,6 @@
-#pragma once
+#ifndef BRDF_FRAMEBUFFER
+#define BRDF_FRAMEBUFFER
+
 #include "Framebuffer.h"
 class BRDF_Framebuffer :
     public Framebuffer
@@ -15,3 +17,4 @@ private:
 	GLuint rboDepth = 0;
 };
 
+#endif

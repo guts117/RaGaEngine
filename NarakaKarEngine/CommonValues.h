@@ -1,9 +1,9 @@
 #ifndef COMMONVALS
 #define COMMONVALS
 
-#include "stb_image.h"
 #define _USE_MATH_DEFINES
 #include <math.h>
+#include "stb_image.h"
 
 const int MAX_POINT_LIGHTS_WITH_SHADOW = 3;
 const int MAX_SPOT_LIGHTS = 3;

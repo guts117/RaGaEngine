@@ -1,13 +1,14 @@
-#pragma once
+#ifndef WINDOW
+#define WINDOW
 
-#include "InputManager.h"
+#include "EngineInputManager.h"
 #include <memory>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
 class Window
 {
-	friend class InputManager;
+	friend class EngineInputManager;
 public:
 	Window();
 	Window(GLint windowWidth, GLint windowheight);
@@ -44,3 +45,4 @@ private:
 	bool mouseFirstMoved = true;
 };
 
+#endif

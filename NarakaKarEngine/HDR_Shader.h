@@ -1,4 +1,6 @@
-#pragma once
+#ifndef HDR_SHADER
+#define HDR_SHADER
+
 #include "Shader.h"
 class HDR_Shader :
 	public Shader
@@ -23,3 +25,4 @@ class HDR_Shader :
 };
 
 
+#endif

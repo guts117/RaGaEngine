@@ -51,7 +51,7 @@
     <ClCompile Include="Skybox.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="InputManager.cpp">
+    <ClCompile Include="EngineInputManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Animated_Model.cpp">
@@ -138,7 +138,7 @@
     <ClCompile Include="MotionBlur_Shader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Motion_Blur_FrameBuffer.cpp">
+    <ClCompile Include="MotionBlur_FrameBuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Equirectangular_to_CubeMap_Shader.cpp">
@@ -212,7 +212,7 @@
     <ClInclude Include="Skybox.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="InputManager.h">
+    <ClInclude Include="EngineInputManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Animated_Model.h">
@@ -296,7 +296,7 @@
     <ClInclude Include="MotionBlur_Shader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Motion_Blur_FrameBuffer.h">
+    <ClInclude Include="MotionBlur_FrameBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Equirectangular_to_CubeMap_Shader.h">

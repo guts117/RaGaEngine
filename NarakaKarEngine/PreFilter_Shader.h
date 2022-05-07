@@ -1,4 +1,6 @@
-#pragma once
+#ifndef PREFILTER_SHADER
+#define PREFILTER_SHADER
+
 #include "Shader.h"
 class PreFilter_Shader :
     public Shader
@@ -15,3 +17,4 @@ private:
 	GLuint uniformRoughness = 0;
 };
 
+#endif

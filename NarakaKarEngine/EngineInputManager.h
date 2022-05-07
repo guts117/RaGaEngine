@@ -1,16 +1,17 @@
-#pragma once
-#include "Window.h"
+#ifndef ENGINE_INPUT_MANAGER
+#define ENGINE_INPUT_MANAGER
 
+#include "Window.h"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-class InputManager
+class EngineInputManager
 {
 	friend class Window;
 public:
-	InputManager();
+	EngineInputManager();
 
-	~InputManager();
+	~EngineInputManager();
 
 private:
 
@@ -18,3 +19,4 @@ private:
 	static void handleMouse(GLFWwindow* window, double xPos, double yPos);
 };
 
+#endif

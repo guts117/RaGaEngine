@@ -1,7 +1,7 @@
-#pragma once
+#ifndef BLUR_PINGPONG_FRAMEBUFFER
+#define BLUR_PINGPONG_FRAMEBUFFER
 
 #include <stdio.h>
-
 #include <GL/glew.h>
 
 class Blur_PingPong_Framebuffer
@@ -27,4 +27,4 @@ protected:
 	GLuint src_width, src_height;
 	GLuint colorBuffers[2] = { 0 };
 };
-
+#endif

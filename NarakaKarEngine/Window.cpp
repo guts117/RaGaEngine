@@ -88,8 +88,8 @@ int Window::Initialise() {
 
 
 void  Window::createCallbacks() {
-	glfwSetKeyCallback(mainWindow, InputManager::handleKeys);
-	glfwSetCursorPosCallback(mainWindow, InputManager::handleMouse);
+	glfwSetKeyCallback(mainWindow, EngineInputManager::handleKeys);
+	glfwSetCursorPosCallback(mainWindow, EngineInputManager::handleMouse);
 }
 
 GLfloat  Window::getXChange() {

@@ -1,4 +1,6 @@
-#pragma once
+#ifndef VERTEX_BONE_DATA
+#define VERTEX_BONE_DATA
+
 #include "CommonValues.h"
 #include <cstdio>
 #include <string>
@@ -19,3 +21,4 @@ public:
 	void AddBoneData(unsigned int BoneID, float Weight);
 };
 
+#endif

@@ -1,4 +1,6 @@
-#pragma once
+#ifndef STATIC_MODEL
+#define STATIC_MODEL
+
 #include "Model.h"
 class Static_Model :
 	public Model
@@ -16,3 +18,4 @@ private:
 	void LoadMaterials(const aiScene* scene) final;
 };
 
+#endif

@@ -1,4 +1,6 @@
 #include "NarakaKarEngine.h"
+#define STB_IMAGE_IMPLEMENTATION
+
 bool direction = true;
 float triOffset = 0.0f;
 float triMaxOffset = 0.6f;
@@ -15,8 +17,10 @@ float scaleMin = -1.0f;
 float terrainScaleFactor = 0.0f;
 float terrainScaleFactor1 = 1000.0f;
 
-void NarakaKarEngine::init()
+void NarakaKarEngine::Init()
 {
+	lastTime = static_cast<GLfloat>(glfwGetTime());
+
 	mainWindow->Initialise();
 	CreateBillboard();
 	CreateParticles();
@@ -141,7 +145,7 @@ void NarakaKarEngine::init()
 	blur = std::make_unique < Blur_PingPong_Framebuffer>();
 	blur->Init(ScreenWidth, ScreenHeight);
 
-	motionBlur = std::make_unique < Motion_Blur_FrameBuffer>();
+	motionBlur = std::make_unique < MotionBlur_FrameBuffer>();
 	motionBlur->Init(ScreenWidth, ScreenHeight);
 
 	mainLight = std::make_shared < DirectionalLight>(1024, 1024,
@@ -350,11 +354,22 @@ void NarakaKarEngine::CreateClusters() {
 	buildAABBGridCompShader->Dispatch(gridSizeX, gridSizeY, gridSizeZ);
 }
 
-void NarakaKarEngine::update(float fps) {
-	GLfloat now = static_cast<GLfloat>(glfwGetTime()); //SDL_GetPerformanceCounter();
-	deltaTime = now - lastTime;	//(now-lastTime)*1000/SDL_GetPerfomnaceFrequency(); //for seconds
+void NarakaKarEngine::Update() 
+{	
+	// Measure speed
+	GLfloat now = static_cast<GLfloat>(glfwGetTime());
+	deltaTime = now - lastTime;
 	lastTime = now;
-
+	framesPerSec++;
+	if (deltaTime - lastTime >= 1.0) {
+		// printf and reset timer
+		printf("%f ms/fps\n", framesPerSec);      //1000.0/double(nbFrames)for frametime/ nbFrames for fps
+		printf("%f ms/frameTime\n", 1000.0 / deltaTime);      //1000.0/double(nbFrames)for frametime/ nbFrames for fps
+		deltaTime = 0.0f;
+		framesPerSec = 0.0f;
+		lastTime += 1.0;
+	}
+	
 	//get + handle user input events
 	glfwPollEvents();
 	camera->keyControl(mainWindow->getKeys(), deltaTime);
@@ -407,7 +422,7 @@ void NarakaKarEngine::update(float fps) {
 	SSAOBlurPass();
 	RenderPass(deltaTime);
 	BlurPass();
-	MotionBlurPass(fps);
+	MotionBlurPass(framesPerSec);
 	BloomPass();
 
 	camera->UpdatePreviousMatrices();

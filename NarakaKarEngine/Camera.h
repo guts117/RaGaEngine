@@ -1,4 +1,6 @@
-#pragma once
+#ifndef CAMERA
+#define CAMERA
+
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -58,3 +60,4 @@ private:
 	void update();
 };
 
+#endif

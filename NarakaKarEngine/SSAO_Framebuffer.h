@@ -1,4 +1,6 @@
-#pragma once
+#ifndef	SSAO_FRAMEBUFFER
+#define SSAO_FRAMEBUFFER
+
 #include "Framebuffer.h"
 
 class SSAO_Framebuffer : public Framebuffer
@@ -11,3 +13,4 @@ public:
 	~SSAO_Framebuffer();
 };
 
+#endif

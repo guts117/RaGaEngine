@@ -35,7 +35,7 @@
     <ClCompile Include="Framebuffer.cpp" />
     <ClCompile Include="HDR_Framebuffer.cpp" />
     <ClCompile Include="HDR_Shader.cpp" />
-    <ClCompile Include="InputManager.cpp" />
+    <ClCompile Include="EngineInputManager.cpp" />
     <ClCompile Include="Irradiance_Convolution_Shader.cpp" />
     <ClCompile Include="Light.cpp" />
     <ClCompile Include="main.cpp" />
@@ -44,7 +44,7 @@
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="MotionBlur_Shader.cpp" />
-    <ClCompile Include="Motion_Blur_FrameBuffer.cpp" />
+    <ClCompile Include="MotionBlur_FrameBuffer.cpp" />
     <ClCompile Include="OmniShadowMap_FrameBuffer.cpp" />
     <ClCompile Include="Particle.cpp" />
     <ClCompile Include="ParticleSystem.cpp" />
@@ -90,7 +90,7 @@
     <ClInclude Include="Framebuffer.h" />
     <ClInclude Include="HDR_Framebuffer.h" />
     <ClInclude Include="HDR_Shader.h" />
-    <ClInclude Include="InputManager.h" />
+    <ClInclude Include="EngineInputManager.h" />
     <ClInclude Include="Irradiance_Convolution_Shader.h" />
     <ClInclude Include="Light.h" />
     <ClInclude Include="NarakaKarEngine.h" />
@@ -98,7 +98,7 @@
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="MotionBlur_Shader.h" />
-    <ClInclude Include="Motion_Blur_FrameBuffer.h" />
+    <ClInclude Include="MotionBlur_FrameBuffer.h" />
     <ClInclude Include="OmniShadowMap_FrameBuffer.h" />
     <ClInclude Include="Particle.h" />
     <ClInclude Include="ParticleSystem.h" />

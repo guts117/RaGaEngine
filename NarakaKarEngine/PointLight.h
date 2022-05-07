@@ -1,4 +1,6 @@
-#pragma once
+#ifndef POINTLIGHT
+#define POINTLIGHT
+
 #include "Light.h"
 #include "OmniShadowMap_FrameBuffer.h"
 
@@ -31,3 +33,4 @@ protected:
 
 };
 
+#endif

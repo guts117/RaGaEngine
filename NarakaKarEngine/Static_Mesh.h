@@ -1,4 +1,6 @@
-#pragma once
+#ifndef STATIC_MESH
+#define STATIC_MESH
+
 #include "Mesh.h"
 
 class Static_Mesh : public Mesh
@@ -25,3 +27,4 @@ private:
 	int particlesCount = 0;
 };
 
+#endif

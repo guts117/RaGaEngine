@@ -1,4 +1,5 @@
-#pragma once
+#ifndef DEPTH_FRAMEBUFFER
+#define DEPTH_FRAMEBUFFER
 
 #include "Framebuffer.h"
 class Depth_Framebuffer :public Framebuffer
@@ -11,3 +12,4 @@ public:
 
 	~Depth_Framebuffer();
 };
+#endif

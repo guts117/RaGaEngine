@@ -1,4 +1,6 @@
-#pragma once
+#ifndef MOTIONBLUR_SHADER
+#define MOTIONBLUR_SHADER
+
 #include "Shader.h"
 class MotionBlur_Shader :
 	public Shader
@@ -20,3 +22,4 @@ private:
 	GLuint uniformVelocityScale = 0;
 };
 
+#endif

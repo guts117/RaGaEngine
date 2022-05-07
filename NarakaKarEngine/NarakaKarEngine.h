@@ -1,11 +1,10 @@
-#pragma once
+#ifndef NARAKA_KAR_ENGINE
+#define NARAKA_KAR_ENGINE
 
 #include <stdio.h>
 #include <string>
 #include <cmath>
 #include <memory>
-#define _USE_MATH_DEFINES
-#include <math.h>
 #include <vector>
 
 #include <GL/glew.h>
@@ -16,6 +15,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/string_cast.hpp>
+
 #include "CommonValues.h"
 
 #include "Window.h"
@@ -51,7 +51,7 @@
 #include "SSAO_Framebuffer.h"
 #include "SSAOBlur_Framebuffer.h"
 #include "HDR_Framebuffer.h"
-#include "Motion_Blur_FrameBuffer.h"
+#include "MotionBlur_FrameBuffer.h"
 
 #include "Blur_PingPong_Framebuffer.h"
 
@@ -72,9 +72,9 @@ class NarakaKarEngine {
 public:
 	NarakaKarEngine() = default;
 
-	void init();
+	void Init();
 
-	void update(float fps);
+	void Update();
 	std::unique_ptr<Window> mainWindow = std::make_unique<Window>(ScreenWidth, ScreenHeight);
 	~NarakaKarEngine();
 private:
@@ -194,7 +194,7 @@ private:
 	std::unique_ptr < HDR_Shader> hdrShader = std::make_unique<HDR_Shader>();
 	std::unique_ptr < HDR_Framebuffer> hdr = nullptr;
 	std::unique_ptr < MotionBlur_Shader> motionBlurShader = std::make_unique<MotionBlur_Shader>();
-	std::unique_ptr < Motion_Blur_FrameBuffer> motionBlur = nullptr;
+	std::unique_ptr < MotionBlur_FrameBuffer> motionBlur = nullptr;
 	std::unique_ptr < Blur_Shader> blurShader = std::make_unique<Blur_Shader>();
 	std::unique_ptr < Blur_PingPong_Framebuffer> blur = nullptr;
 
@@ -264,9 +264,6 @@ private:
 	std::unique_ptr <Static_Object> sphere = std::make_unique<Static_Object>();
 	std::unique_ptr <Static_Object> bulbWhite = std::make_unique<Static_Object>();
 	std::unique_ptr <Static_Object> bulbRed = std::make_unique<Static_Object>();
-	
-	GLfloat deltaTime = 0.0f;
-	GLfloat lastTime = 0.0f;
 
 	GLfloat aircraftAngle = 0.0f;
 
@@ -337,4 +334,10 @@ private:
 		unsigned int isActive;
 		unsigned int uniqueIndex;
 	};
+
+
+	GLfloat lastTime = 0.0f;
+	GLfloat framesPerSec = 0.0f;
+	GLfloat deltaTime = 0.0f;
 };
+#endif
