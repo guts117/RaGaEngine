@@ -2,6 +2,7 @@
 #define BLUR_SHADER
 
 #include "Shader.h"
+
 class Blur_Shader :
 	public Shader
 {

@@ -2,6 +2,7 @@
 #define COMPUTE_SHADER
 
 #include "Shader.h"
+
 class Compute_Shader :
     public Shader
 {

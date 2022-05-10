@@ -2,6 +2,7 @@
 #define DEPTH_FRAMEBUFFER
 
 #include "Framebuffer.h"
+
 class Depth_Framebuffer :public Framebuffer
 {
 public:

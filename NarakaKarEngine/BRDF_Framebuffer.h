@@ -2,6 +2,7 @@
 #define BRDF_FRAMEBUFFER
 
 #include "Framebuffer.h"
+
 class BRDF_Framebuffer :
     public Framebuffer
 {
