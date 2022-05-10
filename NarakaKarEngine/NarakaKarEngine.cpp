@@ -65,7 +65,14 @@
 
 struct NarakaKarEngine::Impl
 {
-	Impl() = default;
+	explicit Impl()						= default;
+
+	Impl(Impl&& rhs)					= delete;
+	Impl& operator=(Impl&& rhs)			= delete;
+
+	Impl(const Impl& rhs)				= delete;
+	Impl& operator=(const Impl& rhs)	= delete;
+
 
 	std::unique_ptr<Window> mainWindow = std::make_unique<Window>(ScreenWidth, ScreenHeight);
 
@@ -1685,7 +1692,7 @@ struct NarakaKarEngine::Impl
 		glUniform1f(uniformExposure, 1.0f);
 
 		blur->Read(1);
-		glUniform1i(uniformBlur, 1.0f);
+		glUniform1i(uniformBlur, 1);
 
 		motionBlur->Read(GL_TEXTURE2);
 		hdrShader->SetTexture(2);
@@ -1695,7 +1702,7 @@ struct NarakaKarEngine::Impl
 		quad->RenderQuad();
 	}
 
-	~Impl() 
+	~Impl()
 	{
 		if (AABBvolumeGridSSBO != 0)
 		{
@@ -1744,17 +1751,17 @@ NarakaKarEngine::NarakaKarEngine() = default;
 
 void NarakaKarEngine::Init()
 {
-	pimpl->Init();
+	Pimpl()->Init();
 }
 
 void NarakaKarEngine::Update() 
 {	
-	pimpl->Update();
+	Pimpl()->Update();
 }
 
 bool NarakaKarEngine:: IsEnd()
 {
-	return pimpl->mainWindow->getShouldClose();
+	return Pimpl()->mainWindow->getShouldClose();
 }
 
 NarakaKarEngine::~NarakaKarEngine() = default;
