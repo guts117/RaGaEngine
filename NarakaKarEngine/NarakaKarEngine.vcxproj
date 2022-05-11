@@ -110,6 +110,7 @@
     <ClInclude Include="Shader.h" />
     <ClInclude Include="ShadowMap_FrameBuffer.h" />
     <ClInclude Include="Skybox.h" />
+    <ClInclude Include="spimpl.h" />
     <ClInclude Include="SpotLight.h" />
     <ClInclude Include="Depth_Framebuffer.h" />
     <ClInclude Include="SSAO_Framebuffer.h" />
