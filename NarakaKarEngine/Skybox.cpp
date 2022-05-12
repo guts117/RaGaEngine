@@ -1,4 +1,7 @@
 #include "Skybox.h"
+#include <GL/glew.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 Skybox::Skybox()
 {
@@ -61,28 +64,9 @@ Skybox::Skybox(std::vector<std::string> faceLocation)
 	uniformPrevPV = skyShader->GetPrevPVMLocation();
 
 	skyMesh = new Static_Mesh();
-	//texture setup
-	glGenTextures(1, &textureId);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
 
-	int width, height, bitDepth;
-	for (size_t i = 0; i < 6; i++)
-	{
-		unsigned char* texData = stbi_load(faceLocation[i].c_str(), &width, &height, &bitDepth, 0);
-
-		if (!texData) {
-			printf("Failed ot find: %s\n", faceLocation[i].c_str());
-			return;
-		}
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_SRGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, texData);
-		stbi_image_free(texData);
-	}
-
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	cubeMap = new Texture();
+	cubeMap->LoadCubeMapSRGB(faceLocation);
 }
 
 void Skybox::DrawSkybox(glm::mat4 viewMatrix, glm::mat4 projectionMatrix, glm::mat4 prevP, glm::mat4 prevV)
@@ -104,8 +88,7 @@ void Skybox::DrawSkybox(glm::mat4 viewMatrix, glm::mat4 projectionMatrix, glm::m
 	prevPV = prevP*prevV;
 	glUniformMatrix4fv(uniformPrevPV, 1, GL_FALSE, glm::value_ptr(prevPV));
 
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
+	cubeMap->UseCubeMap(0);
 
 	skyShader->Validate();
 
@@ -149,8 +132,9 @@ Skybox::~Skybox()
 		delete skyMesh;
 		skyMesh = nullptr;
 	}
-	if(textureId)
+	if(cubeMap != nullptr)
 	{
-		glDeleteTextures(1, &textureId);
+		delete cubeMap;
+		cubeMap = nullptr;
 	}
 }

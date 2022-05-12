@@ -65,7 +65,7 @@
 
 struct NarakaKarEngine::Impl
 {
-	explicit Impl()						= default;
+	Impl()								= default;
 
 	Impl(Impl&& rhs)					= delete;
 	Impl& operator=(Impl&& rhs)			= delete;

@@ -4,18 +4,11 @@
 #include <vector>
 #include <string>
 
-#include <GL/glew.h>
-
-#define GLM_FORCE_CTOR_INIT
-#include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
-#include "CommonValues.h"
-
 #include "Equirectangular_to_CubeMap_Framebuffer.h"
 #include "Model_Shader.h"
 #include "Static_Mesh.h"
+#include "Texture.h"
 
 class Skybox
 {
@@ -32,7 +25,7 @@ private:
 	Static_Mesh* skyMesh = nullptr;
 	Model_Shader* skyShader = nullptr;
 	
-	GLuint textureId = 0;
+	Texture* cubeMap;
 	GLuint uniformProjection{ 0 }, uniformView{ 0 }, uniformPrevPV{0};
 
 };

@@ -337,42 +337,6 @@ void Static_Model::ClearModel()
 			static_MeshList[i] = nullptr;
 		}
 	}
-	for (size_t i = 0; i < textureList.size(); i++) {
-		if (textureList[i]) {
-			delete textureList[i];
-			textureList[i] = nullptr;
-		}
-	}
-	for (size_t i = 0; i < metalTextureList.size(); i++) {
-		if (metalTextureList[i]) {
-			delete metalTextureList[i];
-			metalTextureList[i] = nullptr;
-		}
-	}
-	for (size_t i = 0; i < normalTextureList.size(); i++) {
-		if (normalTextureList[i]) {
-			delete normalTextureList[i];
-			normalTextureList[i] = nullptr;
-		}
-	}
-	for (size_t i = 0; i < roughTextureList.size(); i++) {
-		if (roughTextureList[i]) {
-			delete roughTextureList[i];
-			roughTextureList[i] = nullptr;
-		}
-	}
-	for (size_t i = 0; i < parallaxTextureList.size(); i++) {
-		if (parallaxTextureList[i]) {
-			delete parallaxTextureList[i];
-			parallaxTextureList[i] = nullptr;
-		}
-	}
-	for (size_t i = 0; i < glowTextureList.size(); i++) {
-		if (glowTextureList[i]) {
-			delete glowTextureList[i];
-			glowTextureList[i] = nullptr;
-		}
-	}
 }
 
 Static_Model::~Static_Model()
