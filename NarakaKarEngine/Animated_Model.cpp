@@ -221,9 +221,9 @@ void Animated_Model::LoadMaterials(const aiScene* scene)
 
 				std::string texPath = std::string("Textures/") + filename;
 
-				textureList[i] = new Texture(texPath.c_str());
+				textureList[i] = new Texture(texPath, true);
 
-				if (!textureList[i]->LoadTextureSRGB()) {
+				if (!textureList[i]->LoadTextureNoAlpha()) {
 					printf("Failed to load texture at: %s\n", texPath.c_str());
 					delete textureList[i];
 					textureList[i] = nullptr;
@@ -241,7 +241,7 @@ void Animated_Model::LoadMaterials(const aiScene* scene)
 
 				metalTextureList[i] = new Texture(texPath.c_str());
 
-				if (!metalTextureList[i]->LoadTexture()) {
+				if (!metalTextureList[i]->LoadTextureNoAlpha()) {
 					printf("Failed to load texture at: %s\n", texPath.c_str());
 					delete metalTextureList[i];
 					metalTextureList[i] = nullptr;
@@ -258,7 +258,7 @@ void Animated_Model::LoadMaterials(const aiScene* scene)
 
 				metalTextureList[i] = new Texture(texPath.c_str());
 
-				if (!metalTextureList[i]->LoadTexture()) {
+				if (!metalTextureList[i]->LoadTextureNoAlpha()) {
 					printf("Failed to load texture at: %s\n", texPath.c_str());
 					delete metalTextureList[i];
 					metalTextureList[i] = nullptr;
@@ -277,7 +277,7 @@ void Animated_Model::LoadMaterials(const aiScene* scene)
 
 				normalTextureList[i] = new Texture(texPath.c_str());
 
-				if (!normalTextureList[i]->LoadTexture()) {
+				if (!normalTextureList[i]->LoadTextureNoAlpha()) {
 					printf("Failed to load texture at: %s\n", texPath.c_str());
 					delete normalTextureList[i];
 					normalTextureList[i] = nullptr;
@@ -294,7 +294,7 @@ void Animated_Model::LoadMaterials(const aiScene* scene)
 
 				normalTextureList[i] = new Texture(texPath.c_str());
 
-				if (!normalTextureList[i]->LoadTexture()) {
+				if (!normalTextureList[i]->LoadTextureNoAlpha()) {
 					printf("Failed to load texture at: %s\n", texPath.c_str());
 					delete normalTextureList[i];
 					normalTextureList[i] = nullptr;
@@ -312,7 +312,7 @@ void Animated_Model::LoadMaterials(const aiScene* scene)
 
 				roughTextureList[i] = new Texture(texPath.c_str());
 
-				if (!roughTextureList[i]->LoadTexture()) {
+				if (!roughTextureList[i]->LoadTextureNoAlpha()) {
 					printf("Failed to load texture for at: %s\n", texPath.c_str());
 					delete roughTextureList[i];
 					roughTextureList[i] = nullptr;
@@ -329,7 +329,7 @@ void Animated_Model::LoadMaterials(const aiScene* scene)
 
 				roughTextureList[i] = new Texture(texPath.c_str());
 
-				if (!roughTextureList[i]->LoadTexture()) {
+				if (!roughTextureList[i]->LoadTextureNoAlpha()) {
 					printf("Failed to load texture at: %s\n", texPath.c_str());
 					delete roughTextureList[i];
 					roughTextureList[i] = nullptr;
@@ -348,7 +348,7 @@ void Animated_Model::LoadMaterials(const aiScene* scene)
 
 				glowTextureList[i] = new Texture(texPath.c_str());
 
-				if (!glowTextureList[i]->LoadTexture()) {
+				if (!glowTextureList[i]->LoadTextureNoAlpha()) {
 					printf("Failed to load reflec texture for static model at: %s\n", texPath.c_str());
 					delete glowTextureList[i];
 					glowTextureList[i] = nullptr;
@@ -365,7 +365,7 @@ void Animated_Model::LoadMaterials(const aiScene* scene)
 
 				glowTextureList[i] = new Texture(texPath.c_str());
 
-				if (!glowTextureList[i]->LoadTexture()) {
+				if (!glowTextureList[i]->LoadTextureNoAlpha()) {
 					printf("Failed to load texture for static model at: %s\n", texPath.c_str());
 					delete glowTextureList[i];
 					glowTextureList[i] = nullptr;
@@ -374,30 +374,30 @@ void Animated_Model::LoadMaterials(const aiScene* scene)
 		}
 
 		if (!textureList[i]) {
-			textureList[i] = new Texture("Textures/plain.jpg");
-			textureList[i]->LoadTextureSRGB();
+			textureList[i] = new Texture("Textures/plain.jpg", true);
+			textureList[i]->LoadTextureNoAlpha();
 		}
 
 		if (!metalTextureList[i]) {
 			metalTextureList[i] = new Texture("Textures/plain.jpg");
-			metalTextureList[i]->LoadTexture();
+			metalTextureList[i]->LoadTextureNoAlpha();
 		}
 
 		if (!normalTextureList[i]) {
 			normalTextureList[i] = new Texture("Textures/plain.jpg");
-			normalTextureList[i]->LoadTexture();
+			normalTextureList[i]->LoadTextureNoAlpha();
 		}
 		if (!roughTextureList[i]) {
 			roughTextureList[i] = new Texture("Textures/plain_norm.jpg");
-			roughTextureList[i]->LoadTexture();
+			roughTextureList[i]->LoadTextureNoAlpha();
 		}
 		if (!parallaxTextureList[i]) {
 			parallaxTextureList[i] = new Texture("Textures/plain_dark.jpg");
-			parallaxTextureList[i]->LoadTexture();
+			parallaxTextureList[i]->LoadTextureNoAlpha();
 		}
 		if (!glowTextureList[i]) {
 			glowTextureList[i] = new Texture("Textures/plain_dark.jpg");
-			glowTextureList[i]->LoadTexture();
+			glowTextureList[i]->LoadTextureNoAlpha();
 		}
 	}
 }

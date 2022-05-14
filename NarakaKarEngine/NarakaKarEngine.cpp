@@ -335,11 +335,11 @@ struct NarakaKarEngine::Impl
 		environmentTexture = std::make_unique<Texture>("Textures/HDR/GCanyon_C_YumaPoint_3k.hdr");
 		environmentTexture->LoadTextureHDR();
 
-		plainTexture = std::make_unique <Texture>("Textures/plain.png");
-		plainTexture->LoadTextureSRGB();
+		plainTexture = std::make_unique <Texture>("Textures/plain.png", true);
+		plainTexture->LoadTextureWithAlpha();
 
-		grassTexture = std::make_unique <Texture>("Textures/grass.png");
-		grassTexture->LoadTextureSRGBA();
+		grassTexture = std::make_unique <Texture>("Textures/grass.png", true);
+		grassTexture->LoadTextureWithAlpha();
 
 
 		pyramid1 = std::make_unique<Static_Object>();
@@ -361,19 +361,19 @@ struct NarakaKarEngine::Impl
 
 
 		terrainTextureDisp = std::make_unique <Texture>("Textures/Displacement/terrain.jpg");
-		terrainTextureDisp->LoadTexture();
+		terrainTextureDisp->LoadTextureNoAlpha();
 		terrainTextureBlend = std::make_unique <Texture>("Textures/Blend/terrain.jpg");
-		terrainTextureBlend->LoadTexture();
-		terrainTexture = std::make_unique <Texture>("Textures/terrain");
-		terrainTexture->LoadTextureArray(true, false);
-		terrainTextureMetal = std::make_unique <Texture>("Textures/Metallic/terrain");
-		terrainTextureMetal->LoadTextureArray(false, true);
-		terrainTextureRough = std::make_unique <Texture>("Textures/Roughness/terrain");
-		terrainTextureRough->LoadTextureArray(false, true);
-		terrainTextureNorm = std::make_unique <Texture>("Textures/Normal/terrain");
-		terrainTextureNorm->LoadTextureArray(false, true);
-		terrainTexturePara = std::make_unique <Texture>("Textures/Parallax/terrain");
-		terrainTexturePara->LoadTextureArray(false, true);
+		terrainTextureBlend->LoadTextureNoAlpha();
+		terrainTexture = std::make_unique <Texture>("Textures/terrain.jpg", true);
+		terrainTexture->LoadTextureArray(glm::vec2(1024, 1024), NUM_TERRAIN_LAYERS);
+		terrainTextureMetal = std::make_unique <Texture>("Textures/Metallic/terrain.jpg");
+		terrainTextureMetal->LoadTextureArray(glm::vec2(256, 256), NUM_TERRAIN_LAYERS);
+		terrainTextureRough = std::make_unique <Texture>("Textures/Roughness/terrain.jpg");
+		terrainTextureRough->LoadTextureArray(glm::vec2(256, 256), NUM_TERRAIN_LAYERS);
+		terrainTextureNorm = std::make_unique <Texture>("Textures/Normal/terrain.jpg");
+		terrainTextureNorm->LoadTextureArray(glm::vec2(256, 256), NUM_TERRAIN_LAYERS);
+		terrainTexturePara = std::make_unique <Texture>("Textures/Parallax/terrain.jpg");
+		terrainTexturePara->LoadTextureArray(glm::vec2(256, 256), NUM_TERRAIN_LAYERS);
 
 
 		shinyMaterialGlow = std::make_unique<Material>(1, 6, 7, 11, 12, 13);
@@ -477,12 +477,12 @@ struct NarakaKarEngine::Impl
 		spotLightCount++;
 
 		//std::vector<std::string> skyboxFaces;
-		///*skyboxFaces.push_back("Textures/Skybox/cupertin-lake_rt.tga");
+		//skyboxFaces.push_back("Textures/Skybox/cupertin-lake_rt.tga");
 		//skyboxFaces.push_back("Textures/Skybox/cupertin-lake_lf.tga");
 		//skyboxFaces.push_back("Textures/Skybox/cupertin-lake_up.tga");
 		//skyboxFaces.push_back("Textures/Skybox/cupertin-lake_dn.tga");
 		//skyboxFaces.push_back("Textures/Skybox/cupertin-lake_bk.tga");
-		//skyboxFaces.push_back("Textures/Skybox/cupertin-lake_ft.tga");*/
+		//skyboxFaces.push_back("Textures/Skybox/cupertin-lake_ft.tga");
 		//skyboxFaces.push_back("Textures/Skybox/barren_rt.jpg");
 		//skyboxFaces.push_back("Textures/Skybox/barren_lf.jpg");
 		//skyboxFaces.push_back("Textures/Skybox/barren_up.jpg");
@@ -507,7 +507,7 @@ struct NarakaKarEngine::Impl
 		ssaoShader->GenKernel();
 		ssaoShader->GenNoise(ssaoNoiseData);
 
-		SSAONoiseTexture->GenerateNoiseTexture(ssaoNoiseData);
+		SSAONoiseTexture->LoadNativeTexture(ssaoNoiseData);
 
 		terrainShader->UseShader();
 		for (size_t i = 0; i < NUM_CASCADES; ++i)
@@ -1277,7 +1277,7 @@ struct NarakaKarEngine::Impl
 			directionalShadowShader->UseShader();
 			uniformModel = directionalShadowShader->GetModelLocation();
 
-			directionalShadowShader->SetDirectionalLightTransform(&projView);
+			directionalShadowShader->SetDirectionalLightTransform(projView);
 			directionalShadowShader->Validate();
 
 			RenderScene(directionalShadowShader);
@@ -1287,7 +1287,7 @@ struct NarakaKarEngine::Impl
 
 			uniformModel1 = animDirectionalShadowShader->GetModelLocation();
 
-			animDirectionalShadowShader->SetDirectionalLightTransform(&projView);
+			animDirectionalShadowShader->SetDirectionalLightTransform(projView);
 
 			animDirectionalShadowShader->Validate();
 

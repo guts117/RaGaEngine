@@ -50,20 +50,14 @@ void Static_Object::LoadTexture(std::unique_ptr<Texture>& texture, std::string p
 {
 	if (path != "")
 	{
-		texture = std::make_unique<Texture>(path.c_str());
+		texture = std::make_unique<Texture>(path, isSRGB);
 		if (path.find(".png" ||".gif" || ".tiff" || ".tga" || ".jp2" || ".jpx") != std::string::npos)
 		{
-			if (isSRGB)
-				texture->LoadTextureSRGBA();
-			else
-				texture->LoadTextureA();
+			texture->LoadTextureWithAlpha();
 		}
 		else
 		{
-			if (isSRGB)
-				texture->LoadTextureSRGB();
-			else
-				texture->LoadTexture();
+			texture->LoadTextureNoAlpha();
 		}
 	}
 }

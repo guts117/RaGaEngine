@@ -62,11 +62,13 @@ Skybox::Skybox(std::vector<std::string> faceLocation)
 	uniformProjection = skyShader->GetProjectionLocation();
 	uniformView = skyShader->GetViewLocation();
 	uniformPrevPV = skyShader->GetPrevPVMLocation();
-
 	skyMesh = new Static_Mesh();
 
-	cubeMap = new Texture();
-	cubeMap->LoadCubeMapSRGB(faceLocation);
+	auto loc = faceLocation[0];
+	for (int i = 1; i < 6; ++i) { loc += "\n" + faceLocation[i]; }
+
+	cubeMap = new Texture(loc, true);
+	cubeMap->LoadCubeMap();
 }
 
 void Skybox::DrawSkybox(glm::mat4 viewMatrix, glm::mat4 projectionMatrix, glm::mat4 prevP, glm::mat4 prevV)

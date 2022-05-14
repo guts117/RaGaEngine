@@ -147,9 +147,9 @@ void Model_Shader::SetDepthMap(GLuint textureUnit)
 	glUniform1i(uniformDepth, textureUnit);
 }
 
-void Model_Shader::SetDirectionalLightTransform(glm::mat4* lTransform)
+void Model_Shader::SetDirectionalLightTransform(glm::mat4 lTransform)
 {
-	glUniformMatrix4fv(uniformDirectionalLightTransform, 1, GL_FALSE, glm::value_ptr(*lTransform));
+	glUniformMatrix4fv(uniformDirectionalLightTransform, 1, GL_FALSE, glm::value_ptr(lTransform));
 }
 
 void Model_Shader::SetLightMatrices(std::vector<glm::mat4> lightMatrices)
