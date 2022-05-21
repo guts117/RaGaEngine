@@ -39,7 +39,7 @@ void Animated_Model::RenderModel() {
 			glowTextureList[materialIndex]->UseTexture(12);
 		}
 
-		anim_MeshList[i]->RenderAnimatedMesh();
+		anim_MeshList[i]->RenderMesh();
 	}
 
 	prevTransforms = transforms;
@@ -184,7 +184,7 @@ void Animated_Model::LoadMesh(aiMesh* mesh, const aiScene* scene)
 	}
 
 	Animated_Mesh* newMesh = new Animated_Mesh();
-	newMesh->CreateAnimatedMesh(&vertices[0], &indices[0], vertices.size(), indices.size(), bones);
+	newMesh->CreateMeshWithBones(&vertices[0], &indices[0], vertices.size(), indices.size(), bones);
 	anim_MeshList.push_back(newMesh);
 	meshToTex.push_back(mesh->mMaterialIndex);
 

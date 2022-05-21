@@ -70,7 +70,7 @@ void Static_Model::LoadMesh(aiMesh* mesh, const aiScene* scene)
 		}
 	}
 	Static_Mesh* newMesh = new Static_Mesh();
-	newMesh->CreateMeshNorm(&vertices[0], &indices[0], vertices.size(), indices.size());
+	newMesh->CreateMeshWithTangentNormal(&vertices[0], &indices[0], vertices.size(), indices.size());
 	static_MeshList.push_back(newMesh);
 	meshToTex.push_back(mesh->mMaterialIndex);
 

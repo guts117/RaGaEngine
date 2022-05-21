@@ -31,6 +31,7 @@
 #include "Compute_Shader.h"
 
 #include "Mesh.h"
+#include "Billboard_Mesh.h"
 #include "Camera.h"
 #include "Texture.h"
 #include "DirectionalLight.h"
@@ -178,7 +179,7 @@ struct NarakaKarEngine::Impl
 
 	std::vector< std::shared_ptr < Static_Mesh>> meshList;
 	std::vector< std::shared_ptr < Static_Mesh>> terrainList;
-	std::vector< std::shared_ptr < Static_Mesh>> billboardList;
+	std::vector< std::shared_ptr < Billboard_Mesh>> billboardList;
 	std::vector< std::shared_ptr < ParticleSystem>> particleList;
 
 	std::unique_ptr < Static_Mesh> quad;
@@ -820,8 +821,8 @@ struct NarakaKarEngine::Impl
 			0.5f, 0.5f, 0.0f,
 		};
 
-		std::shared_ptr<Static_Mesh> obj = std::make_shared <Static_Mesh>();
-		obj->CreateBillboard(billboardVertices, billboardIndices, 12, 6);
+		std::shared_ptr<Billboard_Mesh> obj = std::make_shared <Billboard_Mesh>();
+		obj->CreateMeshWithNormal(billboardVertices, billboardIndices, 12, 6);
 		billboardList.push_back(obj);
 
 	}
@@ -868,7 +869,7 @@ struct NarakaKarEngine::Impl
 		//Debug::DebugPrintTBN("TerrainTBN", terrainVertices, 5, 8);
 
 		std::shared_ptr < Static_Mesh> obj = std::make_shared< Static_Mesh>();
-		obj->CreateMeshNorm(terrainVertices, terrainIndices, 44, 6);
+		obj->CreateMeshWithTangentNormal(terrainVertices, terrainIndices, 44, 6);
 		terrainList.push_back(obj);
 	}
 
@@ -907,19 +908,19 @@ struct NarakaKarEngine::Impl
 		calcAverageTangents(floorIndices, 6, floorVertices, 44, 11, 8);
 
 		std::shared_ptr < Static_Mesh> obj1 = std::make_shared <Static_Mesh>();
-		obj1->CreateMeshNorm(vertices, indices, 44, 12);
+		obj1->CreateMeshWithTangentNormal(vertices, indices, 44, 12);
 		meshList.push_back(obj1);
 
 		std::shared_ptr < Static_Mesh> obj2 = std::make_shared <Static_Mesh>();
-		obj2->CreateMeshNorm(vertices, indices, 44, 12);
+		obj2->CreateMeshWithTangentNormal(vertices, indices, 44, 12);
 		meshList.push_back(obj2);
 
 		std::shared_ptr < Static_Mesh> obj3 = std::make_shared <Static_Mesh>();
-		obj3->CreateMeshNorm(floorVertices, floorIndices, 44, 6);
+		obj3->CreateMeshWithTangentNormal(floorVertices, floorIndices, 44, 6);
 		meshList.push_back(obj3);
 
 		std::shared_ptr < Static_Mesh> obj4 = std::make_shared <Static_Mesh>();
-		obj4->CreateMeshNorm(floorVertices, floorIndices, 44, 6);
+		obj4->CreateMeshWithTangentNormal(floorVertices, floorIndices, 44, 6);
 		meshList.push_back(obj4);
 	}
 
@@ -1007,7 +1008,7 @@ struct NarakaKarEngine::Impl
 		//model = glm::rotate(model, curAngle * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));  //if you put the rotate at the last place(i.e on the top) it will have a bouncy effect
 		//model = glm::scale(model,glm::vec3(terrainScaleFactor, 1.0f, terrainScaleFactor));
 		glUniformMatrix4fv(uniformModel2, 1, GL_FALSE, glm::value_ptr(model));
-		prevPVM = camera->GetPreviousProjectionViewMatrix() * terrainList[0]->prevMesh;
+		prevPVM = camera->GetPreviousProjectionViewMatrix() * terrainList[0]->PrevMesh;
 		glUniformMatrix4fv(uniformPrevPVM2, 1, GL_FALSE, glm::value_ptr(prevPVM));
 		terrainTextureDisp->UseTexture(0);
 		terrainTextureBlend->UseTexture(10);
@@ -1032,7 +1033,7 @@ struct NarakaKarEngine::Impl
 		dullTerrainMaterial->UseMaterial(uniformAlbedoMap2, uniformMetallicMap2, uniformNormalMap2, uniformRoughnessMap2, uniformParallaxMap2);
 
 		terrainList[0]->RenderTessellatedMesh();
-		terrainList[0]->prevMesh = model;
+		terrainList[0]->PrevMesh = model;
 	}
 
 	void RenderEnvCubeMap(bool is_cubeMap)

@@ -1,4 +1,12 @@
 #include "VertexBoneData.h"
+#include <cstdio>
+#include <string>
+
+VertexBoneData::VertexBoneData()
+{
+	memset(IDs, 0, sizeof(IDs));    // init all values in array = 0
+	memset(Weights, 0, sizeof(Weights));
+}
 
 void VertexBoneData::AddBoneData(unsigned int BoneID, float Weight)
 {

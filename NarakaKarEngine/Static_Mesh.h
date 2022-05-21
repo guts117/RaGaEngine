@@ -6,25 +6,23 @@
 class Static_Mesh : public Mesh
 {
 public:
-	Static_Mesh();
-	void CreateMesh(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices);
-	void CreateBillboard(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices);
-	void CreateInstancedBillboard(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices);
-	void CreateMeshNorm(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices);
+	explicit Static_Mesh() = default;
 
-	void UpdateInstancedBillboard(GLfloat position_size_data[], GLubyte color_data[], int ParticlesCount);
+	Static_Mesh(Static_Mesh&& rhs) noexcept = default;
+	Static_Mesh& operator= (Static_Mesh&& rhs) noexcept = default;
 
-	void RenderMesh();
-	void RenderTessellatedMesh();
-	void RenderInstancedBillboard();
+	Static_Mesh(const Static_Mesh& rhs) = delete;
+	Static_Mesh& operator= (const Static_Mesh& rhs) = delete;
+
+	void CreateMeshWithNormal(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices) override;
+	void CreateMeshWithTangentNormal(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices) override;
+
+	void RenderMesh() override;
+	void RenderTessellatedMesh() override;
 	void RenderQuad();
 	void RenderCube();
-	~Static_Mesh();
-private:
-	void ClearMesh();
-	GLuint particles_position_buffer = 0;
-	GLuint particles_color_buffer = 0;
-	int particlesCount = 0;
+	
+	~Static_Mesh() = default;
 };
 
 #endif

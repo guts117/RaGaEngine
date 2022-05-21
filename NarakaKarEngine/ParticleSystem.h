@@ -10,7 +10,13 @@ class ParticleSystem :
 	public Mesh
 {
 public:
-	ParticleSystem();
+	explicit ParticleSystem();
+
+	ParticleSystem(ParticleSystem&& rhs) noexcept = default;
+	ParticleSystem& operator= (ParticleSystem&& rhs) noexcept = default;
+
+	ParticleSystem(const ParticleSystem& rhs) = delete;
+	ParticleSystem& operator= (const ParticleSystem& rhs) = delete;
 
 	void CreateParticlesMeshCPU(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices);
 	void UpdateParticlesMeshCPU();
@@ -26,16 +32,10 @@ private:
 
 	void ClearMesh();
 
-	GLfloat* particles_pos_size;
-	GLubyte* particles_color;
-
-	GLuint particles_position_buffer = 0;
-	GLuint particles_color_buffer = 0;
-	static int particlesCount;
-
-	static int LastUsedParticle;
-
-	Particle* ParticlesContainer;
+	std::unique_ptr<GLfloat> particles_pos_size;
+	std::unique_ptr<GLubyte> particles_color;
+	std::unique_ptr<Particle> ParticlesContainer;
+	GLuint particles_position_buffer = 0, particles_color_buffer = 0, particlesCount = 0, LastUsedParticle = 0;
 };
 
 #endif
