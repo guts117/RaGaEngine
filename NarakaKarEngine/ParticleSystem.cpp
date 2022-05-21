@@ -197,7 +197,7 @@ void ParticleSystem::SimulateParticlesCPU(glm::vec3 CameraPosition, GLfloat delt
 	particlesCount = ParticlesCount;
 }
 
-void ParticleSystem::RenderMesh()
+void ParticleSystem::RenderInstancedMesh()
 {
 	glBindVertexArray(VAO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);

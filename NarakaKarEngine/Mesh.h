@@ -26,6 +26,7 @@ public:
 	virtual void CreateMeshWithTangentNormal(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices);
 	virtual void CreateMeshWithBones(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices, std::vector<VertexBoneData>& Bones);
 	virtual void RenderMesh();
+	virtual void RenderInstancedMesh();
 	virtual void RenderTessellatedMesh();
 
 	glm::mat4 PrevMesh = glm::mat4(1.0);

@@ -17,6 +17,7 @@ public:
     void CreateMesh(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices) override;
     void CreateInstancedMesh(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices) override;
     void RenderMesh() override;
+    void RenderInstancedMesh() override;
 
     void UpdateInstancedBillboard(GLfloat position_size_data[], GLubyte color_data[], int ParticlesCount);
 

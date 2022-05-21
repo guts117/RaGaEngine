@@ -822,7 +822,7 @@ struct NarakaKarEngine::Impl
 		};
 
 		std::shared_ptr<Billboard_Mesh> obj = std::make_shared <Billboard_Mesh>();
-		obj->CreateMeshWithNormal(billboardVertices, billboardIndices, 12, 6);
+		obj->CreateMesh(billboardVertices, billboardIndices, 12, 6);
 		billboardList.push_back(obj);
 
 	}
@@ -995,7 +995,7 @@ struct NarakaKarEngine::Impl
 		particleList[0]->SimulateParticlesCPU(camera->getCameraPosition(), deltaTime);
 		particleList[0]->UpdateParticlesMeshCPU();
 		plainTexture->UseTexture(0);
-		particleList[0]->RenderMesh();
+		particleList[0]->RenderInstancedMesh();
 	}
 
 	void RenderTerrain(bool shadow, bool depth)

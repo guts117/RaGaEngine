@@ -12,6 +12,8 @@ void Mesh::CreateMeshWithBones(GLfloat Vertices[], unsigned int Indices[], GLuin
 
 void Mesh::RenderMesh() {}
 
+void Mesh::RenderInstancedMesh() {}
+
 void Mesh::RenderTessellatedMesh() {}
 
 Mesh::~Mesh() 

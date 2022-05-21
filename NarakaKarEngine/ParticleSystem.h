@@ -19,7 +19,7 @@ public:
 	ParticleSystem& operator= (const ParticleSystem& rhs) = delete;
 
 	void CreateInstancedMesh(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices) override;
-	void RenderMesh() override;
+	void RenderInstancedMesh() override;
 
 	void UpdateParticlesMeshCPU();
 	void GenerateParticlesCPU(GLfloat delta, glm::vec3 Pos);
