@@ -22,7 +22,7 @@ public:
 
 	bool LoadTextureWithAlpha();
 	bool LoadTextureNoAlpha();
-	bool LoadTextureArray(const glm::vec2 resolution, const int numOfLayers);
+	bool LoadTextureArray(const glm::vec2& resolution, const int numOfLayers);
 	bool LoadCubeMap();
 	bool LoadTextureHDR();
 

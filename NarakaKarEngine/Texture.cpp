@@ -102,7 +102,7 @@ struct Texture::Impl
 		return true;
 	}
 
-	bool LoadTextureArray(const glm::vec2 resolution, const int numOfLayers)
+	bool LoadTextureArray(const glm::vec2& resolution, const int numOfLayers)
 	{
 		stbi_set_flip_vertically_on_load(false);
 
@@ -259,7 +259,7 @@ bool Texture::LoadTextureNoAlpha() {
 	return Pimpl()->LoadTextureNoAlpha();
 }
 
-bool Texture::LoadTextureArray(const glm::vec2 resolution, const int numOfLayers) {
+bool Texture::LoadTextureArray(const glm::vec2& resolution, const int numOfLayers) {
 	return Pimpl()->LoadTextureArray(resolution, numOfLayers);
 }
 
