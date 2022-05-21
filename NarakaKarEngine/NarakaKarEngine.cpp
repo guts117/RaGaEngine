@@ -844,7 +844,7 @@ struct NarakaKarEngine::Impl
 
 		std::shared_ptr <ParticleSystem> obj = std::make_shared< ParticleSystem>();
 
-		obj->CreateParticlesMeshCPU(particlesVertices, particlesIndices, 12, 6);
+		obj->CreateInstancedMesh(particlesVertices, particlesIndices, 12, 6);
 		particleList.push_back(obj);
 	}
 
@@ -995,7 +995,7 @@ struct NarakaKarEngine::Impl
 		particleList[0]->SimulateParticlesCPU(camera->getCameraPosition(), deltaTime);
 		particleList[0]->UpdateParticlesMeshCPU();
 		plainTexture->UseTexture(0);
-		particleList[0]->RenderParticlesMeshCPU();
+		particleList[0]->RenderMesh();
 	}
 
 	void RenderTerrain(bool shadow, bool depth)

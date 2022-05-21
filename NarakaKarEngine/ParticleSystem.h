@@ -18,19 +18,17 @@ public:
 	ParticleSystem(const ParticleSystem& rhs) = delete;
 	ParticleSystem& operator= (const ParticleSystem& rhs) = delete;
 
-	void CreateParticlesMeshCPU(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices);
+	void CreateInstancedMesh(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices) override;
+	void RenderMesh() override;
+
 	void UpdateParticlesMeshCPU();
 	void GenerateParticlesCPU(GLfloat delta, glm::vec3 Pos);
 	void SimulateParticlesCPU(glm::vec3 CameraPosition, GLfloat delta);
-	
-	void RenderParticlesMeshCPU();
 
 	~ParticleSystem();
 private:
 	int FindUnusedParticles();
 	void SortParticles();
-
-	void ClearMesh();
 
 	std::unique_ptr<GLfloat> particles_pos_size;
 	std::unique_ptr<GLubyte> particles_color;

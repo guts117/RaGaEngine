@@ -7,7 +7,7 @@ ParticleSystem::ParticleSystem()
 	, ParticlesContainer{ new Particle[MaxParticles] }
 {}
 
-void ParticleSystem::CreateParticlesMeshCPU(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices)
+void ParticleSystem::CreateInstancedMesh(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices)
 {
 	indexCount = numOfIndices;
 	vertexCount = numOfVertices;
@@ -126,7 +126,6 @@ void ParticleSystem::GenerateParticlesCPU(GLfloat delta, glm::vec3 Pos)
 
 		ParticlesContainer.get()[particleIndex].speed = maindir + randomdir * spread;
 
-
 		// Very bad way to generate a random color
 		ParticlesContainer.get()[particleIndex].r = rand() % 256;
 		ParticlesContainer.get()[particleIndex].g = rand() % 256;
@@ -134,9 +133,7 @@ void ParticleSystem::GenerateParticlesCPU(GLfloat delta, glm::vec3 Pos)
 		ParticlesContainer.get()[particleIndex].a = (rand() % 256) / 3;
 
 		ParticlesContainer.get()[particleIndex].size = (rand() % 1000) / 20000.0f + 0.1f;
-
 	}
-
 }
 
 void ParticleSystem::SimulateParticlesCPU(glm::vec3 CameraPosition, GLfloat delta)
@@ -198,21 +195,15 @@ void ParticleSystem::SimulateParticlesCPU(glm::vec3 CameraPosition, GLfloat delt
 
 	SortParticles();
 	particlesCount = ParticlesCount;
-
 }
 
-void ParticleSystem::RenderParticlesMeshCPU()
+void ParticleSystem::RenderMesh()
 {
 	glBindVertexArray(VAO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
 	glDrawElementsInstanced(GL_TRIANGLE_STRIP, indexCount, GL_UNSIGNED_INT, 0, particlesCount);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
-}
-
-ParticleSystem::~ParticleSystem()
-{
-	ClearMesh();
 }
 
 int ParticleSystem::FindUnusedParticles()
@@ -239,7 +230,7 @@ void ParticleSystem::SortParticles()
 	std::sort(&ParticlesContainer.get()[0], &ParticlesContainer.get()[MaxParticles]);
 }
 
-void ParticleSystem::ClearMesh()
+ParticleSystem::~ParticleSystem()
 {
 	if (particles_position_buffer != 0) {
 		glDeleteBuffers(1, &particles_position_buffer);
