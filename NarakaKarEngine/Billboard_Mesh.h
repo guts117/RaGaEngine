@@ -23,7 +23,7 @@ public:
 
     ~Billboard_Mesh();
 
-private:
+protected:
     GLuint position_buffer = 0, color_buffer = 0, instanceCount = 0;
 };
 
