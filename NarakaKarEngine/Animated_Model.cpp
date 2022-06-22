@@ -2,17 +2,17 @@
 #include<iostream>
 
 
-void Animated_Model::initShaders(GLuint shaderID)
+void Animated_Model::UpdateBoneData(const GLuint& shaderID)
 {
 	
 	for (size_t i = 0; i < MAX_BONES; i++)
 	{
 		char locBuff[100] = { '\0' };
 
-		snprintf(locBuff, sizeof(locBuff), "gBones[%d]", i);
+		snprintf(locBuff, sizeof(locBuff), "gBones[%zd]", i);
 		m_bone_location[i] = glGetUniformLocation(shaderID, locBuff);
 
-		snprintf(locBuff, sizeof(locBuff), "gPrevBones[%d]", i);
+		snprintf(locBuff, sizeof(locBuff), "gPrevBones[%zd]", i);
 		m_prev_bone_location[i] = glGetUniformLocation(shaderID, locBuff);
 	}
 }

@@ -34,16 +34,16 @@ void Model_Shader::CompileProgram()
 
 		char locBuff[100] = { '\0' };
 
-		snprintf(locBuff, sizeof(locBuff), "spotLights[%d].color", i);
+		snprintf(locBuff, sizeof(locBuff), "spotLights[%zd].color", i);
 		uniformSpotLight[i].uniformColor = glGetUniformLocation(shaderID, locBuff);
 
-		snprintf(locBuff, sizeof(locBuff), "spotLights[%d].position", i);
+		snprintf(locBuff, sizeof(locBuff), "spotLights[%zd].position", i);
 		uniformSpotLight[i].uniformPosition = glGetUniformLocation(shaderID, locBuff);
 
-		snprintf(locBuff, sizeof(locBuff), "spotLights[%d].direction", i);
+		snprintf(locBuff, sizeof(locBuff), "spotLights[%zd].direction", i);
 		uniformSpotLight[i].uniformDirection = glGetUniformLocation(shaderID, locBuff);
 
-		snprintf(locBuff, sizeof(locBuff), "spotLights[%d].edge", i);
+		snprintf(locBuff, sizeof(locBuff), "spotLights[%zd].edge", i);
 		uniformSpotLight[i].uniformEdge = glGetUniformLocation(shaderID, locBuff);
 	}
 	uniformSkybox = glGetUniformLocation(shaderID, "skybox");

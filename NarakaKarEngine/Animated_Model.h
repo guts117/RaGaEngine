@@ -6,12 +6,11 @@
 class Animated_Model :public Model
 {
 public:
-	Animated_Model() = default;
+	explicit Animated_Model() = default;
 
-	void initShaders(GLuint shaderID);
+	void UpdateBoneData(const GLuint& shaderID);
 	void RenderModel()final;
 	void LoadModel(const std::string& fileName)final;
-	//void RenderModel() final;
 	void showNodeName(aiNode* node);
 	glm::mat4 aiToGlm(aiMatrix4x4 ai_matr);
 	aiQuaternion nlerp(aiQuaternion a, aiQuaternion b, float blend);

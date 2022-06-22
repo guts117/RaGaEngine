@@ -1126,14 +1126,14 @@ struct NarakaKarEngine::Impl
 
 		if (shadow)
 		{
-			anim->initShaders(animDirectionalShadowShader->GetShaderID());
+			anim->UpdateBoneData(animDirectionalShadowShader->GetShaderID());
 		}
 		else if (depth)
 		{
-			anim->initShaders(anim_preZPassShader->GetShaderID());
+			anim->UpdateBoneData(anim_preZPassShader->GetShaderID());
 		}
 		else {
-			anim->initShaders(animShaderList[0]->GetShaderID());
+			anim->UpdateBoneData(animShaderList[0]->GetShaderID());
 		}
 		anim->RenderModel();
 		anim->prevModel = model;
@@ -1149,15 +1149,15 @@ struct NarakaKarEngine::Impl
 
 		if (shadow)
 		{
-			anim2->initShaders(animDirectionalShadowShader->GetShaderID());
+			anim2->UpdateBoneData(animDirectionalShadowShader->GetShaderID());
 		}
 		else if (depth)
 		{
-			anim2->initShaders(anim_preZPassShader->GetShaderID());
+			anim2->UpdateBoneData(anim_preZPassShader->GetShaderID());
 		}
 		else
 		{
-			anim2->initShaders(animShaderList[0]->GetShaderID());
+			anim2->UpdateBoneData(animShaderList[0]->GetShaderID());
 		}
 
 		anim2->RenderModel();

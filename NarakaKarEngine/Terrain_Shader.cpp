@@ -36,16 +36,16 @@ void Terrain_Shader::CompileProgram()
 
 		char locBuff[100] = { '\0' };
 
-		snprintf(locBuff, sizeof(locBuff), "spotLights[%d].color", i);
+		snprintf(locBuff, sizeof(locBuff), "spotLights[%zd].color", i);
 		uniformSpotLight[i].uniformColor = glGetUniformLocation(shaderID, locBuff);
 
-		snprintf(locBuff, sizeof(locBuff), "spotLights[%d].position", i);
+		snprintf(locBuff, sizeof(locBuff), "spotLights[%zd].position", i);
 		uniformSpotLight[i].uniformPosition = glGetUniformLocation(shaderID, locBuff);
 
-		snprintf(locBuff, sizeof(locBuff), "spotLights[%d].direction", i);
+		snprintf(locBuff, sizeof(locBuff), "spotLights[%zd].direction", i);
 		uniformSpotLight[i].uniformDirection = glGetUniformLocation(shaderID, locBuff);
 
-		snprintf(locBuff, sizeof(locBuff), "spotLights[%d].edge", i);
+		snprintf(locBuff, sizeof(locBuff), "spotLights[%zd].edge", i);
 		uniformSpotLight[i].uniformEdge = glGetUniformLocation(shaderID, locBuff);
 	}
 	uniformAO = glGetUniformLocation(shaderID, "AOMap");
@@ -59,42 +59,42 @@ void Terrain_Shader::CompileProgram()
 	for (size_t i = 0; i < NUM_CASCADES; i++) {
 		char locBuff[100] = { '\0' };
 
-		snprintf(locBuff, sizeof(locBuff), "DirectionalLightTransforms[%d]", i);
+		snprintf(locBuff, sizeof(locBuff), "DirectionalLightTransforms[%zd]", i);
 		uniformDirectionalLightTransforms[i] = glGetUniformLocation(shaderID, locBuff);
 	}
 
 	for (size_t i = 0; i < NUM_CASCADES; i++) {
 		char locBuff[100] = { '\0' };
 
-		snprintf(locBuff, sizeof(locBuff), "directionalShadowMaps[%d].shadowMap", i);
+		snprintf(locBuff, sizeof(locBuff), "directionalShadowMaps[%zd].shadowMap", i);
 		uniformDirectionalShadowMaps[i].shadowMap = glGetUniformLocation(shaderID, locBuff);
 	}
 
 	for (size_t i = 0; i < NUM_CASCADES; i++) {
 		char locBuff[100] = { '\0' };
 
-		snprintf(locBuff, sizeof(locBuff), "CascadeEndClipSpace[%d]", i);
+		snprintf(locBuff, sizeof(locBuff), "CascadeEndClipSpace[%zd]", i);
 		uniformCascadeEndClipSpace[i] = glGetUniformLocation(shaderID, locBuff);
 	}
 
 	for (size_t i = 0; i < 6; i++) {
 		char locBuff[100] = { '\0' };
 
-		snprintf(locBuff, sizeof(locBuff), "lightMatrices[%d]", i);
+		snprintf(locBuff, sizeof(locBuff), "lightMatrices[%zd]", i);
 		uniformLightMatrices[i] = glGetUniformLocation(shaderID, locBuff);
 	}
 	//omnishadowmap
 	for (size_t i = 0; i < MAX_POINT_LIGHTS_WITH_SHADOW + MAX_SPOT_LIGHTS; i++) {
 		char locBuff[100] = { '\0' };
 
-		snprintf(locBuff, sizeof(locBuff), "omniShadowMaps[%d].shadowMap", i);
+		snprintf(locBuff, sizeof(locBuff), "omniShadowMaps[%zd].shadowMap", i);
 		uniformOmniShadowMap[i].shadowMap = glGetUniformLocation(shaderID, locBuff);
 	}
 
 	for (size_t i = 0; i < MAX_POINT_LIGHTS_WITH_SHADOW + MAX_SPOT_LIGHTS; i++) {
 		char locBuff[100] = { '\0' };
 
-		snprintf(locBuff, sizeof(locBuff), "omniShadowMaps[%d].farPlane", i);
+		snprintf(locBuff, sizeof(locBuff), "omniShadowMaps[%zd].farPlane", i);
 		uniformOmniShadowMap[i].farPlane = glGetUniformLocation(shaderID, locBuff);
 	}
 }
