@@ -1,5 +1,5 @@
 #version 460 core
-layout(local_size_x = 1, local_size_y = 1) in;
+layout(local_size_x = 16, local_size_y = 9, local_size_z = 7) in;
 
 //ssbo initialization
 struct VolumeTileAABB{
@@ -30,9 +30,7 @@ void main(){
 
     //Per Tile variables
     uint tileSizePx 			= tileSizes[3];
-    uint tileIndex 				= 	gl_WorkGroupID.x +
-									gl_WorkGroupID.y * gl_NumWorkGroups.x +
-									gl_WorkGroupID.z * (gl_NumWorkGroups.x * gl_NumWorkGroups.y);
+    uint tileIndex 				= 	gl_LocalInvocationIndex;
 
     //Calculating the min and max point in screen space
     vec4 maxPoint_sS 			= vec4(vec2(gl_WorkGroupID.xy + 1) * tileSizePx, -1.0, 1.0); // Top Right

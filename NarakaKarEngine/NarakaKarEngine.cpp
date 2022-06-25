@@ -270,12 +270,11 @@ struct NarakaKarEngine::Impl
 		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))
 	};
 
-	unsigned int AABBvolumeGridSSBO, screenToViewSSBO, lightSSBO, lightIndexListSSBO, lightGridSSBO,
-		lightIndexGlobalCountSSBO, visibleUniqueClusterSSBO, activeClusterCountSSBO;
+	unsigned int AABBvolumeGridSSBO, screenToViewSSBO, lightSSBO, lightIndexListSSBO, lightGridSSBO, visibleUniqueClusterSSBO, activeClusterCountSSBO;
 
 	const int gridSizeX = 16;
 	const int gridSizeY = 9;
-	const int gridSizeZ = 24;
+	const int gridSizeZ = 7;
 	const int numClusters = gridSizeX * gridSizeY * gridSizeZ;
 	unsigned int sizeX, sizeY;
 
@@ -696,18 +695,6 @@ struct NarakaKarEngine::Impl
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 		}
 
-		//Setting up simplest ssbo in the world
-		{
-			glGenBuffers(1, &lightIndexGlobalCountSSBO);
-			glBindBuffer(GL_SHADER_STORAGE_BUFFER, lightIndexGlobalCountSSBO);
-
-			//Every tile takes two unsigned ints one to represent the number of lights in that grid
-			//Another to represent the offset 
-			glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(unsigned int), NULL, GL_STATIC_COPY);
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, lightIndexGlobalCountSSBO);
-			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-		}
-
 		{
 			glGenBuffers(1, &visibleUniqueClusterSSBO);
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, visibleUniqueClusterSSBO);
@@ -731,7 +718,7 @@ struct NarakaKarEngine::Impl
 	{
 		//Building the grid of AABB enclosing the view frustum clusters
 		buildAABBGridCompShader->UseShader();
-		buildAABBGridCompShader->Dispatch(gridSizeX, gridSizeY, gridSizeZ);
+		buildAABBGridCompShader->Dispatch(1, 1, 1);
 	}
 
 	void calcAverageNormals(unsigned int* indices, unsigned int indicesCount,
@@ -1353,17 +1340,17 @@ struct NarakaKarEngine::Impl
 		visibleClusterCompShader->Dispatch(ScreenWidth / 32, ScreenHeight / 30, 1);
 
 		uniqueClusterCompShader->UseShader();
-		uniqueClusterCompShader->Dispatch(gridSizeX, gridSizeY, gridSizeZ);
+		uniqueClusterCompShader->Dispatch(1, 1, 1);
 
-		unsigned int count;
-		glGetNamedBufferSubData(activeClusterCountSSBO, 0, sizeof(unsigned int), &count);
+		//unsigned int count;
+		//glGetNamedBufferSubData(activeClusterCountSSBO, 0, sizeof(unsigned int), &count);
 
 		//std::cout << count << " Clusters are Active" << std::endl;
 
 		//4-Light assignment
 		cullLightsCompShader->UseShader();
 		glUniformMatrix4fv(cullLightsCompShader->GetViewLocation(), 1, GL_FALSE, glm::value_ptr(camera->CalculateViewMatrix()));
-		cullLightsCompShader->Dispatch(count, 1, 1);
+		cullLightsCompShader->Dispatch(1, 1, 1);
 	}
 
 	void PreZPass(GLfloat deltaTime)
@@ -1729,11 +1716,6 @@ struct NarakaKarEngine::Impl
 		{
 			glDeleteBuffers(1, &lightGridSSBO);
 			lightGridSSBO = 0;
-		}
-		if (lightIndexGlobalCountSSBO != 0)
-		{
-			glDeleteBuffers(1, &lightIndexGlobalCountSSBO);
-			lightIndexGlobalCountSSBO = 0;
 		}
 		if (visibleUniqueClusterSSBO != 0)
 		{

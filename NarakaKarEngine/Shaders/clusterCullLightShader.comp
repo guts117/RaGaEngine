@@ -1,5 +1,5 @@
 #version 460 core
-layout(local_size_x = 1, local_size_y = 1) in;
+layout(local_size_x = 16, local_size_y = 9, local_size_z = 7) in;
 
 struct PointLight{
     vec4 position;
@@ -45,9 +45,7 @@ layout (std430, binding = 5) buffer lightGridSSBO{
     LightGrid lightGrid[];
 };
 
-layout (std430, binding = 6) buffer globalIndexCountSSBO{
-    uint globalIndexCount;
-};
+shared uint globalIndexCount;
 
 struct VisibleUniqueCluster
 {
@@ -70,14 +68,19 @@ float sqDistPointAABB(vec3 point, uint tile);
 
 void main()
 {
-	if(gl_GlobalInvocationID.x == 0)
+	if(gl_LocalInvocationIndex == 0) 
+	{
+		globalIndexCount = 0;
+	}
+	
+	if(gl_LocalInvocationIndex >= globalActiveClusterCount) 
 	{
 		globalActiveClusterCount = 0;
+		return;
 	}
-
-    globalIndexCount 							= 0;
+	
     uint lightCount  							= pointLight.length();
-    uint tileIndex 								= visibleUniqueCluster[gl_GlobalInvocationID.x].uniqueIndex;
+    uint tileIndex 								= visibleUniqueCluster[gl_LocalInvocationIndex].uniqueIndex;
 	
 	//visible lights temp buffer for the loop
     uint vLightCnt 								= 0;								
@@ -97,7 +100,7 @@ void main()
 	}	
 
     //We want all thread groups to have completed the light tests before continuing
-    barrier();
+    //barrier();
 
     uint offset 								= atomicAdd(globalIndexCount, vLightCnt);
 
