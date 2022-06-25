@@ -30,7 +30,7 @@ void main(){
 
     //Per Tile variables
     uint tileSizePx 			= tileSizes[3];
-    uint tileIndex 				= 	gl_LocalInvocationIndex;
+    uint tileIndex 				= gl_LocalInvocationIndex;
 
     //Calculating the min and max point in screen space
     vec4 maxPoint_sS 			= vec4(vec2(gl_WorkGroupID.xy + 1) * tileSizePx, -1.0, 1.0); // Top Right
