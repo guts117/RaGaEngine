@@ -56,25 +56,26 @@ void Model_Shader::CompileProgram()
 	uniformDirectionalShadowMap = glGetUniformLocation(shaderID, "DirectionalShadowMap");
 
 	uniformOmniLightPos = glGetUniformLocation(shaderID, "lightPos");
+	uniformFarPlane = glGetUniformLocation(shaderID, "farPlane");
 
 	for (size_t i = 0; i < 6; i++) {
 		char locBuff[100] = { '\0' };
 
-		snprintf(locBuff, sizeof(locBuff), "lightMatrices[%d]", i);
+		snprintf(locBuff, sizeof(locBuff), "lightMatrices[%zd]", i);
 		uniformLightMatrices[i] = glGetUniformLocation(shaderID, locBuff);
 	}
 	//omnishadowmap
 	for (size_t i = 0; i < MAX_POINT_LIGHTS_WITH_SHADOW + MAX_SPOT_LIGHTS; i++) {
 		char locBuff[100] = { '\0' };
 
-		snprintf(locBuff, sizeof(locBuff), "omniShadowMaps[%d].shadowMap", i);
+		snprintf(locBuff, sizeof(locBuff), "omniShadowMaps[%zd].shadowMap", i);
 		uniformOmniShadowMap[i].shadowMap = glGetUniformLocation(shaderID, locBuff);
 	}
 
 	for (size_t i = 0; i < MAX_POINT_LIGHTS_WITH_SHADOW + MAX_SPOT_LIGHTS; i++) {
 		char locBuff[100] = { '\0' };
 
-		snprintf(locBuff, sizeof(locBuff), "omniShadowMaps[%d].farPlane", i);
+		snprintf(locBuff, sizeof(locBuff), "omniShadowMaps[%zd].farPlane", i);
 		uniformOmniShadowMap[i].farPlane = glGetUniformLocation(shaderID, locBuff);
 	}
 }

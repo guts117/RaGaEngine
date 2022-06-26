@@ -201,7 +201,7 @@ struct NarakaKarEngine::Impl
 
 	std::unique_ptr < Texture> terrainTextureDisp;
 	std::unique_ptr < Texture> terrainTextureBlend;
-	std::unique_ptr < Texture>	terrainTexture;
+	std::unique_ptr < Texture> terrainTexture;
 	std::unique_ptr < Texture> terrainTextureMetal;
 	std::unique_ptr < Texture> terrainTextureRough;
 	std::unique_ptr < Texture> terrainTextureNorm;
