@@ -1,11 +1,7 @@
 #include "Animated_Mesh.h"
-
 #include <iostream>
-Animated_Mesh::Animated_Mesh() :Mesh()
-{
-}
 
-void Animated_Mesh::CreateAnimatedMesh(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices, std::vector<VertexBoneData>& Bones)
+void Animated_Mesh::CreateMeshWithBones(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices, std::vector<VertexBoneData>& Bones)
 {
 	indexCount = numOfIndices;
 	vertexCount = numOfVertices;
@@ -47,8 +43,8 @@ void Animated_Mesh::CreateAnimatedMesh(GLfloat Vertices[], unsigned int Indices[
 	glBindVertexArray(0);
 }
 
-
-void Animated_Mesh::RenderAnimatedMesh() {
+void Animated_Mesh::RenderMesh() 
+{
 	glBindVertexArray(VAO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
 	glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
@@ -56,28 +52,10 @@ void Animated_Mesh::RenderAnimatedMesh() {
 	glBindVertexArray(0);
 }
 
-void Animated_Mesh::ClearMesh() {
-	if (VBO != 0) {
-		glDeleteBuffers(1, &VBO);
-		VBO = 0;
-	}
-	if (VBO_bones != 0)
-	{
+Animated_Mesh::~Animated_Mesh() 
+{
+	if (VBO_bones != 0) {
 		glDeleteBuffers(1, &VBO_bones);
 		VBO_bones = 0;
 	}
-	if (VAO != 0) {
-		glDeleteVertexArrays(1, &VAO);
-		VAO = 0;
-	}
-	if (IBO != 0) {
-		glDeleteBuffers(1, &IBO);
-		IBO = 0;
-	}
-
-	indexCount = 0;
-	vertexCount = 0;
-}
-Animated_Mesh::~Animated_Mesh() {
-	ClearMesh();
 }

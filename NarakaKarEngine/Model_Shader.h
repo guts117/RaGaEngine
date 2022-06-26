@@ -18,7 +18,7 @@ public:
 	void SetDirectionalShadowMap(GLuint textureUnit);
 	void SetAOMap(GLuint textureUnit);
 	void SetDepthMap(GLuint textureUnit);
-	void SetDirectionalLightTransform(glm::mat4* lTransform);
+	void SetDirectionalLightTransform(glm::mat4 lTransform);
 	void SetLightMatrices(std::vector<glm::mat4> lightMatrices);
 
 	~Model_Shader();

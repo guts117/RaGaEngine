@@ -27,7 +27,6 @@ private:
 	
 	Texture* cubeMap;
 	GLuint uniformProjection{ 0 }, uniformView{ 0 }, uniformPrevPV{0};
-
 };
 
 #endif

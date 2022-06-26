@@ -12,23 +12,29 @@
 class Mesh
 {
 public:
-	Mesh();
+	explicit Mesh() = default;
+	
+	Mesh(Mesh&& rhs) = default;
+	Mesh& operator= (Mesh&& rhs) = default;
+
+	Mesh(const Mesh& rhs) = delete;
+	Mesh& operator= (const Mesh& rhs) = delete;
+	
 	virtual void CreateMesh(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices);
-	virtual void CreateMeshNorm(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices);
-	virtual void CreateAnimatedMesh(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices, std::vector<VertexBoneData>& Bones);
+	virtual void CreateInstancedMesh(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices);
+	virtual void CreateMeshWithNormal(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices);
+	virtual void CreateMeshWithTangentNormal(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices);
+	virtual void CreateMeshWithBones(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices, std::vector<VertexBoneData>& Bones);
 	virtual void RenderMesh();
-	virtual void RenderAnimatedMesh();
-	glm::mat4 prevMesh = glm::mat4(1.0);
-	~Mesh();
+	virtual void RenderInstancedMesh();
+	virtual void RenderTessellatedMesh();
+
+	glm::mat4 PrevMesh = glm::mat4(1.0);
+
+	virtual ~Mesh() = 0;
 
 protected:
-	virtual void ClearMesh();
-
-	GLuint indexCount, vertexCount;
-	std::vector<VertexBoneData> Bones;
-
-	GLuint VAO, VBO, IBO;
-	GLuint VBO_bones;
+	GLuint indexCount = 0, vertexCount = 0, VAO = 0, VBO = 0, IBO = 0;
 };
 
 #endif

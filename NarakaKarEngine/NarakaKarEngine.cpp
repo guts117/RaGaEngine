@@ -31,6 +31,7 @@
 #include "Compute_Shader.h"
 
 #include "Mesh.h"
+#include "Billboard_Mesh.h"
 #include "Camera.h"
 #include "Texture.h"
 #include "DirectionalLight.h"
@@ -178,7 +179,7 @@ struct NarakaKarEngine::Impl
 
 	std::vector< std::shared_ptr < Static_Mesh>> meshList;
 	std::vector< std::shared_ptr < Static_Mesh>> terrainList;
-	std::vector< std::shared_ptr < Static_Mesh>> billboardList;
+	std::vector< std::shared_ptr < Billboard_Mesh>> billboardList;
 	std::vector< std::shared_ptr < ParticleSystem>> particleList;
 
 	std::unique_ptr < Static_Mesh> quad;
@@ -200,7 +201,7 @@ struct NarakaKarEngine::Impl
 
 	std::unique_ptr < Texture> terrainTextureDisp;
 	std::unique_ptr < Texture> terrainTextureBlend;
-	std::unique_ptr < Texture>	terrainTexture;
+	std::unique_ptr < Texture> terrainTexture;
 	std::unique_ptr < Texture> terrainTextureMetal;
 	std::unique_ptr < Texture> terrainTextureRough;
 	std::unique_ptr < Texture> terrainTextureNorm;
@@ -269,12 +270,11 @@ struct NarakaKarEngine::Impl
 		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))
 	};
 
-	unsigned int AABBvolumeGridSSBO, screenToViewSSBO, lightSSBO, lightIndexListSSBO, lightGridSSBO,
-		lightIndexGlobalCountSSBO, visibleUniqueClusterSSBO, activeClusterCountSSBO;
+	unsigned int AABBvolumeGridSSBO, screenToViewSSBO, lightSSBO, lightIndexListSSBO, lightGridSSBO, visibleUniqueClusterSSBO, activeClusterCountSSBO;
 
 	const int gridSizeX = 16;
 	const int gridSizeY = 9;
-	const int gridSizeZ = 24;
+	const int gridSizeZ = 7;
 	const int numClusters = gridSizeX * gridSizeY * gridSizeZ;
 	unsigned int sizeX, sizeY;
 
@@ -335,11 +335,11 @@ struct NarakaKarEngine::Impl
 		environmentTexture = std::make_unique<Texture>("Textures/HDR/GCanyon_C_YumaPoint_3k.hdr");
 		environmentTexture->LoadTextureHDR();
 
-		plainTexture = std::make_unique <Texture>("Textures/plain.png");
-		plainTexture->LoadTextureSRGB();
+		plainTexture = std::make_unique <Texture>("Textures/plain.png", true);
+		plainTexture->LoadTextureWithAlpha();
 
-		grassTexture = std::make_unique <Texture>("Textures/grass.png");
-		grassTexture->LoadTextureSRGBA();
+		grassTexture = std::make_unique <Texture>("Textures/grass.png", true);
+		grassTexture->LoadTextureWithAlpha();
 
 
 		pyramid1 = std::make_unique<Static_Object>();
@@ -361,19 +361,19 @@ struct NarakaKarEngine::Impl
 
 
 		terrainTextureDisp = std::make_unique <Texture>("Textures/Displacement/terrain.jpg");
-		terrainTextureDisp->LoadTexture();
+		terrainTextureDisp->LoadTextureNoAlpha();
 		terrainTextureBlend = std::make_unique <Texture>("Textures/Blend/terrain.jpg");
-		terrainTextureBlend->LoadTexture();
-		terrainTexture = std::make_unique <Texture>("Textures/terrain");
-		terrainTexture->LoadTextureArray(true, false);
-		terrainTextureMetal = std::make_unique <Texture>("Textures/Metallic/terrain");
-		terrainTextureMetal->LoadTextureArray(false, true);
-		terrainTextureRough = std::make_unique <Texture>("Textures/Roughness/terrain");
-		terrainTextureRough->LoadTextureArray(false, true);
-		terrainTextureNorm = std::make_unique <Texture>("Textures/Normal/terrain");
-		terrainTextureNorm->LoadTextureArray(false, true);
-		terrainTexturePara = std::make_unique <Texture>("Textures/Parallax/terrain");
-		terrainTexturePara->LoadTextureArray(false, true);
+		terrainTextureBlend->LoadTextureNoAlpha();
+		terrainTexture = std::make_unique <Texture>("Textures/terrain.jpg", true);
+		terrainTexture->LoadTextureArray(glm::vec2(1024, 1024), NUM_TERRAIN_LAYERS);
+		terrainTextureMetal = std::make_unique <Texture>("Textures/Metallic/terrain.jpg");
+		terrainTextureMetal->LoadTextureArray(glm::vec2(256, 256), NUM_TERRAIN_LAYERS);
+		terrainTextureRough = std::make_unique <Texture>("Textures/Roughness/terrain.jpg");
+		terrainTextureRough->LoadTextureArray(glm::vec2(256, 256), NUM_TERRAIN_LAYERS);
+		terrainTextureNorm = std::make_unique <Texture>("Textures/Normal/terrain.jpg");
+		terrainTextureNorm->LoadTextureArray(glm::vec2(256, 256), NUM_TERRAIN_LAYERS);
+		terrainTexturePara = std::make_unique <Texture>("Textures/Parallax/terrain.jpg");
+		terrainTexturePara->LoadTextureArray(glm::vec2(256, 256), NUM_TERRAIN_LAYERS);
 
 
 		shinyMaterialGlow = std::make_unique<Material>(1, 6, 7, 11, 12, 13);
@@ -477,12 +477,12 @@ struct NarakaKarEngine::Impl
 		spotLightCount++;
 
 		//std::vector<std::string> skyboxFaces;
-		///*skyboxFaces.push_back("Textures/Skybox/cupertin-lake_rt.tga");
+		//skyboxFaces.push_back("Textures/Skybox/cupertin-lake_rt.tga");
 		//skyboxFaces.push_back("Textures/Skybox/cupertin-lake_lf.tga");
 		//skyboxFaces.push_back("Textures/Skybox/cupertin-lake_up.tga");
 		//skyboxFaces.push_back("Textures/Skybox/cupertin-lake_dn.tga");
 		//skyboxFaces.push_back("Textures/Skybox/cupertin-lake_bk.tga");
-		//skyboxFaces.push_back("Textures/Skybox/cupertin-lake_ft.tga");*/
+		//skyboxFaces.push_back("Textures/Skybox/cupertin-lake_ft.tga");
 		//skyboxFaces.push_back("Textures/Skybox/barren_rt.jpg");
 		//skyboxFaces.push_back("Textures/Skybox/barren_lf.jpg");
 		//skyboxFaces.push_back("Textures/Skybox/barren_up.jpg");
@@ -507,7 +507,7 @@ struct NarakaKarEngine::Impl
 		ssaoShader->GenKernel();
 		ssaoShader->GenNoise(ssaoNoiseData);
 
-		SSAONoiseTexture->GenerateNoiseTexture(ssaoNoiseData);
+		SSAONoiseTexture->LoadNativeTexture(ssaoNoiseData);
 
 		terrainShader->UseShader();
 		for (size_t i = 0; i < NUM_CASCADES; ++i)
@@ -695,18 +695,6 @@ struct NarakaKarEngine::Impl
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 		}
 
-		//Setting up simplest ssbo in the world
-		{
-			glGenBuffers(1, &lightIndexGlobalCountSSBO);
-			glBindBuffer(GL_SHADER_STORAGE_BUFFER, lightIndexGlobalCountSSBO);
-
-			//Every tile takes two unsigned ints one to represent the number of lights in that grid
-			//Another to represent the offset 
-			glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(unsigned int), NULL, GL_STATIC_COPY);
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, lightIndexGlobalCountSSBO);
-			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-		}
-
 		{
 			glGenBuffers(1, &visibleUniqueClusterSSBO);
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, visibleUniqueClusterSSBO);
@@ -730,7 +718,7 @@ struct NarakaKarEngine::Impl
 	{
 		//Building the grid of AABB enclosing the view frustum clusters
 		buildAABBGridCompShader->UseShader();
-		buildAABBGridCompShader->Dispatch(gridSizeX, gridSizeY, gridSizeZ);
+		buildAABBGridCompShader->Dispatch(1, 1, 1);
 	}
 
 	void calcAverageNormals(unsigned int* indices, unsigned int indicesCount,
@@ -820,8 +808,8 @@ struct NarakaKarEngine::Impl
 			0.5f, 0.5f, 0.0f,
 		};
 
-		std::shared_ptr<Static_Mesh> obj = std::make_shared <Static_Mesh>();
-		obj->CreateBillboard(billboardVertices, billboardIndices, 12, 6);
+		std::shared_ptr<Billboard_Mesh> obj = std::make_shared <Billboard_Mesh>();
+		obj->CreateMesh(billboardVertices, billboardIndices, 12, 6);
 		billboardList.push_back(obj);
 
 	}
@@ -843,7 +831,7 @@ struct NarakaKarEngine::Impl
 
 		std::shared_ptr <ParticleSystem> obj = std::make_shared< ParticleSystem>();
 
-		obj->CreateParticlesMeshCPU(particlesVertices, particlesIndices, 12, 6);
+		obj->CreateInstancedMesh(particlesVertices, particlesIndices, 12, 6);
 		particleList.push_back(obj);
 	}
 
@@ -868,7 +856,7 @@ struct NarakaKarEngine::Impl
 		//Debug::DebugPrintTBN("TerrainTBN", terrainVertices, 5, 8);
 
 		std::shared_ptr < Static_Mesh> obj = std::make_shared< Static_Mesh>();
-		obj->CreateMeshNorm(terrainVertices, terrainIndices, 44, 6);
+		obj->CreateMeshWithTangentNormal(terrainVertices, terrainIndices, 44, 6);
 		terrainList.push_back(obj);
 	}
 
@@ -907,19 +895,19 @@ struct NarakaKarEngine::Impl
 		calcAverageTangents(floorIndices, 6, floorVertices, 44, 11, 8);
 
 		std::shared_ptr < Static_Mesh> obj1 = std::make_shared <Static_Mesh>();
-		obj1->CreateMeshNorm(vertices, indices, 44, 12);
+		obj1->CreateMeshWithTangentNormal(vertices, indices, 44, 12);
 		meshList.push_back(obj1);
 
 		std::shared_ptr < Static_Mesh> obj2 = std::make_shared <Static_Mesh>();
-		obj2->CreateMeshNorm(vertices, indices, 44, 12);
+		obj2->CreateMeshWithTangentNormal(vertices, indices, 44, 12);
 		meshList.push_back(obj2);
 
 		std::shared_ptr < Static_Mesh> obj3 = std::make_shared <Static_Mesh>();
-		obj3->CreateMeshNorm(floorVertices, floorIndices, 44, 6);
+		obj3->CreateMeshWithTangentNormal(floorVertices, floorIndices, 44, 6);
 		meshList.push_back(obj3);
 
 		std::shared_ptr < Static_Mesh> obj4 = std::make_shared <Static_Mesh>();
-		obj4->CreateMeshNorm(floorVertices, floorIndices, 44, 6);
+		obj4->CreateMeshWithTangentNormal(floorVertices, floorIndices, 44, 6);
 		meshList.push_back(obj4);
 	}
 
@@ -994,7 +982,7 @@ struct NarakaKarEngine::Impl
 		particleList[0]->SimulateParticlesCPU(camera->getCameraPosition(), deltaTime);
 		particleList[0]->UpdateParticlesMeshCPU();
 		plainTexture->UseTexture(0);
-		particleList[0]->RenderParticlesMeshCPU();
+		particleList[0]->RenderInstancedMesh();
 	}
 
 	void RenderTerrain(bool shadow, bool depth)
@@ -1007,7 +995,7 @@ struct NarakaKarEngine::Impl
 		//model = glm::rotate(model, curAngle * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));  //if you put the rotate at the last place(i.e on the top) it will have a bouncy effect
 		//model = glm::scale(model,glm::vec3(terrainScaleFactor, 1.0f, terrainScaleFactor));
 		glUniformMatrix4fv(uniformModel2, 1, GL_FALSE, glm::value_ptr(model));
-		prevPVM = camera->GetPreviousProjectionViewMatrix() * terrainList[0]->prevMesh;
+		prevPVM = camera->GetPreviousProjectionViewMatrix() * terrainList[0]->PrevMesh;
 		glUniformMatrix4fv(uniformPrevPVM2, 1, GL_FALSE, glm::value_ptr(prevPVM));
 		terrainTextureDisp->UseTexture(0);
 		terrainTextureBlend->UseTexture(10);
@@ -1032,7 +1020,7 @@ struct NarakaKarEngine::Impl
 		dullTerrainMaterial->UseMaterial(uniformAlbedoMap2, uniformMetallicMap2, uniformNormalMap2, uniformRoughnessMap2, uniformParallaxMap2);
 
 		terrainList[0]->RenderTessellatedMesh();
-		terrainList[0]->prevMesh = model;
+		terrainList[0]->PrevMesh = model;
 	}
 
 	void RenderEnvCubeMap(bool is_cubeMap)
@@ -1125,14 +1113,14 @@ struct NarakaKarEngine::Impl
 
 		if (shadow)
 		{
-			anim->initShaders(animDirectionalShadowShader->GetShaderID());
+			anim->UpdateBoneData(animDirectionalShadowShader->GetShaderID());
 		}
 		else if (depth)
 		{
-			anim->initShaders(anim_preZPassShader->GetShaderID());
+			anim->UpdateBoneData(anim_preZPassShader->GetShaderID());
 		}
 		else {
-			anim->initShaders(animShaderList[0]->GetShaderID());
+			anim->UpdateBoneData(animShaderList[0]->GetShaderID());
 		}
 		anim->RenderModel();
 		anim->prevModel = model;
@@ -1148,15 +1136,15 @@ struct NarakaKarEngine::Impl
 
 		if (shadow)
 		{
-			anim2->initShaders(animDirectionalShadowShader->GetShaderID());
+			anim2->UpdateBoneData(animDirectionalShadowShader->GetShaderID());
 		}
 		else if (depth)
 		{
-			anim2->initShaders(anim_preZPassShader->GetShaderID());
+			anim2->UpdateBoneData(anim_preZPassShader->GetShaderID());
 		}
 		else
 		{
-			anim2->initShaders(animShaderList[0]->GetShaderID());
+			anim2->UpdateBoneData(animShaderList[0]->GetShaderID());
 		}
 
 		anim2->RenderModel();
@@ -1277,7 +1265,7 @@ struct NarakaKarEngine::Impl
 			directionalShadowShader->UseShader();
 			uniformModel = directionalShadowShader->GetModelLocation();
 
-			directionalShadowShader->SetDirectionalLightTransform(&projView);
+			directionalShadowShader->SetDirectionalLightTransform(projView);
 			directionalShadowShader->Validate();
 
 			RenderScene(directionalShadowShader);
@@ -1287,7 +1275,7 @@ struct NarakaKarEngine::Impl
 
 			uniformModel1 = animDirectionalShadowShader->GetModelLocation();
 
-			animDirectionalShadowShader->SetDirectionalLightTransform(&projView);
+			animDirectionalShadowShader->SetDirectionalLightTransform(projView);
 
 			animDirectionalShadowShader->Validate();
 
@@ -1352,17 +1340,17 @@ struct NarakaKarEngine::Impl
 		visibleClusterCompShader->Dispatch(ScreenWidth / 32, ScreenHeight / 30, 1);
 
 		uniqueClusterCompShader->UseShader();
-		uniqueClusterCompShader->Dispatch(gridSizeX, gridSizeY, gridSizeZ);
+		uniqueClusterCompShader->Dispatch(1, 1, 1);
 
-		unsigned int count;
-		glGetNamedBufferSubData(activeClusterCountSSBO, 0, sizeof(unsigned int), &count);
+		//unsigned int count;
+		//glGetNamedBufferSubData(activeClusterCountSSBO, 0, sizeof(unsigned int), &count);
 
 		//std::cout << count << " Clusters are Active" << std::endl;
 
 		//4-Light assignment
 		cullLightsCompShader->UseShader();
 		glUniformMatrix4fv(cullLightsCompShader->GetViewLocation(), 1, GL_FALSE, glm::value_ptr(camera->CalculateViewMatrix()));
-		cullLightsCompShader->Dispatch(count, 1, 1);
+		cullLightsCompShader->Dispatch(1, 1, 1);
 	}
 
 	void PreZPass(GLfloat deltaTime)
@@ -1728,11 +1716,6 @@ struct NarakaKarEngine::Impl
 		{
 			glDeleteBuffers(1, &lightGridSSBO);
 			lightGridSSBO = 0;
-		}
-		if (lightIndexGlobalCountSSBO != 0)
-		{
-			glDeleteBuffers(1, &lightIndexGlobalCountSSBO);
-			lightIndexGlobalCountSSBO = 0;
 		}
 		if (visibleUniqueClusterSSBO != 0)
 		{

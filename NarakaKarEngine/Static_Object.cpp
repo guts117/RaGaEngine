@@ -50,20 +50,14 @@ void Static_Object::LoadTexture(std::unique_ptr<Texture>& texture, std::string p
 {
 	if (path != "")
 	{
-		texture = std::make_unique<Texture>(path.c_str());
+		texture = std::make_unique<Texture>(path, isSRGB);
 		if (path.find(".png" ||".gif" || ".tiff" || ".tga" || ".jp2" || ".jpx") != std::string::npos)
 		{
-			if (isSRGB)
-				texture->LoadTextureSRGBA();
-			else
-				texture->LoadTextureA();
+			texture->LoadTextureWithAlpha();
 		}
 		else
 		{
-			if (isSRGB)
-				texture->LoadTextureSRGB();
-			else
-				texture->LoadTexture();
+			texture->LoadTextureNoAlpha();
 		}
 	}
 }
@@ -113,7 +107,7 @@ void Static_Object::DrawNativeObject(std::shared_ptr<Shader> shader, std::shared
 
 	glUniformMatrix4fv(m_uniformModel, 1, GL_FALSE, glm::value_ptr(m_model));
 
-	m_prevPVM = camera->GetPreviousProjectionViewMatrix() * m_staticMesh->prevMesh;
+	m_prevPVM = camera->GetPreviousProjectionViewMatrix() * m_staticMesh->PrevMesh;
 	glUniformMatrix4fv(m_uniformPrevPVM, 1, GL_FALSE, glm::value_ptr(m_prevPVM));
 
 	m_albedoTexture->UseTexture(albedoTexUnit);
@@ -125,7 +119,7 @@ void Static_Object::DrawNativeObject(std::shared_ptr<Shader> shader, std::shared
 	m_material->UseMaterial(m_uniformAlbedoMap, m_uniformMetallicMap, m_uniformNormalMap, m_uniformRoughnessMap, m_uniformParallaxMap, m_uniformGlowMap);
 	
 	m_staticMesh->RenderMesh();
-	m_staticMesh->prevMesh = m_model;
+	m_staticMesh->PrevMesh = m_model;
 	m_model = glm::mat4(1.0f);
 }
 

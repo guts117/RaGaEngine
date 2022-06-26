@@ -12,33 +12,30 @@ class Texture
 {
 public:
 	explicit Texture();
-	explicit Texture(std::string fileLoc);
+	explicit Texture(std::string fileLoc, bool isSRGB = false);
 
 	Texture(Texture&& rhs) noexcept = default;
 	Texture& operator=(Texture&& rhs) noexcept = default;
 
-	Texture(const Texture& rhs) noexcept;
-	Texture& operator=(const Texture& rhs) noexcept;
+	Texture(const Texture& rhs) noexcept = delete;
+	Texture& operator=(const Texture& rhs) noexcept = delete;
 
-	bool LoadTexture();
-	bool LoadTextureA();
-	bool LoadTextureSRGB();
-	bool LoadTextureArray(bool is_SRGB, bool is_lowres);
-	bool LoadTextureSRGBA();
-	bool LoadCubeMap(const std::vector<std::string>& faceLocation);
-	bool LoadCubeMapSRGB(const std::vector<std::string>& faceLocation);
+	bool LoadTextureWithAlpha();
+	bool LoadTextureNoAlpha();
+	bool LoadTextureArray(const glm::vec2& resolution, const int numOfLayers);
+	bool LoadCubeMap();
 	bool LoadTextureHDR();
 
-	bool GenerateNoiseTexture(const std::vector<glm::vec3>& noiseData);
+	bool LoadNativeTexture(const std::vector<glm::vec3>& noiseData);
 
 	void UseTexture(GLuint i);
 	void UseTextureArray(GLuint i);
 	void UseCubeMap(GLuint i);
 
 	//Getters
-	int GetWidth();
-	int GetHeight();
-	int GetBitDepth();
+	const int GetWidth();
+	const int GetHeight();
+	const int GetBitDepth();
 
 	~Texture();
 private:
