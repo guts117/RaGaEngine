@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "SSAO_Shader.h"
 
 void SSAO_Shader::CompileProgram()

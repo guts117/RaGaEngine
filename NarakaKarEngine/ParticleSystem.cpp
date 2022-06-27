@@ -1,4 +1,6 @@
+#include "pch.h"
 #include "ParticleSystem.h"
+#include "CommonValues.h"
 
 ParticleSystem::ParticleSystem()
 	: Billboard_Mesh()

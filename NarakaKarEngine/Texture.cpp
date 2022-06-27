@@ -1,9 +1,9 @@
+#include "pch.h"
 #include "Texture.h"
 #define STB_IMAGE_IMPLEMENTATION 
 #include "stb_image.h"
 #include "CommonValues.h"
-#include <cstring>
-#include <cstdio>
+
 
 struct Texture::Impl
 {

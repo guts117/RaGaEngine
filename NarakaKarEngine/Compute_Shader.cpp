@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Compute_Shader.h"
 
 void Compute_Shader::CompileProgram()

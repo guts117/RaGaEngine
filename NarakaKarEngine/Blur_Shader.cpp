@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Blur_Shader.h"
 
 Blur_Shader::Blur_Shader()

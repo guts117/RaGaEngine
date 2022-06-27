@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "SSAO_Framebuffer.h"
 
 bool SSAO_Framebuffer::Init(GLuint width, GLuint height)

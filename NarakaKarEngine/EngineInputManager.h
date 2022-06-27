@@ -2,8 +2,7 @@
 #define ENGINE_INPUT_MANAGER
 
 #include "Window.h"
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
+#include "pch.h"
 
 class EngineInputManager
 {

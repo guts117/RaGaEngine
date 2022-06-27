@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Equirectangular_to_CubeMap_Framebuffer.h"
 
 bool Equirectangular_to_CubeMap_Framebuffer::Init(GLuint width, GLuint height, bool is_env_map)

@@ -1,4 +1,5 @@
-﻿#include "Model.h"
+﻿#include "pch.h"
+#include "Model.h"
 
 void Model::LoadModel(const std::string& fileName)
 {

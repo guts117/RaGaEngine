@@ -1,7 +1,7 @@
 #ifndef MATERIAL
 #define MATERIAL
 
-#include <GL/glew.h>
+#include "pch.h"
 
 class Material
 {

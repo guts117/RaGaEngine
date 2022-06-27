@@ -1,13 +1,9 @@
 #ifndef MESH
 #define MESH
 
-#include <GL/glew.h>
-#include "CommonValues.h"
-#include <vector>
+#include "pch.h"
 
-#include "glm\glm.hpp"
-#include "assimp\Importer.hpp"
-#include "VertexBoneData.h"
+class VertexBoneData;
 
 class Mesh
 {

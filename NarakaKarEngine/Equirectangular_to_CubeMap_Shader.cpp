@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Equirectangular_to_CubeMap_Shader.h"
 
 void Equirectangular_to_CubeMap_Shader::CompileProgram()

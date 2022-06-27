@@ -1,5 +1,5 @@
+#include "pch.h"
 #include "HDR_Shader.h"
-
 
 void HDR_Shader::CompileProgram()
 {

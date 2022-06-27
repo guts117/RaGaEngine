@@ -2,6 +2,10 @@
 #define TERRAIN_SHADER
 
 #include "Shader.h"
+#include "CommonValues.h"
+
+class Light;
+
 class Terrain_Shader :
 	public Shader
 {

@@ -1,5 +1,6 @@
+#include "pch.h"
 #include "Animated_Mesh.h"
-#include <iostream>
+#include "VertexBoneData.h"
 
 void Animated_Mesh::CreateMeshWithBones(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices, std::vector<VertexBoneData>& Bones)
 {

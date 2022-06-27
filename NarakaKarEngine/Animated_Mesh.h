@@ -3,6 +3,8 @@
 
 #include "Mesh.h"
 
+class VertexBoneData;
+
 class Animated_Mesh : public Mesh
 {
 public:

@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Terrain_PreZPass_Shader.h"
 
 void Terrain_PreZPass_Shader::CompileProgram()

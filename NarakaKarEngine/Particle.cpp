@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Particle.h"
 
 bool Particle::operator<(const Particle& that) const

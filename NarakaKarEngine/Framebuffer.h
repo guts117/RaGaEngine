@@ -1,11 +1,8 @@
 #ifndef FRAMEBUFFER
 #define FRAMEBUFFER
 
-#include <stdio.h>
 #include "CommonValues.h"
-#include <GL/glew.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+#include "pch.h"
 
 class Framebuffer
 {

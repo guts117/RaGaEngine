@@ -1,21 +1,12 @@
 #ifndef SHADER
 #define SHADER
 
-#include <stdio.h>
-#include <string>
-#include <iostream>
-#include <fstream>
-
-#include <GL/glew.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include "Animated_Model.h"
-
+#include "pch.h"
 #include "CommonValues.h"
 
-#include "DirectionalLight.h"
-#include "PointLight.h"
-#include "SpotLight.h"
+class DirectionalLight;
+class PointLight;
+class SpotLight;
 
 class Shader
 {

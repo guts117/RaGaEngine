@@ -1,6 +1,5 @@
+#include "pch.h"
 #include "VertexBoneData.h"
-#include <cstdio>
-#include <string>
 
 VertexBoneData::VertexBoneData()
 {

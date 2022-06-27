@@ -1,6 +1,5 @@
+#include "pch.h"
 #include "Window.h"
-#include <stdio.h>
-
 
 Window::Window() {
 	mainWindow = nullptr;

@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "HDR_Framebuffer.h"
 
 bool HDR_Framebuffer::Init(GLuint width, GLuint height)

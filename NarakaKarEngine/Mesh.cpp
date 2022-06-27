@@ -1,4 +1,6 @@
+#include "pch.h"
 #include "Mesh.h"
+#include "VertexBoneData.h"
 
 void Mesh::CreateMesh(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices) {}
 

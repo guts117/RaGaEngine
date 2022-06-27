@@ -1,4 +1,8 @@
+#include "pch.h"
 #include "Terrain_Shader.h"
+#include "DirectionalLight.h"
+#include "PointLight.h"
+#include "SpotLight.h"
 
 void Terrain_Shader::CompileProgram()
 {

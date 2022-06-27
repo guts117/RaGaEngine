@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Debug.h"
 
 void Debug::DebugPrintReferenceTBN(std::string header, GLfloat* vertices, int offset, glm::vec3 nm) {
