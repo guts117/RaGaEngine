@@ -27,6 +27,7 @@
 #include "PointLight.h"
 #include "SpotLight.h"
 #include "Material.h"
+#include "Particle.h"
 
 #include "Equirectangular_to_CubeMap_Framebuffer.h"
 #include "PreFilter_Framebuffer.h"
@@ -36,6 +37,7 @@
 #include "SSAOBlur_Framebuffer.h"
 #include "HDR_Framebuffer.h"
 #include "MotionBlur_FrameBuffer.h"
+#include "ShadowMap_FrameBuffer.h"
 
 #include "Blur_PingPong_Framebuffer.h"
 

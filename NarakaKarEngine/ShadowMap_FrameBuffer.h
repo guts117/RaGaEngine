@@ -1,8 +1,10 @@
 #ifndef	SHADOWMAP_FRAMEBUFFER
 #define SHADOWMAP_FRAMEBUFFER
-#include "Framebuffer.h"
 
-class ShadowMap_Framebuffer:public Framebuffer
+#include "Framebuffer.h"
+#include "CommonValues.h"
+
+class ShadowMap_Framebuffer : public Framebuffer
 {
 public:
 	ShadowMap_Framebuffer() = default;

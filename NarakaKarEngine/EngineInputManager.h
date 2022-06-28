@@ -1,8 +1,8 @@
 #ifndef ENGINE_INPUT_MANAGER
 #define ENGINE_INPUT_MANAGER
 
-#include "Window.h"
 #include "pch.h"
+#include "Window.h"
 
 class EngineInputManager
 {

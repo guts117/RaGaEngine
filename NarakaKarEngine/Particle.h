@@ -1,7 +1,8 @@
 #ifndef PARTICLE
 #define PARTICLE
 
-#include <glm/glm.hpp>
+#include "pch.h"
+
 class Particle
 {
 public:

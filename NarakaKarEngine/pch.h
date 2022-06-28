@@ -15,13 +15,18 @@
 #include <string>
 #include <cstring>
 
+#include <Random>
+
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+
 #define GLM_FORCE_CTOR_INIT
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/string_cast.hpp>
+#include <glm/gtx/norm.hpp>
+
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>

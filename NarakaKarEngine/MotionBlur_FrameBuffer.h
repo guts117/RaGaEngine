@@ -2,6 +2,7 @@
 #define MOTIONBLUR_FRAMEBUFFER
 
 #include "Framebuffer.h"
+
 class MotionBlur_FrameBuffer :
 	public Framebuffer
 {

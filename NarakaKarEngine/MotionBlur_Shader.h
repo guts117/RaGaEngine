@@ -2,6 +2,7 @@
 #define MOTIONBLUR_SHADER
 
 #include "Shader.h"
+
 class MotionBlur_Shader :
 	public Shader
 {

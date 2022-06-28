@@ -2,6 +2,7 @@
 #define PREFILTER_FRAMEBUFFER
 
 #include "Framebuffer.h"
+
 class PreFilter_Framebuffer :
     public Framebuffer
 {

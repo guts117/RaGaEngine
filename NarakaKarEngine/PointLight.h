@@ -1,10 +1,7 @@
 #ifndef POINTLIGHT
 #define POINTLIGHT
 
-#include "Light.h"
-#include "OmniShadowMap_FrameBuffer.h"
-
-#include <vector>
+#include "Light.h";
 
 class PointLight :
 	public Light

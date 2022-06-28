@@ -1,7 +1,6 @@
 #ifndef FRAMEBUFFER
 #define FRAMEBUFFER
 
-#include "CommonValues.h"
 #include "pch.h"
 
 class Framebuffer

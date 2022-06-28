@@ -2,6 +2,7 @@
 #define TERRAIN_PREZPASS_SHADER
 
 #include "PreZPass_Shader.h"
+
 class Terrain_PreZPass_Shader :
 	public PreZPass_Shader
 {

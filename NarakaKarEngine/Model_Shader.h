@@ -2,6 +2,7 @@
 #define MODEL_SHADER
 
 #include "Shader.h"
+
 class Model_Shader :
 	public Shader
 {

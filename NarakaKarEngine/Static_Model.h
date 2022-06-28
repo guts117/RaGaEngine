@@ -2,6 +2,7 @@
 #define STATIC_MODEL
 
 #include "Model.h"
+
 class Static_Model :
 	public Model
 {

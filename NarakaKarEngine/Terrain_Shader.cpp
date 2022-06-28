@@ -3,6 +3,7 @@
 #include "DirectionalLight.h"
 #include "PointLight.h"
 #include "SpotLight.h"
+#include "ShadowMap_FrameBuffer.h"
 
 void Terrain_Shader::CompileProgram()
 {

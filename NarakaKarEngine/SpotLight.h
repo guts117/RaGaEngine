@@ -2,6 +2,7 @@
 #define SPOTLIGHT
 
 #include "PointLight.h"
+
 class SpotLight :
 	public PointLight
 {

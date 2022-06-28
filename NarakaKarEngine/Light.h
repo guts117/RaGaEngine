@@ -3,7 +3,7 @@
 
 #include "pch.h"
 
-#include "ShadowMap_Framebuffer.h"
+class ShadowMap_Framebuffer;
 
 class Light
 {
@@ -12,7 +12,7 @@ public:
 	Light(GLuint shadowWidth, GLuint shadowHeight,
 			GLfloat red, GLfloat green, GLfloat blue);
 
-	ShadowMap_Framebuffer* GetShadowMap() { return shadowMap; }
+	ShadowMap_Framebuffer* GetShadowMap();
 
 	virtual ~Light() = 0;
 
