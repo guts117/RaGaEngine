@@ -1,6 +1,8 @@
+#include "pch.h"
 #include "Animated_Model.h"
-#include<iostream>
-
+#include "Texture.h"
+#include "Animated_Mesh.h"
+#include "VertexBoneData.h"
 
 void Animated_Model::UpdateBoneData(const GLuint& shaderID)
 {

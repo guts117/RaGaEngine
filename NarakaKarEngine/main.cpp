@@ -1,5 +1,5 @@
+#include "pch.h"
 #include "NarakaKarEngine.h"
-#include  <memory>
 
 int main()
 {

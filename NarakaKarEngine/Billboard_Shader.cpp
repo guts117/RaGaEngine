@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Billboard_Shader.h"
 
 void Billboard_Shader::CompileProgram()

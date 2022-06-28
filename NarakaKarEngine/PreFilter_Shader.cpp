@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "PreFilter_Shader.h"
 
 void PreFilter_Shader::CompileProgram()

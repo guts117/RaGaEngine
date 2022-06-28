@@ -1,4 +1,9 @@
+#include "pch.h"
 #include "Model_Shader.h"
+#include "DirectionalLight.h"
+#include "PointLight.h"
+#include "SpotLight.h"
+#include "ShadowMap_FrameBuffer.h"
 
 void Model_Shader::CompileProgram()
 {

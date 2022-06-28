@@ -2,9 +2,8 @@
 #define PARTICLESYSTEM
 
 #include "Billboard_Mesh.h"
-#include "Particle.h"
-#include <glm/gtx/norm.hpp>
-#include <iostream>
+
+class Particle;
 
 class ParticleSystem :
 	public Billboard_Mesh

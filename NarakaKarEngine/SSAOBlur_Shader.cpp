@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "SSAOBlur_Shader.h"
 
 void SSAOBlur_Shader::CompileProgram()

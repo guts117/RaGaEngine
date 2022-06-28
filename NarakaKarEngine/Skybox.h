@@ -1,14 +1,12 @@
 #ifndef SKYBOX
 #define SKYBOX
 
-#include <vector>
-#include <string>
+#include "pch.h"
 
-#include <glm/gtc/matrix_transform.hpp>
-#include "Equirectangular_to_CubeMap_Framebuffer.h"
-#include "Model_Shader.h"
-#include "Static_Mesh.h"
-#include "Texture.h"
+class Model_Shader;
+class Equirectangular_to_CubeMap_Framebuffer;
+class Static_Mesh;
+class Texture;
 
 class Skybox
 {

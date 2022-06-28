@@ -1,11 +1,7 @@
 #ifndef TEXTURE
 #define TEXTURE
 
-#include <GL/glew.h>
-#include <glm/glm.hpp>
-#include <vector>
-#include <string>
-#include <memory>
+#include "pch.h"
 //#include "spimpl.h"
 
 class Texture

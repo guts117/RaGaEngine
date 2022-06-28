@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "BRDF_Framebuffer.h"
 
 bool BRDF_Framebuffer::Init(GLuint width, GLuint height)

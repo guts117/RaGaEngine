@@ -1,7 +1,7 @@
 #ifndef NARAKA_KAR_ENGINE
 #define NARAKA_KAR_ENGINE
 
-#include <memory>
+#include "pch.h"
 //#include "spimpl.h"
 
 class NarakaKarEngine 

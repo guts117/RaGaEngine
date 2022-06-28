@@ -1,5 +1,7 @@
+#include "pch.h"
 #include "Static_Model.h"
-
+#include "Texture.h"
+#include "Static_Mesh.h"
 
 void Static_Model::RenderModel()
 {

@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "BRDF_Shader.h"
 
 void BRDF_Shader::CompileProgram()

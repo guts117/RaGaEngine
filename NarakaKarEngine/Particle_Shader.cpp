@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Particle_Shader.h"
 
 Particle_Shader::Particle_Shader()

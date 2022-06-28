@@ -2,6 +2,7 @@
 #define HDR_SHADER
 
 #include "Shader.h"
+
 class HDR_Shader :
 	public Shader
 {

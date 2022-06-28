@@ -2,6 +2,7 @@
 #define PREFILTER_SHADER
 
 #include "Shader.h"
+
 class PreFilter_Shader :
     public Shader
 {

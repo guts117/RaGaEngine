@@ -2,6 +2,7 @@
 #define EQUIRECTANGULAR_TO_CUBEMAP_FRAMEBUFFER
 
 #include "Framebuffer.h"
+
 class Equirectangular_to_CubeMap_Framebuffer :
     public Framebuffer
 {

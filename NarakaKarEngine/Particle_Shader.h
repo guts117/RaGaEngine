@@ -2,6 +2,7 @@
 #define PARTICLE_SHADER
 
 #include "Shader.h"
+
 class Particle_Shader :
 	public Shader
 {

@@ -1,7 +1,9 @@
+#include "pch.h"
 #include "Skybox.h"
-#include <GL/glew.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include "Equirectangular_to_CubeMap_Framebuffer.h"
+#include "Model_Shader.h"
+#include "Static_Mesh.h"
+#include "Texture.h"
 
 Skybox::Skybox()
 {

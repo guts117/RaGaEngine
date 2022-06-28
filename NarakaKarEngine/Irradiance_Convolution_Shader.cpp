@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Irradiance_Convolution_Shader.h"
 
 void Irradiance_Convolution_Shader::CompileProgram()

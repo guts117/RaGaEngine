@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "SpotLight.h"
 
 SpotLight::SpotLight() : PointLight() {
@@ -44,9 +45,4 @@ void SpotLight::SetFlash(glm::vec3 pos, glm::vec3 dir)
 }
 
 SpotLight::~SpotLight() {
-	if (shadowMap != nullptr)
-	{
-		delete shadowMap;
-		shadowMap = nullptr;
-	}
 }

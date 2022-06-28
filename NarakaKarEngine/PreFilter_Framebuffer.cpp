@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "PreFilter_Framebuffer.h"
 
 bool PreFilter_Framebuffer::Init(GLuint width, GLuint height)

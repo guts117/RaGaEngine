@@ -1,6 +1,8 @@
 #ifndef HDR_FRAMEBUFFER
 #define HDR_FRAMEBUFFER
+
 #include "Framebuffer.h"
+
 class HDR_Framebuffer : public Framebuffer
 {
 public:

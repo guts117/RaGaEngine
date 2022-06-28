@@ -1,11 +1,7 @@
 #ifndef DEBUG
 #define DEBUG
 
-#include <glm/glm.hpp>
-#include <GL/glew.h>
-#include <stdio.h>
-#include <string>
-#include <iostream>
+#include "pch.h"
 
 class Debug
 {

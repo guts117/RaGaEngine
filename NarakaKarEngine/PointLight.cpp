@@ -1,4 +1,6 @@
+#include "pch.h"
 #include "PointLight.h"
+#include "OmniShadowMap_Framebuffer.h"
 
 PointLight::PointLight() : Light(){
 

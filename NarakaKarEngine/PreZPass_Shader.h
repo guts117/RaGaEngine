@@ -2,6 +2,7 @@
 #define PREZPASS_SHADER
 
 #include "Shader.h"
+
 class PreZPass_Shader :
 	public Shader
 {

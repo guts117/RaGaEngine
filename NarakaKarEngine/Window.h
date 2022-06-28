@@ -1,10 +1,9 @@
 #ifndef WINDOW
 #define WINDOW
 
-#include "EngineInputManager.h"
-#include <memory>
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
+#include "pch.h"
+
+class EngineInputManager;
 
 class Window
 {

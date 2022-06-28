@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "PreZPass_Shader.h"
 
 void PreZPass_Shader::CompileProgram()

@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "MotionBlur_FrameBuffer.h"
 
 bool MotionBlur_FrameBuffer::Init(GLuint width, GLuint height)

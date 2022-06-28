@@ -1,17 +1,5 @@
+#include "pch.h"
 #include "NarakaKarEngine.h"
-#include <stdio.h>
-
-#include <string>
-#include <cmath>
-#include <vector>
-
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-#define GLM_FORCE_CTOR_INIT
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/string_cast.hpp>
 
 #include "Equirectangular_to_CubeMap_Shader.h"
 #include "Irradiance_Convolution_Shader.h"
@@ -31,6 +19,7 @@
 #include "Compute_Shader.h"
 
 #include "Mesh.h"
+#include "Static_Mesh.h"
 #include "Billboard_Mesh.h"
 #include "Camera.h"
 #include "Texture.h"
@@ -38,6 +27,7 @@
 #include "PointLight.h"
 #include "SpotLight.h"
 #include "Material.h"
+#include "Particle.h"
 
 #include "Equirectangular_to_CubeMap_Framebuffer.h"
 #include "PreFilter_Framebuffer.h"
@@ -47,6 +37,7 @@
 #include "SSAOBlur_Framebuffer.h"
 #include "HDR_Framebuffer.h"
 #include "MotionBlur_FrameBuffer.h"
+#include "ShadowMap_FrameBuffer.h"
 
 #include "Blur_PingPong_Framebuffer.h"
 
@@ -58,7 +49,6 @@
 #include "ParticleSystem.h"
 #include "Skybox.h"
 
-#include <assimp/Importer.hpp>
 #include "Debug.h"
 
 #include "CommonValues.h"

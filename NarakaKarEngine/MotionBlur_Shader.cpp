@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "MotionBlur_Shader.h"
 
 void MotionBlur_Shader::CompileProgram()

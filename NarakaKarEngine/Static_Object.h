@@ -1,8 +1,6 @@
 #ifndef  STATIC_OBJECT
-#include <memory>
-#include <GL/glew.h>
-#include <glm/glm.hpp>
-#include <String>
+
+#include "pch.h"
 
 class Texture;
 class Material;

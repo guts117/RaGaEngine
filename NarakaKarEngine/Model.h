@@ -1,29 +1,12 @@
 #ifndef MODEL
 #define MODEL
 
-#include <cstdio>
-#include <vector>
-#include <string>
-#include <map>
-
-#include<GL/glew.h>
-#include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
-
-#include "Mesh.h"
-#include "Static_Mesh.h"
-#include "Animated_Mesh.h"
-#include "Texture.h"
+#include "pch.h"
 
 class Static_Mesh;
 class Animated_Mesh;
 class VertexBoneData;
+class Texture;
 
 struct BoneMatrix
 {

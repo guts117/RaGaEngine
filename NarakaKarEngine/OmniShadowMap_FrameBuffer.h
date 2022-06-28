@@ -2,6 +2,7 @@
 #define OMNISHADOWMAP_FRAMEBUFFER
 
 #include "ShadowMap_Framebuffer.h"
+
 class OmniShadowMap_Framebuffer :
 	public ShadowMap_Framebuffer
 {

@@ -1,9 +1,9 @@
 #ifndef ENGINE_INPUT_MANAGER
 #define ENGINE_INPUT_MANAGER
 
-#include "Window.h"
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
+#include "pch.h"
+
+class Window;
 
 class EngineInputManager
 {

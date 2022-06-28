@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Blur_PingPong_Framebuffer.h"
 
 Blur_PingPong_Framebuffer::Blur_PingPong_Framebuffer()

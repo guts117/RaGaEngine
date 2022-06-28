@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "OmniShadowMap_FrameBuffer.h"
 
 bool OmniShadowMap_Framebuffer::Init(GLuint width, GLuint height)

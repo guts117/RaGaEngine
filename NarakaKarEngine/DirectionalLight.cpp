@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "DirectionalLight.h"
 
 DirectionalLight::DirectionalLight() : Light() {

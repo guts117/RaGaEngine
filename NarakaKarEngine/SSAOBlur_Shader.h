@@ -2,6 +2,7 @@
 #define SSAOBLUR_SHADER
 
 #include "Shader.h"
+
 class SSAOBlur_Shader :
 	public Shader
 {

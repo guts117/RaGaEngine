@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Camera.h"
 
 Camera::Camera(glm::mat4 projectionMatrix, glm::vec3 startPosition, glm::vec3 startUp, GLfloat startYaw, GLfloat startPitch, GLfloat startMoveSpeed, GLfloat startTurnSpeed)

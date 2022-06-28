@@ -1,8 +1,9 @@
+#include "pch.h"
 #include "Shader.h"
-#include "Model.h"
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
+#include "CommonValues.h"
+#include "DirectionalLight.h"
+#include "PointLight.h"
+#include "SpotLight.h"
 
 void Shader::CreateFromString(const char* vertexCode, const char* fragmentCode) {
 	CompileShader(vertexCode, fragmentCode);

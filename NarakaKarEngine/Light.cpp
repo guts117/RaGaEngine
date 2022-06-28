@@ -1,4 +1,6 @@
+#include "pch.h"
 #include "Light.h"
+#include "ShadowMap_Framebuffer.h"
 
 Light::Light() {
 	//empty
@@ -12,5 +14,11 @@ Light::Light(GLuint shadowWidth, GLuint shadowHeight,
 	color = glm::vec3(red, green, blue);
 }
 
-Light::~Light() {
+ShadowMap_Framebuffer* Light::GetShadowMap()
+{
+	return shadowMap;
+}
+
+Light::~Light() 
+{
 }

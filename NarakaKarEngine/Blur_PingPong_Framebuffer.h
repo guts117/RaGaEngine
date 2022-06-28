@@ -1,8 +1,7 @@
 #ifndef BLUR_PINGPONG_FRAMEBUFFER
 #define BLUR_PINGPONG_FRAMEBUFFER
 
-#include <stdio.h>
-#include <GL/glew.h>
+#include "pch.h"
 
 class Blur_PingPong_Framebuffer
 {

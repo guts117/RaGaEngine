@@ -1,15 +1,5 @@
+#include "pch.h"
 #include "Static_Object.h"
-
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
-#define GLM_FORCE_CTOR_INIT
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/string_cast.hpp>
-#include <math.h>
-#include <functional>
-
 #include "Static_Model.h"
 #include "Static_Mesh.h"
 #include "Material.h"
