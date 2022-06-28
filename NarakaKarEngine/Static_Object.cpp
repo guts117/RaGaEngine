@@ -9,7 +9,7 @@
 #include "DirectionalLight.h"
 #include "SpotLight.h"
 #include "PointLight.h"
-#include "CommonValues.h"
+#include "RenderingCommonValues.h"
 
 void Static_Object::SetUpNativeModelData(std::shared_ptr<Static_Mesh> mesh,
 	std::string albedoPath,

@@ -51,7 +51,7 @@
 
 #include "Debug.h"
 
-#include "CommonValues.h"
+#include "RenderingCommonValues.h"
 #include "Window.h"
 
 struct NarakaKarEngine::Impl

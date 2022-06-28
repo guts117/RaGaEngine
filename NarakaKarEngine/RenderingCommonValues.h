@@ -1,5 +1,5 @@
-#ifndef COMMONVALS
-#define COMMONVALS
+#ifndef RENDERING_COMMONVALS
+#define RENDERING_COMMONVALS
 
 #include "pch.h"
 

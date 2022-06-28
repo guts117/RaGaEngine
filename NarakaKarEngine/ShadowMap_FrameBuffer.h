@@ -2,7 +2,7 @@
 #define SHADOWMAP_FRAMEBUFFER
 
 #include "Framebuffer.h"
-#include "CommonValues.h"
+#include "RenderingCommonValues.h"
 
 class ShadowMap_Framebuffer : public Framebuffer
 {

@@ -2,7 +2,7 @@
 #define ANIMATED_MODEL
 
 #include "Model.h"
-#include "CommonValues.h"
+#include "RenderingCommonValues.h"
 
 class Animated_Model :public Model
 {

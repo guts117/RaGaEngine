@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "ParticleSystem.h"
-#include "CommonValues.h"
+#include "RenderingCommonValues.h"
 #include "Particle.h"
 
 ParticleSystem::ParticleSystem()

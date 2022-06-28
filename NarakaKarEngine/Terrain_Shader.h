@@ -2,7 +2,7 @@
 #define TERRAIN_SHADER
 
 #include "Shader.h"
-#include "CommonValues.h"
+#include "RenderingCommonValues.h"
 
 class Light;
 

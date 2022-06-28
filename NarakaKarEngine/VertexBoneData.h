@@ -1,7 +1,7 @@
 #ifndef VERTEX_BONE_DATA
 #define VERTEX_BONE_DATA
 
-#include "CommonValues.h"
+#include "RenderingCommonValues.h"
 
 class VertexBoneData
 {

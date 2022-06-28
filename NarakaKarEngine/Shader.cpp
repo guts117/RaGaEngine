@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "Shader.h"
-#include "CommonValues.h"
+#include "RenderingCommonValues.h"
 #include "DirectionalLight.h"
 #include "PointLight.h"
 #include "SpotLight.h"

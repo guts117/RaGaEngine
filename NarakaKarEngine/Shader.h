@@ -2,7 +2,7 @@
 #define SHADER
 
 #include "pch.h"
-#include "CommonValues.h"
+#include "RenderingCommonValues.h"
 
 class DirectionalLight;
 class PointLight;
