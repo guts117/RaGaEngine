@@ -2,6 +2,7 @@
 #define BILLBOARD_MESH
 
 #include "Mesh.h"
+
 class Billboard_Mesh :
     public Mesh
 {

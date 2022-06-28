@@ -2,7 +2,8 @@
 #define ENGINE_INPUT_MANAGER
 
 #include "pch.h"
-#include "Window.h"
+
+class Window;
 
 class EngineInputManager
 {

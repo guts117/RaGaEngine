@@ -1,8 +1,9 @@
 #ifndef WINDOW
 #define WINDOW
 
-#include "EngineInputManager.h"
 #include "pch.h"
+
+class EngineInputManager;
 
 class Window
 {

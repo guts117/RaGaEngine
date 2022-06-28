@@ -1,7 +1,6 @@
 #ifndef COMMONVALS
 #define COMMONVALS
 
-#define _USE_MATH_DEFINES
 #include "pch.h"
 
 const int MAX_POINT_LIGHTS_WITH_SHADOW = 3;

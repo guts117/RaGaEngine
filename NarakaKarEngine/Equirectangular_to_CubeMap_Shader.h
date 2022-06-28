@@ -2,6 +2,7 @@
 #define EQUIRECTANGULAR_TO_CUBEMAP_SHADER
 
 #include "Shader.h"
+
 class Equirectangular_to_CubeMap_Shader :
     public Shader
 {

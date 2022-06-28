@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "EngineInputManager.h"
+#include "Window.h"
 
 EngineInputManager::EngineInputManager()
 {

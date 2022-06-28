@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Window.h"
+#include "EngineInputManager.h"
 
 Window::Window() {
 	mainWindow = nullptr;
