@@ -3,6 +3,9 @@
 #include "RenderingCommonValues.h"
 #include "Particle.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 ParticleSystem::ParticleSystem()
 	: Billboard_Mesh()
 	, particles_pos_size{ new GLfloat[MaxParticles * 4]{ 0.0f } }

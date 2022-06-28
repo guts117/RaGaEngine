@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "SpotLight.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 SpotLight::SpotLight() : PointLight() {
 	direction = glm::vec3(0.0f, -1.0f, 0.0f);
 	edge = 0.0f;

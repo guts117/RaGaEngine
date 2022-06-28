@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "HDR_Shader.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 void HDR_Shader::CompileProgram()
 {
 	GLint result = 0;

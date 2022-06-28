@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "Equirectangular_to_CubeMap_Shader.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 void Equirectangular_to_CubeMap_Shader::CompileProgram()
 {
 	GLint result = 0;

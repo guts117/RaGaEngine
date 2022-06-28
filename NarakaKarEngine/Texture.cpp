@@ -4,6 +4,9 @@
 #include "stb_image.h"
 #include "RenderingCommonValues.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 
 struct Texture::Impl
 {

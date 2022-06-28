@@ -3,24 +3,29 @@
 
 #include "Shader.h"
 
-class MotionBlur_Shader :
-	public Shader
+namespace NarakaKarEngine
 {
-public:
-	MotionBlur_Shader() = default;
+	namespace RenderEngine
+	{
+		class MotionBlur_Shader :
+			public Shader
+		{
+		public:
+			MotionBlur_Shader() = default;
 
-	void SetTexture(GLuint textureUnit);
-	void SetMotionTexture(GLuint textureUnit);
-	
-	GLuint GetVelocityScaleLocation() { return uniformVelocityScale; }
+			void SetTexture(GLuint textureUnit);
+			void SetMotionTexture(GLuint textureUnit);
 
-	~MotionBlur_Shader();
+			GLuint GetVelocityScaleLocation() { return uniformVelocityScale; }
 
-private:
-	void CompileProgram();
+			~MotionBlur_Shader();
 
-	GLuint uniformMotion = 0;
-	GLuint uniformVelocityScale = 0;
-};
+		private:
+			void CompileProgram();
 
+			GLuint uniformMotion = 0;
+			GLuint uniformVelocityScale = 0;
+		};
+	}
+}
 #endif

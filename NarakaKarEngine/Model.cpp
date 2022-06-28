@@ -1,6 +1,9 @@
 ﻿#include "pch.h"
 #include "Model.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 void Model::LoadModel(const std::string& fileName)
 {
 }

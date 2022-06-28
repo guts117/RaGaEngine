@@ -3,17 +3,22 @@
 
 #include "Framebuffer.h"
 
-class MotionBlur_FrameBuffer :
-	public Framebuffer
+namespace NarakaKarEngine
 {
-public:
-	MotionBlur_FrameBuffer() = default;
+	namespace RenderEngine
+	{
+		class MotionBlur_FrameBuffer :
+			public Framebuffer
+		{
+		public:
+			MotionBlur_FrameBuffer() = default;
 
-	bool Init(GLuint width, GLuint height);
+			bool Init(GLuint width, GLuint height);
 
-	~MotionBlur_FrameBuffer();
-private:
-	//GLuint rboDepth = 0;
-};
-
+			~MotionBlur_FrameBuffer();
+		private:
+			//GLuint rboDepth = 0;
+		};
+	}
+}
 #endif

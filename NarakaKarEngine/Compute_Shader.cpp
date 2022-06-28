@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "Compute_Shader.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 void Compute_Shader::CompileProgram()
 {
 	GLint result = 0;

@@ -2,6 +2,9 @@
 #include "EngineInputManager.h"
 #include "Window.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 EngineInputManager::EngineInputManager()
 {
 	//empty

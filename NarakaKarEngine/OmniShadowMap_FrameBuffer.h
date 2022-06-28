@@ -3,17 +3,23 @@
 
 #include "ShadowMap_Framebuffer.h"
 
-class OmniShadowMap_Framebuffer :
-	public ShadowMap_Framebuffer
+namespace NarakaKarEngine
 {
-public:
-	OmniShadowMap_Framebuffer()= default;
+	namespace RenderEngine
+	{
+		class OmniShadowMap_Framebuffer :
+			public ShadowMap_Framebuffer
+		{
+		public:
+			OmniShadowMap_Framebuffer() = default;
 
-	bool Init(GLuint width, GLuint height);
+			bool Init(GLuint width, GLuint height);
 
-	void Read(int i, GLenum textureUnit);
+			void Read(int i, GLenum textureUnit);
 
-	~OmniShadowMap_Framebuffer();
+			~OmniShadowMap_Framebuffer();
 
-};
+		};
+	}
+}
 #endif

@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "OmniShadowMap_FrameBuffer.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 bool OmniShadowMap_Framebuffer::Init(GLuint width, GLuint height)
 {
 	src_width = width; src_height = height;

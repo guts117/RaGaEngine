@@ -2,6 +2,9 @@
 #include "PointLight.h"
 #include "OmniShadowMap_Framebuffer.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 PointLight::PointLight() : Light(){
 
 	position = glm::vec3(0.0f, 0.0f, 0.0f);

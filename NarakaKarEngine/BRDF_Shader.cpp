@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "BRDF_Shader.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 void BRDF_Shader::CompileProgram()
 {
 	GLint result = 0;

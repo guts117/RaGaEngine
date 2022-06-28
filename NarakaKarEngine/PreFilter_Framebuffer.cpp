@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "PreFilter_Framebuffer.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 bool PreFilter_Framebuffer::Init(GLuint width, GLuint height)
 {
 	src_width = width; src_height = height;

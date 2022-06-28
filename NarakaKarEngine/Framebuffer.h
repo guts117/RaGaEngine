@@ -3,26 +3,31 @@
 
 #include "pch.h"
 
-class Framebuffer
+namespace NarakaKarEngine
 {
-public:
-	Framebuffer();
+	namespace RenderEngine
+	{
+		class Framebuffer
+		{
+		public:
+			Framebuffer();
 
-	virtual bool Init(GLuint width, GLuint height);
+			virtual bool Init(GLuint width, GLuint height);
 
-	void Write();
+			void Write();
 
-	virtual void Read(GLenum textureUnit);
+			virtual void Read(GLenum textureUnit);
 
-	GLuint GetWidth() { return src_width; }
+			GLuint GetWidth() { return src_width; }
 
-	GLuint GetHeight() { return src_height; }
+			GLuint GetHeight() { return src_height; }
 
-	virtual ~Framebuffer() = 0;
+			virtual ~Framebuffer() = 0;
 
-protected:
-	GLuint FBO, buffer;
-	GLuint src_width, src_height;
-};
-
+		protected:
+			GLuint FBO, buffer;
+			GLuint src_width, src_height;
+		};
+	}
+}
 #endif

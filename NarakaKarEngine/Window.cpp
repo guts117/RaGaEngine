@@ -2,6 +2,9 @@
 #include "Window.h"
 #include "EngineInputManager.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 Window::Window() {
 	mainWindow = nullptr;
 	width = 800;

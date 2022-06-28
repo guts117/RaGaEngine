@@ -3,14 +3,19 @@
 
 #include "Framebuffer.h"
 
-class SSAO_Framebuffer : public Framebuffer
+namespace NarakaKarEngine
 {
-public:
-	SSAO_Framebuffer() = default;
+	namespace RenderEngine
+	{
+		class SSAO_Framebuffer : public Framebuffer
+		{
+		public:
+			SSAO_Framebuffer() = default;
 
-	bool Init(GLuint width, GLuint height);
+			bool Init(GLuint width, GLuint height);
 
-	~SSAO_Framebuffer();
-};
-
+			~SSAO_Framebuffer();
+		};
+	}
+}
 #endif

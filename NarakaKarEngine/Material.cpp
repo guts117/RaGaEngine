@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "Material.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 Material::Material() {
 }
 

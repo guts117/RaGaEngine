@@ -11,6 +11,9 @@
 #include "PointLight.h"
 #include "RenderingCommonValues.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 void Static_Object::SetUpNativeModelData(std::shared_ptr<Static_Mesh> mesh,
 	std::string albedoPath,
 	std::string metalPath,

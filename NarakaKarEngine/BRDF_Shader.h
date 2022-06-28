@@ -3,16 +3,21 @@
 
 #include "Shader.h"
 
-class BRDF_Shader :
-    public Shader
+namespace NarakaKarEngine
 {
-public:
-	BRDF_Shader() = default;
-	~BRDF_Shader();
+	namespace RenderEngine
+	{
+		class BRDF_Shader :
+			public Shader
+		{
+		public:
+			BRDF_Shader() = default;
+			~BRDF_Shader();
 
-private:
+		private:
 
-	void CompileProgram();
-};
-
+			void CompileProgram();
+		};
+	}
+}
 #endif

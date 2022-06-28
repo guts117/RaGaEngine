@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "Particle_Shader.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 Particle_Shader::Particle_Shader()
 {
 }

@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "Blur_Shader.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 Blur_Shader::Blur_Shader()
 {
 

@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "Framebuffer.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 Framebuffer::Framebuffer()
 	:FBO(0), buffer(0), src_width(0),src_height(0)
 {}

@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "Irradiance_Convolution_Shader.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 void Irradiance_Convolution_Shader::CompileProgram()
 {
 	GLint result = 0;

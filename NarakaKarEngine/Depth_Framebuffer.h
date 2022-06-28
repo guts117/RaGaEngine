@@ -3,14 +3,20 @@
 
 #include "Framebuffer.h"
 
-class Depth_Framebuffer :public Framebuffer
+namespace NarakaKarEngine
 {
-public:
-	Depth_Framebuffer() = default;
+	namespace RenderEngine
+	{
+		class Depth_Framebuffer :public Framebuffer
+		{
+		public:
+			Depth_Framebuffer() = default;
 
-	bool Init(GLuint width, GLuint height);
+			bool Init(GLuint width, GLuint height);
 
 
-	~Depth_Framebuffer();
-};
+			~Depth_Framebuffer();
+		};
+	}
+}
 #endif

@@ -5,6 +5,9 @@
 #include "PointLight.h"
 #include "SpotLight.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 void Shader::CreateFromString(const char* vertexCode, const char* fragmentCode) {
 	CompileShader(vertexCode, fragmentCode);
 }

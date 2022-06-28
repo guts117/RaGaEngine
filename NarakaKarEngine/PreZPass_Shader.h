@@ -3,16 +3,21 @@
 
 #include "Shader.h"
 
-class PreZPass_Shader :
-	public Shader
+namespace NarakaKarEngine
 {
-	public:
-		PreZPass_Shader() = default;
+	namespace RenderEngine
+	{
+		class PreZPass_Shader :
+			public Shader
+		{
+		public:
+			PreZPass_Shader() = default;
 
-		~PreZPass_Shader();
+			~PreZPass_Shader();
 
-	private:
-		void CompileProgram();
-};
-
+		private:
+			void CompileProgram();
+		};
+	}
+}
 #endif

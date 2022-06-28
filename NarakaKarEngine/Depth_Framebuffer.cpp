@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "Depth_Framebuffer.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 bool Depth_Framebuffer::Init(GLuint width, GLuint height)
 {
 	src_width = width; src_height = height;

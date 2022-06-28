@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "SSAOBlur_Framebuffer.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
 
 bool SSAOBlur_Framebuffer::Init(GLuint width, GLuint height)
 {

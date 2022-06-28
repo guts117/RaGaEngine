@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "NarakaKarEngine.h"
+#include "RenderEngineMain.h"
 
 #include "Equirectangular_to_CubeMap_Shader.h"
 #include "Irradiance_Convolution_Shader.h"
@@ -54,7 +54,10 @@
 #include "RenderingCommonValues.h"
 #include "Window.h"
 
-struct NarakaKarEngine::Impl
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
+struct RenderEngineMain::Impl
 {
 	Impl()								= default;
 
@@ -1720,21 +1723,21 @@ struct NarakaKarEngine::Impl
 	}
 };
 
-NarakaKarEngine::NarakaKarEngine() = default;
+RenderEngineMain::RenderEngineMain() = default;
 
-void NarakaKarEngine::Init()
+void RenderEngineMain::Init()
 {
 	Pimpl()->Init();
 }
 
-void NarakaKarEngine::Update() 
+void RenderEngineMain::Update()
 {	
 	Pimpl()->Update();
 }
 
-bool NarakaKarEngine:: IsEnd()
+bool RenderEngineMain:: IsEnd()
 {
 	return Pimpl()->mainWindow->getShouldClose();
 }
 
-NarakaKarEngine::~NarakaKarEngine() = default;
+RenderEngineMain::~RenderEngineMain() = default;

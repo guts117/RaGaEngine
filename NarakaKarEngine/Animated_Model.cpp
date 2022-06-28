@@ -4,6 +4,9 @@
 #include "Animated_Mesh.h"
 #include "VertexBoneData.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 void Animated_Model::UpdateBoneData(const GLuint& shaderID)
 {
 	

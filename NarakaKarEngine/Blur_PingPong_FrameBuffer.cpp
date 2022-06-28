@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "Blur_PingPong_Framebuffer.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 Blur_PingPong_Framebuffer::Blur_PingPong_Framebuffer()
 {
 	src_width = 0;

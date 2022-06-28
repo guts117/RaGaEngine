@@ -3,20 +3,25 @@
 
 #include "pch.h"
 
-class Window;
-
-class EngineInputManager
+namespace NarakaKarEngine
 {
-	friend class Window;
-public:
-	EngineInputManager();
+	namespace RenderEngine
+	{
+		class Window;
 
-	~EngineInputManager();
+		class EngineInputManager
+		{
+			friend class Window;
+		public:
+			EngineInputManager();
 
-private:
+			~EngineInputManager();
 
-	static void handleKeys(GLFWwindow* window, int key, int code, int action, int mode);
-	static void handleMouse(GLFWwindow* window, double xPos, double yPos);
-};
+		private:
 
+			static void handleKeys(GLFWwindow* window, int key, int code, int action, int mode);
+			static void handleMouse(GLFWwindow* window, double xPos, double yPos);
+		};
+	}
+}
 #endif

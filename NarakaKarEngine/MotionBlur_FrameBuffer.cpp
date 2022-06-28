@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "MotionBlur_FrameBuffer.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 bool MotionBlur_FrameBuffer::Init(GLuint width, GLuint height)
 {
 	src_width = width; src_height = height;

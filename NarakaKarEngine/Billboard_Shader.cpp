@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "Billboard_Shader.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 void Billboard_Shader::CompileProgram()
 {
 	GLint result = 0;

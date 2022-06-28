@@ -3,33 +3,38 @@
 
 #include "Billboard_Mesh.h"
 
-class Particle;
-
-class ParticleSystem :
-	public Billboard_Mesh
+namespace NarakaKarEngine
 {
-public:
-	explicit ParticleSystem();
+	namespace RenderEngine
+	{
+		class Particle;
 
-	ParticleSystem(ParticleSystem&& rhs) noexcept = default;
-	ParticleSystem& operator= (ParticleSystem&& rhs) noexcept = default;
+		class ParticleSystem :
+			public Billboard_Mesh
+		{
+		public:
+			explicit ParticleSystem();
 
-	ParticleSystem(const ParticleSystem& rhs) = delete;
-	ParticleSystem& operator= (const ParticleSystem& rhs) = delete;
+			ParticleSystem(ParticleSystem&& rhs) noexcept = default;
+			ParticleSystem& operator= (ParticleSystem&& rhs) noexcept = default;
 
-	void UpdateParticlesMeshCPU();
-	void GenerateParticlesCPU(GLfloat delta, glm::vec3 Pos);
-	void SimulateParticlesCPU(glm::vec3 CameraPosition, GLfloat delta);
+			ParticleSystem(const ParticleSystem& rhs) = delete;
+			ParticleSystem& operator= (const ParticleSystem& rhs) = delete;
 
-	~ParticleSystem() = default;
-private:
-	int FindUnusedParticles();
-	void SortParticles();
+			void UpdateParticlesMeshCPU();
+			void GenerateParticlesCPU(GLfloat delta, glm::vec3 Pos);
+			void SimulateParticlesCPU(glm::vec3 CameraPosition, GLfloat delta);
 
-	std::unique_ptr<GLfloat> particles_pos_size;
-	std::unique_ptr<GLubyte> particles_color;
-	std::unique_ptr<Particle> ParticlesContainer;
-	GLuint LastUsedParticle = 0;
-};
+			~ParticleSystem() = default;
+		private:
+			int FindUnusedParticles();
+			void SortParticles();
 
+			std::unique_ptr<GLfloat> particles_pos_size;
+			std::unique_ptr<GLubyte> particles_color;
+			std::unique_ptr<Particle> ParticlesContainer;
+			GLuint LastUsedParticle = 0;
+		};
+	}
+}
 #endif

@@ -5,6 +5,9 @@
 #include "Static_Mesh.h"
 #include "Texture.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 Skybox::Skybox()
 {
 	skyShader = new Model_Shader();

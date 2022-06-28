@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "SSAO_Shader.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 void SSAO_Shader::CompileProgram()
 {
 	GLint result = 0;
