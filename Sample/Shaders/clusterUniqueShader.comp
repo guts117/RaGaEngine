@@ -1,0 +1,31 @@
+#version 460 core
+layout(local_size_x = 16, local_size_y = 9, local_size_z = 7) in;
+
+struct VisibleUniqueCluster
+{
+	uint isActive;
+	uint uniqueIndex;
+};
+
+layout (std430, binding = 7) buffer visibleUniqueClusterSSBO{
+    VisibleUniqueCluster visibleUniqueCluster[ ];
+};
+
+layout (std430, binding = 8) buffer globalActiveClusterCountSSBO{
+    uint globalActiveClusterCount;
+};
+
+void BuildCompactClusterList(){
+    uint clusterId  								= gl_LocalInvocationIndex;
+	
+    if(visibleUniqueCluster[clusterId].isActive == 1)
+	{
+		uint offset 								= atomicAdd(globalActiveClusterCount, 1);
+		visibleUniqueCluster[offset].uniqueIndex 	= clusterId;	
+		visibleUniqueCluster[clusterId].isActive	= 0;
+    }
+}
+
+void main(){
+    BuildCompactClusterList();
+}
