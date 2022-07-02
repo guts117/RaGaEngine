@@ -4,6 +4,18 @@
 using namespace NarakaKarEngine;
 using namespace RenderEngine;
 
+int Debug:: GetGreatestCommonDenominator(int a, int b)
+{
+	int result = std::min(a, b); // Find Minimum of a nd b
+	while (result > 0) {
+		if (a % result == 0 && b % result == 0) {
+			break;
+		}
+		result--;
+	}
+	return result; // return gcd of a nd b
+}
+
 void Debug::DebugPrintReferenceTBN(std::string header, GLfloat* vertices, int offset, glm::vec3 nm) {
 
 	//Ref

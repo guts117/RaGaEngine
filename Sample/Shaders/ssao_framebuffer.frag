@@ -17,6 +17,7 @@ uniform vec3 Kernel[MAX_KERNEL_SIZE];
 layout (std430, binding = 2) readonly buffer screenToView{
     mat4 inverseProjection;
     uvec4 tileSizes;
+	uvec2 tileSizeInPixel;
     uvec2 screenDimensions;
 };
 
