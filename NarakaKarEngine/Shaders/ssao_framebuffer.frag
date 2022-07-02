@@ -21,8 +21,6 @@ layout (std430, binding = 2) readonly buffer screenToView{
 };
 
 const float bias = 0.025;
-// tile noise texture over screen based on screen dimensions divided by noise size
-const vec2 noiseScale = vec2(float(screenDimensions)/4.0);
 
 vec3 PositionFromDepth(vec2 Coords)
 {
@@ -53,6 +51,8 @@ void main()
 { 
 	vec3 Pos = PositionFromDepth(TexCoord);	
 	vec3 Normal = NormalFromDepth(TexCoord);
+	// tile noise texture over screen based on screen dimensions divided by noise size
+	vec2 noiseScale = vec2(screenDimensions)/4.0;
     vec3 randomVec = normalize(texture(noise, TexCoord * noiseScale).xyz);
 	
     // create TBN change-of-basis matrix: from tangent-space to view-space

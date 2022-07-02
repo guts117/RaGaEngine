@@ -90,7 +90,8 @@ vec4 screen2View(vec4 screen){
     vec2 texCoord 				= screen.xy / screenDimensions.xy;
 
     //Convert to clipSpace
-    vec4 clip 					= vec4(vec2(texCoord.x, texCoord.y) * 2.0 - 1.0, screen.z, screen.w);
+    // vec4 clip 				= vec4(vec2(texCoord.x, 1.0 - texCoord.y)* 2.0 - 1.0, screen.z, screen.w);
+    vec4 clip 					= vec4(vec2(texCoord.x, texCoord.y)* 2.0 - 1.0, screen.z, screen.w);
 
     return clipToView(clip);
 }
