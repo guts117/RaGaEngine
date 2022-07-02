@@ -59,8 +59,6 @@ bool HDR_Framebuffer::Init(GLuint width, GLuint height)
 	return true;
 }
 
-
-
 void HDR_Framebuffer::Read(GLenum textureUnit)
 {
 	glActiveTexture(textureUnit);
@@ -79,11 +77,33 @@ void HDR_Framebuffer::ReadMotion(GLenum textureUnit)
 	glBindTexture(GL_TEXTURE_2D, motionBuffer);
 }
 
+void HDR_Framebuffer::ResizeFrameBuffer(int width, int height)
+{
+	src_width = width;
+	src_height = height;
+
+	for (unsigned int i = 0; i < 3; ++i)
+	{
+		if (i < 2)
+		{
+			glBindTexture(GL_TEXTURE_2D, colorBuffers[i]);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, src_width, src_height, 0, GL_RGBA, GL_FLOAT, NULL);
+		}
+		else
+		{
+			glBindTexture(GL_TEXTURE_2D, motionBuffer);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RG16F, src_width, src_height, 0, GL_RG, GL_FLOAT, NULL);
+		}
+	}
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, src_width, src_height);
+}
+
 HDR_Framebuffer::~HDR_Framebuffer()
 {
-	if (FBO) {
-		glDeleteFramebuffers(1, &FBO);
-	}
 	if (rboDepth) {
 		glDeleteBuffers(1, &rboDepth);
 	}

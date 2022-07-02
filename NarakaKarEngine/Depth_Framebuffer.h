@@ -13,9 +13,10 @@ namespace NarakaKarEngine
 			Depth_Framebuffer() = default;
 
 			bool Init(GLuint width, GLuint height);
+			
+			void ResizeFrameBuffer(int width, int height) override;
 
-
-			~Depth_Framebuffer();
+			~Depth_Framebuffer() = default;
 		};
 	}
 }

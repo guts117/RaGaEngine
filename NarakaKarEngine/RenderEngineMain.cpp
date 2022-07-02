@@ -57,18 +57,23 @@
 using namespace NarakaKarEngine;
 using namespace RenderEngine;
 
+extern int ScreenWidth;
+extern int ScreenHeight;
+extern unsigned int screenToViewSSBO;
+extern bool isUpdateFrameBuffersSize;
+
 struct RenderEngineMain::Impl
 {
-	Impl()								= default;
+	Impl() = default;
 
-	Impl(Impl&& rhs)					= delete;
-	Impl& operator=(Impl&& rhs)			= delete;
+	Impl(Impl&& rhs) = delete;
+	Impl& operator=(Impl&& rhs) = delete;
 
-	Impl(const Impl& rhs)				= delete;
-	Impl& operator=(const Impl& rhs)	= delete;
+	Impl(const Impl& rhs) = delete;
+	Impl& operator=(const Impl& rhs) = delete;
 
 
-	std::unique_ptr<Window> mainWindow = std::make_unique<Window>(ScreenWidth, ScreenHeight);
+	std::unique_ptr<Window> mainWindow = std::make_unique<Window>();
 
 	bool direction = true;
 	float triOffset = 0.0f;
@@ -263,7 +268,7 @@ struct RenderEngineMain::Impl
 		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))
 	};
 
-	unsigned int AABBvolumeGridSSBO, screenToViewSSBO, lightSSBO, lightIndexListSSBO, lightGridSSBO, visibleUniqueClusterSSBO, activeClusterCountSSBO;
+	unsigned int AABBvolumeGridSSBO, lightSSBO, lightIndexListSSBO, lightGridSSBO, visibleUniqueClusterSSBO, activeClusterCountSSBO;
 
 	const int gridSizeX = 16;
 	const int gridSizeY = 9;
@@ -312,7 +317,9 @@ struct RenderEngineMain::Impl
 	GLfloat lastFrameTime = 0.0f;
 	GLfloat deltaTime = 0.0f;
 
-	void Init() 
+	std::unique_ptr<std::vector<std::function<void(int, int)>>> resizeUpdateFramebuffers;
+
+	void Init()
 	{
 		mainWindow->Initialise();
 		lastFrameTime = static_cast<GLfloat>(glfwGetTime());
@@ -322,8 +329,7 @@ struct RenderEngineMain::Impl
 		CreateObject();
 		CreateShaders();
 
-		auto projectionMatrix = glm::perspective(glm::radians(60.0f), (GLfloat)mainWindow->getBufferWidth() / (GLfloat)mainWindow->getBufferHeight(), camNearZ, camFarZ);
-		camera = std::make_shared<Camera>(projectionMatrix, glm::vec3(-terrainScaleFactor, 30.0f, -terrainScaleFactor), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f, 50.0f, 0.2f);
+		camera = std::make_shared<Camera>(glm::vec3(-terrainScaleFactor, 30.0f, -terrainScaleFactor), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f, 50.0f, 0.2f);
 
 		environmentTexture = std::make_unique<Texture>("Textures/HDR/GCanyon_C_YumaPoint_3k.hdr");
 		environmentTexture->LoadTextureHDR();
@@ -442,6 +448,14 @@ struct RenderEngineMain::Impl
 		motionBlur = std::make_unique < MotionBlur_FrameBuffer>();
 		motionBlur->Init(ScreenWidth, ScreenHeight);
 
+		resizeUpdateFramebuffers = std::make_unique<std::vector<std::function<void(int, int)>>>();
+		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { depth->ResizeFrameBuffer(width, height); });
+		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { ssao->ResizeFrameBuffer(width, height); });
+		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { ssaoBlur->ResizeFrameBuffer(width, height); });
+		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { hdr->ResizeFrameBuffer(width, height); });
+		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { blur->ResizeFrameBuffer(width, height); });
+		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { motionBlur->ResizeFrameBuffer(width, height); });
+
 		mainLight = std::make_unique < DirectionalLight>(1024, 1024,
 			0.1f, 0.1f, 0.1f,
 			5500.0f, -5500.0f, -10000.0f);
@@ -519,8 +533,22 @@ struct RenderEngineMain::Impl
 		BRDFPass();
 	}
 
-	void Update() 
+	void UpdateFrameBuffersAtResize(int width, int height)
 	{
+		if (isUpdateFrameBuffersSize)
+		{
+			isUpdateFrameBuffersSize = false;
+			for (int i = 0; i < resizeUpdateFramebuffers->size(); i++)
+			{
+				resizeUpdateFramebuffers->at(i)(width, height);
+			}
+		}
+	}
+
+	void Update()
+	{
+		UpdateFrameBuffersAtResize(ScreenWidth, ScreenHeight);
+
 		// Measure speed
 		GLfloat now = static_cast<GLfloat>(glfwGetTime());
 		deltaTime = now - lastTime;
@@ -636,7 +664,8 @@ struct RenderEngineMain::Impl
 			screen2View.zNear = camNearZ;
 			screen2View.zFar = camFarZ;
 			//Generating and copying data to memory in GPU
-			glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(struct ScreenToView), &screen2View, GL_STATIC_COPY);
+			auto size = sizeof(struct ScreenToView);
+			glBufferData(GL_SHADER_STORAGE_BUFFER, size, &screen2View, GL_STATIC_COPY);
 			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, screenToViewSSBO);
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 		}

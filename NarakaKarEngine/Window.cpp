@@ -1,31 +1,68 @@
 #include "pch.h"
 #include "Window.h"
 #include "EngineInputManager.h"
+#include "RenderingCommonValues.h"
 
 using namespace NarakaKarEngine;
 using namespace RenderEngine;
 
-Window::Window() {
-	mainWindow = nullptr;
-	width = 800;
-	height = 600;
-	bufferWidth = 0; 
-	bufferHeight=0;
+//[3840 x 2160] [2560 x 1440] [1920 x 1080] [1280x720]
+int ScreenWidth;
+int ScreenHeight;
+unsigned int screenToViewSSBO;
+bool isUpdateFrameBuffersSize;
 
+Window::Window() {
 	for (size_t i = 0; i < 1024; i++) {
 		keys[i] = 0;
 	}
 }
-Window::Window(GLint windowWidth, GLint windowHeight) {
-	mainWindow = nullptr;
-	width = windowWidth;
-	height = windowHeight;
-	bufferWidth = 0;
-	bufferHeight = 0;
 
-	for (size_t i = 0; i < 1024; i++) {
-		keys[i] = 0;
+
+static int mini(int x, int y)
+{
+	return x < y ? x : y;
+}
+
+static int maxi(int x, int y)
+{
+	return x > y ? x : y;
+}
+
+GLFWmonitor* get_current_monitor(GLFWwindow* window)
+{
+	int nmonitors, i;
+	int wx, wy, ww, wh;
+	int mx, my, mw, mh;
+	int overlap, bestoverlap;
+	GLFWmonitor* bestmonitor;
+	GLFWmonitor** monitors;
+	const GLFWvidmode* mode;
+
+	bestoverlap = 0;
+	bestmonitor = NULL;
+
+	glfwGetWindowPos(window, &wx, &wy);
+	glfwGetWindowSize(window, &ww, &wh);
+	monitors = glfwGetMonitors(&nmonitors);
+
+	for (i = 0; i < nmonitors; i++) {
+		mode = glfwGetVideoMode(monitors[i]);
+		glfwGetMonitorPos(monitors[i], &mx, &my);
+		mw = mode->width;
+		mh = mode->height;
+
+		overlap =
+			maxi(0, mini(wx + ww, mx + mw) - maxi(wx, mx)) *
+			maxi(0, mini(wy + wh, my + mh) - maxi(wy, my));
+
+		if (bestoverlap < overlap) {
+			bestoverlap = overlap;
+			bestmonitor = monitors[i];
+		}
 	}
+
+	return bestmonitor;
 }
 
 int Window::Initialise() {
@@ -45,7 +82,10 @@ int Window::Initialise() {
 	///allow forward compatibility
 	//glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
-	mainWindow = glfwCreateWindow(width, height, "Test Window", NULL, NULL);
+	auto mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+	ScreenWidth = mode->width;
+	ScreenHeight = mode->height;
+	mainWindow = glfwCreateWindow(ScreenWidth, ScreenHeight, "Test Window", NULL, NULL);
 
 	if (!mainWindow) {
 		printf("GLFWwindow creation failed");
@@ -53,8 +93,19 @@ int Window::Initialise() {
 		return 1;
 	}
 
-	//get buffer size information
-	glfwGetFramebufferSize(mainWindow, &bufferWidth, &bufferHeight);
+	////get buffer size information
+	//glfwGetFramebufferSize(mainWindow, &bufferWidth, &bufferHeight);
+
+	glfwSetFramebufferSizeCallback(mainWindow, [](GLFWwindow* window, int width, int height)
+		{
+			printf("Framebuffer size : %d , %d \n", width, height);
+			ScreenWidth = width;
+			ScreenHeight = height;
+			glViewport(0, 0, ScreenWidth, ScreenHeight);
+			int data[2] = { ScreenWidth, ScreenHeight };
+			glNamedBufferSubData(screenToViewSSBO, 80, 8, &data);
+			isUpdateFrameBuffersSize = true;
+		});
 
 	//Handle key+ Mouse Input
 	createCallbacks();
@@ -83,7 +134,7 @@ int Window::Initialise() {
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
 	//setup viewport size
-	glViewport(0, 0, bufferWidth, bufferHeight);
+	glViewport(0, 0, ScreenWidth, ScreenHeight);
 	glfwSetWindowUserPointer(mainWindow, this); // passing in our mainWindow and the user of that window 
 
 	return 0;

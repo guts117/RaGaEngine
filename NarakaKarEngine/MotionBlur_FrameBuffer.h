@@ -15,7 +15,9 @@ namespace NarakaKarEngine
 
 			bool Init(GLuint width, GLuint height);
 
-			~MotionBlur_FrameBuffer();
+			void ResizeFrameBuffer(int width, int height) override;
+
+			~MotionBlur_FrameBuffer() = default;
 		private:
 			//GLuint rboDepth = 0;
 		};

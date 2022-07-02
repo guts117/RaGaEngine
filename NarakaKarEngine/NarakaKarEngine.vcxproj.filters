@@ -102,7 +102,7 @@
     <ClCompile Include="MotionBlur_Shader.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
-    <ClCompile Include="NarakaKarEngine.cpp">
+    <ClCompile Include="RenderEngineMain.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
     <ClCompile Include="OmniShadowMap_FrameBuffer.cpp">

@@ -14,7 +14,9 @@ namespace NarakaKarEngine
 
 			bool Init(GLuint width, GLuint height);
 
-			~SSAOBlur_Framebuffer();
+			void ResizeFrameBuffer(int width, int height) override;
+
+			~SSAOBlur_Framebuffer() = default;
 		};
 	}
 }

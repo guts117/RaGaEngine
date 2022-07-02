@@ -20,6 +20,8 @@ namespace NarakaKarEngine
 
 			void ReadMotion(GLenum textureUnit);
 
+			void ResizeFrameBuffer(int width, int height) override;
+
 			GLuint* GetColorBuffer(unsigned int i) { return &colorBuffers[i]; }
 			~HDR_Framebuffer();
 

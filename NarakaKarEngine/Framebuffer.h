@@ -18,6 +18,8 @@ namespace NarakaKarEngine
 
 			virtual void Read(GLenum textureUnit);
 
+			virtual void ResizeFrameBuffer(int width, int height);
+
 			GLuint GetWidth() { return src_width; }
 
 			GLuint GetHeight() { return src_height; }

@@ -11,7 +11,7 @@ namespace NarakaKarEngine
 		{
 		public:
 			Camera() = default;
-			Camera(glm::mat4 projectionMatrix, glm::vec3 startPosition, glm::vec3 startUp, GLfloat startYaw, GLfloat startPitch, GLfloat startMoveSpeed, GLfloat startTurnSpeed);
+			Camera(glm::vec3 startPosition, glm::vec3 startUp, GLfloat startYaw, GLfloat startPitch, GLfloat startMoveSpeed, GLfloat startTurnSpeed);
 
 			void keyControl(bool* Keys, GLfloat deltaTime);
 			void mouseControl(GLfloat xChange, GLfloat yChange);
@@ -50,8 +50,6 @@ namespace NarakaKarEngine
 
 			glm::vec3 frontYaw = glm::vec3(0.0f, 0.0f, -1.0f);
 			glm::vec3 upYaw = glm::vec3(0.0f, 1.0f, 0.0f);
-
-			glm::mat4 m_projectionMatrix = glm::mat4(1.0f);
 
 			glm::mat4 m_prevProjView = glm::mat4(1.0f);
 

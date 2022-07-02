@@ -23,13 +23,6 @@ bool MotionBlur_FrameBuffer::Init(GLuint width, GLuint height)
 	unsigned int attachment[1] = { GL_COLOR_ATTACHMENT0 };
 	glDrawBuffers(1, attachment);
 
-	//glGenRenderbuffers(1, &rboDepth);
-	//glBindRenderbuffer(GL_RENDERBUFFER, rboDepth);
-	//glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, src_width, src_height);
-
-	//// attach buffers
-	//glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rboDepth);
-
 	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 
 	if (status != GL_FRAMEBUFFER_COMPLETE) {
@@ -41,20 +34,12 @@ bool MotionBlur_FrameBuffer::Init(GLuint width, GLuint height)
 	return true;
 }
 
-MotionBlur_FrameBuffer::~MotionBlur_FrameBuffer()
+void MotionBlur_FrameBuffer::ResizeFrameBuffer(int width, int height)
 {
-	if (FBO) {
-		glDeleteFramebuffers(1, &FBO);
-	}
-
-	/*if(rboDepth)
-	{
-		glDeleteBuffers(1, &rboDepth);
-	}*/
-
-	if (buffer)
-	{
-		glDeleteTextures(1, &buffer);
-	}
+	src_width = width;
+	src_height = height;
+	glBindTexture(GL_TEXTURE_2D, buffer);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, src_width, src_height, 0, GL_RGBA, GL_FLOAT, NULL);
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 

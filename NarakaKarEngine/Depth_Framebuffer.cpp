@@ -35,15 +35,15 @@ bool Depth_Framebuffer::Init(GLuint width, GLuint height)
 	return true;
 }
 
+void Depth_Framebuffer::ResizeFrameBuffer(int width, int height)
+{
+	src_width = width;
+	src_height = height;
+	glBindTexture(GL_TEXTURE_2D, buffer);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, src_width, src_height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+	glBindTexture(GL_TEXTURE_2D, 0);
+}
 
 Depth_Framebuffer::~Depth_Framebuffer()
 {
-	if (FBO) {
-		glDeleteFramebuffers(1, &FBO);
-	}
-
-	if (buffer)
-	{
-		glDeleteTextures(1, &buffer);
-	}
 }

@@ -24,7 +24,18 @@ void Framebuffer::Read(GLenum textureUnit)
 	glBindTexture(GL_TEXTURE_2D, buffer);
 }
 
+void Framebuffer::ResizeFrameBuffer(int width, int height)
+{
+}
+
 Framebuffer::~Framebuffer()
 {
+	if (FBO) {
+		glDeleteFramebuffers(1, &FBO);
+	}
 
+	if (buffer)
+	{
+		glDeleteTextures(1, &buffer);
+	}
 }

@@ -13,16 +13,11 @@ namespace NarakaKarEngine
 		{
 			friend class EngineInputManager;
 		public:
-			Window();
-			Window(GLint windowWidth, GLint windowheight);
+			explicit Window();
 
 			int Initialise();
 
 			bool getShouldClose() { return glfwWindowShouldClose(mainWindow); }
-
-			GLint getBufferWidth() { return bufferWidth; }
-			GLint getBufferHeight() { return bufferHeight; }
-
 			bool* getKeys() { return keys; }
 			GLfloat getXChange();
 			GLfloat getYChange();
@@ -32,10 +27,7 @@ namespace NarakaKarEngine
 			~Window();
 
 		private:
-			GLFWwindow* mainWindow;
-
-			GLint width, height;
-			GLint bufferWidth, bufferHeight;
+			GLFWwindow* mainWindow = nullptr;
 
 			void createCallbacks();
 
