@@ -2,6 +2,7 @@
 #include "Window.h"
 #include "EngineInputManager.h"
 #include "RenderingCommonValues.h"
+#include "RenderEngineMain.h"
 
 using namespace NarakaKarEngine;
 using namespace RenderEngine;
@@ -9,7 +10,6 @@ using namespace RenderEngine;
 //[3840 x 2160] [2560 x 1440] [1920 x 1080] [1280x720]
 int ScreenWidth;
 int ScreenHeight;
-unsigned int screenToViewSSBO;
 bool isUpdateFrameBuffersSize;
 
 Window::Window() {
@@ -17,7 +17,6 @@ Window::Window() {
 		keys[i] = 0;
 	}
 }
-
 
 static int mini(int x, int y)
 {
@@ -83,18 +82,16 @@ int Window::Initialise() {
 	//glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
 	auto mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-	ScreenWidth = mode->width;
-	ScreenHeight = mode->height;
-	mainWindow = glfwCreateWindow(ScreenWidth, ScreenHeight, "Test Window", NULL, NULL);
+	mainWindow = glfwCreateWindow(mode->width, mode->height, "NarakaKarEngine", NULL, NULL);
 
 	if (!mainWindow) {
 		printf("GLFWwindow creation failed");
 		glfwTerminate();
 		return 1;
 	}
-
-	////get buffer size information
-	//glfwGetFramebufferSize(mainWindow, &bufferWidth, &bufferHeight);
+	 
+	//get buffer size information
+	glfwGetFramebufferSize(mainWindow, &ScreenWidth, &ScreenHeight);
 
 	glfwSetFramebufferSizeCallback(mainWindow, [](GLFWwindow* window, int width, int height)
 		{
@@ -102,8 +99,6 @@ int Window::Initialise() {
 			ScreenWidth = width;
 			ScreenHeight = height;
 			glViewport(0, 0, ScreenWidth, ScreenHeight);
-			int data[2] = { ScreenWidth, ScreenHeight };
-			glNamedBufferSubData(screenToViewSSBO, 80, 8, &data);
 			isUpdateFrameBuffersSize = true;
 		});
 

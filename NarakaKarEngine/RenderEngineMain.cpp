@@ -59,7 +59,6 @@ using namespace RenderEngine;
 
 extern int ScreenWidth;
 extern int ScreenHeight;
-extern unsigned int screenToViewSSBO;
 extern bool isUpdateFrameBuffersSize;
 
 struct RenderEngineMain::Impl
@@ -97,8 +96,6 @@ struct RenderEngineMain::Impl
 	GLuint uniformProjectionIrr = 0, uniformViewIrr = 0;
 	GLuint uniformProjectionPreF = 0, uniformViewPreF = 0;
 
-	GLuint uniformProjectionAO = 0, uniformSampleRadius = 0;
-
 	GLuint uniformModel = 0, uniformProjection = 0, uniformView = 0, uniformPrevPVM = 0, uniformEyePosition = 0, uniformHeightScale = 0,
 		uniformAlbedoMap = 0, uniformMetallicMap = 0, uniformNormalMap = 0, uniformRoughnessMap = 0, uniformParallaxMap = 0, uniformGlowMap = 0,
 		uniformOmniLightPos = 0, uniformFarPlane = 0;
@@ -125,7 +122,6 @@ struct RenderEngineMain::Impl
 
 	std::unique_ptr<Compute_Shader> buildAABBGridCompShader = std::make_unique<Compute_Shader>();
 	std::unique_ptr<Compute_Shader> visibleClusterCompShader = std::make_unique<Compute_Shader>();
-	std::unique_ptr<Compute_Shader> uniqueClusterCompShader = std::make_unique <Compute_Shader>();
 	std::unique_ptr<Compute_Shader> cullLightsCompShader = std::make_unique <Compute_Shader>();
 
 	std::unique_ptr<Equirectangular_to_CubeMap_Shader> environmentMapShader = std::make_unique<Equirectangular_to_CubeMap_Shader>();
@@ -268,13 +264,13 @@ struct RenderEngineMain::Impl
 		glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))
 	};
 
-	unsigned int AABBvolumeGridSSBO, lightSSBO, lightIndexListSSBO, lightGridSSBO, visibleUniqueClusterSSBO, activeClusterCountSSBO;
-
-	const int gridSizeX = 16;
-	const int gridSizeY = 9;
-	const int gridSizeZ = 7;
-	const int numClusters = gridSizeX * gridSizeY * gridSizeZ;
+	unsigned int AABBvolumeGridSSBO, lightSSBO, lightIndexListSSBO, lightGridSSBO, visibleClusterSSBO, screenToViewSSBO;
+	
+	const int gridSizeX = 32;
+	const int gridSizeY = 32;
+	const int gridSizeZ = 32;
 	unsigned int sizeX, sizeY;
+	int numClusters = gridSizeX * gridSizeY * gridSizeZ;
 
 	unsigned int numLights;
 	const unsigned int maxLights = 1000;
@@ -288,6 +284,7 @@ struct RenderEngineMain::Impl
 	struct ScreenToView {
 		glm::mat4 inverseProjectionMat;
 		unsigned int tileSizes[4];
+		unsigned int tileSizeInPixel[2];
 		unsigned int screenWidth;
 		unsigned int screenHeight;
 		float sliceScalingFactor;
@@ -304,13 +301,6 @@ struct RenderEngineMain::Impl
 		float range = 0;
 		float padding = 0;
 	};
-
-	struct VisibleUniqueCluster
-	{
-		unsigned int isActive;
-		unsigned int uniqueIndex;
-	};
-
 
 	GLfloat lastTime = 0.0f;
 	GLfloat framesPerSec = 0.0f;
@@ -502,29 +492,8 @@ struct RenderEngineMain::Impl
 
 		//skyboxTexture.LoadCubeMapSRGB(skyboxFaces);
 
-		//SSAO initialization
-		ssaoShader->UseShader();
-
-		uniformSampleRadius = ssaoShader->GetSampleRadiusLocation();
-		uniformProjectionAO = ssaoShader->GetProjectionLocation();
-
-		glUniformMatrix4fv(uniformProjectionAO, 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
-		glUniform1f(uniformSampleRadius, 0.1f);
-
-		ssaoShader->GenKernel();
-		ssaoShader->GenNoise(ssaoNoiseData);
-
-		SSAONoiseTexture->LoadNativeTexture(ssaoNoiseData);
-
-		terrainShader->UseShader();
-		for (size_t i = 0; i < NUM_CASCADES; ++i)
-		{
-			glm::vec4 vView(0.0f, 0.0f, mainLight->GetShadowMap()->GetCascadeEnd(i + 1), 1.0f);
-			glm::vec4 vClip = camera->GetProjectionMatrix() * vView;
-			printf("%F \n", vClip.z);
-			terrainShader->SetCascadeEndClipSpace(i, -vClip.z);
-		}
-
+		InitSSAO();
+		CalcDirLightShadowCascades();
 		InitSSBOs();
 		CreateClusters();
 		EnvironmentMapPass();
@@ -533,21 +502,53 @@ struct RenderEngineMain::Impl
 		BRDFPass();
 	}
 
-	void UpdateFrameBuffersAtResize(int width, int height)
+	void InitSSAO() 
+	{
+		//SSAO initialization
+		ssaoShader->UseShader();
+		ssaoShader->GenKernel();
+		ssaoShader->GenNoise(ssaoNoiseData);
+		SSAONoiseTexture->LoadNativeTexture(ssaoNoiseData);
+	}
+
+	void CalcDirLightShadowCascades() 
+	{
+		terrainShader->UseShader();
+		for (size_t i = 0; i < NUM_CASCADES; ++i)
+		{
+			glm::vec4 vView(0.0f, 0.0f, mainLight->GetShadowMap()->GetCascadeEnd(i + 1), 1.0f);
+			glm::vec4 vClip = camera->GetProjectionMatrix() * vView;
+			printf("%F \n", vClip.z);
+			terrainShader->SetCascadeEndClipSpace(i, -vClip.z);
+		}
+	}
+	
+	void UpdateAtFrameBufferResize()
 	{
 		if (isUpdateFrameBuffersSize)
 		{
 			isUpdateFrameBuffersSize = false;
+
+			auto invProj = glm::inverse(camera->GetProjectionMatrix());
+			glNamedBufferSubData(screenToViewSSBO, 0, sizeof(invProj), &invProj);
+			sizeX = (unsigned int)std::ceilf(ScreenWidth / (float)gridSizeX);
+			sizeY = (unsigned int)std::ceilf(ScreenHeight / (float)gridSizeY);
+			int data[4] = { sizeX, sizeY, ScreenWidth, ScreenHeight };
+			glNamedBufferSubData(screenToViewSSBO, 80, sizeof(data), &data);
+
 			for (int i = 0; i < resizeUpdateFramebuffers->size(); i++)
 			{
-				resizeUpdateFramebuffers->at(i)(width, height);
+				resizeUpdateFramebuffers->at(i)(ScreenWidth, ScreenHeight);
 			}
+
+			CalcDirLightShadowCascades();
+			CreateClusters();
 		}
 	}
 
 	void Update()
 	{
-		UpdateFrameBuffersAtResize(ScreenWidth, ScreenHeight);
+		UpdateAtFrameBufferResize();
 
 		// Measure speed
 		GLfloat now = static_cast<GLfloat>(glfwGetTime());
@@ -627,9 +628,7 @@ struct RenderEngineMain::Impl
 	{
 		//Setting up tile size on both X and Y 
 		sizeX = (unsigned int)std::ceilf(ScreenWidth / (float)gridSizeX);
-
-		float zFar = camFarZ;
-		float zNear = camNearZ;
+		sizeY = (unsigned int)std::ceilf(ScreenHeight / (float)gridSizeY);
 
 		//Buffer containing all the clusters
 		{
@@ -654,13 +653,15 @@ struct RenderEngineMain::Impl
 			screen2View.tileSizes[0] = gridSizeX;
 			screen2View.tileSizes[1] = gridSizeY;
 			screen2View.tileSizes[2] = gridSizeZ;
-			screen2View.tileSizes[3] = sizeX;
+			screen2View.tileSizes[3] = maxLightsPerTile;
+			screen2View.tileSizeInPixel[0] = sizeX;
+			screen2View.tileSizeInPixel[1] = sizeY;
 			screen2View.screenWidth = ScreenWidth;
 			screen2View.screenHeight = ScreenHeight;
 			//Basically reduced a log function into a simple multiplication an addition by pre-calculating these
-			float factor = gridSizeZ / glm::log(zFar / zNear);
+			float factor = gridSizeZ / glm::log(camFarZ / camNearZ);
 			screen2View.sliceScalingFactor = factor;
-			screen2View.sliceBiasFactor = -(glm::log(zNear) * factor);
+			screen2View.sliceBiasFactor = -(glm::log(camNearZ) * factor);
 			screen2View.zNear = camNearZ;
 			screen2View.zFar = camFarZ;
 			//Generating and copying data to memory in GPU
@@ -718,20 +719,11 @@ struct RenderEngineMain::Impl
 		}
 
 		{
-			glGenBuffers(1, &visibleUniqueClusterSSBO);
-			glBindBuffer(GL_SHADER_STORAGE_BUFFER, visibleUniqueClusterSSBO);
+			glGenBuffers(1, &visibleClusterSSBO);
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, visibleClusterSSBO);
 
-			glBufferData(GL_SHADER_STORAGE_BUFFER, numClusters * sizeof(VisibleUniqueCluster), NULL, GL_STATIC_COPY);
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, visibleUniqueClusterSSBO);
-			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-		}
-
-		{
-			glGenBuffers(1, &activeClusterCountSSBO);
-			glBindBuffer(GL_SHADER_STORAGE_BUFFER, activeClusterCountSSBO);
-
-			glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(unsigned int), NULL, GL_STATIC_COPY);
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, activeClusterCountSSBO);
+			glBufferData(GL_SHADER_STORAGE_BUFFER, numClusters * sizeof(unsigned int), NULL, GL_STATIC_COPY);
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, visibleClusterSSBO);
 			glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 		}
 	}
@@ -740,7 +732,7 @@ struct RenderEngineMain::Impl
 	{
 		//Building the grid of AABB enclosing the view frustum clusters
 		buildAABBGridCompShader->UseShader();
-		buildAABBGridCompShader->Dispatch(1, 1, 1);
+		buildAABBGridCompShader->Dispatch(1, 1, gridSizeZ);
 	}
 
 	void calcAverageNormals(unsigned int* indices, unsigned int indicesCount,
@@ -937,7 +929,6 @@ struct RenderEngineMain::Impl
 
 		buildAABBGridCompShader->CreateFromFiles("Shaders/clusterShader.comp");
 		visibleClusterCompShader->CreateFromFiles("Shaders/clusterVisibleShader.comp");
-		uniqueClusterCompShader->CreateFromFiles("Shaders/clusterUniqueShader.comp");
 		cullLightsCompShader->CreateFromFiles("Shaders/clusterCullLightShader.comp");
 
 		environmentMapShader->CreateFromFiles("Shaders/cubemap.vert", "Shaders/equirectangular_to_cubemap.frag");
@@ -1361,18 +1352,31 @@ struct RenderEngineMain::Impl
 		depth->Read(GL_TEXTURE0);
 		visibleClusterCompShader->Dispatch(ScreenWidth / 32, ScreenHeight / 30, 1);
 
-		uniqueClusterCompShader->UseShader();
-		uniqueClusterCompShader->Dispatch(1, 1, 1);
+		//unsigned int count = 0;
+		//unsigned int isvisible[32 * 32 * 10];
 
-		//unsigned int count;
-		//glGetNamedBufferSubData(activeClusterCountSSBO, 0, sizeof(unsigned int), &count);
-
-		//std::cout << count << " Clusters are Active" << std::endl;
+		//glGetNamedBufferSubData(visibleClusterSSBO, 0, numClusters * sizeof(unsigned int), &isvisible);
+		//for(int i = 0; i < numClusters; ++i)
+		//{
+		//	if (isvisible[i]) ++count;
+		//}
 
 		//4-Light assignment
 		cullLightsCompShader->UseShader();
 		glUniformMatrix4fv(cullLightsCompShader->GetViewLocation(), 1, GL_FALSE, glm::value_ptr(camera->CalculateViewMatrix()));
-		cullLightsCompShader->Dispatch(1, 1, 1);
+		cullLightsCompShader->Dispatch(1, 1, gridSizeZ);
+
+		//unsigned int count1 = 0;
+		//unsigned int grid[32 * 32 * 10 * 2];
+
+		//glGetNamedBufferSubData(lightGridSSBO, 0, numClusters * 2 * sizeof(unsigned int), &grid);
+		//for (int i = 0; i < numClusters * 2; i += 2)
+		//{
+		//	if (grid[i + 1]) ++count1;
+		//}
+
+		//if (count1 == count)
+		//	std::cout << count << " Clusters are Active" << std::endl;
 	}
 
 	void PreZPass(GLfloat deltaTime)
@@ -1428,8 +1432,6 @@ struct RenderEngineMain::Impl
 
 	void SSAOPass()
 	{
-		auto projectionMatrix = camera->GetProjectionMatrix();
-
 		glViewport(0, 0, ssao->GetWidth(), ssao->GetHeight());
 		ssao->Write();
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -1441,6 +1443,9 @@ struct RenderEngineMain::Impl
 
 		SSAONoiseTexture->UseTexture(1);
 		ssaoShader->SetNoiseTexture(2);
+
+		glUniform1f(ssaoShader->GetSampleRadiusLocation(), 0.1f);
+		glUniformMatrix4fv(ssaoShader->GetProjectionLocation(), 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
 
 		quad->RenderQuad();
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -1739,15 +1744,10 @@ struct RenderEngineMain::Impl
 			glDeleteBuffers(1, &lightGridSSBO);
 			lightGridSSBO = 0;
 		}
-		if (visibleUniqueClusterSSBO != 0)
+		if (visibleClusterSSBO != 0)
 		{
-			glDeleteBuffers(1, &visibleUniqueClusterSSBO);
-			visibleUniqueClusterSSBO = 0;
-		}
-		if (activeClusterCountSSBO != 0)
-		{
-			glDeleteBuffers(1, &activeClusterCountSSBO);
-			activeClusterCountSSBO = 0;
+			glDeleteBuffers(1, &visibleClusterSSBO);
+			visibleClusterSSBO = 0;
 		}
 	}
 };

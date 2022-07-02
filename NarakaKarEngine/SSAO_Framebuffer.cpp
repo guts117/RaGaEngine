@@ -37,14 +37,11 @@ bool SSAO_Framebuffer::Init(GLuint width, GLuint height)
 	return true;
 }
 
-SSAO_Framebuffer::~SSAO_Framebuffer()
+void SSAO_Framebuffer::ResizeFrameBuffer(int width, int height)
 {
-	if (FBO) {
-		glDeleteFramebuffers(1, &FBO);
-	}
-
-	if (buffer)
-	{
-		glDeleteTextures(1, &buffer);
-	}
+	src_width = width;
+	src_height = height;
+	glBindTexture(GL_TEXTURE_2D, buffer);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, src_width, src_height, 0, GL_RED, GL_FLOAT, nullptr);
+	glBindTexture(GL_TEXTURE_2D, 0);
 }

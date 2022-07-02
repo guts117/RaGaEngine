@@ -1,5 +1,5 @@
 #version 460 core
-layout(local_size_x = 16, local_size_y = 9, local_size_z = 7) in;
+layout(local_size_x = 32, local_size_y = 32) in;
 
 struct PointLight{
     vec4 position;
@@ -26,6 +26,7 @@ layout (std430, binding = 1) buffer clusterAABB{
 layout (std430, binding = 2) readonly buffer screenToView{
     mat4 inverseProjection;
     uvec4 tileSizes;
+	uvec2 tileSizeInPixel;
     uvec2 screenDimensions;
     float scale;
 	float bias;
@@ -45,20 +46,8 @@ layout (std430, binding = 5) buffer lightGridSSBO{
     LightGrid lightGrid[];
 };
 
-shared uint globalIndexCount;
-
-struct VisibleUniqueCluster
-{
-	uint isActive;
-	uint uniqueIndex;
-};
-
-layout (std430, binding = 7) buffer visibleUniqueClusterSSBO{
-    VisibleUniqueCluster visibleUniqueCluster[ ];
-};
-
-layout (std430, binding = 8) buffer globalActiveClusterCountSSBO{
-    uint globalActiveClusterCount;
+layout (std430, binding = 7) buffer visibleClusterSSBO{
+    uint isVisibleCluster[];
 };
 
 uniform mat4 View;
@@ -68,19 +57,18 @@ float sqDistPointAABB(vec3 point, uint tile);
 
 void main()
 {
-	if(gl_LocalInvocationIndex == 0) 
+    uint tileIndex 								= 	gl_LocalInvocationIndex +
+													gl_WorkGroupID.z * (gl_WorkGroupSize.x * gl_WorkGroupSize.y);
+
+	if(isVisibleCluster[tileIndex] == 0) 
 	{
-		globalIndexCount = 0;
-	}
-	
-	if(gl_LocalInvocationIndex >= globalActiveClusterCount) 
-	{
-		globalActiveClusterCount = 0;
+		lightGrid[tileIndex].count 				= 0;
 		return;
 	}
-	
-    uint lightCount  							= pointLight.length();
-    uint tileIndex 								= visibleUniqueCluster[gl_LocalInvocationIndex].uniqueIndex;
+
+	isVisibleCluster[tileIndex] 				= 0;
+
+	uint lightCount  							= pointLight.length();
 	
 	//visible lights temp buffer for the loop
     uint vLightCnt 								= 0;								
@@ -98,13 +86,12 @@ void main()
 			}
 		}
 	}	
+	
+	uint maxLightPerCluster 					= tileSizes[3];
+	uint offset 								= tileIndex * maxLightPerCluster;
 
-    //We want all thread groups to have completed the light tests before continuing
-    //barrier();
-
-    uint offset 								= atomicAdd(globalIndexCount, vLightCnt);
-
-    for(uint i = 0; i < vLightCnt; ++i){
+    for(uint i = 0; i < vLightCnt; ++i)
+	{
         globalLightIndexList[offset + i] 		= vLightIndices[i];
     }
 

@@ -51,6 +51,7 @@ struct LightGrid{
 layout (std430, binding = 2) readonly buffer screenToView{
     mat4 inverseProjection;
     uvec4 tileSizes;
+	uvec2 tileSizeInPixel;
     uvec2 screenDimensions;
     float scale;
 	float bias;
@@ -444,7 +445,7 @@ void main()
 	ivec2 pixelPos 			= ivec2(gl_FragCoord.xy);
 	float z 				= LinearDepth(texelFetch(depthMap, pixelPos, 0).r);
 	uint zTile     			= uint(max(log(z) * scale + bias, 0.0));
-    uvec3 tiles    			= uvec3(uvec2(pixelPos.xy / tileSizes[3]), zTile);
+    uvec3 tiles    			= uvec3(uvec2(pixelPos.x / tileSizeInPixel.x, pixelPos.y / tileSizeInPixel.y), zTile);
     uint tileIndex 			= tiles.x + tileSizes.x * tiles.y + (tileSizes.x * tileSizes.y) * tiles.z;
 
 	vec4 finalColor 		=  CalcDirectionalLight(viewDir, newNormal, F0, albedo, metallic, roughness);

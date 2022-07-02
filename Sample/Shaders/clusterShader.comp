@@ -1,5 +1,5 @@
 #version 460 core
-layout(local_size_x = 16, local_size_y = 9, local_size_z = 7) in;
+layout(local_size_x = 32, local_size_y = 32) in;
 
 //ssbo initialization
 struct VolumeTileAABB{
@@ -12,6 +12,7 @@ layout (std430, binding = 1) buffer clusterAABB{
 layout (std430, binding = 2) readonly buffer screenToView{
     mat4 inverseProjection;
     uvec4 tileSizes;
+	uvec2 tileSizeInPixel;
     uvec2 screenDimensions;
     float scale;
 	float bias;
@@ -29,20 +30,20 @@ void main(){
     const vec3 eyePos 			= vec3(0.0);
 
     //Per Tile variables
-    uint tileSizePx 			= tileSizes[3];
-    uint tileIndex 				= gl_LocalInvocationIndex;
+    uint tileIndex 				= 	gl_LocalInvocationIndex +
+									gl_WorkGroupID.z * (gl_WorkGroupSize.x * gl_WorkGroupSize.y);
 
     //Calculating the min and max point in screen space
-    vec4 maxPoint_sS 			= vec4(vec2(gl_LocalInvocationID.xy + 1) * tileSizePx, -1.0, 1.0); // Top Right
-    vec4 minPoint_sS 			= vec4(gl_LocalInvocationID.xy * tileSizePx, -1.0, 1.0); // Bottom left
+    vec4 maxPoint_sS 			= vec4(vec2((gl_LocalInvocationID.x + 1) * tileSizeInPixel.x, (gl_LocalInvocationID.y + 1) * tileSizeInPixel.y), -1.0, 1.0); // Top Right
+    vec4 minPoint_sS 			= vec4(vec2(gl_LocalInvocationID.x * tileSizeInPixel.x, gl_LocalInvocationID.y * tileSizeInPixel.y), -1.0, 1.0); // Bottom left
     
     //Pass min and max to view space
     vec3 maxPoint_vS 			= screen2View(maxPoint_sS).xyz;
     vec3 minPoint_vS 			= screen2View(minPoint_sS).xyz;
 
     //Near and far values of the cluster in view space
-    float tileNear  			= -zNear * pow(zFar/ zNear, gl_LocalInvocationID.z / float(gl_WorkGroupSize.z));
-    float tileFar   			= -zNear * pow(zFar/ zNear, (gl_LocalInvocationID.z + 1) / float(gl_WorkGroupSize.z));
+    float tileNear  			= -zNear * pow(zFar/ zNear, gl_WorkGroupID.z / float(gl_NumWorkGroups.z));
+    float tileFar   			= -zNear * pow(zFar/ zNear, (gl_WorkGroupID.z + 1) / float(gl_NumWorkGroups.z));
 
     //Finding the 4 intersection points made from the maxPoint to the cluster near/far plane
     vec3 minPointNear 			= lineIntersectionToZPlane(eyePos, minPoint_vS, tileNear );
@@ -90,7 +91,8 @@ vec4 screen2View(vec4 screen){
     vec2 texCoord 				= screen.xy / screenDimensions.xy;
 
     //Convert to clipSpace
-    vec4 clip 					= vec4(vec2(texCoord.x, texCoord.y) * 2.0 - 1.0, screen.z, screen.w);
+    // vec4 clip 				= vec4(vec2(texCoord.x, 1.0 - texCoord.y)* 2.0 - 1.0, screen.z, screen.w);
+    vec4 clip 					= vec4(vec2(texCoord.x, texCoord.y)* 2.0 - 1.0, screen.z, screen.w);
 
     return clipToView(clip);
 }
