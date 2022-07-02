@@ -43,7 +43,3 @@ void Depth_Framebuffer::ResizeFrameBuffer(int width, int height)
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, src_width, src_height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
-
-Depth_Framebuffer::~Depth_Framebuffer()
-{
-}
