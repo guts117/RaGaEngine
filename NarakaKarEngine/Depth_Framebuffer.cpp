@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "Depth_Framebuffer.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 bool Depth_Framebuffer::Init(GLuint width, GLuint height)
 {
 	src_width = width; src_height = height;
@@ -32,15 +35,11 @@ bool Depth_Framebuffer::Init(GLuint width, GLuint height)
 	return true;
 }
 
-
-Depth_Framebuffer::~Depth_Framebuffer()
+void Depth_Framebuffer::ResizeFrameBuffer(int width, int height)
 {
-	if (FBO) {
-		glDeleteFramebuffers(1, &FBO);
-	}
-
-	if (buffer)
-	{
-		glDeleteTextures(1, &buffer);
-	}
+	src_width = width;
+	src_height = height;
+	glBindTexture(GL_TEXTURE_2D, buffer);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, src_width, src_height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+	glBindTexture(GL_TEXTURE_2D, 0);
 }

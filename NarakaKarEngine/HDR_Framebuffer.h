@@ -3,26 +3,33 @@
 
 #include "Framebuffer.h"
 
-class HDR_Framebuffer : public Framebuffer
+namespace NarakaKarEngine
 {
-public:
-	HDR_Framebuffer() = default;
+	namespace RenderEngine
+	{
+		class HDR_Framebuffer : public Framebuffer
+		{
+		public:
+			HDR_Framebuffer() = default;
 
-	bool Init(GLuint width, GLuint height);
+			bool Init(GLuint width, GLuint height);
 
-	void Read(GLenum textureUnit);
+			void Read(GLenum textureUnit);
 
-	void ReadScene(GLenum textureUnit);
+			void ReadScene(GLenum textureUnit);
 
-	void ReadMotion(GLenum textureUnit);
+			void ReadMotion(GLenum textureUnit);
 
-	GLuint* GetColorBuffer(unsigned int i) { return &colorBuffers[i]; }
-	~HDR_Framebuffer();
+			void ResizeFrameBuffer(int width, int height) override;
 
-protected:
-	GLuint rboDepth = 0;
-	GLuint colorBuffers[2] = {0};
-	GLuint motionBuffer = 0;
-};
+			GLuint* GetColorBuffer(unsigned int i) { return &colorBuffers[i]; }
+			~HDR_Framebuffer();
 
+		protected:
+			GLuint rboDepth = 0;
+			GLuint colorBuffers[2] = { 0 };
+			GLuint motionBuffer = 0;
+		};
+	}
+}
 #endif

@@ -1,7 +1,10 @@
 #include "pch.h"
 #include "ParticleSystem.h"
-#include "CommonValues.h"
+#include "RenderingCommonValues.h"
 #include "Particle.h"
+
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
 
 ParticleSystem::ParticleSystem()
 	: Billboard_Mesh()

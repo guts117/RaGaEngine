@@ -3,19 +3,24 @@
 
 #include "Framebuffer.h"
 
-class BRDF_Framebuffer :
-    public Framebuffer
+namespace NarakaKarEngine
 {
-public:
-	BRDF_Framebuffer() = default;
+	namespace RenderEngine
+	{
+		class BRDF_Framebuffer :
+			public Framebuffer
+		{
+		public:
+			BRDF_Framebuffer() = default;
 
-	bool Init(GLuint width, GLuint height);
-	void Write();
-	void Read(GLenum textureUnit);
+			bool Init(GLuint width, GLuint height);
+			void Write();
+			void Read(GLenum textureUnit);
 
-	~BRDF_Framebuffer();
-private:
-	GLuint rboDepth = 0;
-};
-
+			~BRDF_Framebuffer();
+		private:
+			GLuint rboDepth = 0;
+		};
+	}
+}
 #endif

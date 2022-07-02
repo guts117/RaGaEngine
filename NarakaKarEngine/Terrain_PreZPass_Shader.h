@@ -3,22 +3,27 @@
 
 #include "PreZPass_Shader.h"
 
-class Terrain_PreZPass_Shader :
-	public PreZPass_Shader
+namespace NarakaKarEngine
 {
-public:
-	Terrain_PreZPass_Shader() = default;
+	namespace RenderEngine
+	{
+		class Terrain_PreZPass_Shader :
+			public PreZPass_Shader
+		{
+		public:
+			Terrain_PreZPass_Shader() = default;
 
-	~Terrain_PreZPass_Shader();
+			~Terrain_PreZPass_Shader();
 
-	void SetDisplacementMap(GLuint textureUnit);
-	GLuint GetDispFactorLocation() { return uniformDispFactor; }
+			void SetDisplacementMap(GLuint textureUnit);
+			GLuint GetDispFactorLocation() { return uniformDispFactor; }
 
 
-private:
-	void CompileProgram();
-	GLuint uniformDisplacement = 0;
-	GLuint uniformDispFactor = 0;
-};
-
+		private:
+			void CompileProgram();
+			GLuint uniformDisplacement = 0;
+			GLuint uniformDispFactor = 0;
+		};
+	}
+}
 #endif

@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "Framebuffer.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 Framebuffer::Framebuffer()
 	:FBO(0), buffer(0), src_width(0),src_height(0)
 {}
@@ -21,7 +24,18 @@ void Framebuffer::Read(GLenum textureUnit)
 	glBindTexture(GL_TEXTURE_2D, buffer);
 }
 
+void Framebuffer::ResizeFrameBuffer(int width, int height)
+{
+}
+
 Framebuffer::~Framebuffer()
 {
+	if (FBO) {
+		glDeleteFramebuffers(1, &FBO);
+	}
 
+	if (buffer)
+	{
+		glDeleteTextures(1, &buffer);
+	}
 }

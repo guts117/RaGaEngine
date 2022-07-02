@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "Terrain_PreZPass_Shader.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 void Terrain_PreZPass_Shader::CompileProgram()
 {
 	GLint result = 0;

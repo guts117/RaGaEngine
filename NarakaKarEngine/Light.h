@@ -3,25 +3,30 @@
 
 #include "pch.h"
 
-class ShadowMap_Framebuffer;
-
-class Light
+namespace NarakaKarEngine
 {
-public:
-	Light();
-	Light(GLuint shadowWidth, GLuint shadowHeight,
-			GLfloat red, GLfloat green, GLfloat blue);
+	namespace RenderEngine
+	{
+		class ShadowMap_Framebuffer;
 
-	ShadowMap_Framebuffer* GetShadowMap();
+		class Light
+		{
+		public:
+			Light();
+			Light(GLuint shadowWidth, GLuint shadowHeight,
+				GLfloat red, GLfloat green, GLfloat blue);
 
-	virtual ~Light() = 0;
+			ShadowMap_Framebuffer* GetShadowMap();
 
-protected:
-	glm::vec3 color = glm::vec3(1.0f, 1.0f, 1.0f);;
+			virtual ~Light() = 0;
 
-	glm::mat4 lightProj = glm::mat4();
+		protected:
+			glm::vec3 color = glm::vec3(1.0f, 1.0f, 1.0f);;
 
-	ShadowMap_Framebuffer* shadowMap = nullptr;
-};
+			glm::mat4 lightProj = glm::mat4();
 
+			ShadowMap_Framebuffer* shadowMap = nullptr;
+		};
+	}
+}
 #endif

@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "PreZPass_Shader.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 void PreZPass_Shader::CompileProgram()
 {
 	GLint result = 0;

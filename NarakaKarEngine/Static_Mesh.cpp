@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "Static_Mesh.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 void Static_Mesh::CreateMeshWithNormal(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices) 
 {	
 	indexCount = numOfIndices;

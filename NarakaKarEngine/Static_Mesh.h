@@ -3,26 +3,31 @@
 
 #include "Mesh.h"
 
-class Static_Mesh : public Mesh
+namespace NarakaKarEngine
 {
-public:
-	explicit Static_Mesh() = default;
+	namespace RenderEngine
+	{
+		class Static_Mesh : public Mesh
+		{
+		public:
+			explicit Static_Mesh() = default;
 
-	Static_Mesh(Static_Mesh&& rhs) noexcept = default;
-	Static_Mesh& operator= (Static_Mesh&& rhs) noexcept = default;
+			Static_Mesh(Static_Mesh&& rhs) noexcept = default;
+			Static_Mesh& operator= (Static_Mesh&& rhs) noexcept = default;
 
-	Static_Mesh(const Static_Mesh& rhs) = delete;
-	Static_Mesh& operator= (const Static_Mesh& rhs) = delete;
+			Static_Mesh(const Static_Mesh& rhs) = delete;
+			Static_Mesh& operator= (const Static_Mesh& rhs) = delete;
 
-	void CreateMeshWithNormal(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices) override;
-	void CreateMeshWithTangentNormal(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices) override;
+			void CreateMeshWithNormal(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices) override;
+			void CreateMeshWithTangentNormal(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices) override;
 
-	void RenderMesh() override;
-	void RenderTessellatedMesh() override;
-	void RenderQuad();
-	void RenderCube();
-	
-	~Static_Mesh() = default;
-};
+			void RenderMesh() override;
+			void RenderTessellatedMesh() override;
+			void RenderQuad();
+			void RenderCube();
 
+			~Static_Mesh() = default;
+		};
+	}
+}
 #endif

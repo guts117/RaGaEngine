@@ -2,28 +2,29 @@
 #define BLUR_PINGPONG_FRAMEBUFFER
 
 #include "pch.h"
+#include "Framebuffer.h"
 
-class Blur_PingPong_Framebuffer
+namespace NarakaKarEngine
 {
-public:
-	Blur_PingPong_Framebuffer();
+	namespace RenderEngine
+	{
+		class Blur_PingPong_Framebuffer : public Framebuffer
+		{
+		public:
+			Blur_PingPong_Framebuffer() = default;
 
-	bool Init(GLuint width, GLuint height);
+			bool Init(GLuint width, GLuint height) override;
+			void Write(bool horizontal);
+			void Read(bool horizontal);
+			void ReadFirstIteration(GLuint* ColorBuffer);
+			void ResizeFrameBuffer(int width, int height) override;
 
-	void Write(bool horizontal);
+			~Blur_PingPong_Framebuffer();
 
-	void Read(bool horizontal);
-	void ReadFirstIteration(GLuint* ColorBuffer);
-
-	GLuint GetWidth() { return src_width; }
-
-	GLuint GetHeight() { return src_height; }
-
-	~Blur_PingPong_Framebuffer();
-
-protected:
-	GLuint FBO[2] = {0};
-	GLuint src_width, src_height;
-	GLuint colorBuffers[2] = { 0 };
-};
+		protected:
+			GLuint FBOs[2] = { 0 };
+			GLuint colorBuffers[2] = { 0 };
+		};
+	}
+}
 #endif

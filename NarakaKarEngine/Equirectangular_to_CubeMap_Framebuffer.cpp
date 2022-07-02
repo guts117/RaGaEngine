@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "Equirectangular_to_CubeMap_Framebuffer.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 bool Equirectangular_to_CubeMap_Framebuffer::Init(GLuint width, GLuint height, bool is_env_map)
 {
 	src_width = width; src_height = height;

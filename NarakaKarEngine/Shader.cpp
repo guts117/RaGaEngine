@@ -1,9 +1,12 @@
 #include "pch.h"
 #include "Shader.h"
-#include "CommonValues.h"
+#include "RenderingCommonValues.h"
 #include "DirectionalLight.h"
 #include "PointLight.h"
 #include "SpotLight.h"
+
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
 
 void Shader::CreateFromString(const char* vertexCode, const char* fragmentCode) {
 	CompileShader(vertexCode, fragmentCode);

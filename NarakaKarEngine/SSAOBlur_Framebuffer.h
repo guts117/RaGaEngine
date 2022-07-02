@@ -3,14 +3,21 @@
 
 #include "Framebuffer.h"
 
-class SSAOBlur_Framebuffer : public Framebuffer
+namespace NarakaKarEngine
 {
-public:
-	SSAOBlur_Framebuffer() = default;
+	namespace RenderEngine
+	{
+		class SSAOBlur_Framebuffer : public Framebuffer
+		{
+		public:
+			SSAOBlur_Framebuffer() = default;
 
-	bool Init(GLuint width, GLuint height);
+			bool Init(GLuint width, GLuint height);
 
-	~SSAOBlur_Framebuffer();
-};
+			void ResizeFrameBuffer(int width, int height) override;
 
+			~SSAOBlur_Framebuffer() = default;
+		};
+	}
+}
 #endif

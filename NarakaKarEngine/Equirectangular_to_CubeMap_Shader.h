@@ -3,17 +3,22 @@
 
 #include "Shader.h"
 
-class Equirectangular_to_CubeMap_Shader :
-    public Shader
+namespace NarakaKarEngine
 {
-public:
-	Equirectangular_to_CubeMap_Shader() = default;
-	void SetTexture(GLuint textureUnit);
-	~Equirectangular_to_CubeMap_Shader();
+	namespace RenderEngine
+	{
+		class Equirectangular_to_CubeMap_Shader :
+			public Shader
+		{
+		public:
+			Equirectangular_to_CubeMap_Shader() = default;
+			void SetTexture(GLuint textureUnit);
+			~Equirectangular_to_CubeMap_Shader();
 
-private:
+		private:
 
-	void CompileProgram();
-};
-
+			void CompileProgram();
+		};
+	}
+}
 #endif

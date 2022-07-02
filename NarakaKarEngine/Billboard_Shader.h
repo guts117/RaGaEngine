@@ -3,26 +3,31 @@
 
 #include "Shader.h"
 
-class Billboard_Shader :
-	public Shader
+namespace NarakaKarEngine
 {
-public:
-	Billboard_Shader() = default;
+	namespace RenderEngine
+	{
+		class Billboard_Shader :
+			public Shader
+		{
+		public:
+			Billboard_Shader() = default;
 
-	GLuint GetCameraUpLocation();
-	GLuint GetCameraRightLocation();
-	GLuint GetPosLocation();
-	GLuint GetSizeLocation();
-	void SetTexture(GLuint textureUnit);
-	~Billboard_Shader();
+			GLuint GetCameraUpLocation();
+			GLuint GetCameraRightLocation();
+			GLuint GetPosLocation();
+			GLuint GetSizeLocation();
+			void SetTexture(GLuint textureUnit);
+			~Billboard_Shader();
 
-private:
+		private:
 
-	void CompileProgram();
-	GLuint uniformCameraRight = 0;
-	GLuint uniformCameraUp = 0;
-	GLuint uniformPos = 0;
-	GLuint uniformSize = 0;
-};
-
+			void CompileProgram();
+			GLuint uniformCameraRight = 0;
+			GLuint uniformCameraUp = 0;
+			GLuint uniformPos = 0;
+			GLuint uniformSize = 0;
+		};
+	}
+}
 #endif

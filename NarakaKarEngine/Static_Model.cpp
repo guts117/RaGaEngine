@@ -3,6 +3,9 @@
 #include "Texture.h"
 #include "Static_Mesh.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 void Static_Model::RenderModel()
 {
 	for (size_t i = 0; i < static_MeshList.size(); i++) {

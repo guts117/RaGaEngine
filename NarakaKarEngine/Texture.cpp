@@ -2,7 +2,10 @@
 #include "Texture.h"
 #define STB_IMAGE_IMPLEMENTATION 
 #include "stb_image.h"
-#include "CommonValues.h"
+#include "RenderingCommonValues.h"
+
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
 
 
 struct Texture::Impl

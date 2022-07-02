@@ -3,45 +3,42 @@
 
 #include "pch.h"
 
-class EngineInputManager;
-
-class Window
+namespace NarakaKarEngine
 {
-	friend class EngineInputManager;
-public:
-	Window();
-	Window(GLint windowWidth, GLint windowheight);
+	namespace RenderEngine
+	{
+		class EngineInputManager;
 
-	int Initialise();
+		class Window
+		{
+			friend class EngineInputManager;
+		public:
+			explicit Window();
 
-	bool getShouldClose() { return glfwWindowShouldClose(mainWindow); }
+			int Initialise();
 
-	GLint getBufferWidth() { return bufferWidth; }
-	GLint getBufferHeight() { return bufferHeight; }
+			bool getShouldClose() { return glfwWindowShouldClose(mainWindow); }
+			bool* getKeys() { return keys; }
+			GLfloat getXChange();
+			GLfloat getYChange();
 
-	bool* getKeys() { return keys; }
-	GLfloat getXChange();
-	GLfloat getYChange();
+			void swapBuffers() { glfwSwapBuffers(mainWindow); }
 
-	void swapBuffers() { glfwSwapBuffers(mainWindow); }
+			~Window();
 
-	~Window();
+		private:
+			GLFWwindow* mainWindow = nullptr;
 
-private:
-	GLFWwindow* mainWindow;
+			void createCallbacks();
 
-	GLint width, height;
-	GLint bufferWidth, bufferHeight;
+			bool keys[1024] = { false };
 
-	void createCallbacks();
-
-	bool keys[1024] = {false};
-
-	GLfloat lastX;
-	GLfloat lastY;
-	GLfloat xChange;
-	GLfloat yChange;
-	bool mouseFirstMoved = true;
-};
-
+			GLfloat lastX;
+			GLfloat lastY;
+			GLfloat xChange;
+			GLfloat yChange;
+			bool mouseFirstMoved = true;
+		};
+	}
+}
 #endif

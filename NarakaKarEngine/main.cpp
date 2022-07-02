@@ -1,9 +1,12 @@
 #include "pch.h"
-#include "NarakaKarEngine.h"
+#include "RenderEngineMain.h"
+
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
 
 int main()
 {
-	std::unique_ptr<NarakaKarEngine> engine = std::make_unique<NarakaKarEngine>();
+	std::unique_ptr<RenderEngineMain> engine = std::make_unique<RenderEngineMain>();
 	
 	engine->Init();
 

@@ -2,6 +2,9 @@
 #include "Mesh.h"
 #include "VertexBoneData.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 void Mesh::CreateMesh(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices) {}
 
 void Mesh::CreateInstancedMesh(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices) {}

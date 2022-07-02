@@ -3,17 +3,22 @@
 
 #include "Shader.h"
 
-class Irradiance_Convolution_Shader :
-    public Shader
+namespace NarakaKarEngine
 {
-public:
-	Irradiance_Convolution_Shader() = default;
-	void SetSkybox(GLuint textureUnit);
-	~Irradiance_Convolution_Shader();
+	namespace RenderEngine
+	{
+		class Irradiance_Convolution_Shader :
+			public Shader
+		{
+		public:
+			Irradiance_Convolution_Shader() = default;
+			void SetSkybox(GLuint textureUnit);
+			~Irradiance_Convolution_Shader();
 
-private:
+		private:
 
-	void CompileProgram();
-};
-
+			void CompileProgram();
+		};
+	}
+}
 #endif

@@ -2,6 +2,9 @@
 #include "Light.h"
 #include "ShadowMap_Framebuffer.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 Light::Light() {
 	//empty
 }

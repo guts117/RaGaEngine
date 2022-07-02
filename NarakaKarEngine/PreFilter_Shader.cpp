@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "PreFilter_Shader.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 void PreFilter_Shader::CompileProgram()
 {
 	GLint result = 0;

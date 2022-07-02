@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "Billboard_Mesh.h"
-#include "CommonValues.h"
+#include "RenderingCommonValues.h"
+
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
 
 void Billboard_Mesh::CreateMesh(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices) 
 {

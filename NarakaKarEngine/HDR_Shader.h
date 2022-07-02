@@ -3,27 +3,31 @@
 
 #include "Shader.h"
 
-class HDR_Shader :
-	public Shader
+namespace NarakaKarEngine
 {
-	public:
-		HDR_Shader() = default;
+	namespace RenderEngine
+	{
+		class HDR_Shader :
+			public Shader
+		{
+		public:
+			HDR_Shader() = default;
 
-		GLuint GetHDRLocation();
-		GLuint GetExposureLocation();
-		GLuint GetBlurLocation();
+			GLuint GetHDRLocation();
+			GLuint GetExposureLocation();
+			GLuint GetBlurLocation();
 
-		void SetTexture(GLuint textureUnit);
+			void SetTexture(GLuint textureUnit);
 
-		~HDR_Shader();
+			~HDR_Shader();
 
-	private:
-		void CompileProgram();
+		private:
+			void CompileProgram();
 
-		GLuint uniformHDR = 0;
-		GLuint uniformExposure = 0;
-		GLuint uniformBlur = 0;
-};
-
-
+			GLuint uniformHDR = 0;
+			GLuint uniformExposure = 0;
+			GLuint uniformBlur = 0;
+		};
+	}
+}
 #endif

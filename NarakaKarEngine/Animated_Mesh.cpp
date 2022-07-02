@@ -2,6 +2,9 @@
 #include "Animated_Mesh.h"
 #include "VertexBoneData.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 void Animated_Mesh::CreateMeshWithBones(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices, std::vector<VertexBoneData>& Bones)
 {
 	indexCount = numOfIndices;

@@ -5,6 +5,9 @@
 #include "SpotLight.h"
 #include "ShadowMap_FrameBuffer.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 void Terrain_Shader::CompileProgram()
 {
 	GLint result = 0;

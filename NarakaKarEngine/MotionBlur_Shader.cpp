@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "MotionBlur_Shader.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 void MotionBlur_Shader::CompileProgram()
 {
 	GLint result = 0;

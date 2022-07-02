@@ -1,9 +1,15 @@
 #include "pch.h"
 #include "Camera.h"
+#include "RenderingCommonValues.h"
 
-Camera::Camera(glm::mat4 projectionMatrix, glm::vec3 startPosition, glm::vec3 startUp, GLfloat startYaw, GLfloat startPitch, GLfloat startMoveSpeed, GLfloat startTurnSpeed)
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
+extern int ScreenWidth;
+extern int ScreenHeight;
+
+Camera::Camera(glm::vec3 startPosition, glm::vec3 startUp, GLfloat startYaw, GLfloat startPitch, GLfloat startMoveSpeed, GLfloat startTurnSpeed)
 	:
-	m_projectionMatrix{projectionMatrix},
 	position{ startPosition },
 	front{ glm::vec3(0.0f, 0.0f, -1.0f) },
 	worldUp{ startUp },
@@ -65,8 +71,9 @@ glm::mat4 Camera::CalculateShadowViewMatrix()
 void Camera::UpdatePreviousMatrices()
 {
 	auto viewMatrix = CalculateViewMatrix();
-	m_prevProjView = m_projectionMatrix * viewMatrix;
-	m_prevProj = m_projectionMatrix;
+	auto projMatrix = GetProjectionMatrix();
+	m_prevProjView = projMatrix * viewMatrix;
+	m_prevProj = projMatrix;
 	m_prevView = viewMatrix;
 }
 
@@ -102,7 +109,7 @@ glm::vec3 Camera::getCameraFront()
 
 glm::mat4 Camera::GetProjectionMatrix()
 {
-	return m_projectionMatrix;
+	return glm::perspective(glm::radians(60.0f), (GLfloat)ScreenWidth / (GLfloat)ScreenHeight, camNearZ, camFarZ);
 }
 
 glm::mat4 Camera::GetPreviousProjectionMatrix()

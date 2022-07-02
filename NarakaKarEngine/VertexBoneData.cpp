@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "VertexBoneData.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 VertexBoneData::VertexBoneData()
 {
 	memset(IDs, 0, sizeof(IDs));    // init all values in array = 0

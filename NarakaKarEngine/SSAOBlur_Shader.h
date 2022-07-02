@@ -3,18 +3,23 @@
 
 #include "Shader.h"
 
-class SSAOBlur_Shader :
-	public Shader
+namespace NarakaKarEngine
 {
-public:
-	SSAOBlur_Shader() = default;
+	namespace RenderEngine
+	{
+		class SSAOBlur_Shader :
+			public Shader
+		{
+		public:
+			SSAOBlur_Shader() = default;
 
-	void SetTexture(GLuint textureUnit);
-	~SSAOBlur_Shader();
+			void SetTexture(GLuint textureUnit);
+			~SSAOBlur_Shader();
 
 
-private:
-	void CompileProgram();
-};
-
+		private:
+			void CompileProgram();
+		};
+	}
+}
 #endif

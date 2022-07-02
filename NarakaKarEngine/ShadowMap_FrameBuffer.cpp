@@ -1,6 +1,12 @@
 #include "pch.h"
 #include "ShadowMap_Framebuffer.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
+extern int ScreenWidth;
+extern int ScreenHeight;
+
 bool ShadowMap_Framebuffer::Init(GLuint width, GLuint height)
 {
 	src_width = width; src_height = height;

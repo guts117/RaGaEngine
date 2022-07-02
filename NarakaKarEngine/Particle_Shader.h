@@ -3,26 +3,31 @@
 
 #include "Shader.h"
 
-class Particle_Shader :
-	public Shader
+namespace NarakaKarEngine
 {
-public:
-	Particle_Shader();
+	namespace RenderEngine
+	{
+		class Particle_Shader :
+			public Shader
+		{
+		public:
+			Particle_Shader();
 
-	void SetTexture(GLuint textureUnit);
-	GLuint GetCameraUpLocation();
-	GLuint GetCameraRightLocation();
+			void SetTexture(GLuint textureUnit);
+			GLuint GetCameraUpLocation();
+			GLuint GetCameraRightLocation();
 
-	~Particle_Shader();
+			~Particle_Shader();
 
-private:
-	void CompileProgram();
+		private:
+			void CompileProgram();
 
-	GLuint uniformCameraRight= 0;
-	GLuint uniformCameraUp = 0;
-	GLuint uniformPos = 0;
-	GLuint uniformSize = 0;
+			GLuint uniformCameraRight = 0;
+			GLuint uniformCameraUp = 0;
+			GLuint uniformPos = 0;
+			GLuint uniformSize = 0;
 
-};
-
+		};
+	}
+}
 #endif

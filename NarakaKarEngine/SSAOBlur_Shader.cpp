@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "SSAOBlur_Shader.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 void SSAOBlur_Shader::CompileProgram()
 {
 	GLint result = 0;

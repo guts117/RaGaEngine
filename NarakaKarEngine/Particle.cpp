@@ -1,6 +1,9 @@
 #include "pch.h"
 #include "Particle.h"
 
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
 bool Particle::operator<(const Particle& that) const
 {
 	// Sort in reverse order : far particles drawn first.
