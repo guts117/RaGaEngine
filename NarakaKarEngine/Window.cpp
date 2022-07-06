@@ -3,6 +3,7 @@
 #include "EngineInputManager.h"
 #include "RenderingCommonValues.h"
 #include "RenderEngineMain.h"
+#include "MathUtil.h"
 
 using namespace NarakaKarEngine;
 using namespace RenderEngine;
@@ -18,17 +19,7 @@ Window::Window() {
 	}
 }
 
-static int mini(int x, int y)
-{
-	return x < y ? x : y;
-}
-
-static int maxi(int x, int y)
-{
-	return x > y ? x : y;
-}
-
-GLFWmonitor* get_current_monitor(GLFWwindow* window)
+GLFWmonitor* Get_current_monitor(GLFWwindow* window)
 {
 	int nmonitors, i;
 	int wx, wy, ww, wh;
@@ -52,8 +43,8 @@ GLFWmonitor* get_current_monitor(GLFWwindow* window)
 		mh = mode->height;
 
 		overlap =
-			maxi(0, mini(wx + ww, mx + mw) - maxi(wx, mx)) *
-			maxi(0, mini(wy + wh, my + mh) - maxi(wy, my));
+			MathUtil::Maxi(0, MathUtil::Mini(wx + ww, mx + mw) - MathUtil::Maxi(wx, mx)) *
+			MathUtil::Maxi(0, MathUtil::Mini(wy + wh, my + mh) - MathUtil::Maxi(wy, my));
 
 		if (bestoverlap < overlap) {
 			bestoverlap = overlap;

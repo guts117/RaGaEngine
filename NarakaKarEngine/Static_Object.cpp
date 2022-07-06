@@ -80,6 +80,7 @@ void Static_Object::SetUniformLocations(std::shared_ptr<Shader> shader, std::sha
 	shader->SetPrefilterMap(9);
 	shader->SetBRDFLUT(10);
 	shader->SetAOMap(14);
+	shader->SetDepthMap(18);
 }
 
 void Static_Object::Translate(float x, float y, float z) {
