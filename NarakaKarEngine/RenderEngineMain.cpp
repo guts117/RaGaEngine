@@ -102,6 +102,7 @@ struct RenderEngineMain::Impl
 	GLuint uniformModel2 = 0, uniformProjection2 = 0, uniformView2 = 0, uniformPrevPVM2 = 0, uniformEyePosition2 = 0, uniformHeightScale2 = 0, uniformDispFactor = 0,
 		uniformAlbedoMap2 = 0, uniformMetallicMap2 = 0, uniformRoughnessMap2 = 0, uniformNormalMap2 = 0, uniformParallaxMap2 = 0,
 		uniformOmniLightPos2 = 0, uniformFarPlane2 = 0;
+
 	std::unique_ptr<Compute_Shader> buildAABBGridCompShader = std::make_unique<Compute_Shader>();
 	std::unique_ptr<Compute_Shader> visibleClusterCompShader = std::make_unique<Compute_Shader>();
 	std::unique_ptr<Compute_Shader> cullLightsCompShader = std::make_unique <Compute_Shader>();
@@ -248,9 +249,9 @@ struct RenderEngineMain::Impl
 
 	unsigned int AABBvolumeGridSSBO, lightSSBO, lightIndexListSSBO, lightGridSSBO, visibleClusterSSBO, screenToViewSSBO;
 	
-	const int gridSizeX = 32;
-	const int gridSizeY = 32;
-	const int gridSizeZ = 32;
+	int gridSizeX = 32;
+	int gridSizeY = 32;
+	int gridSizeZ = 32;
 	unsigned int sizeX, sizeY;
 	int numClusters = gridSizeX * gridSizeY * gridSizeZ;
 
@@ -380,8 +381,8 @@ struct RenderEngineMain::Impl
 		sniper->SetUpImportedModelData("Models/Sniper_rifle_KSR-29.fbx");
 		gun = std::make_unique<Static_Object>();
 		gun->SetUpImportedModelData("Models/Cerberus_LP.fbx");
-		//anymodel = std::make_unique<Static_Object>();
-		////anymodel->SetUpImportedModelData("Models/Intergalactic_Spaceship-(Wavefront).obj");
+		anymodel = std::make_unique<Static_Object>();
+		anymodel->SetUpImportedModelData("Models/Intergalactic_Spaceship-(Wavefront).obj");
 		//anymodel->SetUpImportedModelData("Models/Sponza.gltf");
 
 		anim->LoadModel("Models/boblampclean.md5mesh");
@@ -1016,9 +1017,9 @@ struct RenderEngineMain::Impl
 		bulbRed->Scale(10.0f, 10.f, 10.0f);
 		bulbRed->DrawImportedObject(shader, camera);
 
-		//anymodel->Translate(-terrainScaleFactor, 37.0f, 1.0f - terrainScaleFactor);
-		//anymodel->Scale(1.0f, 1.0f, 1.0f);
-		//anymodel->DrawImportedObject(shader, camera);
+		anymodel->Translate(-terrainScaleFactor, 37.0f, 1.0f - terrainScaleFactor);
+		anymodel->Scale(1.0f, 1.0f, 1.0f);
+		anymodel->DrawImportedObject(shader, camera);
 	}
 
 	void RenderAnimScene(bool shadow, bool depth) {
