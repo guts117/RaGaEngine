@@ -133,6 +133,7 @@
     <ClInclude Include="Terrain_PreZPass_Shader.h" />
     <ClInclude Include="Terrain_Shader.h" />
     <ClInclude Include="Texture.h" />
+    <ClInclude Include="MathUtil.h" />
     <ClInclude Include="VertexBoneData.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>

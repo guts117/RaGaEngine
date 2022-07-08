@@ -52,6 +52,7 @@
 #include "Debug.h"
 
 #include "RenderingCommonValues.h"
+#include "MathUtil.h"
 #include "Window.h"
 
 using namespace NarakaKarEngine;
@@ -92,14 +93,6 @@ struct RenderEngineMain::Impl
 
 	const float toRadians = static_cast<float>(M_PI) / 180.0f;
 
-	GLuint uniformProjectionEnv = 0, uniformViewEnv = 0;
-	GLuint uniformProjectionIrr = 0, uniformViewIrr = 0;
-	GLuint uniformProjectionPreF = 0, uniformViewPreF = 0;
-
-	GLuint uniformModel = 0, uniformProjection = 0, uniformView = 0, uniformPrevPVM = 0, uniformEyePosition = 0, uniformHeightScale = 0,
-		uniformAlbedoMap = 0, uniformMetallicMap = 0, uniformNormalMap = 0, uniformRoughnessMap = 0, uniformParallaxMap = 0, uniformGlowMap = 0,
-		uniformOmniLightPos = 0, uniformFarPlane = 0;
-
 	GLuint uniformModel1 = 0, uniformProjection1 = 0, uniformView1 = 0, uniformPrevPVM1 = 0, uniformEyePosition1 = 0, uniformHeightScale1 = 0,
 		uniformAlbedoMap1 = 0, uniformMetallicMap1 = 0, uniformNormalMap1 = 0, uniformRoughnessMap1 = 0, uniformParallaxMap1 = 0, uniformGlowMap1 = 0,
 		uniformOmniLightPos1 = 0, uniformFarPlane1 = 0;
@@ -109,17 +102,6 @@ struct RenderEngineMain::Impl
 	GLuint uniformModel2 = 0, uniformProjection2 = 0, uniformView2 = 0, uniformPrevPVM2 = 0, uniformEyePosition2 = 0, uniformHeightScale2 = 0, uniformDispFactor = 0,
 		uniformAlbedoMap2 = 0, uniformMetallicMap2 = 0, uniformRoughnessMap2 = 0, uniformNormalMap2 = 0, uniformParallaxMap2 = 0,
 		uniformOmniLightPos2 = 0, uniformFarPlane2 = 0;
-
-	GLuint uniformProjection0 = 0, uniformView0 = 0, uniformPrevPV0 = 0, uniformCameraUp = 0, uniformCameraRight = 0, uniformPos = 0, uniformSize = 0;
-
-	GLuint uniformProjectionParticles = 0, uniformViewParticles = 0, uniformCameraUpParticles = 0, uniformCameraRightParticles = 0;
-
-	GLuint uniformHDR = 0, uniformExposure = 0, uniformBlur = 0;
-
-	GLuint uniformHorizontal = 0, uniformWeight = 0;
-
-	GLuint uniformVelocityScale = 0;
-
 	std::unique_ptr<Compute_Shader> buildAABBGridCompShader = std::make_unique<Compute_Shader>();
 	std::unique_ptr<Compute_Shader> visibleClusterCompShader = std::make_unique<Compute_Shader>();
 	std::unique_ptr<Compute_Shader> cullLightsCompShader = std::make_unique <Compute_Shader>();
@@ -735,78 +717,6 @@ struct RenderEngineMain::Impl
 		buildAABBGridCompShader->Dispatch(1, 1, gridSizeZ);
 	}
 
-	void calcAverageNormals(unsigned int* indices, unsigned int indicesCount,
-		GLfloat* vertices, unsigned int verticesCount,
-		unsigned int vLength, unsigned int normalOffset)
-	{
-		for (size_t i = 0; i < indicesCount; i += 3) {
-			unsigned int in0 = indices[i] * vLength;
-			unsigned int in1 = indices[i + 1] * vLength;
-			unsigned int in2 = indices[i + 2] * vLength;
-			glm::vec3 v1(vertices[in1] - vertices[in0], vertices[in1 + 1] - vertices[in0 + 1], vertices[in1 + 2] - vertices[in0 + 2]);
-			glm::vec3 v2(vertices[in2] - vertices[in0], vertices[in2 + 1] - vertices[in0 + 1], vertices[in2 + 2] - vertices[in0 + 2]);
-			glm::vec3 normal = glm::cross(v1, v2);
-			normal = glm::normalize(normal);
-
-			in0 += normalOffset; in1 += normalOffset; in2 += normalOffset;
-
-			vertices[in0] += normal.x; vertices[in0 + 1] += normal.y; vertices[in0 + 2] += normal.z;
-			vertices[in1] += normal.x; vertices[in1 + 1] += normal.y; vertices[in1 + 2] += normal.z;
-			vertices[in2] += normal.x; vertices[in2 + 1] += normal.y; vertices[in2 + 2] += normal.z;
-
-		}
-
-		for (size_t i = 0; i < verticesCount / vLength; i++) {
-			unsigned int nOffset = i * vLength + normalOffset;
-			glm::vec3 vec(vertices[nOffset], vertices[nOffset + 1], vertices[nOffset + 2]);
-			vec = glm::normalize(vec);
-			vertices[nOffset] = vec.x; vertices[nOffset + 1] = vec.y; vertices[nOffset + 2] = vec.z;
-		}
-	}
-
-	void calcAverageTangents(unsigned int* indices, unsigned int indicesCount,
-		GLfloat* vertices, unsigned int verticesCount,
-		unsigned int vLength, unsigned int tangentOffset)
-	{
-		for (size_t i = 0; i < indicesCount; i += 3) {
-			unsigned int in0 = indices[i] * vLength;
-			unsigned int in1 = indices[i + 1] * vLength;
-			unsigned int in2 = indices[i + 2] * vLength;
-
-			glm::vec3 Edge1(vertices[in1] - vertices[in0], vertices[in1 + 1] - vertices[in0 + 1], vertices[in1 + 2] - vertices[in0 + 2]);
-			glm::vec3 Edge2(vertices[in2] - vertices[in0], vertices[in2 + 1] - vertices[in0 + 1], vertices[in2 + 2] - vertices[in0 + 2]);
-
-			float DeltaU1 = vertices[in1 + 3] - vertices[in0 + 3];                //for the uv coordinates add 3
-			float DeltaV1 = vertices[in1 + 3 + 1] - vertices[in0 + 3 + 1];
-			float DeltaU2 = vertices[in2 + 3] - vertices[in0 + 3];
-			float DeltaV2 = vertices[in2 + 3 + 1] - vertices[in0 + 3 + 1];
-
-			float f = 1.0f / (DeltaU1 * DeltaV2 - DeltaU2 * DeltaV1);
-
-			glm::vec3 Tangent, Bitangent;
-
-			Tangent.x = f * (DeltaV2 * Edge1.x - DeltaV1 * Edge2.x);
-			Tangent.y = f * (DeltaV2 * Edge1.y - DeltaV1 * Edge2.y);
-			Tangent.z = f * (DeltaV2 * Edge1.z - DeltaV1 * Edge2.z);
-
-			/*Bitangent.x = f * (-DeltaU2 * Edge1.x - DeltaU1 * Edge2.x);
-			Bitangent.y = f * (-DeltaU2 * Edge1.y - DeltaU1 * Edge2.y);
-			Bitangent.z = f * (-DeltaU2 * Edge1.z - DeltaU1 * Edge2.z);*/
-
-			in0 += tangentOffset; in1 += tangentOffset; in2 += tangentOffset;
-			vertices[in0] += Tangent.x; vertices[in0 + 1] += Tangent.y; vertices[in0 + 2] += Tangent.z;
-			vertices[in1] += Tangent.x; vertices[in1 + 1] += Tangent.y; vertices[in1 + 2] += Tangent.z;
-			vertices[in2] += Tangent.x; vertices[in2 + 1] += Tangent.y; vertices[in2 + 2] += Tangent.z;
-		}
-
-		for (size_t i = 0; i < verticesCount / vLength; i++) {
-			unsigned int nOffset = i * vLength + tangentOffset;
-			glm::vec3 vec(vertices[nOffset], vertices[nOffset + 1], vertices[nOffset + 2]);
-			vec = glm::normalize(vec);
-			vertices[nOffset] = vec.x; vertices[nOffset + 1] = vec.y; vertices[nOffset + 2] = vec.z;
-		}
-	}
-
 	void CreateBillboard() {
 
 		unsigned int billboardIndices[] = {
@@ -863,8 +773,8 @@ struct RenderEngineMain::Impl
 			terrainScaleFactor1, 0.0f,terrainScaleFactor1,			terrainScaleFactor1, terrainScaleFactor1,	    0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f
 		};
 
-		calcAverageNormals(terrainIndices, 6, terrainVertices, 44, 11, 5);
-		calcAverageTangents(terrainIndices, 6, terrainVertices, 44, 11, 8);
+		MathUtil::CalcAverageNormals(terrainIndices, 6, terrainVertices, 44, 11, 5);
+		MathUtil::CalcAverageTangents(terrainIndices, 6, terrainVertices, 44, 11, 8);
 
 		//Debug::DebugPrintReferenceTBN("ReferenceTBN", terrainVertices, 11, glm::vec3(0.0f, 1.0f, 0.0f));
 		//Debug::DebugPrintTBN("TerrainTBN", terrainVertices, 5, 8);
@@ -903,10 +813,10 @@ struct RenderEngineMain::Impl
 		};
 
 
-		calcAverageNormals(indices, 12, vertices, 44, 11, 5);
-		calcAverageTangents(indices, 12, vertices, 44, 11, 8);
-		calcAverageNormals(floorIndices, 6, floorVertices, 44, 11, 5);
-		calcAverageTangents(floorIndices, 6, floorVertices, 44, 11, 8);
+		MathUtil::CalcAverageNormals(indices, 12, vertices, 44, 11, 5);
+		MathUtil::CalcAverageTangents(indices, 12, vertices, 44, 11, 8);
+		MathUtil::CalcAverageNormals(floorIndices, 6, floorVertices, 44, 11, 5);
+		MathUtil::CalcAverageTangents(floorIndices, 6, floorVertices, 44, 11, 8);
 
 		std::shared_ptr < Static_Mesh> obj1 = std::make_shared <Static_Mesh>();
 		obj1->CreateMeshWithTangentNormal(vertices, indices, 44, 12);
@@ -979,11 +889,11 @@ struct RenderEngineMain::Impl
 	void RenderBillboardScene()
 	{
 		glm::mat4 prevPV = glm::mat4();
-		glUniform3f(uniformPos, 6.0f - terrainScaleFactor, 29.0f, -terrainScaleFactor);
-		glUniform2f(uniformSize, 2.0f, 2.0f/*0.125f*/);
+		glUniform3f(billboardShader->GetPosLocation(), 6.0f - terrainScaleFactor, 29.0f, -terrainScaleFactor);
+		glUniform2f(billboardShader->GetSizeLocation(), 2.0f, 2.0f/*0.125f*/);
 
 		prevPV = camera->GetPreviousProjectionViewMatrix();
-		glUniformMatrix4fv(uniformPrevPV0, 1, GL_FALSE, glm::value_ptr(prevPV));
+		glUniformMatrix4fv(billboardShader->GetPrevPVMLocation(), 1, GL_FALSE, glm::value_ptr(prevPV));
 
 		grassTexture->UseTexture(0);
 		billboardList[0]->RenderMesh();
@@ -1169,15 +1079,13 @@ struct RenderEngineMain::Impl
 		environmentMapShader->UseShader();
 		environmentMapShader->SetTexture(1);
 
-		uniformProjectionEnv = environmentMapShader->GetProjectionLocation();
-		glUniformMatrix4fv(uniformProjectionEnv, 1, GL_FALSE, glm::value_ptr(captureProjection));
+		glUniformMatrix4fv(environmentMapShader->GetProjectionLocation(), 1, GL_FALSE, glm::value_ptr(captureProjection));
 
 		glViewport(0, 0, environmentMap->GetWidth(), environmentMap->GetHeight());
 		environmentMap->Write(-1);
 		for (unsigned int i = 0; i < 6; ++i)
 		{
-			uniformViewEnv = environmentMapShader->GetViewLocation();
-			glUniformMatrix4fv(uniformViewEnv, 1, GL_FALSE, glm::value_ptr(captureViews[i]));
+			glUniformMatrix4fv(environmentMapShader->GetViewLocation(), 1, GL_FALSE, glm::value_ptr(captureViews[i]));
 			environmentMap->Write(i);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			environmentMapShader->Validate();
@@ -1194,15 +1102,13 @@ struct RenderEngineMain::Impl
 		irradianceConvolutionShader->UseShader();
 		irradianceConvolutionShader->SetSkybox(1);
 
-		uniformProjectionIrr = irradianceConvolutionShader->GetProjectionLocation();
-		glUniformMatrix4fv(uniformProjectionIrr, 1, GL_FALSE, glm::value_ptr(captureProjection));
+		glUniformMatrix4fv(irradianceConvolutionShader->GetProjectionLocation(), 1, GL_FALSE, glm::value_ptr(captureProjection));
 
 		glViewport(0, 0, irradianceMap->GetWidth(), irradianceMap->GetHeight());
 		irradianceMap->Write(-1);
 		for (unsigned int i = 0; i < 6; ++i)
 		{
-			uniformViewIrr = irradianceConvolutionShader->GetViewLocation();
-			glUniformMatrix4fv(uniformViewIrr, 1, GL_FALSE, glm::value_ptr(captureViews[i]));
+			glUniformMatrix4fv(irradianceConvolutionShader->GetViewLocation(), 1, GL_FALSE, glm::value_ptr(captureViews[i]));
 			irradianceMap->Write(i);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			irradianceConvolutionShader->Validate();
@@ -1216,8 +1122,7 @@ struct RenderEngineMain::Impl
 	{
 		prefilterShader->UseShader();
 		prefilterShader->SetSkybox(1);
-		uniformProjectionPreF = prefilterShader->GetProjectionLocation();
-		glUniformMatrix4fv(uniformProjectionPreF, 1, GL_FALSE, glm::value_ptr(captureProjection));
+		glUniformMatrix4fv(prefilterShader->GetProjectionLocation(), 1, GL_FALSE, glm::value_ptr(captureProjection));
 
 		prefilterMap->Write(-2, 0, 0, 0);
 		unsigned int maxMipLevels = 5;
@@ -1232,9 +1137,9 @@ struct RenderEngineMain::Impl
 
 			float roughness = (float)mip / (float)(maxMipLevels - 1);
 			prefilterShader->SetRoughness(roughness);
-			for (unsigned int i = 0; i < 6; ++i) {
-				uniformViewPreF = prefilterShader->GetViewLocation();
-				glUniformMatrix4fv(uniformViewPreF, 1, GL_FALSE, glm::value_ptr(captureViews[i]));
+			for (unsigned int i = 0; i < 6; ++i) 
+			{
+				glUniformMatrix4fv(prefilterShader->GetViewLocation(), 1, GL_FALSE, glm::value_ptr(captureViews[i]));
 				prefilterMap->Write(i, 0, 0, mip);
 				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 				prefilterShader->Validate();
@@ -1276,8 +1181,6 @@ struct RenderEngineMain::Impl
 			glm::mat4 projView = light->GetShadowMap()->GetProjMat(vView[i], i) * vView[i];
 
 			directionalShadowShader->UseShader();
-			uniformModel = directionalShadowShader->GetModelLocation();
-
 			directionalShadowShader->SetDirectionalLightTransform(projView);
 			directionalShadowShader->Validate();
 
@@ -1318,12 +1221,8 @@ struct RenderEngineMain::Impl
 		light->GetShadowMap()->Write();
 		glClear(GL_DEPTH_BUFFER_BIT);
 
-		uniformModel = omniShadowShader->GetModelLocation();
-		uniformOmniLightPos = omniShadowShader->GetOmniLightPosLocation();
-		uniformFarPlane = omniShadowShader->GetFarPlaneLocation();
-
-		glUniform3f(uniformOmniLightPos, light->GetPosition().x, light->GetPosition().y, light->GetPosition().z);
-		glUniform1f(uniformFarPlane, light->GetFarPlane());
+		glUniform3f(omniShadowShader->GetOmniLightPosLocation(), light->GetPosition().x, light->GetPosition().y, light->GetPosition().z);
+		glUniform1f(omniShadowShader->GetFarPlaneLocation(), light->GetFarPlane());
 		omniShadowShader->SetLightMatrices(light->CalculateLightTransform());
 
 		omniShadowShader->Validate();
@@ -1405,13 +1304,6 @@ struct RenderEngineMain::Impl
 		RenderTerrain(false, true);
 
 		static_preZPassShader->UseShader();
-		uniformModel = static_preZPassShader->GetModelLocation();
-		uniformProjection = static_preZPassShader->GetProjectionLocation();
-		uniformView = static_preZPassShader->GetViewLocation();
-
-		glUniformMatrix4fv(uniformProjection, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
-		glUniformMatrix4fv(uniformView, 1, GL_FALSE, glm::value_ptr(viewMatrix));
-
 		static_preZPassShader->Validate();
 		RenderScene(static_preZPassShader);
 
@@ -1531,38 +1423,12 @@ struct RenderEngineMain::Impl
 
 		shaderList[0]->UseShader();
 
-		uniformModel = shaderList[0]->GetModelLocation();
-		uniformProjection = shaderList[0]->GetProjectionLocation();
-		uniformView = shaderList[0]->GetViewLocation();
-		uniformPrevPVM = shaderList[0]->GetPrevPVMLocation();
-		uniformEyePosition = shaderList[0]->GetEyePositionLocation();
-		uniformHeightScale = shaderList[0]->GetHeightScaleLocation();
-		uniformAlbedoMap = shaderList[0]->GetAlbedoLocation();
-		uniformMetallicMap = shaderList[0]->GetMetallicLocation();
-		uniformNormalMap = shaderList[0]->GetNormalLocation();
-		uniformRoughnessMap = shaderList[0]->GetRoughnessLocation();
-		uniformParallaxMap = shaderList[0]->GetParallaxLocation();
-		uniformGlowMap = shaderList[0]->GetGlowLocation();
-
-		glUniformMatrix4fv(uniformProjection, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
-		glUniformMatrix4fv(uniformView, 1, GL_FALSE, glm::value_ptr(viewMatrix));
-		glUniform3f(uniformEyePosition, camera->getCameraPosition().x, camera->getCameraPosition().y, camera->getCameraPosition().z);
-		glUniform1f(uniformHeightScale, 0.02f);
-
 		shaderList[0]->SetDirectionalLight(mainLight.get());
 		shaderList[0]->SetPointLight(pointLights, pointLightCount, 3, 0);
 		shaderList[0]->SetSpotLight(spotLights, spotLightCount, 3 + pointLightCount, pointLightCount);
 		shaderList[0]->SetDirectionalLightTransform(mainLight->CalculateLightTransform());
 
-		shaderList[0]->SetDirectionalShadowMap(2);
-		shaderList[0]->SetIrradianceMap(8);
-		shaderList[0]->SetPrefilterMap(9);
-		shaderList[0]->SetBRDFLUT(10);
-		shaderList[0]->SetAOMap(14);
-		shaderList[0]->SetDepthMap(18);
-
 		shaderList[0]->Validate();
-
 		RenderScene(shaderList[0]);
 
 		animShaderList[0]->UseShader();
@@ -1604,18 +1470,10 @@ struct RenderEngineMain::Impl
 
 		billboardShader->UseShader();
 
-		uniformProjection0 = billboardShader->GetProjectionLocation();
-		uniformView0 = billboardShader->GetViewLocation();
-		uniformPrevPV0 = billboardShader->GetPrevPVMLocation();
-		uniformCameraUp = billboardShader->GetCameraUpLocation();
-		uniformCameraRight = billboardShader->GetCameraRightLocation();
-		uniformPos = billboardShader->GetPosLocation();
-		uniformSize = billboardShader->GetSizeLocation();
-
-		glUniformMatrix4fv(uniformProjection0, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
-		glUniformMatrix4fv(uniformView0, 1, GL_FALSE, glm::value_ptr(viewMatrix));
-		glUniform3f(uniformCameraUp, camera->getCameraUp().x, camera->getCameraUp().y, camera->getCameraUp().z);
-		glUniform3f(uniformCameraRight, camera->getCameraRight().x, camera->getCameraRight().y, camera->getCameraRight().z);
+		glUniformMatrix4fv(billboardShader->GetProjectionLocation(), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+		glUniformMatrix4fv(billboardShader->GetViewLocation(), 1, GL_FALSE, glm::value_ptr(viewMatrix));
+		glUniform3f(billboardShader->GetCameraUpLocation(), camera->getCameraUp().x, camera->getCameraUp().y, camera->getCameraUp().z);
+		glUniform3f(billboardShader->GetCameraRightLocation(), camera->getCameraRight().x, camera->getCameraRight().y, camera->getCameraRight().z);
 
 		billboardShader->SetTexture(1);
 
@@ -1625,15 +1483,10 @@ struct RenderEngineMain::Impl
 
 		particleShader->UseShader();
 
-		uniformProjectionParticles = particleShader->GetProjectionLocation();
-		uniformViewParticles = particleShader->GetViewLocation();
-		uniformCameraUpParticles = particleShader->GetCameraUpLocation();
-		uniformCameraRightParticles = particleShader->GetCameraRightLocation();
-
-		glUniformMatrix4fv(uniformProjectionParticles, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
-		glUniformMatrix4fv(uniformViewParticles, 1, GL_FALSE, glm::value_ptr(viewMatrix));
-		glUniform3f(uniformCameraUpParticles, camera->getCameraUp().x, camera->getCameraUp().y, camera->getCameraUp().z);
-		glUniform3f(uniformCameraRightParticles, camera->getCameraRight().x, camera->getCameraRight().y, camera->getCameraRight().z);
+		glUniformMatrix4fv(particleShader->GetProjectionLocation(), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+		glUniformMatrix4fv(particleShader->GetViewLocation(), 1, GL_FALSE, glm::value_ptr(viewMatrix));
+		glUniform3f(particleShader->GetCameraUpLocation(), camera->getCameraUp().x, camera->getCameraUp().y, camera->getCameraUp().z);
+		glUniform3f(particleShader->GetCameraRightLocation(), camera->getCameraRight().x, camera->getCameraRight().y, camera->getCameraRight().z);
 
 		particleShader->SetTexture(1);
 
@@ -1656,8 +1509,7 @@ struct RenderEngineMain::Impl
 		for (int i = 0; i < amount; i++)
 		{
 			blur->Write(horizontal);
-			uniformHorizontal = blurShader->GetHorizontalLocation();
-			glUniform1i(uniformHorizontal, horizontal);
+			glUniform1i(blurShader->GetHorizontalLocation(), horizontal);
 			blurShader->Validate();
 			blurShader->SetTexture(1);
 			if (i < 1)
@@ -1682,8 +1534,7 @@ struct RenderEngineMain::Impl
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		motionBlurShader->UseShader();
 
-		uniformVelocityScale = motionBlurShader->GetVelocityScaleLocation();
-		glUniform1f(uniformVelocityScale, fps / 30.0f);
+		glUniform1f(motionBlurShader->GetVelocityScaleLocation(), fps / 30.0f);
 
 		hdr->ReadScene(GL_TEXTURE1);
 		motionBlurShader->SetTexture(1);
@@ -1699,15 +1550,12 @@ struct RenderEngineMain::Impl
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		hdrShader->UseShader();
-		uniformHDR = hdrShader->GetHDRLocation();
-		uniformExposure = hdrShader->GetExposureLocation();
-		uniformBlur = hdrShader->GetBlurLocation();
 
-		glUniform1i(uniformHDR, 1);
-		glUniform1f(uniformExposure, 1.0f);
+		glUniform1i(hdrShader->GetHDRLocation(), 1);
+		glUniform1f(hdrShader->GetExposureLocation(), 1.0f);
 
 		blur->Read(1);
-		glUniform1i(uniformBlur, 1);
+		glUniform1i(hdrShader->GetBlurLocation(), 1);
 
 		motionBlur->Read(GL_TEXTURE2);
 		hdrShader->SetTexture(2);
