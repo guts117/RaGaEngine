@@ -1,0 +1,22 @@
+#version 460 core
+layout(local_size_x = 32, local_size_y = 32) in;
+
+layout(binding = 0, rgba32f) uniform image2DArray velocitiesTexture;
+layout(binding = 0, rgba32f) uniform image2DArray densityTexture;
+layout(binding = 0, rgba32f) uniform image2DArray divRBTexture;
+layout(binding = 0, rgba32f) uniform image2D pressureRBTexture;
+layout(binding = 0, rgba32f) uniform image2D divergenceCurlTexture;
+
+layout (std430, binding = 2) readonly buffer screenToView{
+    mat4 inverseProjection;
+    uvec4 tileSizes;
+	uvec2 tileSizeInPixel;
+    uvec2 screenDimensions;
+};
+
+void main()
+{
+	if(gl_GlobalInvocationID.x >= screenDimensions.x && gl_GlobalInvocationID.y >= screenDimensions.y) return;
+ 
+	imageStore(velocitiesTexture, ivec3(gl_GlobalInvocationID.xy, 0), vec4(1.0, 0.0, 0.0, 1.0));  
+}

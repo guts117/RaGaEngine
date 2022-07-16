@@ -22,7 +22,12 @@ namespace NarakaKarEngine
 			GLfloat getXChange();
 			GLfloat getYChange();
 
+			glm::vec2 GetCursorPos();
+
 			void swapBuffers() { glfwSwapBuffers(mainWindow); }
+
+			bool isLeftMousePress;
+			bool isLeftMouseRelease;
 
 			~Window();
 

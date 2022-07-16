@@ -42,6 +42,21 @@ void EngineInputManager::handleMouse(GLFWwindow* window, double xPos, double yPo
 	theWindow->lastY = static_cast<float>(yPos);
 }
 
+void EngineInputManager::handleMouseClick(GLFWwindow* window, int button, int action, int mode) {
+	Window* theWindow = static_cast<Window*>(glfwGetWindowUserPointer(window)); // grabbing that user pointer and casting it to Window*
+
+	if (button == GLFW_MOUSE_BUTTON_LEFT) {
+		if (action == GLFW_PRESS) {
+			theWindow->isLeftMousePress = true;
+			theWindow->isLeftMouseRelease = false;
+		}
+		else if (action == GLFW_RELEASE) {
+			theWindow->isLeftMouseRelease = true;
+			theWindow->isLeftMousePress = false;
+		}
+	}
+}
+
 EngineInputManager::~EngineInputManager()
 {
 	//empty

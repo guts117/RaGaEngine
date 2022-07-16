@@ -130,6 +130,7 @@ int Window::Initialise() {
 void  Window::createCallbacks() {
 	glfwSetKeyCallback(mainWindow, EngineInputManager::handleKeys);
 	glfwSetCursorPosCallback(mainWindow, EngineInputManager::handleMouse);
+	glfwSetMouseButtonCallback(mainWindow, EngineInputManager::handleMouseClick);
 }
 
 GLfloat  Window::getXChange() {
@@ -142,6 +143,13 @@ GLfloat  Window::getYChange() {
 	GLfloat theChange = yChange;
 	yChange = 0.0f;
 	return theChange;
+}
+
+glm::vec2 Window::GetCursorPos()
+{
+	double x, y;
+	glfwGetCursorPos(mainWindow, &x, &y);
+	return glm::vec2(x, y);
 }
 
 Window::~Window() {
