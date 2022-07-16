@@ -27,10 +27,16 @@ namespace NarakaKarEngine
 			bool LoadTextureHDR();
 
 			bool LoadNativeTexture(const std::vector<glm::vec3>& noiseData);
+			bool CreateTextureArray(const glm::vec2& resolution, const int numOfLayers, bool createMipMaps = false);
+
+			bool CreateTexture(const glm::vec2& resolution);
 
 			void UseTexture(GLuint i);
 			void UseTextureArray(GLuint i);
+			void UseTextureReadWrite(GLuint i, bool isWriteOnly, bool isLayered);
 			void UseCubeMap(GLuint i);
+
+			void GetTextureData(float* data);
 
 			//Getters
 			const int GetWidth();

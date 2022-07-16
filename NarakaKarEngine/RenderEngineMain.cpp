@@ -87,6 +87,7 @@ struct RenderEngineMain::Impl
 	float scaleIncrement = 0.0f;
 	float scaleMax = 5.0f;
 	float scaleMin = -1.0f;
+	bool drawFluidSim = false;
 
 	float terrainScaleFactor = 0.0f;
 	float terrainScaleFactor1 = 1000.0f;
@@ -102,9 +103,20 @@ struct RenderEngineMain::Impl
 	GLuint uniformModel2 = 0, uniformProjection2 = 0, uniformView2 = 0, uniformPrevPVM2 = 0, uniformEyePosition2 = 0, uniformHeightScale2 = 0, uniformDispFactor = 0,
 		uniformAlbedoMap2 = 0, uniformMetallicMap2 = 0, uniformRoughnessMap2 = 0, uniformNormalMap2 = 0, uniformParallaxMap2 = 0,
 		uniformOmniLightPos2 = 0, uniformFarPlane2 = 0;
+
 	std::unique_ptr<Compute_Shader> buildAABBGridCompShader = std::make_unique<Compute_Shader>();
 	std::unique_ptr<Compute_Shader> visibleClusterCompShader = std::make_unique<Compute_Shader>();
 	std::unique_ptr<Compute_Shader> cullLightsCompShader = std::make_unique <Compute_Shader>();
+
+	std::unique_ptr<Compute_Shader> fluidFinalShader = std::make_unique <Compute_Shader>();
+	std::unique_ptr<Compute_Shader> addSmokeSpotCompShader = std::make_unique <Compute_Shader>();
+	std::unique_ptr<Compute_Shader> maxReduceCompShader = std::make_unique <Compute_Shader>();
+	std::unique_ptr<Compute_Shader> RKCompShader = std::make_unique <Compute_Shader>();
+	std::unique_ptr<Compute_Shader> maccormackCompShader = std::make_unique <Compute_Shader>();
+	std::unique_ptr<Compute_Shader> jacobiBlackCompShader = std::make_unique <Compute_Shader>();
+	std::unique_ptr<Compute_Shader> jacobiRedCompShader = std::make_unique <Compute_Shader>();
+	std::unique_ptr<Compute_Shader> divRBCompShader = std::make_unique <Compute_Shader>();
+	std::unique_ptr<Compute_Shader> pressureProjectionRBCompShader = std::make_unique <Compute_Shader>();
 
 	std::unique_ptr<Equirectangular_to_CubeMap_Shader> environmentMapShader = std::make_unique<Equirectangular_to_CubeMap_Shader>();
 	std::unique_ptr<Equirectangular_to_CubeMap_Framebuffer> environmentMap;
@@ -152,6 +164,7 @@ struct RenderEngineMain::Impl
 	std::unique_ptr < MotionBlur_FrameBuffer> motionBlur = nullptr;
 	std::unique_ptr < Blur_Shader> blurShader = std::make_unique<Blur_Shader>();
 	std::unique_ptr < Blur_PingPong_Framebuffer> blur = nullptr;
+	std::unique_ptr < Billboard_Shader> fluidFragShader = std::make_unique<Billboard_Shader>();
 
 	std::vector< std::shared_ptr < Static_Mesh>> meshList;
 	std::vector< std::shared_ptr < Static_Mesh>> terrainList;
@@ -182,7 +195,13 @@ struct RenderEngineMain::Impl
 	std::unique_ptr < Texture> terrainTextureRough;
 	std::unique_ptr < Texture> terrainTextureNorm;
 	std::unique_ptr < Texture> terrainTexturePara;
-
+	
+	std::unique_ptr<Texture> velocitiesTexture;
+	std::unique_ptr<Texture> density;
+	std::unique_ptr<Texture> divRBTexture;
+	std::unique_ptr<Texture> pressureRBTexture;
+	std::unique_ptr<Texture> finalReduceTexture;
+ 
 	std::unique_ptr < Texture> SSAONoiseTexture = std::make_unique<Texture>();
 
 	std::unique_ptr < Texture> plainTexture;
@@ -248,9 +267,9 @@ struct RenderEngineMain::Impl
 
 	unsigned int AABBvolumeGridSSBO, lightSSBO, lightIndexListSSBO, lightGridSSBO, visibleClusterSSBO, screenToViewSSBO;
 	
-	const int gridSizeX = 32;
-	const int gridSizeY = 32;
-	const int gridSizeZ = 32;
+	int gridSizeX = 32;
+	int gridSizeY = 32;
+	int gridSizeZ = 32;
 	unsigned int sizeX, sizeY;
 	int numClusters = gridSizeX * gridSizeY * gridSizeZ;
 
@@ -291,6 +310,14 @@ struct RenderEngineMain::Impl
 
 	std::unique_ptr<std::vector<std::function<void(int, int)>>> resizeUpdateFramebuffers;
 
+	int velTexId[4] = { 0 , 1, 2, 3 };
+	int denTexId[4] = { 0 , 1, 2, 3 };
+	double sOriginX, sOriginY;
+	int simWidth = 1024;
+	int simHeight = 1024;
+	bool addSplat = false;
+	float simDt = 0.0f;
+
 	void Init()
 	{
 		mainWindow->Initialise();
@@ -301,7 +328,7 @@ struct RenderEngineMain::Impl
 		CreateObject();
 		CreateShaders();
 
-		camera = std::make_shared<Camera>(glm::vec3(-terrainScaleFactor, 30.0f, -terrainScaleFactor), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f, 50.0f, 0.2f);
+		camera = std::make_shared<Camera>(glm::vec3(-terrainScaleFactor, 40.0f, -terrainScaleFactor + 40.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f, 50.0f, 0.2f);
 
 		environmentTexture = std::make_unique<Texture>("Textures/HDR/GCanyon_C_YumaPoint_3k.hdr");
 		environmentTexture->LoadTextureHDR();
@@ -346,6 +373,16 @@ struct RenderEngineMain::Impl
 		terrainTexturePara = std::make_unique <Texture>("Textures/Parallax/terrain.jpg");
 		terrainTexturePara->LoadTextureArray(glm::vec2(256, 256), NUM_TERRAIN_LAYERS);
 
+		finalReduceTexture = std::make_unique<Texture>();
+		finalReduceTexture->CreateTexture(glm::uvec2(simWidth / 32, simWidth / 32));
+		velocitiesTexture = std::make_unique <Texture>();
+		velocitiesTexture->CreateTextureArray(glm::uvec2(simWidth, simHeight) , 4);
+		density = std::make_unique <Texture>();
+		density->CreateTextureArray(glm::uvec2(simWidth, simHeight), 4);
+		divRBTexture = std::make_unique <Texture>();
+		divRBTexture->CreateTexture(glm::uvec2(simWidth / 2, simHeight / 2));
+		pressureRBTexture = std::make_unique <Texture>();
+		pressureRBTexture->CreateTexture(glm::uvec2(simWidth / 2, simHeight / 2));
 
 		shinyMaterialGlow = std::make_unique<Material>(1, 6, 7, 11, 12, 13);
 		dullMaterialGlow = std::make_unique<Material>(1, 6, 7, 11, 12, 13);
@@ -380,8 +417,8 @@ struct RenderEngineMain::Impl
 		sniper->SetUpImportedModelData("Models/Sniper_rifle_KSR-29.fbx");
 		gun = std::make_unique<Static_Object>();
 		gun->SetUpImportedModelData("Models/Cerberus_LP.fbx");
-		//anymodel = std::make_unique<Static_Object>();
-		////anymodel->SetUpImportedModelData("Models/Intergalactic_Spaceship-(Wavefront).obj");
+		anymodel = std::make_unique<Static_Object>();
+		anymodel->SetUpImportedModelData("Models/Intergalactic_Spaceship-(Wavefront).obj");
 		//anymodel->SetUpImportedModelData("Models/Sponza.gltf");
 
 		anim->LoadModel("Models/boblampclean.md5mesh");
@@ -469,6 +506,13 @@ struct RenderEngineMain::Impl
 		//skyboxFaces.push_back("Textures/Skybox/barren_bk.jpg");
 		//skyboxFaces.push_back("Textures/Skybox/barren_ft.jpg");
 
+		unsigned x = 300u; unsigned y = 512u;
+		addSplatSpot(glm::vec2(x, y), glm::vec3(80.0f, 7.0f, 0.0f), 1.0f, velocitiesTexture.get(), velTexId[0]);
+		addSplatSpot(glm::vec2(x, y), glm::vec3(75.0 / 255.0, 89.0 / 255.0, 1.0), 2.5f, density.get(), denTexId[0]);
+
+		x = 700u; y = 512u;
+		addSplatSpot(glm::vec2(x, y), glm::vec3(-80.0f, -7.0f, 0.0f), 1.0f, velocitiesTexture.get(), velTexId[0]);
+		addSplatSpot(glm::vec2(x, y), glm::vec3(1.0, 151.0 / 255.0, 60.0 / 255.0), 2.5f, density.get(), denTexId[0]);
 
 		skybox = std::make_unique<Skybox>();
 
@@ -547,58 +591,83 @@ struct RenderEngineMain::Impl
 
 		//get + handle user input events
 		glfwPollEvents();
+
 		camera->keyControl(mainWindow->getKeys(), deltaTime);
-		camera->mouseControl(mainWindow->getXChange(), mainWindow->getYChange());
 
-		if (direction) {
-			triOffset += triIncrement;
-		}
-		else {
-			triOffset -= triIncrement;
-		}
-
-		if (abs(triOffset) >= triMaxOffset) {
-			direction = !direction;
-		}
-		curAngle += 0.5f;
-		if (curAngle >= 360) {
-			curAngle -= 360;
+		if (mainWindow->getKeys()[GLFW_KEY_X]) 
+		{
+			drawFluidSim = !drawFluidSim;
+			mainWindow->SetCursorActive(drawFluidSim);
+			if (drawFluidSim) { mainWindow->ResizeWindow(simWidth, simHeight); }
+			mainWindow->getKeys()[GLFW_KEY_X] = false;
 		}
 
-		if (tooSmall) {
-
-			curScale += scaleIncrement;
-		}
-		else {
-			curScale -= scaleIncrement;
-		}
-		if (curScale >= scaleMax || curScale <= scaleMin) {
-			tooSmall = !tooSmall;
+		if (mainWindow->isLeftMouseRelease) 
+		{
+			addSplat = false;
 		}
 
-		if (mainWindow->getKeys()[GLFW_KEY_L]) {
-			spotLights[0]->Toggle();
-			mainWindow->getKeys()[GLFW_KEY_L] = false;
-		}
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		DirectionalShadowMapPass(mainLight.get());
-
-		for (size_t i = 0; i < pointLightCount; i++) {
-			OmniShadowMapPass(pointLights[i].get());
-		}
-		for (size_t i = 0; i < spotLightCount; i++) {
-			OmniShadowMapPass(spotLights[i].get());
+		if (mainWindow->isLeftMousePress) 
+		{
+			addSplat = true;
 		}
 
-		PreZPass(deltaTime);
-		CullLight();
-		SSAOPass();
-		SSAOBlurPass();
-		RenderPass(deltaTime);
-		BlurPass();
-		MotionBlurPass(framesPerSec);
-		BloomPass();
+		if (!drawFluidSim)
+		{
+			camera->mouseControl(mainWindow->getXChange(), mainWindow->getYChange());
+
+			if (direction) {
+				triOffset += triIncrement;
+			}
+			else {
+				triOffset -= triIncrement;
+			}
+
+			if (abs(triOffset) >= triMaxOffset) {
+				direction = !direction;
+			}
+			curAngle += 0.5f;
+			if (curAngle >= 360) {
+				curAngle -= 360;
+			}
+
+			if (tooSmall) {
+
+				curScale += scaleIncrement;
+			}
+			else {
+				curScale -= scaleIncrement;
+			}
+			if (curScale >= scaleMax || curScale <= scaleMin) {
+				tooSmall = !tooSmall;
+			}
+
+			if (mainWindow->getKeys()[GLFW_KEY_L]) {
+				spotLights[0]->Toggle();
+				mainWindow->getKeys()[GLFW_KEY_L] = false;
+			}
+
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+			DirectionalShadowMapPass(mainLight.get());
+
+			for (size_t i = 0; i < pointLightCount; i++) {
+				OmniShadowMapPass(pointLights[i].get());
+			}
+			for (size_t i = 0; i < spotLightCount; i++) {
+				OmniShadowMapPass(spotLights[i].get());
+			}
+
+			PreZPass(deltaTime);
+			CullLight();
+			SSAOPass();
+			SSAOBlurPass();
+			RenderPass(deltaTime);
+			Bloom();
+			MotionBlurPass(framesPerSec);
+		}
+
+		RenderToDefaultFB();
 
 		camera->UpdatePreviousMatrices();
 		glUseProgram(0);
@@ -840,6 +909,15 @@ struct RenderEngineMain::Impl
 		buildAABBGridCompShader->CreateFromFiles("Shaders/clusterShader.comp");
 		visibleClusterCompShader->CreateFromFiles("Shaders/clusterVisibleShader.comp");
 		cullLightsCompShader->CreateFromFiles("Shaders/clusterCullLightShader.comp");
+		
+		addSmokeSpotCompShader->CreateFromFiles("Shaders/fluid/addSmokeSpot.comp");
+		maxReduceCompShader->CreateFromFiles("Shaders/fluid/maxReduce.comp");
+		RKCompShader->CreateFromFiles("Shaders/fluid/RKAdvect.comp");
+		maccormackCompShader->CreateFromFiles("Shaders/fluid/maccormack.comp");
+		jacobiBlackCompShader->CreateFromFiles("Shaders/fluid/jacobiBlack.comp");
+		jacobiRedCompShader->CreateFromFiles("Shaders/fluid/jacobiRed.comp");
+		divRBCompShader->CreateFromFiles("Shaders/fluid/divRB.comp");
+		pressureProjectionRBCompShader->CreateFromFiles("Shaders/fluid/pressureProjectionRB.comp");
 
 		environmentMapShader->CreateFromFiles("Shaders/cubemap.vert", "Shaders/equirectangular_to_cubemap.frag");
 		irradianceConvolutionShader->CreateFromFiles("Shaders/cubemap.vert", "Shaders/irradiance_covolution.frag");
@@ -881,6 +959,8 @@ struct RenderEngineMain::Impl
 		motionBlurShader->CreateFromFiles("Shaders/framebuffer.vert", "Shaders/motionBlur_framebuffer.frag");
 
 		blurShader->CreateFromFiles("Shaders/framebuffer.vert", "Shaders/blur_framebuffer.frag");
+
+		fluidFragShader->CreateFromFiles("Shaders/framebuffer.vert", "Shaders/fluid/fluid.frag");
 
 		shader1 = nullptr;
 		shader2 = nullptr;
@@ -1016,9 +1096,9 @@ struct RenderEngineMain::Impl
 		bulbRed->Scale(10.0f, 10.f, 10.0f);
 		bulbRed->DrawImportedObject(shader, camera);
 
-		//anymodel->Translate(-terrainScaleFactor, 37.0f, 1.0f - terrainScaleFactor);
-		//anymodel->Scale(1.0f, 1.0f, 1.0f);
-		//anymodel->DrawImportedObject(shader, camera);
+		anymodel->Translate(-terrainScaleFactor, 37.0f, 1.0f - terrainScaleFactor);
+		anymodel->Scale(1.0f, 1.0f, 1.0f);
+		anymodel->DrawImportedObject(shader, camera);
 	}
 
 	void RenderAnimScene(bool shadow, bool depth) {
@@ -1501,7 +1581,7 @@ struct RenderEngineMain::Impl
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
-	void BlurPass()
+	void Bloom()
 	{
 		bool horizontal = true;
 		int amount = 10;
@@ -1545,24 +1625,195 @@ struct RenderEngineMain::Impl
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
-	void BloomPass()
+	float rd() { return (float)rand() / (float)RAND_MAX; }
+
+	void addSplatSpot(glm::vec2 spotPos, glm::vec3 color, float intensity, Texture* tex, float readTexId)
 	{
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		addSmokeSpotCompShader->UseShader();
+		auto addSmokeSpotProgram = addSmokeSpotCompShader->GetShaderID();
+		GLuint location = glGetUniformLocation(addSmokeSpotProgram, "spotPos");
+		glUniform2i(location, spotPos.x, spotPos.y);
+		location = glGetUniformLocation(addSmokeSpotProgram, "color");
+		glUniform3f(location, color.x, color.y, color.z);
+		location = glGetUniformLocation(addSmokeSpotProgram, "intensity");
+		glUniform1f(location, intensity);
+		location = glGetUniformLocation(addSmokeSpotProgram, "texIndex");
+		glUniform1i(location, readTexId);
 
-		hdrShader->UseShader();
+		tex->UseTextureReadWrite(0, false, true);
+		addSmokeSpotCompShader->Dispatch(simWidth / 32, simHeight / 32, 1);
+	}
 
-		glUniform1i(hdrShader->GetHDRLocation(), 1);
-		glUniform1f(hdrShader->GetExposureLocation(), 1.0f);
+	float maxReduce(const int inTexId, Texture* texture)
+	{
+		maxReduceCompShader->UseShader();
+		finalReduceTexture->UseTextureReadWrite(0, false, false);
+		texture->UseTextureArray(0);
+		GLuint location = glGetUniformLocation(maxReduceCompShader->GetShaderID(), "inTexIndex");
+		glUniform1i(location, inTexId);
+		maxReduceCompShader->Dispatch(simWidth / 32, simHeight / 32, 1);
 
-		blur->Read(1);
-		glUniform1i(hdrShader->GetBlurLocation(), 1);
+		float size = 4 * (simWidth / 32) * (simHeight / 32);
 
-		motionBlur->Read(GL_TEXTURE2);
-		hdrShader->SetTexture(2);
+		float* data = new float[size];
+		finalReduceTexture->GetTextureData(data);
 
-		hdrShader->Validate();
+		float m = data[0];
 
-		quad->RenderQuad();
+		for (size_t j = 0; j < size; ++j) {
+			if (data[j] > m) {
+				m = data[j];
+			}
+		}
+
+		delete[] data;
+
+		return m;
+	}
+
+	void RKAdvect(Texture* velocityTex, Texture* fieldst, const int readVelId, const int readId, const int writeId, const float dt)
+	{
+		RKCompShader->UseShader();
+		GLuint location = glGetUniformLocation(RKCompShader->GetShaderID(), "dt");
+		glUniform1f(location, dt);
+		location = glGetUniformLocation(RKCompShader->GetShaderID(), "readFieldIndex");
+		glUniform1i(location, readId);
+		location = glGetUniformLocation(RKCompShader->GetShaderID(), "writeFieldIndex");
+		glUniform1i(location, writeId);
+		location = glGetUniformLocation(RKCompShader->GetShaderID(), "readVelocityIndex");
+		glUniform1i(location, readVelId);
+		fieldst->UseTextureReadWrite(0, false, true);
+		velocityTex->UseTextureArray(0);
+
+		RKCompShader->Dispatch(simWidth / 32, simHeight / 32, 1);
+	}
+
+	void mcAdvect(Texture* velocityTex, Texture* fieldst, const int readVelId, int* texId)
+	{
+		RKAdvect(velocityTex, fieldst, readVelId, texId[0], texId[1], simDt);
+		RKAdvect(velocityTex, fieldst, readVelId, texId[1], texId[2], -simDt);
+		maccormackStep(texId[3], texId[0], texId[1], texId[2], readVelId, velocityTex, fieldst);
+	}
+
+	void maccormackStep(const int field_WRITE, const int field_n, const int field_n_1, const int field_n_hat, const int readVelId, Texture* velocityTex, Texture* fieldst)
+	{
+		maccormackCompShader->UseShader();
+		GLuint location = glGetUniformLocation(maccormackCompShader->GetShaderID(), "dt");
+		glUniform1f(location, simDt);
+		location = glGetUniformLocation(maccormackCompShader->GetShaderID(), "revert");
+		glUniform1f(location, 0.05f);
+		location = glGetUniformLocation(maccormackCompShader->GetShaderID(), "field_WRITE");
+		glUniform1i(location, field_WRITE);
+		location = glGetUniformLocation(maccormackCompShader->GetShaderID(), "field_n");
+		glUniform1i(location, field_n);
+		location = glGetUniformLocation(maccormackCompShader->GetShaderID(), "field_n_hat_READ");
+		glUniform1i(location, field_n_hat);
+		location = glGetUniformLocation(maccormackCompShader->GetShaderID(), "field_n_1_READ");
+		glUniform1i(location, field_n_1);
+		location = glGetUniformLocation(maccormackCompShader->GetShaderID(), "readVelocityIndex");
+		glUniform1i(location, readVelId);
+
+		fieldst->UseTextureReadWrite(0, false, true);
+		velocityTex->UseTextureArray(0);
+		maccormackCompShader->Dispatch(simWidth / 32, simHeight / 32, 1);
+	}
+
+	void RBMethod(Texture* velocities, Texture* divergence, Texture* pressure, int velocityRead, int velocityWrite)
+	{
+		divRBCompShader->UseShader();
+		divergence->UseTextureReadWrite(0, false, false);
+		velocities->UseTextureArray(0);
+		GLuint location = glGetUniformLocation(divRBCompShader->GetShaderID(), "velocities_READ");
+		glUniform1i(location, velocityRead);
+
+		divRBCompShader->Dispatch(simWidth /32 / 2, simHeight /32 / 2, 1);
+
+		for (unsigned i = 0; i < 50; ++i)
+		{
+			jacobiBlackCompShader->UseShader();
+			pressure->UseTextureReadWrite(0, false, false);
+			divergence->UseTexture(0);
+			jacobiBlackCompShader->Dispatch(simWidth / 32 / 2, simHeight / 32 / 2, 1);
+
+			jacobiRedCompShader->UseShader();
+			pressure->UseTextureReadWrite(0, false, false);
+			divergence->UseTexture(0);
+			jacobiRedCompShader->Dispatch(simWidth / 32 / 2, simHeight / 32 / 2, 1);
+		}
+
+		pressureProjectionRBCompShader->UseShader();
+		velocities->UseTextureReadWrite(0, false, true);
+		pressure->UseTexture(0);
+		location = glGetUniformLocation(pressureProjectionRBCompShader->GetShaderID(), "velocities_WRITE");
+		glUniform1i(location, velocityWrite);
+		location = glGetUniformLocation(pressureProjectionRBCompShader->GetShaderID(), "velocities_READ");
+		glUniform1i(location, velocityRead);
+		pressureProjectionRBCompShader->Dispatch(simWidth / 32 / 2, simHeight / 32 / 2, 1);
+	}
+
+	void RenderToDefaultFB()
+	{
+		//ToDo: Clear after fluid demo
+		if (drawFluidSim) 
+		{
+			glViewport(0, 0, simWidth, simHeight);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+			if (addSplat)
+			{
+				float vScale = 1.0f;
+				auto cursorPos = mainWindow->GetCursorPos();
+				cursorPos.x = (double)simWidth * cursorPos.x / (double)ScreenWidth;
+				cursorPos.y = (double)simHeight * (1.0 - cursorPos.y / (double)ScreenHeight);
+
+				addSplatSpot(cursorPos, glm::vec3(vScale * (cursorPos.x - sOriginX), vScale * (cursorPos.y - sOriginY), 0.0f), 40.0f, velocitiesTexture.get(), velTexId[0]);
+
+				sOriginX = cursorPos.x;
+				sOriginY = cursorPos.y;
+
+				addSplatSpot(cursorPos, glm::vec3(rd(), rd(), rd()), 1.0f, density.get(), denTexId[0]);
+			}
+
+			float vMax = maxReduce(velTexId[0], velocitiesTexture.get());
+			if (vMax > 1e-10f) simDt = 5.0f / vMax;
+
+			mcAdvect(velocitiesTexture.get(), velocitiesTexture.get(), velTexId[0], velTexId);
+			std::swap(velTexId[0], velTexId[3]);
+
+			mcAdvect(velocitiesTexture.get(), density.get(), velTexId[0], denTexId);
+			std::swap(denTexId[0], denTexId[3]);
+
+			RBMethod(velocitiesTexture.get(), divRBTexture.get(), pressureRBTexture.get(), velTexId[0], velTexId[1]);
+			std::swap(velTexId[0], velTexId[1]);
+
+			fluidFragShader->UseShader();
+			density->UseTextureArray(0);
+			glUniform1i(glGetUniformLocation(fluidFragShader->GetShaderID(), "texIndex"), denTexId[0]);
+			fluidFragShader->Validate();
+
+			quad->RenderQuad();
+		}
+		else
+		{
+			glViewport(0, 0, ScreenWidth, ScreenHeight);
+
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+			hdrShader->UseShader();
+
+			glUniform1i(hdrShader->GetHDRLocation(), 1);
+			glUniform1f(hdrShader->GetExposureLocation(), 1.0f);
+
+			blur->Read(1);
+			glUniform1i(hdrShader->GetBlurLocation(), 1);
+
+			motionBlur->Read(GL_TEXTURE2);
+			hdrShader->SetTexture(2);
+
+			hdrShader->Validate();
+
+			quad->RenderQuad();
+		}
 	}
 
 	~Impl()
