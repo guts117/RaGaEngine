@@ -89,7 +89,6 @@ int Window::Initialise() {
 			printf("Framebuffer size : %d , %d \n", width, height);
 			ScreenWidth = width;
 			ScreenHeight = height;
-			glViewport(0, 0, ScreenWidth, ScreenHeight);
 			isUpdateFrameBuffersSize = true;
 		});
 

@@ -17,15 +17,16 @@ namespace NarakaKarEngine
 
 			int Initialise();
 
-			bool getShouldClose() { return glfwWindowShouldClose(mainWindow); }
-			bool* getKeys() { return keys; }
+			inline bool getShouldClose() { return glfwWindowShouldClose(mainWindow); }
+			inline bool* getKeys() { return keys; }
 			GLfloat getXChange();
 			GLfloat getYChange();
 
 			glm::vec2 GetCursorPos();
 
-			void swapBuffers() { glfwSwapBuffers(mainWindow); }
-			void SetCursorActive(bool isActive) { glfwSetInputMode(mainWindow, GLFW_CURSOR, isActive ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED); }
+			inline void swapBuffers() { glfwSwapBuffers(mainWindow); }
+			inline void SetCursorActive(bool isActive) { glfwSetInputMode(mainWindow, GLFW_CURSOR, isActive ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED); }
+			inline void ResizeWindow(GLuint x, GLuint y) { glfwSetWindowSize(mainWindow, x, y); }
 
 			bool isLeftMousePress;
 			bool isLeftMouseRelease;

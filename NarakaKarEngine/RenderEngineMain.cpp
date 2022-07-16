@@ -598,6 +598,7 @@ struct RenderEngineMain::Impl
 		{
 			drawFluidSim = !drawFluidSim;
 			mainWindow->SetCursorActive(drawFluidSim);
+			if (drawFluidSim) { mainWindow->ResizeWindow(simWidth, simHeight); }
 			mainWindow->getKeys()[GLFW_KEY_X] = false;
 		}
 
@@ -1756,8 +1757,7 @@ struct RenderEngineMain::Impl
 		if (drawFluidSim) 
 		{
 			glViewport(0, 0, simWidth, simHeight);
-
-			glClear(GL_COLOR_BUFFER_BIT);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 			if (addSplat)
 			{
