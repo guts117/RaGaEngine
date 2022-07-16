@@ -1,0 +1,57 @@
+#version 460 core
+layout(local_size_x = 32, local_size_y = 32) in;
+
+uniform float dt;
+uniform int readFieldIndex;
+uniform int writeFieldIndex;
+uniform int readVelocityIndex;
+
+layout(rgba16f, binding = 0) uniform image2DArray field;
+layout(binding = 1) uniform sampler2DArray velocities;
+
+vec4 TexelFetch_2DArray_bilinear(sampler2DArray texArray, int arrayId, vec2 coord)
+{
+  vec2 iuv = floor(coord);
+  vec2 fuv = fract(coord);
+
+  vec4 a = texelFetch(texArray, ivec3((iuv + vec2(0.0, 0.0)), arrayId), 0);
+  vec4 b = texelFetch(texArray, ivec3((iuv + vec2(1.0, 0.0)), arrayId), 0);
+  vec4 c = texelFetch(texArray, ivec3((iuv + vec2(0.0, 1.0)), arrayId), 0);
+  vec4 d = texelFetch(texArray, ivec3((iuv + vec2(1.0, 1.0)), arrayId), 0);
+
+  return mix(mix(a, b, fuv.x), mix(c, d, fuv.x), fuv.y);
+}
+
+vec2 TexelFetch_2DArray_RK(sampler2DArray texArray, int arrayId, vec2 pos)
+{
+  vec2 v1 = TexelFetch_2DArray_bilinear(texArray, arrayId, pos).xy;
+  vec2 v2 = TexelFetch_2DArray_bilinear(texArray, arrayId, pos + 0.5 * v1 * dt).xy;
+  vec2 v3 = TexelFetch_2DArray_bilinear(texArray, arrayId, pos + 0.5 * v2 * dt).xy;
+  vec2 v4 = TexelFetch_2DArray_bilinear(texArray, arrayId, pos + v3 * dt).xy;
+
+  return (v1 + 2.0 * (v2 + v3) + v4) * (1.0 / 6.0);
+}
+
+vec4 ReadFieldTexArr_Bilinear(vec2 coord)
+{
+  vec2 iuv = floor(coord);
+  vec2 fuv = fract(coord);
+
+  vec4 a = imageLoad(field, ivec3((iuv + vec2(0.0, 0.0)), readFieldIndex));
+  vec4 b = imageLoad(field, ivec3((iuv + vec2(1.0, 0.0)), readFieldIndex));
+  vec4 c = imageLoad(field, ivec3((iuv + vec2(0.0, 1.0)), readFieldIndex));
+  vec4 d = imageLoad(field, ivec3((iuv + vec2(1.0, 1.0)), readFieldIndex));
+
+  return mix(mix(a, b, fuv.x), mix(c, d, fuv.x), fuv.y);
+}
+
+void main()
+{
+  vec2 pixelCoords = gl_GlobalInvocationID.xy;
+
+  vec2 v = TexelFetch_2DArray_RK(velocities, readVelocityIndex, pixelCoords);
+  vec2 pos = pixelCoords - dt * v;
+  vec4 val = ReadFieldTexArr_Bilinear(pos);
+
+  imageStore(field, ivec3(pixelCoords, writeFieldIndex), val);
+}
