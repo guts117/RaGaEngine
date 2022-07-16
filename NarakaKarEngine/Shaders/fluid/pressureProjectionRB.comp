@@ -13,30 +13,24 @@ layout(binding = 1) uniform sampler2D pressure_READ;
 // |          |
 // 00 ------ 10
 
-vec4 ReadFieldTex_Bilinear(vec2 coord)
+vec2 pixelToTexel(vec2 p, vec2 tSize)
 {
-  vec2 iuv = floor(coord);
-  vec2 fuv = fract(coord);
-
-  vec4 a = texelFetch(pressure_READ, ivec2(iuv + vec2(0.0, 0.0)), 0);
-  vec4 b = texelFetch(pressure_READ, ivec2(iuv + vec2(1.0, 0.0)), 0);
-  vec4 c = texelFetch(pressure_READ, ivec2(iuv + vec2(0.0, 1.0)), 0);
-  vec4 d = texelFetch(pressure_READ, ivec2(iuv + vec2(1.0, 1.0)), 0);
-
-  return mix(mix(a, b, fuv.x), mix(c, d, fuv.x), fuv.y);
+  return (p + 0.5) / tSize;
 }
 
 void main()
 {
+  const ivec2 tSize = textureSize(pressure_READ, 0);
+
   const vec2 pixelCoords = gl_GlobalInvocationID.xy;
   const vec2 dx = vec2(1, 0); 
   const vec2 dy = vec2(0, 1);
 
   const vec4 pC = texelFetch(pressure_READ, ivec2(pixelCoords), 0);
-  const vec4 pL = ReadFieldTex_Bilinear(pixelCoords - dx);
-  const vec4 pR = ReadFieldTex_Bilinear(pixelCoords + dx);
-  const vec4 pB = ReadFieldTex_Bilinear(pixelCoords - dy);
-  const vec4 pT = ReadFieldTex_Bilinear(pixelCoords + dy);
+  const vec4 pL = texture(pressure_READ, pixelToTexel(pixelCoords - dx, tSize));
+  const vec4 pR = texture(pressure_READ, pixelToTexel(pixelCoords + dx, tSize));
+  const vec4 pB = texture(pressure_READ, pixelToTexel(pixelCoords - dy, tSize));
+  const vec4 pT = texture(pressure_READ, pixelToTexel(pixelCoords + dy, tSize));
 
   const vec2 rGrad = 0.5 * vec2(pC.y - pL.y, pC.w - pB.w);
   const vec2 gGrad = 0.5 * vec2(pR.x - pC.x, pC.z - pB.z);

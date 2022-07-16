@@ -244,7 +244,7 @@ struct Texture::Impl
 		return true;
 	}
 
-	bool CreateTextureArray(const glm::vec2& resolution, const int numOfLayers)
+	bool CreateTextureArray(const glm::vec2& resolution, const int numOfLayers, bool createMipMaps)
 	{
 		m_width = resolution.x;
 		m_height = resolution.y;
@@ -259,7 +259,10 @@ struct Texture::Impl
 		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_LEVEL, numOfLayers);
 		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
+		if (createMipMaps)
+		{
+			glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+		}
 		glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 		return true;
 	}
@@ -283,6 +286,13 @@ struct Texture::Impl
 	{
 		glActiveTexture(GL_TEXTURE1 + i);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, m_textureID);
+	}
+
+
+	void GetTextureData(float* data)
+	{
+		glBindTexture(GL_TEXTURE_2D, m_textureID);
+		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, data);
 	}
 
 	void ClearTexture() {
@@ -322,9 +332,9 @@ bool Texture::LoadNativeTexture(const std::vector<glm::vec3>& noiseData) {
 	return Pimpl()->LoadNativeTexture(noiseData);
 }
 
-bool Texture::CreateTextureArray(const glm::vec2& resolution, const int numOfLayers)
+bool Texture::CreateTextureArray(const glm::vec2& resolution, const int numOfLayers, bool createMipMaps)
 {
-	return Pimpl()->CreateTextureArray(resolution, numOfLayers);
+	return Pimpl()->CreateTextureArray(resolution, numOfLayers, createMipMaps);
 }
 bool Texture::CreateTexture(const glm::vec2& resolution)
 {
@@ -345,6 +355,10 @@ void Texture::UseTextureReadWrite(GLuint i, bool isWriteOnly, bool isLayered) {
 
 void Texture::UseCubeMap(GLuint i) {
 	Pimpl()->UseCubeMap(i);
+}
+
+void Texture::GetTextureData(float* data) {
+	Pimpl()->GetTextureData(data);
 }
 
 //Getters

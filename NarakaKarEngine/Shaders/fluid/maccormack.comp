@@ -12,11 +12,6 @@ uniform int readVelocityIndex;
 layout(rgba16f, binding = 0) uniform image2DArray field;
 layout(binding = 1) uniform sampler2DArray velocities;
 
-vec2 pixelToTexel(vec2 p, vec2 tSize)
-{
-  return vec2((p + 0.5) / tSize);
-}
-
 vec4 TexelFetch_2DArray_bilinear(sampler2DArray texArray, int arrayId, vec2 coord)
 {
   vec2 iuv = floor(coord);

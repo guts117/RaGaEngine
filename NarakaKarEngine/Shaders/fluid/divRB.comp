@@ -67,6 +67,4 @@ void main()
   const float a = 0.5 * (field22.x - field02.x + field13.y - field11.y);
 
   imageStore(divergence, pixelCoords, vec4(r, g, b, a));
-  //vec4 val = texelFetchOffset(velocities, ivec3((2 * pixelCoords), velocities_READ), 0, ivec2(-1,  0));
-  //imageStore(divergence, pixelCoords, val);
 }

@@ -909,6 +909,7 @@ struct RenderEngineMain::Impl
 		visibleClusterCompShader->CreateFromFiles("Shaders/clusterVisibleShader.comp");
 		cullLightsCompShader->CreateFromFiles("Shaders/clusterCullLightShader.comp");
 		
+		//fluidFinalShader->CreateFromFiles("Shaders/fluid/fluidBlendShader.comp");
 		addSmokeSpotCompShader->CreateFromFiles("Shaders/fluid/addSmokeSpot.comp");
 		maxReduceCompShader->CreateFromFiles("Shaders/fluid/maxReduce.comp");
 		RKCompShader->CreateFromFiles("Shaders/fluid/RKAdvect.comp");
