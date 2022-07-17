@@ -633,7 +633,7 @@ struct RenderEngineMain::Impl
 			mainWindow->SetCursorActive(drawFluidSim);
 			if (drawFluidSim) 
 			{
-				mainWindow->ResizeWindow(simWidth, simHeight); 
+				mainWindow->ResizeWindow(simWidth, simHeight);
 				drawSmokeSim = false;
 			}
 			mainWindow->getKeys()[GLFW_KEY_X] = false;
@@ -1805,12 +1805,14 @@ struct RenderEngineMain::Impl
 		{
 			jacobiBlackCompShader->UseShader();
 			pressure->UseTextureReadWrite(0, false, false);
-			divergence->UseTexture(0);
+			pressure->UseTexture(0);
+			divergence->UseTexture(1);
 			jacobiBlackCompShader->Dispatch(simWidth / 32 / 2, simHeight / 32 / 2, 1);
 
 			jacobiRedCompShader->UseShader();
 			pressure->UseTextureReadWrite(0, false, false);
-			divergence->UseTexture(0);
+			pressure->UseTexture(0);
+			divergence->UseTexture(1);
 			jacobiRedCompShader->Dispatch(simWidth / 32 / 2, simHeight / 32 / 2, 1);
 		}
 

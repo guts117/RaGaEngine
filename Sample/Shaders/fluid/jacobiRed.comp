@@ -1,8 +1,9 @@
 #version 460 core
 layout(local_size_x = 32, local_size_y = 32) in;
 
-layout(rgba16f, binding = 0) uniform image2D pressure;
-layout(binding = 1) uniform sampler2D divergence;
+layout(rgba16f, binding = 0) uniform image2D pressure_WRITE;
+layout(binding = 1) uniform sampler2D pressure_READ;
+layout(binding = 2) uniform sampler2D divergence;
 
 // The divergence and pressure is packed in an half-size texture.
 // This red pass updates the top left and bottom right points (red points)
@@ -21,35 +22,28 @@ layout(binding = 1) uniform sampler2D divergence;
 // |          |        |          |
 // 00 ------ 10        20 ------ 30
 
-vec4 ReadFieldTex_Bilinear(vec2 coord)
+vec2 pixelToTexel(vec2 p, vec2 tSize)
 {
-  vec2 iuv = floor(coord);
-  vec2 fuv = fract(coord);
-
-  vec4 a = imageLoad(pressure, ivec2(iuv + vec2(0.0, 0.0)));
-  vec4 b = imageLoad(pressure, ivec2(iuv + vec2(1.0, 0.0)));
-  vec4 c = imageLoad(pressure, ivec2(iuv + vec2(0.0, 1.0)));
-  vec4 d = imageLoad(pressure, ivec2(iuv + vec2(1.0, 1.0)));
-
-  return mix(mix(a, b, fuv.x), mix(c, d, fuv.x), fuv.y);
+  return (p + 0.5) / tSize;
 }
 
 void main()
 {
+  const ivec2 tSize = textureSize(pressure_READ, 0);
   const vec2 pixelCoords = gl_GlobalInvocationID.xy;
   const vec2 dx = vec2(1, 0); 
   const vec2 dy = vec2(0, 1);
 
   const vec4 dC = texelFetch(divergence, ivec2(pixelCoords), 0);
 
-  const vec4 pC = ReadFieldTex_Bilinear(ivec2(pixelCoords));
-  const vec4 pL = ReadFieldTex_Bilinear(ivec2(pixelCoords - dx));
-  const vec4 pR = ReadFieldTex_Bilinear(ivec2(pixelCoords + dx));
-  const vec4 pB = ReadFieldTex_Bilinear(ivec2(pixelCoords - dy));
-  const vec4 pT = ReadFieldTex_Bilinear(ivec2(pixelCoords + dy));
+  const vec4 pC = texelFetch(pressure_READ, ivec2(pixelCoords), 0);
+  const vec4 pL = texture(pressure_READ, pixelToTexel(pixelCoords - dx, tSize));
+  const vec4 pR = texture(pressure_READ, pixelToTexel(pixelCoords + dx, tSize));
+  const vec4 pB = texture(pressure_READ, pixelToTexel(pixelCoords - dy, tSize));
+  const vec4 pT = texture(pressure_READ, pixelToTexel(pixelCoords + dy, tSize));
 
   const float g = 0.25 * (pC.x + pR.x + pB.z + pC.z - dC.y);
   const float a = 0.25 * (pL.z + pC.z + pT.x + pC.x - dC.w);
 
-  imageStore(pressure, ivec2(pixelCoords), vec4(pC.x, g, pC.z, a));
+  imageStore(pressure_WRITE, ivec2(pixelCoords), vec4(pC.x, g, pC.z, a));
 }
