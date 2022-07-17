@@ -1658,11 +1658,11 @@ struct RenderEngineMain::Impl
 		float* data = new float[size];
 		finalReduceTexture->GetTextureData(data);
 
-		float m = data[0];
+		float m = abs(data[0]);
 
 		for (size_t j = 0; j < size; ++j) {
-			if (data[j] > m) {
-				m = data[j];
+			if (abs(data[j]) > m) {
+				m = abs(data[j]);
 			}
 		}
 

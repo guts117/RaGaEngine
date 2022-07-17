@@ -44,6 +44,7 @@ void Static_Object::LoadTexture(std::unique_ptr<Texture>& texture, std::string p
 	if (path != "")
 	{
 		texture = std::make_unique<Texture>(path, isSRGB);
+		//ToDo check for alpha channel/ currently incorrect use of find
 		if (path.find(".png" ||".gif" || ".tiff" || ".tga" || ".jp2" || ".jpx") != std::string::npos)
 		{
 			texture->LoadTextureWithAlpha();
