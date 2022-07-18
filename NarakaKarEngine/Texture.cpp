@@ -275,12 +275,7 @@ struct Texture::Impl
 		glGenTextures(1, &m_textureID);
 		glBindTexture(GL_TEXTURE_3D, m_textureID);
 
-		// Allocate the storage.
-		size_t max = 4 * resolution.x * resolution.y * resolution.z;
-		float* data = new float[max];
-		for (int i = 0; i < max; i++) { data[i] = (float) rand() / (float)RAND_MAX; }
-		/*data[0] = 1.0f;*/
-		glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA16F, resolution.x, resolution.y, resolution.z, 0, GL_RGBA, GL_FLOAT, data);
+		glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA16F, resolution.x, resolution.y, resolution.z, 0, GL_RGBA, GL_FLOAT, nullptr);
 		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
@@ -290,7 +285,6 @@ struct Texture::Impl
 		{
 			glGenerateMipmap(GL_TEXTURE_3D);
 		}
-		delete[] data;
 		glBindTexture(GL_TEXTURE_3D, 0);
 		return true;
 	}

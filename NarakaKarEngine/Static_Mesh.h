@@ -26,7 +26,7 @@ namespace NarakaKarEngine
 			void RenderQuad();
 			void RenderCube();
 
-			void RenderVolumeCube();
+			void RenderCCWCube();
 
 			~Static_Mesh() = default;
 		};
