@@ -27,7 +27,7 @@ void main()
 	vec3 vertexPosition_worldspace = 
 		particleCenter_wordspace
 		+ CameraRight_worldspace * pos.x * BillboardSize.x
-		+ CameraUp_worldspace * pos.y * BillboardSize.y;
+		+ up * pos.y * BillboardSize.y;
 
 
 			// Output position of the vertex

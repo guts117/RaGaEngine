@@ -151,3 +151,47 @@ void Static_Mesh::RenderCube()
 	}
 	RenderMesh();
 }
+
+
+void Static_Mesh::RenderVolumeCube()
+{
+	if (VAO == 0)
+	{
+		unsigned int Indices[] = {
+			//front
+			0,1,2,
+			2,1,3,
+			//right
+			2,3,5,
+			5,3,7,
+			//back
+			5,7,4,
+			4,7,6,
+			//left
+			4,6,0,
+			0,6,1,
+			//top
+			4,0,5,
+			5,0,2,
+			//bottom
+			1,6,3,
+			3,6,7
+		};
+
+		float Vertices[] = {
+			-0.5f, 0.5f, -0.5f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f,
+			-0.5f, -0.5f, -0.5f,	0.0f, 0.0f,		0.0f, 0.0f, 0.0f,
+			0.5f, 0.5f, -0.5f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f,
+			0.5f, -0.5f, -0.5f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f,
+
+			-0.5f, 0.5f, 0.5f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f,
+			0.5f, 0.5f, 0.5f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f,
+			-0.5f, -0.5f, 0.5f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f,
+			0.5f, -0.5f, 0.5f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f
+
+		};
+
+		CreateMeshWithNormal(Vertices, Indices, 64, 36);
+	}
+	RenderMesh();
+}

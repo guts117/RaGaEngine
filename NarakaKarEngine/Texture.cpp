@@ -267,6 +267,34 @@ struct Texture::Impl
 		return true;
 	}
 
+	bool CreateTexture3D(const glm::vec3& resolution, bool createMipMaps)
+	{
+		m_width = resolution.x;
+		m_height = resolution.y;
+
+		glGenTextures(1, &m_textureID);
+		glBindTexture(GL_TEXTURE_3D, m_textureID);
+
+		// Allocate the storage.
+		size_t max = 4 * resolution.x * resolution.y * resolution.z;
+		float* data = new float[max];
+		for (int i = 0; i < max; i++) { data[i] = (float) rand() / (float)RAND_MAX; }
+		/*data[0] = 1.0f;*/
+		glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA16F, resolution.x, resolution.y, resolution.z, 0, GL_RGBA, GL_FLOAT, data);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		if (createMipMaps)
+		{
+			glGenerateMipmap(GL_TEXTURE_3D);
+		}
+		delete[] data;
+		glBindTexture(GL_TEXTURE_3D, 0);
+		return true;
+	}
+
 	void UseTexture(GLuint i) {
 		glActiveTexture(GL_TEXTURE1 + i);
 		glBindTexture(GL_TEXTURE_2D, m_textureID);
@@ -276,6 +304,7 @@ struct Texture::Impl
 		glActiveTexture(GL_TEXTURE1 + i);
 		glBindTexture(GL_TEXTURE_2D_ARRAY, m_textureID);
 	}
+
 
 	void UseTextureReadWrite(GLuint i, bool isWriteOnly, bool isLayered) {
 		auto format = isWriteOnly ? GL_WRITE_ONLY : GL_READ_WRITE;
@@ -335,6 +364,11 @@ bool Texture::LoadNativeTexture(const std::vector<glm::vec3>& noiseData) {
 bool Texture::CreateTextureArray(const glm::vec2& resolution, const int numOfLayers, bool createMipMaps)
 {
 	return Pimpl()->CreateTextureArray(resolution, numOfLayers, createMipMaps);
+}
+
+bool Texture::CreateTexture3D(const glm::vec3& resolution, bool createMipMaps)
+{
+	return Pimpl()->CreateTexture3D(resolution, createMipMaps);
 }
 bool Texture::CreateTexture(const glm::vec2& resolution)
 {
