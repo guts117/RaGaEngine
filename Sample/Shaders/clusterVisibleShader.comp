@@ -1,0 +1,41 @@
+#version 460 core
+
+layout(local_size_x = 32, local_size_y = 30) in;
+
+layout (std430, binding = 2) readonly buffer screenToView{
+    mat4 inverseProjection;
+    uvec4 tileSizes;
+	uvec2 tileSizeInPixel;
+    uvec2 screenDimensions;
+    float scale;
+	float bias;
+	float zNear;
+	float zFar;
+};
+
+layout (std430, binding = 7) buffer visibleClusterSSBO{
+    uint isVisibleCluster[];
+};
+
+layout (binding = 0) uniform sampler2D depthTexture;
+
+float LinearDepth(float depthSample){
+    float depthRange							= 2.0 * depthSample - 1.0;
+    float linear 								= 2.0 * zNear * zFar / (zFar + zNear - depthRange * (zFar - zNear));
+    return linear;
+}
+
+void MarkActiveClusters()
+{
+	ivec2 pos 									= ivec2(gl_GlobalInvocationID.xy);     
+    //Getting the depth value
+	float z 									= LinearDepth(texelFetch(depthTexture, pos, 0).r);
+	uint zTile     								= uint(max(log(z) * scale + bias, 0.0));
+    uvec3 tiles    								= uvec3(uvec2(pos.x / tileSizeInPixel.x, pos.y / tileSizeInPixel.y), zTile);
+    uint clusterID 								= tiles.x + tileSizes.x * tiles.y + (tileSizes.x * tileSizes.y) * tiles.z;
+	isVisibleCluster[clusterID] 				= 1;
+}
+
+void main(){
+	MarkActiveClusters();
+}

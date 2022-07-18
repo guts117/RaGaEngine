@@ -1,0 +1,27 @@
+#version 460 core
+layout(local_size_x = 32, local_size_y = 32) in;
+
+uniform float dt;
+uniform float kappa;
+uniform float sigma;
+uniform float t0;
+uniform int velocities_READ_WRITE;
+uniform int temperature_READ;
+uniform int density_READ;
+
+layout(rgba16f, binding = 0) uniform image2DArray velocity;
+layout(binding = 1) uniform sampler2DArray temperature;
+layout(binding = 2) uniform sampler2DArray density;
+
+void main()
+{
+  ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);
+
+  float t = texelFetch(temperature, ivec3(pixelCoords, temperature_READ), 0).x;
+  float d = texelFetch(density, ivec3(pixelCoords, density_READ), 0).x;
+
+  vec2 force = (- kappa * d + sigma * (t - t0)) * vec2(0.0f, 1.0f);
+  vec4 oldVel = imageLoad(velocity, ivec3(pixelCoords, velocities_READ_WRITE));
+
+  imageStore(velocity, ivec3(pixelCoords, velocities_READ_WRITE), oldVel + dt * vec4(force, 0.0f, 0.0f));
+}

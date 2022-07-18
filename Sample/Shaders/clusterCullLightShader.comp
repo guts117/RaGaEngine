@@ -1,0 +1,126 @@
+#version 460 core
+layout(local_size_x = 32, local_size_y = 32) in;
+
+struct PointLight{
+    vec4 position;
+    vec4 color;
+    uint enabled;
+    float intensity;
+    float range;
+};
+
+struct LightGrid{
+    uint offset;
+    uint count;
+};
+
+struct VolumeTileAABB{
+    vec4 minPoint;
+    vec4 maxPoint;
+};
+
+layout (std430, binding = 1) buffer clusterAABB{
+    VolumeTileAABB cluster[ ];
+};
+
+layout (std430, binding = 2) readonly buffer screenToView{
+    mat4 inverseProjection;
+    uvec4 tileSizes;
+	uvec2 tileSizeInPixel;
+    uvec2 screenDimensions;
+    float scale;
+	float bias;
+	float zNear;
+	float zFar;
+};
+
+layout (std430, binding = 3) readonly buffer lightSSBO{
+    PointLight pointLight[];
+};
+
+layout (std430, binding = 4) buffer lightIndexSSBO{
+    uint globalLightIndexList[];
+};
+
+layout (std430, binding = 5) buffer lightGridSSBO{
+    LightGrid lightGrid[];
+};
+
+layout (std430, binding = 7) buffer visibleClusterSSBO{
+    uint isVisibleCluster[];
+};
+
+uniform mat4 View;
+
+bool testSphereAABB(uint light, uint tile);
+float sqDistPointAABB(vec3 point, uint tile);
+
+void main()
+{
+    uint tileIndex 								= 	gl_LocalInvocationIndex +
+													gl_WorkGroupID.z * (gl_WorkGroupSize.x * gl_WorkGroupSize.y);
+
+	if(isVisibleCluster[tileIndex] == 0) 
+	{
+		lightGrid[tileIndex].count 				= 0;
+		return;
+	}
+
+	isVisibleCluster[tileIndex] 				= 0;
+
+	uint lightCount  							= pointLight.length();
+	
+	//visible lights temp buffer for the loop
+    uint vLightCnt 								= 0;								
+    uint vLightIndices[100];
+	
+	//Iterating within the current batch of lights
+	for(uint light = 0; light < lightCount; ++light)
+	{
+		if(pointLight[light].enabled  == 1)
+		{
+			if(testSphereAABB(light, tileIndex))
+			{
+				vLightIndices[vLightCnt] 		= light;
+				vLightCnt 						+= 1;
+			}
+		}
+	}	
+	
+	uint maxLightPerCluster 					= tileSizes[3];
+	uint offset 								= tileIndex * maxLightPerCluster;
+
+    for(uint i = 0; i < vLightCnt; ++i)
+	{
+        globalLightIndexList[offset + i] 		= vLightIndices[i];
+    }
+
+    lightGrid[tileIndex].offset 				= offset;
+    lightGrid[tileIndex].count 					= vLightCnt;
+}
+
+bool testSphereAABB(uint light, uint tile){
+	float radius 								= pointLight[light].range;
+	vec3 center  								= vec3(View * pointLight[light].position);
+	float squaredDistance 						= sqDistPointAABB(center, tile);
+
+	return squaredDistance <= (radius * radius);
+}
+
+float sqDistPointAABB(vec3 point, uint tile){
+    float sqDist 								= 0.0;
+    VolumeTileAABB currentCell 					= cluster[tile];
+    cluster[tile].maxPoint[3] 					= tile;
+    for(int i = 0; i < 3; ++i)
+	{
+        float v 								= point[i];
+        if(v < currentCell.minPoint[i]){
+            sqDist 								+= (currentCell.minPoint[i] - v) * (currentCell.minPoint[i] - v);
+        }
+        if(v > currentCell.maxPoint[i]){
+            sqDist 								+= (v - currentCell.maxPoint[i]) * (v - currentCell.maxPoint[i]);
+        }
+    }
+
+    return sqDist;
+}
