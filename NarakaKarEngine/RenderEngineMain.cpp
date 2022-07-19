@@ -2061,23 +2061,32 @@ struct RenderEngineMain::Impl
 	{
 		glm::vec3 pos = glm::vec3(simDim3D / 2, simDim3D / 4, simDim3D / 2);
 
-		addSplatSpot3D(pos, glm::vec3(0.05f, 0.05f, 0.05f), 0.5f, 1.0f, density3D.get()->at(0).get());
+		//ToDo: revert to this after fixing buyoancy
+		/*addSplatSpot3D(pos, glm::vec3(0.05f, 0.05f, 0.05f), 0.5f, 1.0f, density3D.get()->at(0).get());
 		addSplatSpot3D(pos, glm::vec3(rd() * 20.0f + 10.0f, 0.0f, 0.0f), 3.0f, 1.0f, temperature3D.get()->at(0).get());
-		addSplatSpot3D(pos, glm::vec3(2.0f * rd() - 1.0f, 0.0f, 0.0f), 5.0f, 1.0f, veloxity3D.get()->at(0).get());
+		addSplatSpot3D(pos, glm::vec3(2.0f * rd() - 1.0f, 0.0f, 0.0f), 5.0f, 1.0f, veloxity3D.get()->at(0).get());*/
 
+		addSplatSpot3D(pos, glm::vec3(0.5f, 0.5f, 0.5f), 0.5f, 1.0f, density3D.get()->at(0).get());
+		//addSplatSpot3D(pos, glm::vec3(rd() * 20.0f + 10.0f, 0.0f, 0.0f), 3.0f, 1.0f, temperature3D.get()->at(0).get());
+		addSplatSpot3D(pos, glm::vec3(2.0f * rd() - 1.0f,  1.0f, 0.0f), 5.0f, 1.0f, veloxity3D.get()->at(0).get());
+
+		//ToDo
 		//float vMax = maxReduce(smokeVelTexId[0], smokeVelocitiesTexture.get(), smokeFinalReduceTexture.get());
 		//if (vMax > 1e-10f) simDt = 5.0f / (vMax + simDt);
-		simDt3D = 0.005f;		//ToDo
+		
+		//ToDo	calculate delta time from current max velocity field
+		simDt3D = 0.05f;
 		mcAdvect3D(veloxity3D.get()->at(0).get(), veloxity3D.get());
 		veloxity3D.get()->at(0).swap(veloxity3D.get()->at(3));
 
 		mcAdvect3D(veloxity3D.get()->at(0).get(), density3D.get());
 		density3D.get()->at(0).swap(density3D.get()->at(3));
 
-		mcAdvect3D(veloxity3D.get()->at(0).get(), temperature3D.get());
-		temperature3D.get()->at(0).swap(temperature3D.get()->at(3));
+		//mcAdvect3D(veloxity3D.get()->at(0).get(), temperature3D.get());
+		//temperature3D.get()->at(0).swap(temperature3D.get()->at(3));
 
-		applyBuoyantForce3D(veloxity3D.get()->at(0).get(), temperature3D.get()->at(0).get(), density3D.get()->at(0).get(), 0.25f, 0.1f, 10.0f);
+		//ToDo
+		//applyBuoyantForce3D(veloxity3D.get()->at(0).get(), temperature3D.get()->at(0).get(), density3D.get()->at(0).get(), 0.25f, 0.1f, 10.0f);
 
 		RBMethod3D(veloxity3D.get()->at(0).get(), veloxity3D.get()->at(1).get(), div3D.get(), pressure3D.get());
 		veloxity3D.get()->at(0).swap(veloxity3D.get()->at(1));
@@ -2086,7 +2095,7 @@ struct RenderEngineMain::Impl
 
 		auto model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(0.0f, 45.0f, 0.0f));
-		model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
+		model = glm::scale(model, glm::vec3(10.0f, 10.0f, 10.0f));
 		glUniformMatrix4fv(fluidFragShader3D->GetModelLocation(), 1, GL_FALSE, glm::value_ptr(model));
 		glUniformMatrix4fv(fluidFragShader3D->GetProjectionLocation(), 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
 		glUniformMatrix4fv(fluidFragShader3D->GetViewLocation(), 1, GL_FALSE, glm::value_ptr(camera->CalculateViewMatrix()));

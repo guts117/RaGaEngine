@@ -18,5 +18,5 @@ void main()
   vec3 value = baseD + splat;
   
   barrier();
-  imageStore(field, pixelCoords, vec4(value, 0.0f));
+  imageStore(field, pixelCoords, vec4(value, value.r));
 }

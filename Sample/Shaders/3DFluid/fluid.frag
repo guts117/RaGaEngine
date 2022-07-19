@@ -36,43 +36,26 @@ ivec3 local_to_cube(vec3 pos)
 
 vec4 ray_march(vec3 pos, vec3 dir)
 {
-    /*vec4 colour = vec4(0, 0, 0, 0);
+    vec4 colour = vec4(0, 0, 0, 0);
 
     for (int i = 0; i < STEPS; i++)
     {
         if (!inside_cube(pos))
         {
-            break;
-        }
-
-        vec4 value = imageLoad(theTexture, local_to_cube(pos));	
-        colour = mix(value, colour, colour.a);     
-        pos += dir * STEP_SIZE;
-    }
-
-    return colour;*/
-	
-	float alpha = 1.0;
-    vec3 colour = vec3(0, 0, 0);
-
-    for (int i = 0; i < STEPS; i++)
-    {
-        if (!inside_cube(pos))
-        {
-            //alpha *= (1 - bg_colour.a);
-            colour += vec3(0, 0, 0) * alpha;
             break;
         }
 
         vec4 value = imageLoad(theTexture, local_to_cube(pos));
-
-        alpha *= (1 - value.a);
-        colour += value.rgb * alpha;
+		//value.a = value.r;
+		// Accumulate the color and opacity using the front-to-back
+		// compositing equation
+		colour.rgb += (1.0 - colour.a) * value.a * value.rgb;
+		colour.a += (1.0 - colour.a) * value.a;
         
         pos += dir * STEP_SIZE;
     }
 
-    return vec4(colour, alpha);
+    return colour;
 }
 
 void main()
