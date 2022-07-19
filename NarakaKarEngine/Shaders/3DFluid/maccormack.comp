@@ -1,0 +1,81 @@
+#version 460 core
+layout(local_size_x = 32, local_size_y = 32) in;
+
+uniform float dt;
+uniform float revert;
+
+layout(rgba16f, binding = 0) uniform image3D field_WRITE;
+layout(binding = 1) uniform sampler3D field_n;
+layout(binding = 2) uniform sampler3D field_n_hat_READ;
+layout(binding = 3) uniform sampler3D field_n_1_READ;
+layout(binding = 4) uniform sampler3D velocity_R;
+
+vec3 pixelToTexel(vec3 p, vec3 tSize)
+{
+  return (p + 0.5) / tSize;
+}
+
+vec3 RK(sampler3D tex, vec3 pos)
+{
+	vec3 tSize = textureSize(tex, 0);
+	vec3 v1 = texture(tex, pixelToTexel(pos, tSize)).xyz;
+	vec3 v2 = texture(tex, pixelToTexel(pos + 0.5 * v1 * dt, tSize)).xyz;
+	vec3 v3 = texture(tex, pixelToTexel(pos + 0.5 * v2 * dt, tSize)).xyz;
+	vec3 v4 = texture(tex, pixelToTexel(pos + v3 * dt, tSize)).xyz;
+
+  return (v1 + 2.0 * (v2 + v3) + v4) * (1.0 / 6.0);
+}
+
+vec4 ClampValue(sampler3D tex, vec4 value, vec3 coord)
+{
+	// Find the cell corner closest to the "particle" and compute the 
+	// texture coordinate corresponding to that location.
+	vec3 tSize = textureSize(tex, 0);
+	vec3 npos = pixelToTexel(floor(coord), tSize);	
+	
+	// Get the values of nodes that contribute to the interpolated value. 
+	// Texel centers will be a half-texel away from the cell corner. 
+	vec3 ht = vec3(0.5f / tSize.x, 0.5f / tSize.y, 0.5f / tSize.z); 
+	vec4 nodeValues[8]; 
+	nodeValues[0] = texture(tex, npos + vec3(-ht.x, -ht.y, -ht.z)); 
+	nodeValues[1] = texture(tex, npos + vec3(-ht.x, -ht.y, ht.z)); 
+	nodeValues[2] = texture(tex, npos + vec3(-ht.x, ht.y, -ht.z)); 
+	nodeValues[3] = texture(tex, npos + vec3(-ht.x, ht.y, ht.z)); 
+	nodeValues[4] = texture(tex, npos + vec3(ht.x, -ht.y, -ht.z)); 
+	nodeValues[5] = texture(tex, npos + vec3(ht.x, -ht.y, ht.z)); 
+	nodeValues[6] = texture(tex, npos + vec3(ht.x, ht.y, -ht.z)); 
+	nodeValues[7] = texture(tex, npos + vec3(ht.x, ht.y, ht.z));
+
+	
+	// Determine a valid range for the result. 
+	vec4 vMin = min(min(min(min(min(min(min( nodeValues[0], nodeValues [1]), nodeValues [2]), nodeValues [3]), nodeValues[4]), nodeValues [5]), nodeValues [6]), nodeValues [7]); 
+	vec4 vMax = max(max(max(max(max(max(max( nodeValues[0], nodeValues [1]), nodeValues [2]), nodeValues [3]), nodeValues[4]), nodeValues [5]), nodeValues [6]), nodeValues [7]);
+
+	// Clamp result to the desired range.
+	return clamp(value, vMin, vMax);
+}
+
+void main()
+{
+	vec3 tSize = textureSize(field_n_hat_READ, 0);
+
+	ivec3 pixelCoords = ivec3(gl_GlobalInvocationID);
+
+	// Perform final advection, combining values from intermediate 
+	// advection steps. 
+	vec4 qAdv = texelFetch(field_n_1_READ, pixelCoords, 0);
+
+	vec4 r = qAdv + 0.5 * texelFetch(field_n, pixelCoords, 0)
+				  - 0.5 * texelFetch(field_n_hat_READ, pixelCoords, 0);
+
+	// Trace back along the initial characteristic - we'll use
+	// values near this semi-Lagrangian "particle" to clamp our 
+	// final advected value.
+	vec3 v = RK(velocity_R, vec3(pixelCoords));
+	vec3 pos = pixelCoords - dt * v;
+	vec4 rClamped = ClampValue(field_n, r, pos);
+
+	r = length(rClamped - r) > revert ? qAdv : rClamped;
+
+	imageStore(field_WRITE, pixelCoords, r);
+}

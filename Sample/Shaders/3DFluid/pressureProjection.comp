@@ -1,0 +1,37 @@
+#version 460 core
+layout(local_size_x = 32, local_size_y = 32) in;
+
+layout(rgba16f, binding = 0) uniform image3D velocity_WRITE;
+layout(rgba16f, binding = 1) uniform image3D velocity_READ;
+layout(rgba16f, binding = 2) uniform image3D pressure_READ;
+
+ivec3 clamp_coord(ivec3 coord, ivec3 size)
+{
+    return clamp(coord, ivec3(0, 0, 0), size);
+}
+
+void main()
+{
+	// Compute the gradient of pressure at the current cell by 
+	// taking central differences of neighboring pressure values.
+
+	ivec3 pixelCoords = ivec3(gl_GlobalInvocationID);
+	ivec3 tSize = imageSize(pressure_READ);
+	
+	float left 		= imageLoad(pressure_READ, clamp_coord(pixelCoords + ivec3(-1,  0,  0), tSize)).x;
+	float right 	= imageLoad(pressure_READ, clamp_coord(pixelCoords + ivec3( 1,  0,  0), tSize)).x;
+	float top 		= imageLoad(pressure_READ, clamp_coord(pixelCoords + ivec3( 0,  1,  0), tSize)).x;
+	float bottom 	= imageLoad(pressure_READ, clamp_coord(pixelCoords + ivec3( 0, -1,  0), tSize)).x;
+	float front 	= imageLoad(pressure_READ, clamp_coord(pixelCoords + ivec3( 0,  0, -1), tSize)).x;
+	float back 		= imageLoad(pressure_READ, clamp_coord(pixelCoords + ivec3( 0,  0,  1), tSize)).x;
+
+    vec3 gradP  = 0.5 * (vec3(right - left, top - bottom, back - front));
+
+	// Project the velocity onto its divergence-free component by 
+	// subtracting the gradient of pressure.
+
+	vec3 vOld = imageLoad(velocity_READ, pixelCoords).xyz; 
+	vec3 vNew = vOld - gradP;
+
+	imageStore(velocity_WRITE, pixelCoords, vec4(vNew, 0));
+}

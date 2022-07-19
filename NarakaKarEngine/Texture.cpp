@@ -121,7 +121,7 @@ struct Texture::Impl
 		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_LEVEL, numOfLayers);
 		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+		//glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
 
 		std::vector<stbi_uc*> texData;
 		for (int i = 0; i < numOfLayers; ++i)
@@ -299,6 +299,10 @@ struct Texture::Impl
 		glBindTexture(GL_TEXTURE_2D_ARRAY, m_textureID);
 	}
 
+	void UseTexture3D(GLuint i) {
+		glActiveTexture(GL_TEXTURE1 + i);
+		glBindTexture(GL_TEXTURE_3D, m_textureID);
+	}
 
 	void UseTextureReadWrite(GLuint i, bool isWriteOnly, bool isLayered) {
 		auto format = isWriteOnly ? GL_WRITE_ONLY : GL_READ_WRITE;
@@ -375,6 +379,10 @@ void Texture::UseTexture(GLuint i) {
 
 void Texture::UseTextureArray(GLuint i) {
 	Pimpl()->UseTextureArray(i);
+}
+
+void Texture::UseTexture3D(GLuint i) {
+	Pimpl()->UseTexture3D(i);
 }
 
 void Texture::UseTextureReadWrite(GLuint i, bool isWriteOnly, bool isLayered) {
