@@ -35,6 +35,7 @@ namespace NarakaKarEngine
 
 			void UseTexture(GLuint i);
 			void UseTextureArray(GLuint i);
+			void UseTexture3D(GLuint i);
 			void UseTextureReadWrite(GLuint i, bool isWriteOnly, bool isLayered);
 			void UseCubeMap(GLuint i);
 

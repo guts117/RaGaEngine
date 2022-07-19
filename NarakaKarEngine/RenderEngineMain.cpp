@@ -121,8 +121,14 @@ struct RenderEngineMain::Impl
 	std::unique_ptr<Compute_Shader> buoyantForceCompShader = std::make_unique<Compute_Shader>();
 	std::unique_ptr <Billboard_Shader> fluidFragShader = std::make_unique<Billboard_Shader>();
 
-	std::unique_ptr <Compute_Shader> clearTex3D = std::make_unique<Compute_Shader>();
+	std::unique_ptr <Compute_Shader> clearTexCompShader3D = std::make_unique<Compute_Shader>();
 	std::unique_ptr <Compute_Shader> addSmokeSpotCompShader3D = std::make_unique<Compute_Shader>();
+	std::unique_ptr <Compute_Shader> RKAdvectCompShader3D = std::make_unique<Compute_Shader>();
+	std::unique_ptr <Compute_Shader> maccormackCompShader3D = std::make_unique<Compute_Shader>();
+	std::unique_ptr<Compute_Shader> buoyantForceCompShader3D = std::make_unique<Compute_Shader>();
+	std::unique_ptr<Compute_Shader> divCompShader3D = std::make_unique <Compute_Shader>();
+	std::unique_ptr<Compute_Shader> jacobiCompShader3D = std::make_unique <Compute_Shader>();
+	std::unique_ptr<Compute_Shader> pressureProjectionCompShader3D = std::make_unique <Compute_Shader>();
 	std::unique_ptr <Model_Shader> fluidFragShader3D = std::make_unique<Model_Shader>();
 
 	std::unique_ptr<Equirectangular_to_CubeMap_Shader> environmentMapShader = std::make_unique<Equirectangular_to_CubeMap_Shader>();
@@ -216,7 +222,11 @@ struct RenderEngineMain::Impl
 	std::unique_ptr<Texture> smokeTemperatureTexture;
 	std::unique_ptr<Texture> smokeFinalReduceTexture;
 
-	std::unique_ptr <Texture> density3D;
+	std::unique_ptr<std::vector<std::unique_ptr<Texture>>> density3D;
+	std::unique_ptr<std::vector<std::unique_ptr<Texture>>> veloxity3D;
+	std::unique_ptr<std::vector<std::unique_ptr<Texture>>> temperature3D;
+	std::unique_ptr<Texture> div3D;
+	std::unique_ptr<Texture> pressure3D;
  
 	std::unique_ptr < Texture> SSAONoiseTexture = std::make_unique<Texture>();
 
@@ -336,6 +346,7 @@ struct RenderEngineMain::Impl
 	int simHeight = 1024;
 	bool addSplat = false;
 	float simDt = 0.0f;
+	float simDt3D = 0.0f;
 	int simDim3D = 128;
 
 	void Init()
@@ -418,8 +429,27 @@ struct RenderEngineMain::Impl
 		smokeFinalReduceTexture = std::make_unique<Texture>();
 		smokeFinalReduceTexture->CreateTexture(glm::uvec2(simWidth / 32, simWidth / 32));
 
-		density3D = std::make_unique<Texture>();
-		density3D->CreateTexture3D(glm::vec3(simDim3D, simDim3D, simDim3D));
+		density3D = std::make_unique<std::vector<std::unique_ptr<Texture>>>();
+		veloxity3D = std::make_unique<std::vector<std::unique_ptr<Texture>>>();
+		temperature3D = std::make_unique<std::vector<std::unique_ptr<Texture>>>();
+
+		for (int i = 0; i < 4; i++)
+		{
+			density3D.get()->push_back(std::make_unique<Texture>());
+			density3D.get()->at(i)->CreateTexture3D(glm::vec3(simDim3D, simDim3D, simDim3D));
+
+			veloxity3D.get()->push_back(std::make_unique<Texture>());
+			veloxity3D.get()->at(i)->CreateTexture3D(glm::vec3(simDim3D, simDim3D, simDim3D));
+
+			temperature3D.get()->push_back(std::make_unique<Texture>());
+			temperature3D.get()->at(i)->CreateTexture3D(glm::vec3(simDim3D, simDim3D, simDim3D));
+		}
+
+		div3D = std::make_unique<Texture>();
+		div3D->CreateTexture3D(glm::vec3(simDim3D, simDim3D, simDim3D));
+
+		pressure3D = std::make_unique<Texture>();
+		pressure3D->CreateTexture3D(glm::vec3(simDim3D, simDim3D, simDim3D));
 
 		shinyMaterialGlow = std::make_unique<Material>(1, 6, 7, 11, 12, 13);
 		dullMaterialGlow = std::make_unique<Material>(1, 6, 7, 11, 12, 13);
@@ -545,10 +575,10 @@ struct RenderEngineMain::Impl
 		//skyboxFaces.push_back("Textures/Skybox/barren_ft.jpg");
 
 		
-		clearTex3D->UseShader();
-		density3D->UseTextureReadWrite(0, true, true);
-		clearTex3D->Dispatch(simDim3D / 32, simDim3D / 32, simDim3D);
-		addSplatSpot(glm::vec3(simDim3D / 2, simDim3D / 2, simDim3D / 2), glm::vec3(75.0 / 255.0, 89.0 / 255.0, 1.0), 2.5f, density3D.get());
+		clearTexCompShader3D->UseShader();
+		density3D.get()->at(0)->UseTextureReadWrite(0, true, true);
+		clearTexCompShader3D->Dispatch(simDim3D / 32, simDim3D / 32, simDim3D);
+		//addSplatSpot3D(glm::vec3(simDim3D / 2, simDim3D / 2, simDim3D / 2), glm::vec3(75.0 / 255.0, 89.0 / 255.0, 1.0), 2.5f, 10.0f, density3D.get()->at(0).get());
 		
 		unsigned x = 300u, y = 400u;
 		addSplatSpot(glm::vec2(x, y), glm::vec3(80.0f, 7.0f, 0.0f), 1.0f, velocitiesTexture.get(), velTexId[0]);
@@ -981,14 +1011,21 @@ struct RenderEngineMain::Impl
 		maxReduceCompShader->CreateFromFiles("Shaders/2DFluid/maxReduce.comp");
 		RKCompShader->CreateFromFiles("Shaders/2DFluid/RKAdvect.comp");
 		maccormackCompShader->CreateFromFiles("Shaders/2DFluid/maccormack.comp");
+		buoyantForceCompShader->CreateFromFiles("Shaders/2DFluid/buoyantForce.comp");
+		divRBCompShader->CreateFromFiles("Shaders/2DFluid/divRB.comp");
 		jacobiBlackCompShader->CreateFromFiles("Shaders/2DFluid/jacobiBlack.comp");
 		jacobiRedCompShader->CreateFromFiles("Shaders/2DFluid/jacobiRed.comp");
-		divRBCompShader->CreateFromFiles("Shaders/2DFluid/divRB.comp");
 		pressureProjectionRBCompShader->CreateFromFiles("Shaders/2DFluid/pressureProjectionRB.comp");
-		buoyantForceCompShader->CreateFromFiles("Shaders/2DFluid/buoyantForce.comp");
 
-		clearTex3D->CreateFromFiles("Shaders/3DFluid/clear.comp");
+		clearTexCompShader3D->CreateFromFiles("Shaders/3DFluid/clear.comp");
 		addSmokeSpotCompShader3D->CreateFromFiles("Shaders/3DFluid/addSmokeSpot.comp");
+		//maxReduceCompShader->CreateFromFiles("Shaders/2DFluid/maxReduce.comp");
+		RKAdvectCompShader3D->CreateFromFiles("Shaders/3DFluid/RKAdvect.comp");
+		maccormackCompShader3D->CreateFromFiles("Shaders/3DFluid/maccormack.comp");
+		buoyantForceCompShader3D->CreateFromFiles("Shaders/3DFluid/buoyantForce.comp");
+		divCompShader3D->CreateFromFiles("Shaders/3DFluid/div.comp");
+		jacobiCompShader3D->CreateFromFiles("Shaders/3DFluid/jacobi.comp");
+		pressureProjectionCompShader3D->CreateFromFiles("Shaders/3DFluid/pressureProjection.comp");
 
 		environmentMapShader->CreateFromFiles("Shaders/cubemap.vert", "Shaders/equirectangular_to_cubemap.frag");
 		irradianceConvolutionShader->CreateFromFiles("Shaders/cubemap.vert", "Shaders/irradiance_covolution.frag");
@@ -1646,20 +1683,7 @@ struct RenderEngineMain::Impl
 
 		RenderParticlesScene(deltaTime);
 
-		fluidFragShader3D->UseShader();
-
-		auto model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(0.0f, 45.0f, 0.0f));
-		model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
-		glUniformMatrix4fv(fluidFragShader3D->GetModelLocation(), 1, GL_FALSE, glm::value_ptr(model));
-		glUniformMatrix4fv(fluidFragShader3D->GetProjectionLocation(), 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
-		glUniformMatrix4fv(fluidFragShader3D->GetViewLocation(), 1, GL_FALSE, glm::value_ptr(camera->CalculateViewMatrix()));
-		glUniform3f(fluidFragShader3D->GetEyePositionLocation(), camera->getCameraPosition().x, camera->getCameraPosition().y, camera->getCameraPosition().z);
-
-		density3D->UseTextureReadWrite(0, false, true);
-		glUniform3f(glGetUniformLocation(fluidFragShader3D->GetShaderID(), "box_size"), simDim3D, simDim3D, simDim3D);
-		fluidFragShader3D->Validate();
-		ccw_cube->RenderCCWCube();
+		Render3DSmoke();
 
 		glm::vec3 lowerLight = camera->getCameraPosition();
 		lowerLight.y -= 0.1f;
@@ -1731,7 +1755,7 @@ struct RenderEngineMain::Impl
 		addSmokeSpotCompShader->Dispatch(simWidth / 32, simHeight / 32, 1);
 	}
 
-	void addSplatSpot(glm::vec3 spotPos, glm::vec3 color, float intensity, Texture* tex)
+	void addSplatSpot3D(glm::vec3 spotPos, glm::vec3 color, float intensity, float radius, Texture* tex)
 	{
 		addSmokeSpotCompShader3D->UseShader();
 		auto addSmokeSpotProgram = addSmokeSpotCompShader3D->GetShaderID();
@@ -1741,6 +1765,8 @@ struct RenderEngineMain::Impl
 		glUniform3f(location, color.x, color.y, color.z);
 		location = glGetUniformLocation(addSmokeSpotProgram, "intensity");
 		glUniform1f(location, intensity);
+		location = glGetUniformLocation(addSmokeSpotProgram, "radius");
+		glUniform1f(location, radius);
 
 		tex->UseTextureReadWrite(0, false, true);
 		addSmokeSpotCompShader3D->Dispatch(simDim3D / 32, simDim3D / 32, simDim3D);
@@ -1790,11 +1816,30 @@ struct RenderEngineMain::Impl
 		RKCompShader->Dispatch(simWidth / 32, simHeight / 32, 1);
 	}
 
+	void RKAdvect3D(Texture* velocityTex, Texture* field_R, Texture* field_W, const float dt)
+	{
+		RKAdvectCompShader3D->UseShader();
+		GLuint location = glGetUniformLocation(RKAdvectCompShader3D->GetShaderID(), "dt");
+		glUniform1f(location, dt);
+		field_W->UseTextureReadWrite(0, true, true);
+		field_R->UseTexture3D(0);
+		velocityTex->UseTexture3D(1);
+
+		RKAdvectCompShader3D->Dispatch(simDim3D / 32, simDim3D / 32, simDim3D);
+	}
+
 	void mcAdvect(Texture* velocityTex, Texture* fieldst, const int readVelId, int* texId)
 	{
 		RKAdvect(velocityTex, fieldst, readVelId, texId[0], texId[1], simDt);
 		RKAdvect(velocityTex, fieldst, readVelId, texId[1], texId[2], -simDt);
 		maccormackStep(texId[3], texId[0], texId[1], texId[2], readVelId, velocityTex, fieldst);
+	}
+
+	void mcAdvect3D(Texture* velocityTex, std::vector<std::unique_ptr<Texture>>* field)
+	{
+		RKAdvect3D(velocityTex, field->at(0).get(), field->at(1).get(), simDt3D);
+		RKAdvect3D(velocityTex, field->at(1).get(), field->at(2).get(), -simDt3D);
+		maccormackStep3D(field->at(3).get(), field->at(0).get(), field->at(1).get(), field->at(2).get(), velocityTex, simDt3D);
 	}
 
 	void maccormackStep(const int field_WRITE, const int field_n, const int field_n_1, const int field_n_hat, const int readVelId, Texture* velocityTex, Texture* fieldst)
@@ -1820,6 +1865,22 @@ struct RenderEngineMain::Impl
 		maccormackCompShader->Dispatch(simWidth / 32, simHeight / 32, 1);
 	}
 
+	void maccormackStep3D(Texture* field_WRITE, Texture* field_n, Texture* field_n_1, Texture* field_n_hat, Texture* velocityTex, float dt)
+	{
+		maccormackCompShader3D->UseShader();
+		GLuint location = glGetUniformLocation(maccormackCompShader3D->GetShaderID(), "dt");
+		glUniform1f(location, dt);
+		location = glGetUniformLocation(maccormackCompShader3D->GetShaderID(), "revert");
+		glUniform1f(location, 0.05f);
+
+		field_WRITE->UseTextureReadWrite(0, true, true);
+		field_n->UseTexture3D(0);
+		field_n_hat->UseTexture3D(1);
+		field_n_1->UseTexture3D(2);
+		velocityTex->UseTexture3D(3);
+		maccormackCompShader3D->Dispatch(simDim3D / 32, simDim3D / 32, simDim3D);
+	}
+
 	void applyBuoyantForce(Texture* velocity, int velocities_READ_WRITE, Texture* temperature, int temperature_READ, Texture* density, int density_READ, float kappa, float sigma, float t0)
 	{
 		buoyantForceCompShader->UseShader();
@@ -1842,6 +1903,24 @@ struct RenderEngineMain::Impl
 		density->UseTextureArray(1);
 
 		buoyantForceCompShader->Dispatch(simWidth / 32, simHeight / 32, 1);
+	}
+
+	void applyBuoyantForce3D(Texture* velocity, Texture* temperature_READ, Texture* density_READ, float kappa, float sigma, float t0)
+	{
+		buoyantForceCompShader3D->UseShader();
+		GLuint location = glGetUniformLocation(buoyantForceCompShader3D->GetShaderID(), "dt");
+		glUniform1f(location, simDt3D);
+		location = glGetUniformLocation(buoyantForceCompShader3D->GetShaderID(), "kappa");
+		glUniform1f(location, kappa);
+		location = glGetUniformLocation(buoyantForceCompShader3D->GetShaderID(), "sigma");
+		glUniform1f(location, sigma);
+		location = glGetUniformLocation(buoyantForceCompShader3D->GetShaderID(), "t0");
+		glUniform1f(location, t0);
+		velocity->UseTextureReadWrite(0, false, true);
+		temperature_READ->UseTexture3D(0);
+		density_READ->UseTexture3D(1);
+
+		buoyantForceCompShader3D->Dispatch(simDim3D / 32, simDim3D / 32, simDim3D);
 	}
 
 	void RBMethod(Texture* velocities, Texture* divergence, Texture* pressure, int velocityRead, int velocityWrite)
@@ -1879,82 +1958,158 @@ struct RenderEngineMain::Impl
 		pressureProjectionRBCompShader->Dispatch(simWidth / 32 / 2, simHeight / 32 / 2, 1);
 	}
 
+	void RBMethod3D(Texture* velocityRead, Texture* velocityWrite, Texture* divergence, Texture* pressure)
+	{
+		divCompShader3D->UseShader();
+		divergence->UseTextureReadWrite(0, true, true);
+		velocityRead->UseTextureReadWrite(1, false, true);
+
+		divCompShader3D->Dispatch(simDim3D / 32, simDim3D / 32, simDim3D);
+
+		for (unsigned i = 0; i < 50; ++i)
+		{
+			jacobiCompShader3D->UseShader();
+			pressure->UseTextureReadWrite(0, false, true);
+			divergence->UseTextureReadWrite(1, false, true);
+			jacobiCompShader3D->Dispatch(simDim3D / 32, simDim3D / 32, simDim3D);
+		}
+
+		pressureProjectionCompShader3D->UseShader();
+		velocityWrite->UseTextureReadWrite(0, true, true);
+		velocityRead->UseTextureReadWrite(1, false, true);
+		pressure->UseTextureReadWrite(2, false, true);
+		pressureProjectionCompShader3D->Dispatch(simDim3D / 32, simDim3D / 32, simDim3D);
+	}
+
+	void Render2DFluidSim()
+	{
+		glViewport(0, 0, ScreenWidth, ScreenHeight);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		if (addSplat)
+		{
+			float vScale = 1.0f;
+			auto cursorPos = mainWindow->GetCursorPos();
+			cursorPos.x = (double)simWidth * cursorPos.x / (double)ScreenWidth;
+			cursorPos.y = (double)simHeight * (1.0 - cursorPos.y / (double)ScreenHeight);
+
+			addSplatSpot(cursorPos, glm::vec3(vScale * (cursorPos.x - sOriginX), vScale * (cursorPos.y - sOriginY), 0.0f), 40.0f, velocitiesTexture.get(), velTexId[0]);
+
+			sOriginX = cursorPos.x;
+			sOriginY = cursorPos.y;
+
+			addSplatSpot(cursorPos, glm::vec3(rd(), rd(), rd()), 1.0f, density.get(), denTexId[0]);
+		}
+
+		float vMax = maxReduce(velTexId[0], velocitiesTexture.get(), finalReduceTexture.get());
+		if (vMax > 1e-10f) simDt = 5.0f / vMax;
+
+		mcAdvect(velocitiesTexture.get(), velocitiesTexture.get(), velTexId[0], velTexId);
+		std::swap(velTexId[0], velTexId[3]);
+
+		mcAdvect(velocitiesTexture.get(), density.get(), velTexId[0], denTexId);
+		std::swap(denTexId[0], denTexId[3]);
+
+		RBMethod(velocitiesTexture.get(), divRBTexture.get(), pressureRBTexture.get(), velTexId[0], velTexId[1]);
+		std::swap(velTexId[0], velTexId[1]);
+
+		fluidFragShader->UseShader();
+		density->UseTextureArray(0);
+		glUniform1i(glGetUniformLocation(fluidFragShader->GetShaderID(), "texIndex"), denTexId[0]);
+		fluidFragShader->Validate();
+
+		quad->RenderQuad();
+	}
+
+	void Render2DSmoke() 
+	{
+		glViewport(0, 0, ScreenWidth, ScreenHeight);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		glm::vec2 pos = glm::vec2(simWidth / 2, 75);
+
+		addSplatSpot(pos, glm::vec3(0.05f, 0.05f, 0.05f), 0.5f, smokeDensity.get(), smokeDenTexId[0]);
+		addSplatSpot(pos, glm::vec3(rd() * 20.0f + 10.0f, 0.0f, 0.0f), 3.0f, smokeTemperatureTexture.get(), smokeTempTexId[0]);
+		addSplatSpot(pos, glm::vec3(2.0f * rd() - 1.0f, 0.0f, 0.0f), 5.0f, smokeVelocitiesTexture.get(), smokeVelTexId[0]);
+
+		float vMax = maxReduce(smokeVelTexId[0], smokeVelocitiesTexture.get(), smokeFinalReduceTexture.get());
+		if (vMax > 1e-10f) simDt = 5.0f / (vMax + simDt);
+
+		mcAdvect(smokeVelocitiesTexture.get(), smokeVelocitiesTexture.get(), smokeVelTexId[0], smokeVelTexId);
+		std::swap(smokeVelTexId[0], smokeVelTexId[3]);
+
+		mcAdvect(smokeVelocitiesTexture.get(), smokeDensity.get(), smokeVelTexId[0], smokeDenTexId);
+		std::swap(smokeDenTexId[0], smokeDenTexId[3]);
+
+		mcAdvect(smokeVelocitiesTexture.get(), smokeTemperatureTexture.get(), smokeVelTexId[0], smokeTempTexId);
+		std::swap(smokeTempTexId[0], smokeTempTexId[3]);
+
+		applyBuoyantForce(smokeVelocitiesTexture.get(), smokeVelTexId[0], smokeTemperatureTexture.get(), smokeTempTexId[0], smokeDensity.get(), smokeDenTexId[0], 0.25f, 0.1f, 10.0f);
+
+		RBMethod(smokeVelocitiesTexture.get(), smokeDivRBTexture.get(), smokePressureRBTexture.get(), smokeVelTexId[0], smokeVelTexId[1]);
+		std::swap(smokeVelTexId[0], smokeVelTexId[1]);
+
+		fluidFragShader->UseShader();
+		smokeDensity->UseTextureArray(0);
+		glUniform1i(glGetUniformLocation(fluidFragShader->GetShaderID(), "texIndex"), smokeDenTexId[0]);
+		fluidFragShader->Validate();
+
+		quad->RenderQuad();
+	}
+
+	void Render3DSmoke()
+	{
+		glm::vec3 pos = glm::vec3(simDim3D / 2, simDim3D / 4, simDim3D / 2);
+
+		addSplatSpot3D(pos, glm::vec3(0.05f, 0.05f, 0.05f), 0.5f, 1.0f, density3D.get()->at(0).get());
+		addSplatSpot3D(pos, glm::vec3(rd() * 20.0f + 10.0f, 0.0f, 0.0f), 3.0f, 1.0f, temperature3D.get()->at(0).get());
+		addSplatSpot3D(pos, glm::vec3(2.0f * rd() - 1.0f, 0.0f, 0.0f), 5.0f, 1.0f, veloxity3D.get()->at(0).get());
+
+		//float vMax = maxReduce(smokeVelTexId[0], smokeVelocitiesTexture.get(), smokeFinalReduceTexture.get());
+		//if (vMax > 1e-10f) simDt = 5.0f / (vMax + simDt);
+		simDt3D = 0.005f;		//ToDo
+		mcAdvect3D(veloxity3D.get()->at(0).get(), veloxity3D.get());
+		veloxity3D.get()->at(0).swap(veloxity3D.get()->at(3));
+
+		mcAdvect3D(veloxity3D.get()->at(0).get(), density3D.get());
+		density3D.get()->at(0).swap(density3D.get()->at(3));
+
+		mcAdvect3D(veloxity3D.get()->at(0).get(), temperature3D.get());
+		temperature3D.get()->at(0).swap(temperature3D.get()->at(3));
+
+		applyBuoyantForce3D(veloxity3D.get()->at(0).get(), temperature3D.get()->at(0).get(), density3D.get()->at(0).get(), 0.25f, 0.1f, 10.0f);
+
+		RBMethod3D(veloxity3D.get()->at(0).get(), veloxity3D.get()->at(1).get(), div3D.get(), pressure3D.get());
+		veloxity3D.get()->at(0).swap(veloxity3D.get()->at(1));
+
+		fluidFragShader3D->UseShader();
+
+		auto model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(0.0f, 45.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
+		glUniformMatrix4fv(fluidFragShader3D->GetModelLocation(), 1, GL_FALSE, glm::value_ptr(model));
+		glUniformMatrix4fv(fluidFragShader3D->GetProjectionLocation(), 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
+		glUniformMatrix4fv(fluidFragShader3D->GetViewLocation(), 1, GL_FALSE, glm::value_ptr(camera->CalculateViewMatrix()));
+		glUniform3f(fluidFragShader3D->GetEyePositionLocation(), camera->getCameraPosition().x, camera->getCameraPosition().y, camera->getCameraPosition().z);
+
+		density3D.get()->at(0)->UseTextureReadWrite(0, false, true);
+		//veloxity3D.get()->at(0)->UseTextureReadWrite(0, false, true);
+		glUniform3f(glGetUniformLocation(fluidFragShader3D->GetShaderID(), "box_size"), simDim3D, simDim3D, simDim3D);
+		fluidFragShader3D->Validate();
+
+		ccw_cube->RenderCCWCube();
+	}
+
 	void RenderToDefaultFB()
 	{
 		//ToDo: Clear after fluid demo
 		if (drawFluidSim) 
 		{
-			glViewport(0, 0, ScreenWidth, ScreenHeight);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-			if (addSplat)
-			{
-				float vScale = 1.0f;
-				auto cursorPos = mainWindow->GetCursorPos();
-				cursorPos.x = (double)simWidth * cursorPos.x / (double)ScreenWidth;
-				cursorPos.y = (double)simHeight * (1.0 - cursorPos.y / (double)ScreenHeight);
-
-				addSplatSpot(cursorPos, glm::vec3(vScale * (cursorPos.x - sOriginX), vScale * (cursorPos.y - sOriginY), 0.0f), 40.0f, velocitiesTexture.get(), velTexId[0]);
-
-				sOriginX = cursorPos.x;
-				sOriginY = cursorPos.y;
-
-				addSplatSpot(cursorPos, glm::vec3(rd(), rd(), rd()), 1.0f, density.get(), denTexId[0]);
-			}
-
-			float vMax = maxReduce(velTexId[0], velocitiesTexture.get(), finalReduceTexture.get());
-			if (vMax > 1e-10f) simDt = 5.0f / vMax;
-
-			mcAdvect(velocitiesTexture.get(), velocitiesTexture.get(), velTexId[0], velTexId);
-			std::swap(velTexId[0], velTexId[3]);
-
-			mcAdvect(velocitiesTexture.get(), density.get(), velTexId[0], denTexId);
-			std::swap(denTexId[0], denTexId[3]);
-
-			RBMethod(velocitiesTexture.get(), divRBTexture.get(), pressureRBTexture.get(), velTexId[0], velTexId[1]);
-			std::swap(velTexId[0], velTexId[1]);
-
-			fluidFragShader->UseShader();
-			density->UseTextureArray(0);
-			glUniform1i(glGetUniformLocation(fluidFragShader->GetShaderID(), "texIndex"), denTexId[0]);
-			fluidFragShader->Validate();
-
-			quad->RenderQuad();
+			Render2DFluidSim();
 		}
 		else if(drawSmokeSim)
 		{
-			glViewport(0, 0, ScreenWidth, ScreenHeight);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-			glm::vec2 pos = glm::vec2(simWidth / 2, 75);
-
-			addSplatSpot(pos, glm::vec3(0.05f, 0.05f, 0.05f), 0.5f, smokeDensity.get(), smokeDenTexId[0]);
-			addSplatSpot(pos, glm::vec3(rd() * 20.0f + 10.0f, 0.0f, 0.0f), 3.0f, smokeTemperatureTexture.get(), smokeTempTexId[0]);
-			addSplatSpot(pos, glm::vec3(2.0f * rd() - 1.0f, 0.0f, 0.0f), 5.0f, smokeVelocitiesTexture.get(), smokeVelTexId[0]);
-
-			float vMax = maxReduce(smokeVelTexId[0], smokeVelocitiesTexture.get(), smokeFinalReduceTexture.get());
-			if (vMax > 1e-10f) simDt = 5.0f / (vMax + simDt);
-
-			mcAdvect(smokeVelocitiesTexture.get(), smokeVelocitiesTexture.get(), smokeVelTexId[0], smokeVelTexId);
-			std::swap(smokeVelTexId[0], smokeVelTexId[3]);
-
-			mcAdvect(smokeVelocitiesTexture.get(), smokeDensity.get(), smokeVelTexId[0], smokeDenTexId);
-			std::swap(smokeDenTexId[0], smokeDenTexId[3]);
-
-			mcAdvect(smokeVelocitiesTexture.get(), smokeTemperatureTexture.get(), smokeVelTexId[0], smokeTempTexId);
-			std::swap(smokeTempTexId[0], smokeTempTexId[3]);
-
-			applyBuoyantForce(smokeVelocitiesTexture.get(), smokeVelTexId[0], smokeTemperatureTexture.get(), smokeTempTexId[0], smokeDensity.get(), smokeDenTexId[0], 0.25f, 0.1f, 10.0f);
-
-			RBMethod(smokeVelocitiesTexture.get(), smokeDivRBTexture.get(), smokePressureRBTexture.get(), smokeVelTexId[0], smokeVelTexId[1]);
-			std::swap(smokeVelTexId[0], smokeVelTexId[1]);
-
-			fluidFragShader->UseShader();
-			smokeDensity->UseTextureArray(0);
-			glUniform1i(glGetUniformLocation(fluidFragShader->GetShaderID(), "texIndex"), smokeDenTexId[0]);
-			fluidFragShader->Validate();
-
-			quad->RenderQuad();
+			Render2DSmoke();
 		}
 		else
 		{

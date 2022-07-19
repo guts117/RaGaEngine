@@ -1,0 +1,36 @@
+#version 460 core
+layout(local_size_x = 32, local_size_y = 32) in;
+
+uniform float dt;
+
+layout(rgba16f, binding = 0) uniform image3D field_W;
+layout(binding = 1) uniform sampler3D field_R;
+layout(binding = 2) uniform sampler3D velocity_R;
+
+vec3 pixelToTexel(vec3 p, vec3 tSize)
+{
+  return (p + 0.5) / tSize;
+}
+
+vec3 RK(sampler3D tex, vec3 pos)
+{
+	vec3 tSize = textureSize(tex, 0);
+	vec3 v1 = texture(tex, pixelToTexel(pos, tSize)).xyz;
+	vec3 v2 = texture(tex, pixelToTexel(pos + 0.5 * v1 * dt, tSize)).xyz;
+	vec3 v3 = texture(tex, pixelToTexel(pos + 0.5 * v2 * dt, tSize)).xyz;
+	vec3 v4 = texture(tex, pixelToTexel(pos + v3 * dt, tSize)).xyz;
+
+  return (v1 + 2.0 * (v2 + v3) + v4) * (1.0 / 6.0);
+}
+
+void main()
+{
+	vec3 tSize = textureSize(field_R, 0);
+	vec3 pixelCoords = gl_GlobalInvocationID;
+
+	vec3 v = RK(velocity_R, pixelCoords);
+	vec3 pos = pixelCoords - dt * v;
+	vec4 val = texture(field_R, pixelToTexel(pos, tSize));
+
+	imageStore(field_W, ivec3(pixelCoords), val);
+}
