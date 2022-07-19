@@ -27,16 +27,16 @@ bool inside_cube(vec3 pos)
     return dist <= 0.001;
 }
 
-vec3 local_to_cube(vec3 wpos)
+ivec3 local_to_cube(vec3 pos)
 {
     vec3 h = box_size / 2;
-    vec3 diff = wpos;
-    return diff * h + h;
+    vec3 diff = pos;
+    return ivec3(diff * h + h);
 }
 
 vec4 ray_march(vec3 pos, vec3 dir)
 {
-    vec4 colour = vec4(0, 0, 0, 0);
+    /*vec4 colour = vec4(0, 0, 0, 0);
 
     for (int i = 0; i < STEPS; i++)
     {
@@ -45,17 +45,40 @@ vec4 ray_march(vec3 pos, vec3 dir)
             break;
         }
 
-        colour += imageLoad(theTexture, ivec3(local_to_cube(pos)));     
+        vec4 value = imageLoad(theTexture, local_to_cube(pos));	
+        colour = mix(value, colour, colour.a);     
         pos += dir * STEP_SIZE;
     }
 
-    return colour;
+    return colour;*/
+	
+	float alpha = 1.0;
+    vec3 colour = vec3(0, 0, 0);
+
+    for (int i = 0; i < STEPS; i++)
+    {
+        if (!inside_cube(pos))
+        {
+            //alpha *= (1 - bg_colour.a);
+            colour += vec3(0, 0, 0) * alpha;
+            break;
+        }
+
+        vec4 value = imageLoad(theTexture, local_to_cube(pos));
+
+        alpha *= (1 - value.a);
+        colour += value.rgb * alpha;
+        
+        pos += dir * STEP_SIZE;
+    }
+
+    return vec4(colour, alpha);
 }
 
 void main()
 {
     vec3 ray_pos = VertexPos;
-    vec3 ray_dir = normalize(ray_pos - LocalEyePos);
+    vec3 ray_dir = ray_pos - LocalEyePos;
 
     vec4 ray_colour = ray_march(ray_pos, ray_dir);
     color = ray_colour;
