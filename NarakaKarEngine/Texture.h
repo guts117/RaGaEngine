@@ -29,6 +29,8 @@ namespace NarakaKarEngine
 			bool LoadNativeTexture(const std::vector<glm::vec3>& noiseData);
 			bool CreateTextureArray(const glm::vec2& resolution, const int numOfLayers, bool createMipMaps = false);
 
+			bool CreateTexture3D(const glm::vec3& resolution, bool createMipMaps = false);
+
 			bool CreateTexture(const glm::vec2& resolution);
 
 			void UseTexture(GLuint i);

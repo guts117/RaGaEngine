@@ -5,3 +5,7 @@ Space -> 上がる
 Right CTRL->　下がる
 L-> Spotlight ON/OFF
 ESC-> 終了
+
+新規追加ーーーーーーーーーーー
+X -> ２D流体マウス入力モード
+Z -> 2D流体煙モード

@@ -1,0 +1,18 @@
+#version 460 core
+layout(local_size_x = 32, local_size_y = 32) in;
+
+layout(rgba16f, binding = 0) uniform image2D finalWriteImage;
+layout(binding = 1) uniform sampler2DArray iTex;
+
+uniform int inTexIndex;
+
+void main()
+{
+	ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);
+	
+	barrier();
+	vec4 maxInput = texelFetch(iTex, ivec3(pixelCoords, inTexIndex), 0);
+	vec4 currMax = imageLoad(finalWriteImage, ivec2(gl_WorkGroupID.xy));
+	vec4 color = max(maxInput, currMax);
+	imageStore(finalWriteImage, ivec2(gl_WorkGroupID.xy), maxInput);
+}

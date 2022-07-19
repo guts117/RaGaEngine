@@ -1,0 +1,20 @@
+#version 460 core
+layout(local_size_x = 32, local_size_y = 32) in;
+
+uniform ivec2 spotPos;
+uniform vec3 color;
+uniform float intensity;
+uniform int texIndex;
+
+layout(rgba16f, binding = 0) uniform image2DArray field;
+
+void main()
+{
+  ivec2 pixelCoords = ivec2(gl_GlobalInvocationID.xy);
+  vec2 p = vec2(pixelCoords.xy - spotPos);
+
+  vec3 splat = intensity * exp(- dot(p, p) / 200.0f) * color;
+  vec3 baseD = imageLoad(field, ivec3(pixelCoords, texIndex)).xyz;
+
+  imageStore(field, ivec3(pixelCoords, texIndex), vec4(baseD + splat, 1.0f));
+}
