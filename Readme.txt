@@ -10,11 +10,11 @@
 2D 
 - GPU GEMS CHAPTER 38: 
 https://developer.nvidia.com/gpugems/gpugems/part-vi-beyond-triangles/chapter-38-fast-fluid-dynamics-simulation-gpu
-- 2DFluidSimulation
+- 2DFluidSimulation(2DシムとRK方式の参考)
 https://github.com/cgurps/2DFluidSimulation
 
 自分の追加の部分：
-- RKに必要なヴェクターフィールドの情報をtextureArrayを使用。
+- RKに必要なヴェクターフィールドの情報をtextureArrayを使用して保持。
 - 最大のヴェクターを持つセールの計算方法。
 =======================================================================================================================================
 
@@ -27,8 +27,9 @@ https://www.cs.ubc.ca/~rbridson/fluidsimulation/fluids_notes.pdf
 自分の追加の部分：
 - GPU　Gem　3　では、AABBボリュームの計算には、一つのPrePassが必要でした。
  今回は３Dキューブを作成して、そのキューブのローカルスペースで、３DTextureをサンプルしています。
- この方法です、一つのシェーダーパスが要らなくなり、開始点がキューブの補間された頂点になり、Raymarchingが早く終了することが可能です。
+ この方法だと、一つのシェーダーパスが要らなくなり、開始点がキューブの補間された頂点になって、Raymarchingが早く終了することが可能です。
 - 2DでやったRK方式を使用して、ヴェクターフィールドの計算
+- Computeシェーダを使用したシミュレーション。
 
 =======================================================================================================================================
 
