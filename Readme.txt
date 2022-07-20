@@ -42,5 +42,3 @@ SDF + Raymarching
 Runge Kutta Method:
 https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods
 https://byjus.com/maths/runge-kutta-rk4-method/
-
-３Dの   
