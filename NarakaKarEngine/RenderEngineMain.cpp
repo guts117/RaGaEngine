@@ -351,7 +351,7 @@ struct RenderEngineMain::Impl
 	float simDt3D = 0.0f;
 	int simDim3D = 128;
 
-	void Init()
+	GLFWwindow* Init()
 	{
 		glEnable(GL_TEXTURE_3D);
 		mainWindow->Initialise();
@@ -611,6 +611,8 @@ struct RenderEngineMain::Impl
 		IrradianceConvolutionPass();
 		PrefilterPass();
 		BRDFPass();
+
+		return mainWindow->GetWindow();
 	}
 
 	void InitSSAO() 
@@ -657,7 +659,7 @@ struct RenderEngineMain::Impl
 		}
 	}
 
-	void Update()
+	void Update(const std::function<void()>& renderEngineUI)
 	{
 		UpdateAtFrameBufferResize();
 
@@ -673,9 +675,6 @@ struct RenderEngineMain::Impl
 			framesPerSec = 0.0f;
 			lastFrameTime += 1.0;
 		}
-
-		//get + handle user input events
-		glfwPollEvents();
 
 		camera->keyControl(mainWindow->getKeys(), deltaTime);
 
@@ -772,6 +771,8 @@ struct RenderEngineMain::Impl
 
 		camera->UpdatePreviousMatrices();
 		glUseProgram(0);
+
+		renderEngineUI();
 
 		mainWindow->swapBuffers();
 	}
@@ -2188,14 +2189,14 @@ struct RenderEngineMain::Impl
 
 RenderEngineMain::RenderEngineMain() = default;
 
-void RenderEngineMain::Init()
+GLFWwindow* RenderEngineMain::Init()
 {
-	Pimpl()->Init();
+	return Pimpl()->Init();
 }
 
-void RenderEngineMain::Update()
+void RenderEngineMain::Update(const std::function<void()>& renderEngineUI)
 {	
-	Pimpl()->Update();
+	Pimpl()->Update(renderEngineUI);
 }
 
 bool RenderEngineMain:: IsEnd()

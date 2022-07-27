@@ -13,9 +13,9 @@ namespace NarakaKarEngine
 		public:
 			explicit RenderEngineMain();
 
-			void Init();
+			GLFWwindow* Init();
 
-			void Update();
+			void Update(const std::function<void()>& renderEngineUI);
 
 			bool IsEnd();
 

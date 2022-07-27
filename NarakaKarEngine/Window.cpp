@@ -4,9 +4,11 @@
 #include "RenderingCommonValues.h"
 #include "RenderEngineMain.h"
 #include "MathUtil.h"
+#include "EngineUICreator.h"
 
 using namespace NarakaKarEngine;
 using namespace RenderEngine;
+using namespace EngineUI;
 
 //[3840 x 2160] [2560 x 1440] [1920 x 1080] [1280x720]
 int ScreenWidth;

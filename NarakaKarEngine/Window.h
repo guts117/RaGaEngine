@@ -31,6 +31,8 @@ namespace NarakaKarEngine
 			bool isLeftMousePress;
 			bool isLeftMouseRelease;
 
+			inline GLFWwindow* GetWindow() { return mainWindow; }
+
 			~Window();
 
 		private:
