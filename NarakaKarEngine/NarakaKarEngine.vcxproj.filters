@@ -19,6 +19,12 @@
     <Filter Include="Source Files\RenderEngine">
       <UniqueIdentifier>{144eacf0-55c8-44d8-92fc-f7595702e319}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\EngineUI">
+      <UniqueIdentifier>{36c6c5de-d0c6-4e1e-a80b-594e9aaa811b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\EditorUI">
+      <UniqueIdentifier>{18df95ff-cb35-4ac3-93a2-f87af042b7b6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Animated_Mesh.cpp">
@@ -182,6 +188,30 @@
     </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\deps\Common\imgui\imgui.cpp">
+      <Filter>Source Files\EditorUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\deps\Common\imgui\imgui_demo.cpp">
+      <Filter>Source Files\EditorUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\deps\Common\imgui\imgui_draw.cpp">
+      <Filter>Source Files\EditorUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\deps\Common\imgui\imgui_impl_glfw.cpp">
+      <Filter>Source Files\EditorUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\deps\Common\imgui\imgui_impl_opengl3.cpp">
+      <Filter>Source Files\EditorUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\deps\Common\imgui\imgui_impl_win32.cpp">
+      <Filter>Source Files\EditorUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\deps\Common\imgui\imgui_tables.cpp">
+      <Filter>Source Files\EditorUI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\deps\Common\imgui\imgui_widgets.cpp">
+      <Filter>Source Files\EditorUI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -352,6 +382,33 @@
     </ClInclude>
     <ClInclude Include="MathUtil.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\deps\Common\imgui\imstb_truetype.h">
+      <Filter>Header Files\EngineUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\deps\Common\imgui\imconfig.h">
+      <Filter>Header Files\EngineUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\deps\Common\imgui\imgui.h">
+      <Filter>Header Files\EngineUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\deps\Common\imgui\imgui_impl_glfw.h">
+      <Filter>Header Files\EngineUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\deps\Common\imgui\imgui_impl_opengl3.h">
+      <Filter>Header Files\EngineUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\deps\Common\imgui\imgui_impl_opengl3_loader.h">
+      <Filter>Header Files\EngineUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\deps\Common\imgui\imgui_impl_win32.h">
+      <Filter>Header Files\EngineUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\deps\Common\imgui\imstb_rectpack.h">
+      <Filter>Header Files\EngineUI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\deps\Common\imgui\imstb_textedit.h">
+      <Filter>Header Files\EngineUI</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
