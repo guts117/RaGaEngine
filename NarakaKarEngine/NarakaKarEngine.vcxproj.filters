@@ -213,6 +213,9 @@
     <ClCompile Include="..\deps\Common\imgui\imgui_widgets.cpp">
       <Filter>Source Files\EditorUI</Filter>
     </ClCompile>
+    <ClCompile Include="EngineUICreator.cpp">
+      <Filter>Source Files\EditorUI</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Animated_Mesh.h">
@@ -408,6 +411,9 @@
       <Filter>Header Files\EngineUI</Filter>
     </ClInclude>
     <ClInclude Include="..\deps\Common\imgui\imstb_textedit.h">
+      <Filter>Header Files\EngineUI</Filter>
+    </ClInclude>
+    <ClInclude Include="EngineUICreator.h">
       <Filter>Header Files\EngineUI</Filter>
     </ClInclude>
   </ItemGroup>

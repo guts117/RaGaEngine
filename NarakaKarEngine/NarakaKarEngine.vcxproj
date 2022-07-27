@@ -79,6 +79,7 @@
     <ClCompile Include="Compute_Shader.cpp" />
     <ClCompile Include="Debug.cpp" />
     <ClCompile Include="DirectionalLight.cpp" />
+    <ClCompile Include="EngineUICreator.cpp" />
     <ClCompile Include="Equirectangular_to_CubeMap_Framebuffer.cpp" />
     <ClCompile Include="Equirectangular_to_CubeMap_Shader.cpp" />
     <ClCompile Include="Framebuffer.cpp" />
@@ -146,6 +147,7 @@
     <ClInclude Include="BRDF_Framebuffer.h" />
     <ClInclude Include="BRDF_Shader.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="EngineUICreator.h" />
     <ClInclude Include="RenderingCommonValues.h" />
     <ClInclude Include="Compute_Shader.h" />
     <ClInclude Include="Debug.h" />
