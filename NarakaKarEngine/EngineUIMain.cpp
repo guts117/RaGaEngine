@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "EngineUICreator.h"
+#include "EngineUIMain.h"
 
 using namespace NarakaKarEngine;
 using namespace EngineUI;
@@ -7,9 +7,9 @@ using namespace EngineUI;
 extern int ScreenWidth;
 extern int ScreenHeight;
 
-EngineUICreator::EngineUICreator() = default;
+EngineUIMain::EngineUIMain() = default;
 
-EngineUICreator::EngineUICreator(GLFWwindow* window, const bool installCallbacks, const std::string version)
+EngineUIMain::EngineUIMain(GLFWwindow* window, const bool installCallbacks, const std::string version)
 {
 	//Initialize IMGUI
 	IMGUI_CHECKVERSION();
@@ -20,7 +20,7 @@ EngineUICreator::EngineUICreator(GLFWwindow* window, const bool installCallbacks
 	ImGui_ImplOpenGL3_Init(version.c_str());
 }
 
-void EngineUICreator::Update()
+void EngineUIMain::Update()
 {
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
@@ -32,13 +32,13 @@ void EngineUICreator::Update()
 	ImGui::End();
 }
 
-void EngineUICreator::Render()
+void EngineUIMain::EndUpdate()
 {
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-EngineUICreator::~EngineUICreator() 
+EngineUIMain::~EngineUIMain() 
 {
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();

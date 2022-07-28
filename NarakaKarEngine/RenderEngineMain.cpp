@@ -659,7 +659,7 @@ struct RenderEngineMain::Impl
 		}
 	}
 
-	void Update(const std::function<void()>& renderEngineUI)
+	void Update()
 	{
 		UpdateAtFrameBufferResize();
 
@@ -771,9 +771,10 @@ struct RenderEngineMain::Impl
 
 		camera->UpdatePreviousMatrices();
 		glUseProgram(0);
+	}
 
-		renderEngineUI();
-
+	void EndUpdate() 
+	{
 		mainWindow->swapBuffers();
 	}
 
@@ -2194,9 +2195,14 @@ GLFWwindow* RenderEngineMain::Init()
 	return Pimpl()->Init();
 }
 
-void RenderEngineMain::Update(const std::function<void()>& renderEngineUI)
+void RenderEngineMain::Update()
 {	
-	Pimpl()->Update(renderEngineUI);
+	Pimpl()->Update();
+}
+
+void RenderEngineMain::EndUpdate() 
+{
+	Pimpl()->EndUpdate();
 }
 
 bool RenderEngineMain:: IsEnd()

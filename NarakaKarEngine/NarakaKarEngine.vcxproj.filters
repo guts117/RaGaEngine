@@ -22,7 +22,7 @@
     <Filter Include="Header Files\EngineUI">
       <UniqueIdentifier>{36c6c5de-d0c6-4e1e-a80b-594e9aaa811b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\EditorUI">
+    <Filter Include="Source Files\EngineUI">
       <UniqueIdentifier>{18df95ff-cb35-4ac3-93a2-f87af042b7b6}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -190,31 +190,31 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\deps\Common\imgui\imgui.cpp">
-      <Filter>Source Files\EditorUI</Filter>
+      <Filter>Source Files\EngineUI</Filter>
     </ClCompile>
     <ClCompile Include="..\deps\Common\imgui\imgui_demo.cpp">
-      <Filter>Source Files\EditorUI</Filter>
+      <Filter>Source Files\EngineUI</Filter>
     </ClCompile>
     <ClCompile Include="..\deps\Common\imgui\imgui_draw.cpp">
-      <Filter>Source Files\EditorUI</Filter>
+      <Filter>Source Files\EngineUI</Filter>
     </ClCompile>
     <ClCompile Include="..\deps\Common\imgui\imgui_impl_glfw.cpp">
-      <Filter>Source Files\EditorUI</Filter>
+      <Filter>Source Files\EngineUI</Filter>
     </ClCompile>
     <ClCompile Include="..\deps\Common\imgui\imgui_impl_opengl3.cpp">
-      <Filter>Source Files\EditorUI</Filter>
+      <Filter>Source Files\EngineUI</Filter>
     </ClCompile>
     <ClCompile Include="..\deps\Common\imgui\imgui_impl_win32.cpp">
-      <Filter>Source Files\EditorUI</Filter>
+      <Filter>Source Files\EngineUI</Filter>
     </ClCompile>
     <ClCompile Include="..\deps\Common\imgui\imgui_tables.cpp">
-      <Filter>Source Files\EditorUI</Filter>
+      <Filter>Source Files\EngineUI</Filter>
     </ClCompile>
     <ClCompile Include="..\deps\Common\imgui\imgui_widgets.cpp">
-      <Filter>Source Files\EditorUI</Filter>
+      <Filter>Source Files\EngineUI</Filter>
     </ClCompile>
-    <ClCompile Include="EngineUICreator.cpp">
-      <Filter>Source Files\EditorUI</Filter>
+    <ClCompile Include="EngineUIMain.cpp">
+      <Filter>Source Files\EngineUI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -413,7 +413,7 @@
     <ClInclude Include="..\deps\Common\imgui\imstb_textedit.h">
       <Filter>Header Files\EngineUI</Filter>
     </ClInclude>
-    <ClInclude Include="EngineUICreator.h">
+    <ClInclude Include="EngineUIMain.h">
       <Filter>Header Files\EngineUI</Filter>
     </ClInclude>
   </ItemGroup>

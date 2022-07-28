@@ -15,7 +15,8 @@ namespace NarakaKarEngine
 
 			GLFWwindow* Init();
 
-			void Update(const std::function<void()>& renderEngineUI);
+			void Update();
+			void EndUpdate();
 
 			bool IsEnd();
 
