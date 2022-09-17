@@ -19,49 +19,49 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\deps\Common\imgui\imgui.cpp">
+    <ClCompile Include="..\deps\Common\include\imgui\imgui.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\deps\Common\imgui\imgui_demo.cpp">
+    <ClCompile Include="..\deps\Common\include\imgui\imgui_demo.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\deps\Common\imgui\imgui_draw.cpp">
+    <ClCompile Include="..\deps\Common\include\imgui\imgui_draw.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\deps\Common\imgui\imgui_impl_glfw.cpp">
+    <ClCompile Include="..\deps\Common\include\imgui\imgui_impl_glfw.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\deps\Common\imgui\imgui_impl_opengl3.cpp">
+    <ClCompile Include="..\deps\Common\include\imgui\imgui_impl_opengl3.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\deps\Common\imgui\imgui_impl_win32.cpp">
+    <ClCompile Include="..\deps\Common\include\imgui\imgui_impl_win32.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\deps\Common\imgui\imgui_tables.cpp">
+    <ClCompile Include="..\deps\Common\include\imgui\imgui_tables.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\deps\Common\imgui\imgui_widgets.cpp">
+    <ClCompile Include="..\deps\Common\include\imgui\imgui_widgets.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
@@ -129,15 +129,15 @@
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\deps\Common\imgui\imconfig.h" />
-    <ClInclude Include="..\deps\Common\imgui\imgui.h" />
-    <ClInclude Include="..\deps\Common\imgui\imgui_impl_glfw.h" />
-    <ClInclude Include="..\deps\Common\imgui\imgui_impl_opengl3.h" />
-    <ClInclude Include="..\deps\Common\imgui\imgui_impl_opengl3_loader.h" />
-    <ClInclude Include="..\deps\Common\imgui\imgui_impl_win32.h" />
-    <ClInclude Include="..\deps\Common\imgui\imstb_rectpack.h" />
-    <ClInclude Include="..\deps\Common\imgui\imstb_textedit.h" />
-    <ClInclude Include="..\deps\Common\imgui\imstb_truetype.h" />
+    <ClInclude Include="..\deps\Common\include\imgui\imconfig.h" />
+    <ClInclude Include="..\deps\Common\include\imgui\imgui.h" />
+    <ClInclude Include="..\deps\Common\include\imgui\imgui_impl_glfw.h" />
+    <ClInclude Include="..\deps\Common\include\imgui\imgui_impl_opengl3.h" />
+    <ClInclude Include="..\deps\Common\include\imgui\imgui_impl_opengl3_loader.h" />
+    <ClInclude Include="..\deps\Common\include\imgui\imgui_impl_win32.h" />
+    <ClInclude Include="..\deps\Common\include\imgui\imstb_rectpack.h" />
+    <ClInclude Include="..\deps\Common\include\imgui\imstb_textedit.h" />
+    <ClInclude Include="..\deps\Common\include\imgui\imstb_truetype.h" />
     <ClInclude Include="Animated_Mesh.h" />
     <ClInclude Include="Animated_Model.h" />
     <ClInclude Include="Billboard_Mesh.h" />
@@ -247,24 +247,24 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)deps/$(Platform)/lib/;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(SolutionDir)deps/Common/include/imgui/;$(SolutionDir)deps/Common/include/bullet/;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)deps/$(Platform)/lib/;$(SolutionDir)deps/Common/lib/;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)deps/$(Platform)/lib/;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(SolutionDir)deps/Common/include/imgui/;$(SolutionDir)deps/Common/include/bullet/;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)deps/$(Platform)/lib/;$(SolutionDir)deps/Common/lib/;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)deps/$(Platform)/lib/;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(SolutionDir)deps/Common/include/imgui/;$(SolutionDir)deps/Common/include/bullet/;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)deps/$(Platform)/lib/;$(SolutionDir)deps/Common/lib/;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)deps/$(Platform)/lib/;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(SolutionDir)deps/Common/include/imgui/;$(SolutionDir)deps/Common/include/bullet/;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)deps/$(Platform)/lib/;$(SolutionDir)deps/Common/lib/;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -275,11 +275,12 @@
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)deps/Common/imgui</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>assimp-vc141-mtd.lib;opengl32.lib;glew32.lib;glew32s.lib;glfw3.lib;glfw3_mt.lib;glfw3dll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>assimp-vc141-mtd.lib;opengl32.lib;glew32.lib;glew32s.lib;glfw3.lib;glfw3_mt.lib;glfw3dll.lib;BulletRobotics.lib;BulletCollision.lib;BulletDynamics.lib;BulletSoftBody.lib;Bullet3OpenCL_clew.lib;Bullet3Collision.lib;Bullet3Common.lib;Bullet3Dynamics.lib;BulletInverseDynamicsUtils.lib;Bullet3Geometry.lib;BulletInverseDynamics.lib;BussIK.lib;HACD.lib;LinearMath.lib;ConvexDecomposition.lib;gtest.lib;clsocket.lib;GIMPACTUtils.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
   </ItemDefinitionGroup>
@@ -292,11 +293,12 @@
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)deps/Common/imgui</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>assimp-vc143-mtd.lib;opengl32.lib;glew32.lib;glew32s.lib;glfw3.lib;glfw3_mt.lib;glfw3dll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>assimp-vc143-mtd.lib;opengl32.lib;glew32.lib;glew32s.lib;glfw3.lib;glfw3_mt.lib;glfw3dll.lib;BulletRobotics.lib;BulletCollision.lib;BulletDynamics.lib;BulletSoftBody.lib;Bullet3OpenCL_clew.lib;Bullet3Collision.lib;Bullet3Common.lib;Bullet3Dynamics.lib;BulletInverseDynamicsUtils.lib;Bullet3Geometry.lib;BulletInverseDynamics.lib;BussIK.lib;HACD.lib;LinearMath.lib;ConvexDecomposition.lib;gtest.lib;clsocket.lib;GIMPACTUtils.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
   </ItemDefinitionGroup>
@@ -312,13 +314,14 @@
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)deps/Common/imgui</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>assimp-vc141-mtd.lib;opengl32.lib;glew32.lib;glew32s.lib;glfw3.lib;glfw3_mt.lib;glfw3dll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>assimp-vc141-mtd.lib;opengl32.lib;glew32.lib;glew32s.lib;glfw3.lib;glfw3_mt.lib;glfw3dll.lib;BulletRobotics.lib;BulletCollision.lib;BulletDynamics.lib;BulletSoftBody.lib;Bullet3OpenCL_clew.lib;Bullet3Collision.lib;Bullet3Common.lib;Bullet3Dynamics.lib;BulletInverseDynamicsUtils.lib;Bullet3Geometry.lib;BulletInverseDynamics.lib;BussIK.lib;HACD.lib;LinearMath.lib;ConvexDecomposition.lib;gtest.lib;clsocket.lib;GIMPACTUtils.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
   </ItemDefinitionGroup>
@@ -333,13 +336,14 @@
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(SolutionDir)deps/Common/imgui</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>assimp-vc143-mtd.lib;opengl32.lib;glew32.lib;glew32s.lib;glfw3.lib;glfw3_mt.lib;glfw3dll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>assimp-vc143-mtd.lib;opengl32.lib;glew32.lib;glew32s.lib;glfw3.lib;glfw3_mt.lib;glfw3dll.lib;BulletRobotics.lib;BulletCollision.lib;BulletDynamics.lib;BulletSoftBody.lib;Bullet3OpenCL_clew.lib;Bullet3Collision.lib;Bullet3Common.lib;Bullet3Dynamics.lib;BulletInverseDynamicsUtils.lib;Bullet3Geometry.lib;BulletInverseDynamics.lib;BussIK.lib;HACD.lib;LinearMath.lib;ConvexDecomposition.lib;gtest.lib;clsocket.lib;GIMPACTUtils.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
   </ItemDefinitionGroup>

@@ -33,7 +33,7 @@ namespace NarakaKarEngine
 			const Impl* Pimpl() const { return m_pImpl.get(); }
 			Impl* Pimpl() { return m_pImpl.get(); }
 
-			std::unique_ptr<Impl> m_pImpl = std::make_unique<Impl>();
+			std::unique_ptr<Impl> m_pImpl;
 		};
 	}
 }

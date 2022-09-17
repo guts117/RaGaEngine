@@ -2188,7 +2188,7 @@ struct RenderEngineMain::Impl
 	}
 };
 
-RenderEngineMain::RenderEngineMain() = default;
+RenderEngineMain::RenderEngineMain() : m_pImpl{ std::make_unique<Impl>() } {};
 
 GLFWwindow* RenderEngineMain::Init()
 {

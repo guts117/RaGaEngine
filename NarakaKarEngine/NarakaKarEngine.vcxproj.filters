@@ -189,28 +189,28 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\Common\imgui\imgui.cpp">
+    <ClCompile Include="..\deps\Common\include\imgui\imgui.cpp">
       <Filter>Source Files\EngineUI</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\Common\imgui\imgui_demo.cpp">
+    <ClCompile Include="..\deps\Common\include\imgui\imgui_demo.cpp">
       <Filter>Source Files\EngineUI</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\Common\imgui\imgui_draw.cpp">
+    <ClCompile Include="..\deps\Common\include\imgui\imgui_draw.cpp">
       <Filter>Source Files\EngineUI</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\Common\imgui\imgui_impl_glfw.cpp">
+    <ClCompile Include="..\deps\Common\include\imgui\imgui_impl_glfw.cpp">
       <Filter>Source Files\EngineUI</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\Common\imgui\imgui_impl_opengl3.cpp">
+    <ClCompile Include="..\deps\Common\include\imgui\imgui_impl_opengl3.cpp">
       <Filter>Source Files\EngineUI</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\Common\imgui\imgui_impl_win32.cpp">
+    <ClCompile Include="..\deps\Common\include\imgui\imgui_impl_win32.cpp">
       <Filter>Source Files\EngineUI</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\Common\imgui\imgui_tables.cpp">
+    <ClCompile Include="..\deps\Common\include\imgui\imgui_tables.cpp">
       <Filter>Source Files\EngineUI</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\Common\imgui\imgui_widgets.cpp">
+    <ClCompile Include="..\deps\Common\include\imgui\imgui_widgets.cpp">
       <Filter>Source Files\EngineUI</Filter>
     </ClCompile>
     <ClCompile Include="EngineUIMain.cpp">
@@ -386,31 +386,31 @@
     <ClInclude Include="MathUtil.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\Common\imgui\imstb_truetype.h">
+    <ClInclude Include="..\deps\Common\include\imgui\imstb_truetype.h">
       <Filter>Header Files\EngineUI</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\Common\imgui\imconfig.h">
+    <ClInclude Include="..\deps\Common\include\imgui\imconfig.h">
       <Filter>Header Files\EngineUI</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\Common\imgui\imgui.h">
+    <ClInclude Include="..\deps\Common\include\imgui\imgui.h">
       <Filter>Header Files\EngineUI</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\Common\imgui\imgui_impl_glfw.h">
+    <ClInclude Include="..\deps\Common\include\imgui\imgui_impl_glfw.h">
       <Filter>Header Files\EngineUI</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\Common\imgui\imgui_impl_opengl3.h">
+    <ClInclude Include="..\deps\Common\include\imgui\imgui_impl_opengl3.h">
       <Filter>Header Files\EngineUI</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\Common\imgui\imgui_impl_opengl3_loader.h">
+    <ClInclude Include="..\deps\Common\include\imgui\imgui_impl_opengl3_loader.h">
       <Filter>Header Files\EngineUI</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\Common\imgui\imgui_impl_win32.h">
+    <ClInclude Include="..\deps\Common\include\imgui\imgui_impl_win32.h">
       <Filter>Header Files\EngineUI</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\Common\imgui\imstb_rectpack.h">
+    <ClInclude Include="..\deps\Common\include\imgui\imstb_rectpack.h">
       <Filter>Header Files\EngineUI</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\Common\imgui\imstb_textedit.h">
+    <ClInclude Include="..\deps\Common\include\imgui\imstb_textedit.h">
       <Filter>Header Files\EngineUI</Filter>
     </ClInclude>
     <ClInclude Include="EngineUIMain.h">
