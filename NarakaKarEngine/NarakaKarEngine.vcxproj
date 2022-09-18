@@ -89,6 +89,7 @@
     <ClCompile Include="Irradiance_Convolution_Shader.cpp" />
     <ClCompile Include="Light.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="PhysicsEngineMain.cpp" />
     <ClCompile Include="RenderEngineMain.cpp" />
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="Mesh.cpp" />
@@ -148,6 +149,7 @@
     <ClInclude Include="BRDF_Shader.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="EngineUIMain.h" />
+    <ClInclude Include="PhysicsEngineMain.h" />
     <ClInclude Include="RenderingCommonValues.h" />
     <ClInclude Include="Compute_Shader.h" />
     <ClInclude Include="Debug.h" />
@@ -280,7 +282,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>assimp-vc141-mtd.lib;opengl32.lib;glew32.lib;glew32s.lib;glfw3.lib;glfw3_mt.lib;glfw3dll.lib;BulletRobotics.lib;BulletCollision.lib;BulletDynamics.lib;BulletSoftBody.lib;Bullet3OpenCL_clew.lib;Bullet3Collision.lib;Bullet3Common.lib;Bullet3Dynamics.lib;BulletInverseDynamicsUtils.lib;Bullet3Geometry.lib;BulletInverseDynamics.lib;BussIK.lib;HACD.lib;LinearMath.lib;ConvexDecomposition.lib;gtest.lib;clsocket.lib;GIMPACTUtils.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>assimp-vc141-mtd.lib;opengl32.lib;glew32.lib;glew32s.lib;glfw3.lib;glfw3_mt.lib;glfw3dll.lib;BulletRobotics.lib;BulletDynamics.lib;BulletCollision.lib;BulletSoftBody.lib;Bullet3OpenCL_clew.lib;Bullet3Dynamics.lib;Bullet3Collision.lib;Bullet3Common.lib;BulletInverseDynamicsUtils.lib;Bullet3Geometry.lib;BulletInverseDynamics.lib;BussIK.lib;HACD.lib;LinearMath.lib;ConvexDecomposition.lib;gtest.lib;clsocket.lib;GIMPACTUtils.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
   </ItemDefinitionGroup>
@@ -298,7 +300,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>assimp-vc143-mtd.lib;opengl32.lib;glew32.lib;glew32s.lib;glfw3.lib;glfw3_mt.lib;glfw3dll.lib;BulletRobotics.lib;BulletCollision.lib;BulletDynamics.lib;BulletSoftBody.lib;Bullet3OpenCL_clew.lib;Bullet3Collision.lib;Bullet3Common.lib;Bullet3Dynamics.lib;BulletInverseDynamicsUtils.lib;Bullet3Geometry.lib;BulletInverseDynamics.lib;BussIK.lib;HACD.lib;LinearMath.lib;ConvexDecomposition.lib;gtest.lib;clsocket.lib;GIMPACTUtils.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>assimp-vc143-mtd.lib;opengl32.lib;glew32.lib;glew32s.lib;glfw3.lib;glfw3_mt.lib;glfw3dll.lib;BulletRobotics.lib;BulletDynamics.lib;BulletCollision.lib;BulletSoftBody.lib;Bullet3OpenCL_clew.lib;Bullet3Dynamics.lib;Bullet3Collision.lib;Bullet3Common.lib;BulletInverseDynamicsUtils.lib;Bullet3Geometry.lib;BulletInverseDynamics.lib;BussIK.lib;HACD.lib;LinearMath.lib;ConvexDecomposition.lib;gtest.lib;clsocket.lib;GIMPACTUtils.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
   </ItemDefinitionGroup>
@@ -321,7 +323,7 @@
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>assimp-vc141-mtd.lib;opengl32.lib;glew32.lib;glew32s.lib;glfw3.lib;glfw3_mt.lib;glfw3dll.lib;BulletRobotics.lib;BulletCollision.lib;BulletDynamics.lib;BulletSoftBody.lib;Bullet3OpenCL_clew.lib;Bullet3Collision.lib;Bullet3Common.lib;Bullet3Dynamics.lib;BulletInverseDynamicsUtils.lib;Bullet3Geometry.lib;BulletInverseDynamics.lib;BussIK.lib;HACD.lib;LinearMath.lib;ConvexDecomposition.lib;gtest.lib;clsocket.lib;GIMPACTUtils.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>assimp-vc141-mtd.lib;opengl32.lib;glew32.lib;glew32s.lib;glfw3.lib;glfw3_mt.lib;glfw3dll.lib;BulletRobotics.lib;BulletDynamics.lib;BulletCollision.lib;BulletSoftBody.lib;Bullet3OpenCL_clew.lib;Bullet3Dynamics.lib;Bullet3Collision.lib;Bullet3Common.lib;BulletInverseDynamicsUtils.lib;Bullet3Geometry.lib;BulletInverseDynamics.lib;BussIK.lib;HACD.lib;LinearMath.lib;ConvexDecomposition.lib;gtest.lib;clsocket.lib;GIMPACTUtils.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
   </ItemDefinitionGroup>
@@ -343,7 +345,7 @@
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>assimp-vc143-mtd.lib;opengl32.lib;glew32.lib;glew32s.lib;glfw3.lib;glfw3_mt.lib;glfw3dll.lib;BulletRobotics.lib;BulletCollision.lib;BulletDynamics.lib;BulletSoftBody.lib;Bullet3OpenCL_clew.lib;Bullet3Collision.lib;Bullet3Common.lib;Bullet3Dynamics.lib;BulletInverseDynamicsUtils.lib;Bullet3Geometry.lib;BulletInverseDynamics.lib;BussIK.lib;HACD.lib;LinearMath.lib;ConvexDecomposition.lib;gtest.lib;clsocket.lib;GIMPACTUtils.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>assimp-vc143-mtd.lib;opengl32.lib;glew32.lib;glew32s.lib;glfw3.lib;glfw3_mt.lib;glfw3dll.lib;BulletRobotics.lib;BulletDynamics.lib;BulletCollision.lib;BulletSoftBody.lib;Bullet3OpenCL_clew.lib;Bullet3Dynamics.lib;Bullet3Collision.lib;Bullet3Common.lib;BulletInverseDynamicsUtils.lib;Bullet3Geometry.lib;BulletInverseDynamics.lib;BussIK.lib;HACD.lib;LinearMath.lib;ConvexDecomposition.lib;gtest.lib;clsocket.lib;GIMPACTUtils.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
   </ItemDefinitionGroup>

@@ -92,6 +92,11 @@ void Static_Object::Rotate(float angleInDegrees, float x, float y, float z) {
 	m_model = glm::rotate(m_model, angleInDegrees * toRadians, glm::vec3(x, y, z));
 }
 
+glm::mat4* Static_Object::GetModelMatrix()
+{
+	return &m_model;
+};
+
 void Static_Object::Scale(float x, float y, float z) {
 	m_model = glm::scale(m_model, glm::vec3(x, y, z));
 }

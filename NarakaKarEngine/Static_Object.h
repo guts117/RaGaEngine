@@ -35,6 +35,8 @@ namespace NarakaKarEngine
 
 			void Rotate(float angleInDegrees, float x, float y, float z);
 
+			glm::mat4* GetModelMatrix();
+
 			void Scale(float x, float y, float z);
 
 			void DrawNativeObject(std::shared_ptr<Shader> shader, std::shared_ptr<Camera> camera);
