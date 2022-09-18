@@ -216,9 +216,6 @@
     <ClCompile Include="EngineUIMain.cpp">
       <Filter>Source Files\EngineUI</Filter>
     </ClCompile>
-    <ClCompile Include="PhysicsEngineMain.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Animated_Mesh.h">
@@ -418,9 +415,6 @@
     </ClInclude>
     <ClInclude Include="EngineUIMain.h">
       <Filter>Header Files\EngineUI</Filter>
-    </ClInclude>
-    <ClInclude Include="PhysicsEngineMain.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
