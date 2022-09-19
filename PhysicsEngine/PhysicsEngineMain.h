@@ -9,13 +9,6 @@
 
 #include "physics_pch.h"
 
-class btDynamicsWorld;
-class btDispatcher;
-class btCollisionConfiguration;
-class btBroadphaseInterface;
-class btConstraintSolver;
-class btRigidBody;
-
 class PHYSICS_ENGINE_API PhysicsEngineMain
 {
 public:
@@ -34,15 +27,12 @@ public:
 	~PhysicsEngineMain();
 
 private:
-	btDynamicsWorld* world;
-	btDispatcher* dispatcher;
-	btCollisionConfiguration* collisionConfig;
-	btBroadphaseInterface* broadPhase;
-	btConstraintSolver* solver;
-	std::vector<std::tuple<glm::mat4*, btRigidBody*>>* bodies;
+	struct Impl;
 
-	void ApplyPlanePhysics(std::tuple<glm::mat4*, btRigidBody*> rigidBody);
-	void ApplySpherePhysics(std::tuple<glm::mat4*, btRigidBody*> rigidBody);
+	const Impl* Pimpl() const { return m_pImpl; }
+	Impl* Pimpl() { return m_pImpl; }
+
+	Impl* m_pImpl;
 };
 #endif //PHYSICS_ENGINE
 
