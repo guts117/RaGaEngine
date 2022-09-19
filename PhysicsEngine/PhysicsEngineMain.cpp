@@ -4,13 +4,7 @@
 
 struct PhysicsEngineMain::Impl 
 {
-	btCollisionConfiguration* collisionConfig;
-	btDispatcher* dispatcher;
-	btBroadphaseInterface* broadPhase;
-	btConstraintSolver* solver;
-	btDynamicsWorld* world;
-	std::vector<std::tuple<glm::mat4*, btRigidBody*>>* bodies;
-
+public:
 	Impl()
 		: collisionConfig{ new btDefaultCollisionConfiguration() }
 		, dispatcher{ new btCollisionDispatcher(collisionConfig) }
@@ -106,6 +100,14 @@ struct PhysicsEngineMain::Impl
 		delete world;
 		delete bodies;
 	}
+
+private:
+	btCollisionConfiguration* collisionConfig;
+	btDispatcher* dispatcher;
+	btBroadphaseInterface* broadPhase;
+	btConstraintSolver* solver;
+	btDynamicsWorld* world;
+	std::vector<std::tuple<glm::mat4*, btRigidBody*>>* bodies;
 };
 
 PhysicsEngineMain::PhysicsEngineMain() : m_pImpl{ new Impl() } {};
