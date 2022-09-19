@@ -92,8 +92,9 @@ void Static_Object::Rotate(float angleInDegrees, float x, float y, float z) {
 	m_model = glm::rotate(m_model, angleInDegrees * toRadians, glm::vec3(x, y, z));
 }
 
-glm::mat4* Static_Object::GetModelMatrix()
+glm::mat4* Static_Object::GetModelMatrixForPhysics()
 {
+	isRigidBody = true;
 	return &m_model;
 };
 
@@ -120,7 +121,7 @@ void Static_Object::DrawNativeObject(std::shared_ptr<Shader> shader, std::shared
 	
 	m_staticMesh->RenderMesh();
 	m_staticMesh->PrevMesh = m_model;
-	m_model = glm::mat4(1.0f);
+	if (!isRigidBody) { m_model = glm::mat4(1.0f); }
 }
 
 void Static_Object::DrawImportedObject(std::shared_ptr<Shader> shader,std::shared_ptr<Camera> camera)
@@ -137,5 +138,5 @@ void Static_Object::DrawImportedObject(std::shared_ptr<Shader> shader,std::share
 		
 	StaticModel->RenderModel();
 	StaticModel->prevModel = m_model;
-	m_model = glm::mat4(1.0f);
+	if (!isRigidBody) { m_model = glm::mat4(1.0f); }
 }

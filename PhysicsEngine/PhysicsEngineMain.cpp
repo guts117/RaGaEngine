@@ -21,35 +21,10 @@ public:
 		world->stepSimulation(deltaTime);
 		for (int i = 0; i < bodies->size(); ++i)
 		{
-			if (std::get<1>(bodies->at(i))->getCollisionShape()->getShapeType() == STATIC_PLANE_PROXYTYPE)
-				ApplyPlanePhysics(bodies->at(i));
-			else if (std::get<1>(bodies->at(i))->getCollisionShape()->getShapeType() == SPHERE_SHAPE_PROXYTYPE)
-				ApplySpherePhysics(bodies->at(i));
+			btTransform t;
+			std::get<1>(bodies->at(i))->getMotionState()->getWorldTransform(t);
+			t.getOpenGLMatrix(glm::value_ptr(*std::get<0>(bodies->at(i))));
 		}
-	}
-
-	void ApplyPlanePhysics(std::tuple<glm::mat4*, btRigidBody*> rigidBody)
-	{
-		if (std::get<1>(rigidBody)->getCollisionShape()->getShapeType() != STATIC_PLANE_PROXYTYPE)
-			return;
-
-		btTransform t;
-		std::get<1>(rigidBody)->getMotionState()->getWorldTransform(t);
-		float mat[16];
-		t.getOpenGLMatrix(mat);
-		*(std::get<0>(rigidBody)) = glm::make_mat4(mat);
-	}
-
-	void ApplySpherePhysics(std::tuple<glm::mat4*, btRigidBody*> rigidBody)
-	{
-		if (std::get<1>(rigidBody)->getCollisionShape()->getShapeType() != SPHERE_SHAPE_PROXYTYPE)
-			return;
-
-		btTransform t;
-		std::get<1>(rigidBody)->getMotionState()->getWorldTransform(t);
-		float mat[16];
-		t.getOpenGLMatrix(mat);
-		*(std::get<0>(rigidBody)) = glm::make_mat4(mat);
 	}
 
 	void AddStaticPlane(float rad, float x, float y, float z, float mass, glm::mat4* model)

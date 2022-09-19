@@ -35,7 +35,7 @@ namespace NarakaKarEngine
 
 			void Rotate(float angleInDegrees, float x, float y, float z);
 
-			glm::mat4* GetModelMatrix();
+			glm::mat4* GetModelMatrixForPhysics();
 
 			void Scale(float x, float y, float z);
 
@@ -71,6 +71,7 @@ namespace NarakaKarEngine
 
 			glm::mat4 m_prevPVM = glm::mat4();
 			glm::mat4 m_model = glm::mat4();
+			bool isRigidBody = false;
 		};
 	}
 }
