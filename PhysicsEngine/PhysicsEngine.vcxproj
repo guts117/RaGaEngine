@@ -73,19 +73,19 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(SolutionDir)deps/Common/include/bullet/;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)deps/Common/lib/bullet/;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)deps/Common/lib/bullet/$(Platform)/$(Configuration)/;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(SolutionDir)deps/Common/include/bullet/;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)deps/Common/lib/bullet/;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)deps/Common/lib/bullet/$(Platform)/$(Configuration)/;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(SolutionDir)deps/Common/include/bullet/;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)deps/Common/lib/bullet/;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)deps/Common/lib/bullet/$(Platform)/$(Configuration)/;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(SolutionDir)deps/Common/include/bullet/;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)deps/Common/lib/bullet/;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(SolutionDir)deps/Common/lib/bullet/$(Platform)/$(Configuration)/;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -95,13 +95,13 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>physics_pch.h</PrecompiledHeaderFile>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>BulletRobotics.lib;BulletDynamics.lib;BulletCollision.lib;BulletSoftBody.lib;Bullet3OpenCL_clew.lib;Bullet3Dynamics.lib;Bullet3Collision.lib;Bullet3Common.lib;BulletInverseDynamicsUtils.lib;Bullet3Geometry.lib;BulletInverseDynamics.lib;BussIK.lib;HACD.lib;LinearMath.lib;ConvexDecomposition.lib;gtest.lib;clsocket.lib;GIMPACTUtils.lib</AdditionalDependencies>
+      <AdditionalDependencies>BulletRobotics_Debug.lib;BulletDynamics_Debug.lib;BulletCollision_Debug.lib;BulletSoftBody_Debug.lib;Bullet3OpenCL_clew_Debug.lib;Bullet3Dynamics_Debug.lib;Bullet3Collision_Debug.lib;Bullet3Common_Debug.lib;BulletInverseDynamicsUtils_Debug.lib;Bullet3Geometry_Debug.lib;BulletInverseDynamics_Debug.lib;BussIK_Debug.lib;HACD_Debug.lib;LinearMath_Debug.lib;ConvexDecomposition_Debug.lib;gtest_Debug.lib;clsocket_Debug.lib;GIMPACTUtils_Debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ProjectReference>
       <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
@@ -136,13 +136,13 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>physics_pch.h</PrecompiledHeaderFile>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>BulletRobotics.lib;BulletDynamics.lib;BulletCollision.lib;BulletSoftBody.lib;Bullet3OpenCL_clew.lib;Bullet3Dynamics.lib;Bullet3Collision.lib;Bullet3Common.lib;BulletInverseDynamicsUtils.lib;Bullet3Geometry.lib;BulletInverseDynamics.lib;BussIK.lib;HACD.lib;LinearMath.lib;ConvexDecomposition.lib;gtest.lib;clsocket.lib;GIMPACTUtils.lib</AdditionalDependencies>
+      <AdditionalDependencies>BulletRobotics_Debug.lib;BulletDynamics_Debug.lib;BulletCollision_Debug.lib;BulletSoftBody_Debug.lib;Bullet3OpenCL_clew_Debug.lib;Bullet3Dynamics_Debug.lib;Bullet3Collision_Debug.lib;Bullet3Common_Debug.lib;BulletInverseDynamicsUtils_Debug.lib;Bullet3Geometry_Debug.lib;BulletInverseDynamics_Debug.lib;BussIK_Debug.lib;HACD_Debug.lib;LinearMath_Debug.lib;ConvexDecomposition_Debug.lib;gtest_Debug.lib;clsocket_Debug.lib;GIMPACTUtils_Debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
