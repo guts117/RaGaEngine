@@ -21,7 +21,7 @@ public:
 
 	void Update(float deltaTime);
 
-	void AddStaticPlane(float rad, float x, float y, float z, float mass, glm::mat4* model);
+	void AddStaticPlane(float x, float y, float z, float mass, glm::vec3 normal, glm::mat4* model);
 	void AddSphere(float rad, float x, float y, float z, float mass, glm::mat4* model);
 
 	~PhysicsEngineMain();

@@ -23,18 +23,22 @@ public:
 		{
 			btTransform t;
 			std::get<1>(bodies->at(i))->getMotionState()->getWorldTransform(t);
-			t.getOpenGLMatrix(glm::value_ptr(*std::get<0>(bodies->at(i))));
+			auto ptr_mat = std::get<0>(bodies->at(i));
+			if (ptr_mat != nullptr) 
+			{
+				t.getOpenGLMatrix(glm::value_ptr(*ptr_mat));
+			}
 		}
 	}
 
-	void AddStaticPlane(float rad, float x, float y, float z, float mass, glm::mat4* model)
+	void AddStaticPlane(float x, float y, float z, float mass, glm::vec3 normal, glm::mat4* model)
 	{
 		btTransform t;
 		t.setIdentity();
-		t.setOrigin(btVector3(0, 0, 0));
-		btStaticPlaneShape* plane = new btStaticPlaneShape(btVector3(0, 1, 0), 0);
+		t.setOrigin(btVector3(x, y, z));
+		btStaticPlaneShape* plane = new btStaticPlaneShape(btVector3(normal.x, normal.y, normal.z), 0);
 		btMotionState* motion = new btDefaultMotionState(t);
-		btRigidBody::btRigidBodyConstructionInfo info(0.0f, motion, plane);
+		btRigidBody::btRigidBodyConstructionInfo info(mass, motion, plane);
 		btRigidBody* body = new btRigidBody(info);
 		world->addRigidBody(body);
 		bodies->push_back(std::make_tuple(model, body));
@@ -92,9 +96,9 @@ void PhysicsEngineMain::Update(float deltaTime)
 	Pimpl()->Update(deltaTime);
 }
 
-void PhysicsEngineMain::AddStaticPlane(float rad, float x, float y, float z, float mass, glm::mat4* model)
+void PhysicsEngineMain::AddStaticPlane(float x, float y, float z, float mass, glm::vec3 normal, glm::mat4* model)
 {
-	Pimpl()->AddStaticPlane(rad, x, y, z, mass, model);
+	Pimpl()->AddStaticPlane(x, y, z, mass, normal, model);
 }
 
 void PhysicsEngineMain::AddSphere(float rad, float x, float y, float z, float mass, glm::mat4* model)
