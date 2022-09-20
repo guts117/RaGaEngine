@@ -55,12 +55,15 @@
 #include "MathUtil.h"
 #include "Window.h"
 
+#include "PhysicsEngineMain.h"
+
 using namespace NarakaKarEngine;
 using namespace RenderEngine;
 
 extern int ScreenWidth;
 extern int ScreenHeight;
 extern bool isUpdateFrameBuffersSize;
+extern std::unique_ptr<PhysicsEngineMain> physicsEngine;
 
 struct RenderEngineMain::Impl
 {
@@ -481,6 +484,9 @@ struct RenderEngineMain::Impl
 		bulbRed->SetUpImportedModelData("Models/Free_Antique_Bulb.obj");
 		sphere = std::make_unique<Static_Object>();
 		sphere->SetUpImportedModelData("Models/sphere.obj");
+		physicsEngine->AddSphere(1.0f, -terrainScaleFactor, 80.0f, 5.5f - terrainScaleFactor, 1.0f, sphere->GetModelMatrixForPhysics());
+		//ToDo: use heightmap to add terrain collider
+		physicsEngine->AddStaticPlane(0.0f, 27.0f, 0.0f, 0.0f, glm::vec3(0, 1, 0), nullptr);
 		cube = std::make_unique<Static_Object>();
 		cube->SetUpImportedModelData("Models/cube.obj");
 		sniper = std::make_unique<Static_Object>();
@@ -1186,7 +1192,7 @@ struct RenderEngineMain::Impl
 		cube->Scale(0.1f, 0.1f, 0.1f);
 		cube->DrawImportedObject(shader, camera);
 
-		sphere->Translate(-terrainScaleFactor, 35.0f, 5.5f - terrainScaleFactor);
+		//sphere->Translate(-terrainScaleFactor, 35.0f, 5.5f - terrainScaleFactor);
 		//sphere->Rotate(curAngle, 0.0f, 1.0f, 0.0f);
 		sphere->Scale(1.0f, 1.0f, 1.0f);
 		sphere->DrawImportedObject(shader, camera);
@@ -2188,7 +2194,7 @@ struct RenderEngineMain::Impl
 	}
 };
 
-RenderEngineMain::RenderEngineMain() = default;
+RenderEngineMain::RenderEngineMain() : m_pImpl{ std::make_unique<Impl>() } {};
 
 GLFWwindow* RenderEngineMain::Init()
 {
