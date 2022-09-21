@@ -486,7 +486,7 @@ struct RenderEngineMain::Impl
 		sphere->SetUpImportedModelData("Models/sphere.obj");
 		physicsEngine->AddSphere(1.0f, -terrainScaleFactor, 80.0f, 5.5f - terrainScaleFactor, 1.0f, sphere->GetModelMatrixForPhysics());
 		//ToDo: use heightmap to add terrain collider
-		physicsEngine->AddStaticPlane(0.0f, 27.0f, 0.0f, 0.0f, glm::vec3(0, 1, 0), nullptr);
+		physicsEngine->AddStaticPlane(0.0f, 27.0f, 0.0f, 0.0f, glm::vec3(0.0f, 0.9f, 0.1f), nullptr);
 		cube = std::make_unique<Static_Object>();
 		cube->SetUpImportedModelData("Models/cube.obj");
 		sniper = std::make_unique<Static_Object>();
