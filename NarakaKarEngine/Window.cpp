@@ -96,7 +96,7 @@ int Window::Initialise() {
 
 	//Handle key+ Mouse Input
 	createCallbacks();
-	glfwSetInputMode(mainWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // hides the cursor
+	//glfwSetInputMode(mainWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // hides the cursor
 
 	//set context for GLEW to use
 	glfwMakeContextCurrent(mainWindow);

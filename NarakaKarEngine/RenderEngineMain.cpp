@@ -56,14 +56,17 @@
 #include "Window.h"
 
 #include "PhysicsEngineMain.h"
+#include "EngineUIMain.h"
 
 using namespace NarakaKarEngine;
 using namespace RenderEngine;
+using namespace EngineUI;
 
 extern int ScreenWidth;
 extern int ScreenHeight;
 extern bool isUpdateFrameBuffersSize;
 extern std::unique_ptr<PhysicsEngineMain> physicsEngine;
+extern std::unique_ptr<EngineUIMain> engineUI;
 
 struct RenderEngineMain::Impl
 {
@@ -181,6 +184,7 @@ struct RenderEngineMain::Impl
 	std::unique_ptr < MotionBlur_FrameBuffer> motionBlur = nullptr;
 	std::unique_ptr < Blur_Shader> blurShader = std::make_unique<Blur_Shader>();
 	std::unique_ptr < Blur_PingPong_Framebuffer> blur = nullptr;
+	std::unique_ptr < MotionBlur_FrameBuffer> finalFBO = nullptr;
 
 	std::vector< std::shared_ptr < Static_Mesh>> meshList;
 	std::vector< std::shared_ptr < Static_Mesh>> terrainList;
@@ -354,7 +358,7 @@ struct RenderEngineMain::Impl
 	float simDt3D = 0.0f;
 	int simDim3D = 128;
 
-	GLFWwindow* Init()
+	void Init()
 	{
 		glEnable(GL_TEXTURE_3D);
 		mainWindow->Initialise();
@@ -534,6 +538,9 @@ struct RenderEngineMain::Impl
 		motionBlur = std::make_unique < MotionBlur_FrameBuffer>();
 		motionBlur->Init(ScreenWidth, ScreenHeight);
 
+		finalFBO = std::make_unique < MotionBlur_FrameBuffer>();
+		finalFBO->Init(ScreenWidth, ScreenHeight);
+
 		resizeUpdateFramebuffers = std::make_unique<std::vector<std::function<void(int, int)>>>();
 		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { depth->ResizeFrameBuffer(width, height); });
 		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { ssao->ResizeFrameBuffer(width, height); });
@@ -541,6 +548,7 @@ struct RenderEngineMain::Impl
 		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { hdr->ResizeFrameBuffer(width, height); });
 		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { blur->ResizeFrameBuffer(width, height); });
 		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { motionBlur->ResizeFrameBuffer(width, height); });
+		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { finalFBO->ResizeFrameBuffer(width, height); });
 
 		mainLight = std::make_unique < DirectionalLight>(1024, 1024,
 			0.1f, 0.1f, 0.1f,
@@ -617,8 +625,6 @@ struct RenderEngineMain::Impl
 		IrradianceConvolutionPass();
 		PrefilterPass();
 		BRDFPass();
-
-		return mainWindow->GetWindow();
 	}
 
 	void InitSSAO() 
@@ -2138,7 +2144,10 @@ struct RenderEngineMain::Impl
 		//}
 		//else
 		//{
-			glViewport(0, 0, ScreenWidth, ScreenHeight);
+			glViewport(0, 0, finalFBO->GetWidth(), finalFBO->GetHeight());
+
+			finalFBO->Write();
+			//glViewport(0, 0, ScreenWidth, ScreenHeight);
 
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -2156,6 +2165,7 @@ struct RenderEngineMain::Impl
 			hdrShader->Validate();
 
 			quad->RenderQuad();
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		//}
 	}
 
@@ -2194,12 +2204,7 @@ struct RenderEngineMain::Impl
 	}
 };
 
-RenderEngineMain::RenderEngineMain() : m_pImpl{ std::make_unique<Impl>() } {};
-
-GLFWwindow* RenderEngineMain::Init()
-{
-	return Pimpl()->Init();
-}
+RenderEngineMain::RenderEngineMain() : m_pImpl{ std::make_unique<Impl>() } { Pimpl()->Init(); };
 
 void RenderEngineMain::Update()
 {	
@@ -2209,6 +2214,16 @@ void RenderEngineMain::Update()
 void RenderEngineMain::EndUpdate() 
 {
 	Pimpl()->EndUpdate();
+}
+
+GLFWwindow* RenderEngineMain::GetMainWindow()
+{	
+	return Pimpl()->mainWindow->GetWindow();
+}
+
+void RenderEngineMain::AddViewers()
+{
+	engineUI->AddSceneViewers(Pimpl()->finalFBO->GetBuffer(), "InGame", InGame);
 }
 
 bool RenderEngineMain:: IsEnd()

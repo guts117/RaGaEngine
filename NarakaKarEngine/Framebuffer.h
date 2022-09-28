@@ -24,6 +24,8 @@ namespace NarakaKarEngine
 
 			GLuint GetHeight() { return src_height; }
 
+			GLuint GetBuffer() { return buffer; }
+
 			virtual ~Framebuffer() = 0;
 
 		protected:

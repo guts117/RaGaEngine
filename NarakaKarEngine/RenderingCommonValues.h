@@ -26,4 +26,13 @@ const int brdflutTexUnit	= 10;
 const int aoTexUnit			= 14;
 const float camNearZ		= 0.1f;
 const float camFarZ			= 1000.0f;
+
+enum SceneViewerType
+{
+	Empty,
+	Editor,
+	InGame,
+	//Add other sceneviewers for debug purposes too 
+};
+
 #endif

@@ -109,6 +109,7 @@
     <ClCompile Include="PreFilter_Framebuffer.cpp" />
     <ClCompile Include="PreFilter_Shader.cpp" />
     <ClCompile Include="PreZPass_Shader.cpp" />
+    <ClCompile Include="SceneViewer.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="ShadowMap_FrameBuffer.cpp" />
     <ClCompile Include="Skybox.cpp" />
@@ -148,6 +149,7 @@
     <ClInclude Include="BRDF_Shader.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="EngineUIMain.h" />
+    <ClInclude Include="FBOCreator.h" />
     <ClInclude Include="RenderingCommonValues.h" />
     <ClInclude Include="Compute_Shader.h" />
     <ClInclude Include="Debug.h" />
@@ -175,6 +177,7 @@
     <ClInclude Include="PreFilter_Framebuffer.h" />
     <ClInclude Include="PreFilter_Shader.h" />
     <ClInclude Include="PreZPass_Shader.h" />
+    <ClInclude Include="SceneViewer.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="ShadowMap_FrameBuffer.h" />
     <ClInclude Include="Skybox.h" />

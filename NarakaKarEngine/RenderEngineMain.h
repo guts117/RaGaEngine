@@ -13,10 +13,11 @@ namespace NarakaKarEngine
 		public:
 			explicit RenderEngineMain();
 
-			GLFWwindow* Init();
-
 			void Update();
 			void EndUpdate();
+
+			GLFWwindow* GetMainWindow();
+			void AddViewers();
 
 			bool IsEnd();
 
