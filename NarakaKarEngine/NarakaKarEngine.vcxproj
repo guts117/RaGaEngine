@@ -74,6 +74,7 @@
     <ClCompile Include="Blur_PingPong_FrameBuffer.cpp" />
     <ClCompile Include="Blur_Shader.cpp" />
     <ClCompile Include="BRDF_Framebuffer.cpp" />
+    <ClCompile Include="BRDF_Pass_FBO_Handler.cpp" />
     <ClCompile Include="BRDF_Shader.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Compute_Shader.cpp" />
@@ -83,6 +84,7 @@
     <ClCompile Include="Equirectangular_to_CubeMap_Framebuffer.cpp" />
     <ClCompile Include="Equirectangular_to_CubeMap_Shader.cpp" />
     <ClCompile Include="Framebuffer.cpp" />
+    <ClCompile Include="FrameBufferObject.cpp" />
     <ClCompile Include="HDR_Framebuffer.cpp" />
     <ClCompile Include="HDR_Shader.cpp" />
     <ClCompile Include="EngineInputManager.cpp" />
@@ -146,10 +148,11 @@
     <ClInclude Include="Blur_PingPong_Framebuffer.h" />
     <ClInclude Include="Blur_Shader.h" />
     <ClInclude Include="BRDF_Framebuffer.h" />
+    <ClInclude Include="BRDF_Pass_FBO_Handler.h" />
     <ClInclude Include="BRDF_Shader.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="EngineUIMain.h" />
-    <ClInclude Include="FBOCreator.h" />
+    <ClInclude Include="FrameBufferObject.h" />
     <ClInclude Include="RenderingCommonValues.h" />
     <ClInclude Include="Compute_Shader.h" />
     <ClInclude Include="Debug.h" />
