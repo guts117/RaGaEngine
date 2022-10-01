@@ -37,8 +37,8 @@ struct FrameBufferObject::Impl
 
 				FBOTexGenParams& bufferParams = m_FboParam->FboTexGenParams[fboTexParamIndex];
 				glBindTexture(bufferParams.Target, m_ColorBuffers[i]);
-				glTexImage2D(bufferParams.Target, 0, bufferParams.InternalFormat, m_FboParam->Width, m_FboParam->Height, 0, bufferParams.Format, bufferParams.Type, bufferParams.PixelData);
-
+				glTexImage2D(bufferParams.Target, bufferParams.Level, bufferParams.InternalFormat, m_FboParam->Width, m_FboParam->Height, bufferParams.Border, bufferParams.Format, bufferParams.Type, bufferParams.PixelData);
+				//ToDo: Add support for MipMap generation
 				for (auto j = 0; j < bufferParams.FboTexParams.size(); ++j)
 				{
 					SetTexParams(bufferParams, j);
