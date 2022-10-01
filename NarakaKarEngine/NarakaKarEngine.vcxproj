@@ -94,7 +94,7 @@
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="MotionBlur_Shader.cpp" />
-    <ClCompile Include="MotionBlur_FrameBuffer.cpp" />
+    <ClCompile Include="Motion_Blur_Pass_Fbo_Handler.cpp" />
     <ClCompile Include="OmniShadowMap_FrameBuffer.cpp" />
     <ClCompile Include="Particle.cpp" />
     <ClCompile Include="ParticleSystem.cpp" />
@@ -167,7 +167,7 @@
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="MotionBlur_Shader.h" />
-    <ClInclude Include="MotionBlur_FrameBuffer.h" />
+    <ClInclude Include="Motion_Blur_Pass_Fbo_Handler.h" />
     <ClInclude Include="OmniShadowMap_FrameBuffer.h" />
     <ClInclude Include="Particle.h" />
     <ClInclude Include="ParticleSystem.h" />

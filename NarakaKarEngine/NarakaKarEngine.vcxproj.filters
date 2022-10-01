@@ -93,7 +93,7 @@
     <ClCompile Include="Model_Shader.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
-    <ClCompile Include="MotionBlur_FrameBuffer.cpp">
+    <ClCompile Include="Motion_Blur_Pass_Fbo_Handler.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
     <ClCompile Include="MotionBlur_Shader.cpp">
@@ -293,7 +293,7 @@
     <ClInclude Include="Model_Shader.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
-    <ClInclude Include="MotionBlur_FrameBuffer.h">
+    <ClInclude Include="Motion_Blur_Pass_Fbo_Handler.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="MotionBlur_Shader.h">

@@ -36,7 +36,7 @@
 #include "Ssao_Pass_Fbo_Handler.h"
 #include "Ssao_Blur_Pass_Fbo_Handler.h"
 #include "Shading_Pass_Fbo_Handler.h"
-#include "MotionBlur_FrameBuffer.h"
+#include "Motion_Blur_Pass_Fbo_Handler.h"
 #include "ShadowMap_FrameBuffer.h"
 
 #include "Bloom_Pass_Fbo_Handler.h"
@@ -181,10 +181,10 @@ struct RenderEngineMain::Impl
 	std::unique_ptr < HDR_Shader> hdrShader = std::make_unique<HDR_Shader>();
 	std::unique_ptr < Shading_Pass_Fbo_Handler> hdr = nullptr;
 	std::unique_ptr < MotionBlur_Shader> motionBlurShader = std::make_unique<MotionBlur_Shader>();
-	std::unique_ptr < MotionBlur_FrameBuffer> motionBlur = nullptr;
+	std::unique_ptr < Motion_Blur_Pass_Fbo_Handler> motionBlur = nullptr;
 	std::unique_ptr < Blur_Shader> blurShader = std::make_unique<Blur_Shader>();
 	std::unique_ptr < Bloom_Pass_Fbo_Handler> blur = nullptr;
-	std::unique_ptr < MotionBlur_FrameBuffer> finalFBO = nullptr;
+	std::unique_ptr < Motion_Blur_Pass_Fbo_Handler> finalFBO = nullptr;
 
 	std::vector< std::shared_ptr < Static_Mesh>> meshList;
 	std::vector< std::shared_ptr < Static_Mesh>> terrainList;
@@ -529,11 +529,10 @@ struct RenderEngineMain::Impl
 
 		blur = std::make_unique <Bloom_Pass_Fbo_Handler>(ScreenWidth, ScreenHeight);
 
-		motionBlur = std::make_unique < MotionBlur_FrameBuffer>();
-		motionBlur->Init(ScreenWidth, ScreenHeight);
+		motionBlur = std::make_unique < Motion_Blur_Pass_Fbo_Handler>(ScreenWidth, ScreenHeight);
 
-		finalFBO = std::make_unique < MotionBlur_FrameBuffer>();
-		finalFBO->Init(ScreenWidth, ScreenHeight);
+		//ToDo:
+		finalFBO = std::make_unique < Motion_Blur_Pass_Fbo_Handler>(ScreenWidth, ScreenHeight);
 
 		resizeUpdateFramebuffers = std::make_unique<std::vector<std::function<void(int, int)>>>();
 		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { depth->ResizeFBO(width, height); });
@@ -541,8 +540,8 @@ struct RenderEngineMain::Impl
 		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { ssaoBlur->ResizeFBO(width, height); });
 		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { /*hdr->ResizeFrameBuffer(width, height);*/ hdr->ResizeFBO(width, height); });
 		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { blur->ResizeFBO(width, height); });
-		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { motionBlur->ResizeFrameBuffer(width, height); });
-		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { finalFBO->ResizeFrameBuffer(width, height); });
+		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { motionBlur->ResizeFBO(width, height); });
+		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { finalFBO->ResizeFBO(width, height); });
 
 		mainLight = std::make_unique < DirectionalLight>(1024, 1024,
 			0.1f, 0.1f, 0.1f,
@@ -1734,9 +1733,9 @@ struct RenderEngineMain::Impl
 
 	void MotionBlurPass(float fps)
 	{
-		glViewport(0, 0, motionBlur->GetWidth(), motionBlur->GetHeight());
+		glViewport(0, 0, motionBlur->GetFBOWidth(), motionBlur->GetFBOHeight());
 
-		motionBlur->Write();
+		motionBlur->WriteToFBO();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		motionBlurShader->UseShader();
 
@@ -2138,9 +2137,9 @@ struct RenderEngineMain::Impl
 		//}
 		//else
 		//{
-			glViewport(0, 0, finalFBO->GetWidth(), finalFBO->GetHeight());
+			glViewport(0, 0, finalFBO->GetFBOWidth(), finalFBO->GetFBOHeight());
 
-			finalFBO->Write();
+			finalFBO->WriteToFBO();
 			//glViewport(0, 0, ScreenWidth, ScreenHeight);
 
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -2153,7 +2152,7 @@ struct RenderEngineMain::Impl
 			blur->AttachFBOToTextureUnit(GL_TEXTURE1, 1);
 			glUniform1i(hdrShader->GetBlurLocation(), 1);
 
-			motionBlur->Read(GL_TEXTURE2);
+			motionBlur->AttachFBOToTextureUnit(GL_TEXTURE2);
 			hdrShader->SetTexture(2);
 
 			hdrShader->Validate();
@@ -2217,7 +2216,7 @@ GLFWwindow* RenderEngineMain::GetMainWindow()
 
 void RenderEngineMain::AddViewers()
 {
-	engineUI->AddSceneViewers(Pimpl()->finalFBO->GetBuffer(), "InGame", InGame);
+	engineUI->AddSceneViewers(Pimpl()->finalFBO->GetFBOBuffer(0), "InGame", InGame);
 }
 
 bool RenderEngineMain:: IsEnd()
