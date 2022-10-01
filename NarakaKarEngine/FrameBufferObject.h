@@ -41,7 +41,7 @@ namespace NarakaKarEngine
 		{
 		public:
 			FrameBufferObject() = delete;
-			explicit FrameBufferObject(const FBOParams& fboParams);
+			explicit FrameBufferObject(const std::shared_ptr<FBOParams>& fboParams);
 
 			FrameBufferObject(FrameBufferObject&& rhs) noexcept = default;
 			FrameBufferObject& operator=(FrameBufferObject&& rhs) noexcept = default;
@@ -50,20 +50,20 @@ namespace NarakaKarEngine
 			FrameBufferObject& operator=(const FrameBufferObject& rhs) noexcept = delete;
 
 			void WriteToBuffer() const;
-
 			void AttachColorBufferToTexture(const GLenum& textureUnit, const GLuint& texGenParamIndex, const GLuint& bufferIndex) const;
-
 			void ResizeBuffers(int width, int height);
+			GLuint GetWidth() const;
+			GLuint GetHeight() const;
 
 			~FrameBufferObject();
 
 		private:
-			GLuint m_FboId;
-			FBOParams m_FboParam;
-			std::vector<GLuint>m_ColorBuffers;
-			GLuint m_DepthBuffer;
-			GLuint m_StencilBuffer;
-			GLuint m_DepthStencilBuffer;
+			struct Impl;
+
+			const Impl* Pimpl() const { return m_pImpl.get(); }
+			Impl* Pimpl() { return m_pImpl.get(); }
+
+			std::unique_ptr<Impl> m_pImpl;
 		};
 	}
 }

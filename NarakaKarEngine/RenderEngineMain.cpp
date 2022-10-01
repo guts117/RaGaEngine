@@ -31,7 +31,7 @@
 
 #include "Equirectangular_to_CubeMap_Framebuffer.h"
 #include "PreFilter_Framebuffer.h"
-#include "BRDF_Framebuffer.h"
+#include "BRDF_Pass_FBO_Handler.h"
 #include "Depth_Framebuffer.h"
 #include "SSAO_Framebuffer.h"
 #include "SSAOBlur_Framebuffer.h"
@@ -148,7 +148,7 @@ struct RenderEngineMain::Impl
 	std::unique_ptr <PreFilter_Framebuffer> prefilterMap;
 
 	std::unique_ptr < BRDF_Shader > brdfShader = std::make_unique<BRDF_Shader>();
-	std::unique_ptr < BRDF_Framebuffer > brdfMap;
+	std::unique_ptr <BRDF_Pass_FBO_Handler> brdfMap;
 
 	std::shared_ptr < Model_Shader > directionalShadowShader = std::make_shared<Model_Shader>();
 	std::shared_ptr < Model_Shader > omniShadowShader = std::make_shared<Model_Shader>();
@@ -513,8 +513,7 @@ struct RenderEngineMain::Impl
 		prefilterMap = std::make_unique <PreFilter_Framebuffer>();
 		prefilterMap->Init(128, 128);
 
-		brdfMap = std::make_unique < BRDF_Framebuffer>();
-		brdfMap->Init(ScreenWidth, ScreenWidth);
+		brdfMap = std::make_unique < BRDF_Pass_FBO_Handler>(ScreenWidth, ScreenWidth);
 
 		quad = std::make_unique < Static_Mesh>();
 		mesh_cube = std::make_unique < Static_Mesh>();
@@ -1361,9 +1360,9 @@ struct RenderEngineMain::Impl
 
 	void BRDFPass()
 	{
-		glViewport(0, 0, brdfMap->GetWidth(), brdfMap->GetHeight());
+		glViewport(0, 0, brdfMap->GetFBOWidth(), brdfMap->GetFBOHeight());
 
-		brdfMap->Write();
+		brdfMap->WriteToFBO();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		brdfShader->UseShader();
@@ -1583,7 +1582,7 @@ struct RenderEngineMain::Impl
 		mainLight->GetShadowMap()->Read(1, GL_TEXTURE2);
 		irradianceMap->Read(GL_TEXTURE8);
 		prefilterMap->Read(GL_TEXTURE9);
-		brdfMap->Read(GL_TEXTURE10);
+		brdfMap->AttachFBOToTextureUnit(GL_TEXTURE10);
 		ssaoBlur->Read(GL_TEXTURE14);
 		depth->Read(GL_TEXTURE18);
 

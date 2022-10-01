@@ -7,7 +7,6 @@ using namespace RenderEngine;
 
 struct BRDF_Pass_FBO_Handler::Impl
 {
-	std::unique_ptr<FBOParams> m_FboParams;
 	std::unique_ptr<FrameBufferObject> m_Fbo;
 
 	Impl() = delete;
@@ -22,8 +21,8 @@ struct BRDF_Pass_FBO_Handler::Impl
 
 		FBOTexGenParams fboTexGenParams{ 1, GL_TEXTURE_2D, 0, GL_RG16F, 0, GL_RG, GL_FLOAT, NULL, fboTexParams };
 
-		m_FboParams = std::make_unique<FBOParams>(FBOParams{ width, height, std::vector<FBOTexGenParams>{fboTexGenParams}, 0, 0, 0 });
-		m_Fbo = std::make_unique<FrameBufferObject>(m_FboParams);
+		auto fboParams = std::make_shared<FBOParams>(FBOParams{ width, height, std::vector<FBOTexGenParams>{fboTexGenParams}, 0, 0, 0 });
+		m_Fbo = std::make_unique<FrameBufferObject>(fboParams);
 	}
 
 	Impl(Impl&& rhs) noexcept = default;
@@ -69,12 +68,12 @@ void BRDF_Pass_FBO_Handler::ResizeFBO(const GLuint& width, const GLuint& height)
 
 const GLuint& BRDF_Pass_FBO_Handler::GetFBOWidth() const
 {
-	return Pimpl()->m_FboParams->Width;
+	return Pimpl()->m_Fbo->GetWidth();
 }
 
 const GLuint& BRDF_Pass_FBO_Handler::GetFBOHeight() const
 {
-	return Pimpl()->m_FboParams->Height;
+	return Pimpl()->m_Fbo->GetHeight();
 }
 
 BRDF_Pass_FBO_Handler::~BRDF_Pass_FBO_Handler() = default;
