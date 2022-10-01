@@ -116,8 +116,8 @@
     <ClCompile Include="Skybox.cpp" />
     <ClCompile Include="SpotLight.cpp" />
     <ClCompile Include="Depth_Pass_Fbo_Handler.cpp" />
-    <ClCompile Include="SSAO_Framebuffer.cpp" />
-    <ClCompile Include="SSAOBlur_Framebuffer.cpp" />
+    <ClCompile Include="Ssao_Pass_Fbo_Handler.cpp" />
+    <ClCompile Include="Ssao_Blur_Pass_Fbo_Handler.cpp" />
     <ClCompile Include="SSAOBlur_Shader.cpp" />
     <ClCompile Include="SSAO_Shader.cpp" />
     <ClCompile Include="Static_Mesh.cpp" />
@@ -185,8 +185,8 @@
     <ClInclude Include="spimpl.h" />
     <ClInclude Include="SpotLight.h" />
     <ClInclude Include="Depth_Pass_Fbo_Handler.h" />
-    <ClInclude Include="SSAO_Framebuffer.h" />
-    <ClInclude Include="SSAOBlur_Framebuffer.h" />
+    <ClInclude Include="Ssao_Pass_Fbo_Handler.h" />
+    <ClInclude Include="Ssao_Blur_Pass_Fbo_Handler.h" />
     <ClInclude Include="SSAOBlur_Shader.h" />
     <ClInclude Include="SSAO_Shader.h" />
     <ClInclude Include="Static_Mesh.h" />

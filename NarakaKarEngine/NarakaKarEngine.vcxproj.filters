@@ -138,13 +138,13 @@
     <ClCompile Include="SpotLight.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
-    <ClCompile Include="SSAO_Framebuffer.cpp">
+    <ClCompile Include="Ssao_Pass_Fbo_Handler.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
     <ClCompile Include="SSAO_Shader.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
-    <ClCompile Include="SSAOBlur_Framebuffer.cpp">
+    <ClCompile Include="Ssao_Blur_Pass_Fbo_Handler.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
     <ClCompile Include="SSAOBlur_Shader.cpp">
@@ -338,13 +338,13 @@
     <ClInclude Include="SpotLight.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
-    <ClInclude Include="SSAO_Framebuffer.h">
+    <ClInclude Include="Ssao_Pass_Fbo_Handler.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="SSAO_Shader.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
-    <ClInclude Include="SSAOBlur_Framebuffer.h">
+    <ClInclude Include="Ssao_Blur_Pass_Fbo_Handler.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="SSAOBlur_Shader.h">

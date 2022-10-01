@@ -33,8 +33,8 @@
 #include "PreFilter_Framebuffer.h"
 #include "BRDF_Pass_FBO_Handler.h"
 #include "Depth_Pass_Fbo_Handler.h"
-#include "SSAO_Framebuffer.h"
-#include "SSAOBlur_Framebuffer.h"
+#include "Ssao_Pass_Fbo_Handler.h"
+#include "Ssao_Blur_Pass_Fbo_Handler.h"
 #include "Shading_Pass_Fbo_Handler.h"
 #include "MotionBlur_FrameBuffer.h"
 #include "ShadowMap_FrameBuffer.h"
@@ -165,10 +165,10 @@ struct RenderEngineMain::Impl
 	std::unique_ptr < Depth_Pass_Fbo_Handler> depth = nullptr;
 
 	std::unique_ptr < SSAO_Shader> ssaoShader = std::make_unique<SSAO_Shader>();
-	std::unique_ptr < SSAO_Framebuffer> ssao = nullptr;
+	std::unique_ptr < Ssao_Pass_Fbo_Handler> ssao = nullptr;
 
 	std::unique_ptr < SSAOBlur_Shader > ssaoBlurShader = std::make_unique<SSAOBlur_Shader>();
-	std::unique_ptr < SSAOBlur_Framebuffer > ssaoBlur = nullptr;
+	std::unique_ptr < Ssao_Blur_Pass_Fbo_Handler > ssaoBlur = nullptr;
 
 	std::vector< std::shared_ptr < Model_Shader>> shaderList;
 	std::vector< std::shared_ptr < Model_Shader>> animShaderList;
@@ -521,11 +521,9 @@ struct RenderEngineMain::Impl
 
 		depth = std::make_unique < Depth_Pass_Fbo_Handler>(ScreenWidth, ScreenHeight);
 
-		ssao = std::make_unique < SSAO_Framebuffer>();
-		ssao->Init(ScreenWidth, ScreenHeight);
+		ssao = std::make_unique < Ssao_Pass_Fbo_Handler>(ScreenWidth, ScreenHeight);
 
-		ssaoBlur = std::make_unique < SSAOBlur_Framebuffer>();
-		ssaoBlur->Init(ScreenWidth, ScreenHeight);
+		ssaoBlur = std::make_unique < Ssao_Blur_Pass_Fbo_Handler>(ScreenWidth, ScreenHeight);
 
 		hdr = std::make_unique < Shading_Pass_Fbo_Handler>(ScreenWidth, ScreenHeight);
 
@@ -539,8 +537,8 @@ struct RenderEngineMain::Impl
 
 		resizeUpdateFramebuffers = std::make_unique<std::vector<std::function<void(int, int)>>>();
 		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { depth->ResizeFBO(width, height); });
-		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { ssao->ResizeFrameBuffer(width, height); });
-		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { ssaoBlur->ResizeFrameBuffer(width, height); });
+		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { ssao->ResizeFBO(width, height); });
+		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { ssaoBlur->ResizeFBO(width, height); });
 		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { /*hdr->ResizeFrameBuffer(width, height);*/ hdr->ResizeFBO(width, height); });
 		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { blur->ResizeFBO(width, height); });
 		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { motionBlur->ResizeFrameBuffer(width, height); });
@@ -1529,8 +1527,8 @@ struct RenderEngineMain::Impl
 
 	void SSAOPass()
 	{
-		glViewport(0, 0, ssao->GetWidth(), ssao->GetHeight());
-		ssao->Write();
+		glViewport(0, 0, ssao->GetFBOWidth(), ssao->GetFBOHeight());
+		ssao->WriteToFBO();
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		ssaoShader->UseShader();
@@ -1550,13 +1548,13 @@ struct RenderEngineMain::Impl
 
 	void SSAOBlurPass()
 	{
-		glViewport(0, 0, ssaoBlur->GetWidth(), ssaoBlur->GetHeight());
+		glViewport(0, 0, ssaoBlur->GetFBOWidth(), ssaoBlur->GetFBOHeight());
 
-		ssaoBlur->Write();
+		ssaoBlur->WriteToFBO();
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		ssaoBlurShader->UseShader();
-		ssao->Read(GL_TEXTURE1);
+		ssao->AttachFBOToTextureUnit(GL_TEXTURE1);
 		ssaoBlurShader->SetTexture(1);
 
 		quad->RenderQuad();
@@ -1580,7 +1578,7 @@ struct RenderEngineMain::Impl
 		irradianceMap->Read(GL_TEXTURE8);
 		prefilterMap->Read(GL_TEXTURE9);
 		brdfMap->AttachFBOToTextureUnit(GL_TEXTURE10);
-		ssaoBlur->Read(GL_TEXTURE14);
+		ssaoBlur->AttachFBOToTextureUnit(GL_TEXTURE14);
 		depth->AttachFBOToTextureUnit(GL_TEXTURE18);
 
 		skybox->DrawHDRSkybox(viewMatrix, projectionMatrix, prevProj, prevView, environmentMap.get()); //should be at the end to prevent overdraw,here becoz of blending issues
