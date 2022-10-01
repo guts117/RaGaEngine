@@ -73,7 +73,6 @@
     <ClCompile Include="Billboard_Shader.cpp" />
     <ClCompile Include="Blur_PingPong_FrameBuffer.cpp" />
     <ClCompile Include="Blur_Shader.cpp" />
-    <ClCompile Include="BRDF_Framebuffer.cpp" />
     <ClCompile Include="BRDF_Pass_FBO_Handler.cpp" />
     <ClCompile Include="BRDF_Shader.cpp" />
     <ClCompile Include="Camera.cpp" />
@@ -147,7 +146,6 @@
     <ClInclude Include="Billboard_Shader.h" />
     <ClInclude Include="Blur_PingPong_Framebuffer.h" />
     <ClInclude Include="Blur_Shader.h" />
-    <ClInclude Include="BRDF_Framebuffer.h" />
     <ClInclude Include="BRDF_Pass_FBO_Handler.h" />
     <ClInclude Include="BRDF_Shader.h" />
     <ClInclude Include="Camera.h" />
