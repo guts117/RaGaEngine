@@ -219,7 +219,7 @@
     <ClCompile Include="FrameBufferObject.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
-    <ClCompile Include="BRDF_Pass_FBO_Handler.cpp">
+    <ClCompile Include="Brdf_Pass_Fbo_Handler.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
   </ItemGroup>
@@ -425,7 +425,7 @@
     <ClInclude Include="FrameBufferObject.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
-    <ClInclude Include="BRDF_Pass_FBO_Handler.h">
+    <ClInclude Include="Brdf_Pass_Fbo_Handler.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
   </ItemGroup>

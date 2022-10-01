@@ -1,11 +1,11 @@
 #include "pch.h"
-#include "BRDF_Pass_FBO_Handler.h"
+#include "Brdf_Pass_Fbo_Handler.h"
 #include "FrameBufferObject.h"
 
 using namespace NarakaKarEngine;
 using namespace RenderEngine;
 
-struct BRDF_Pass_FBO_Handler::Impl
+struct Brdf_Pass_Fbo_Handler::Impl
 {
 	std::unique_ptr<FrameBufferObject> m_Fbo;
 
@@ -49,31 +49,31 @@ struct BRDF_Pass_FBO_Handler::Impl
 	~Impl() = default;
 };
 
-BRDF_Pass_FBO_Handler::BRDF_Pass_FBO_Handler(const GLuint& width, const GLuint& height) : m_pImpl{ new Impl(width, height) } {}
+Brdf_Pass_Fbo_Handler::Brdf_Pass_Fbo_Handler(const GLuint& width, const GLuint& height) : m_pImpl{ new Impl(width, height) } {}
 
-void BRDF_Pass_FBO_Handler::WriteToFBO() const
+void Brdf_Pass_Fbo_Handler::WriteToFBO() const
 {
 	Pimpl()->WriteToFBO();
 }
 
-void BRDF_Pass_FBO_Handler::AttachFBOToTextureUnit(const GLenum& textureUnit) const
+void Brdf_Pass_Fbo_Handler::AttachFBOToTextureUnit(const GLenum& textureUnit) const
 {
 	Pimpl()->AttachFBOToTextureUnit(textureUnit);
 }
 
-void BRDF_Pass_FBO_Handler::ResizeFBO(const GLuint& width, const GLuint& height)
+void Brdf_Pass_Fbo_Handler::ResizeFBO(const GLuint& width, const GLuint& height)
 {
 	Pimpl()->ResizeFBO(width, height);
 }
 
-const GLuint& BRDF_Pass_FBO_Handler::GetFBOWidth() const
+const GLuint& Brdf_Pass_Fbo_Handler::GetFBOWidth() const
 {
 	return Pimpl()->m_Fbo->GetWidth();
 }
 
-const GLuint& BRDF_Pass_FBO_Handler::GetFBOHeight() const
+const GLuint& Brdf_Pass_Fbo_Handler::GetFBOHeight() const
 {
 	return Pimpl()->m_Fbo->GetHeight();
 }
 
-BRDF_Pass_FBO_Handler::~BRDF_Pass_FBO_Handler() = default;
+Brdf_Pass_Fbo_Handler::~Brdf_Pass_Fbo_Handler() = default;

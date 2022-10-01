@@ -7,17 +7,17 @@ namespace NarakaKarEngine
 {
 	namespace RenderEngine
 	{
-		class BRDF_Pass_FBO_Handler
+		class Brdf_Pass_Fbo_Handler
 		{
 		public:
-			BRDF_Pass_FBO_Handler() = delete;
-			explicit BRDF_Pass_FBO_Handler(const GLuint& width, const GLuint& height);
+			Brdf_Pass_Fbo_Handler() = delete;
+			explicit Brdf_Pass_Fbo_Handler(const GLuint& width, const GLuint& height);
 
-			BRDF_Pass_FBO_Handler(BRDF_Pass_FBO_Handler&& rhs) noexcept = default;
-			BRDF_Pass_FBO_Handler& operator=(BRDF_Pass_FBO_Handler&& rhs) noexcept = default;
+			Brdf_Pass_Fbo_Handler(Brdf_Pass_Fbo_Handler&& rhs) noexcept = default;
+			Brdf_Pass_Fbo_Handler& operator=(Brdf_Pass_Fbo_Handler&& rhs) noexcept = default;
 
-			BRDF_Pass_FBO_Handler(const BRDF_Pass_FBO_Handler& rhs) noexcept = delete;
-			BRDF_Pass_FBO_Handler& operator=(const BRDF_Pass_FBO_Handler& rhs) noexcept = delete;
+			Brdf_Pass_Fbo_Handler(const Brdf_Pass_Fbo_Handler& rhs) noexcept = delete;
+			Brdf_Pass_Fbo_Handler& operator=(const Brdf_Pass_Fbo_Handler& rhs) noexcept = delete;
 
 			void WriteToFBO() const;
 			void AttachFBOToTextureUnit(const GLenum& textureUnit) const;
@@ -26,7 +26,7 @@ namespace NarakaKarEngine
 			const GLuint& GetFBOWidth() const;
 			const GLuint& GetFBOHeight() const;
 
-			~BRDF_Pass_FBO_Handler();
+			~Brdf_Pass_Fbo_Handler();
 
 		private:
 			struct Impl;

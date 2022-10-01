@@ -148,7 +148,7 @@ struct RenderEngineMain::Impl
 	std::unique_ptr <PreFilter_Framebuffer> prefilterMap;
 
 	std::unique_ptr < BRDF_Shader > brdfShader = std::make_unique<BRDF_Shader>();
-	std::unique_ptr <BRDF_Pass_FBO_Handler> brdfMap;
+	std::unique_ptr <Brdf_Pass_Fbo_Handler> brdfMap;
 
 	std::shared_ptr < Model_Shader > directionalShadowShader = std::make_shared<Model_Shader>();
 	std::shared_ptr < Model_Shader > omniShadowShader = std::make_shared<Model_Shader>();
@@ -513,7 +513,7 @@ struct RenderEngineMain::Impl
 		prefilterMap = std::make_unique <PreFilter_Framebuffer>();
 		prefilterMap->Init(128, 128);
 
-		brdfMap = std::make_unique < BRDF_Pass_FBO_Handler>(ScreenWidth, ScreenWidth);
+		brdfMap = std::make_unique < Brdf_Pass_Fbo_Handler>(ScreenWidth, ScreenWidth);
 
 		quad = std::make_unique < Static_Mesh>();
 		mesh_cube = std::make_unique < Static_Mesh>();
