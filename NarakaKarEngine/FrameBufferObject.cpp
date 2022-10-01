@@ -149,6 +149,7 @@ struct FrameBufferObject::Impl
 	{
 		return m_FboParam->Width;
 	}
+
 	const GLuint& GetHeight() const
 	{
 		return m_FboParam->Height;
@@ -189,6 +190,7 @@ const GLuint& FrameBufferObject::GetWidth() const
 {
 	return Pimpl()->GetWidth();
 }
+
 const GLuint& FrameBufferObject::GetHeight() const
 {
 	return Pimpl()->GetHeight();
