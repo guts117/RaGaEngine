@@ -8,6 +8,12 @@ namespace NarakaKarEngine
 {
 	namespace RenderEngine
 	{
+		struct FBORenderBufferParam
+		{
+			GLenum InternalFormat;
+			GLenum Attachment;
+		};
+
 		struct FBOTexParams
 		{
 			GLenum ParamName;
@@ -31,10 +37,9 @@ namespace NarakaKarEngine
 		{
 			GLuint Width;
 			GLuint Height;
-			std::vector<FBOTexGenParams> FboTexGenParams;
-			GLenum DepthBufferFormat;
-			GLenum StencilBufferFormat;
-			GLenum DepthStencilBufferFormat;
+			GLenum Attachment;
+			std::vector<FBOTexGenParams> FboTexGenParams;		
+			std::vector<FBORenderBufferParam> FBORenderBufferParams;
 		};
 
 		class FrameBufferObject

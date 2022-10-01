@@ -20,8 +20,7 @@ struct Brdf_Pass_Fbo_Handler::Impl
 		fboTexParams.push_back(FBOTexParams{ GL_TEXTURE_WRAP_T,		GL_CLAMP_TO_EDGE });
 
 		FBOTexGenParams fboTexGenParams{ 1, GL_TEXTURE_2D, 0, GL_RG16F, 0, GL_RG, GL_FLOAT, NULL, fboTexParams };
-
-		auto fboParams = std::make_shared<FBOParams>(FBOParams{ width, height, std::vector<FBOTexGenParams>{fboTexGenParams}, 0, 0, 0 });
+		auto fboParams = std::make_shared<FBOParams>(FBOParams{ width, height, GL_COLOR_ATTACHMENT0, std::vector<FBOTexGenParams>{fboTexGenParams} });
 		m_Fbo = std::make_unique<FrameBufferObject>(fboParams);
 	}
 

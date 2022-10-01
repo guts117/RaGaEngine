@@ -39,9 +39,6 @@
     <ClCompile Include="Billboard_Shader.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
-    <ClCompile Include="Blur_PingPong_FrameBuffer.cpp">
-      <Filter>Source Files\RenderEngine</Filter>
-    </ClCompile>
     <ClCompile Include="Blur_Shader.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
@@ -57,7 +54,7 @@
     <ClCompile Include="Debug.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
-    <ClCompile Include="Depth_Framebuffer.cpp">
+    <ClCompile Include="Depth_Pass_Fbo_Handler.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
     <ClCompile Include="DirectionalLight.cpp">
@@ -239,9 +236,6 @@
     <ClInclude Include="Billboard_Shader.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
-    <ClInclude Include="Blur_PingPong_Framebuffer.h">
-      <Filter>Header Files\RenderEngine</Filter>
-    </ClInclude>
     <ClInclude Include="Blur_Shader.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
@@ -260,7 +254,7 @@
     <ClInclude Include="Debug.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
-    <ClInclude Include="Depth_Framebuffer.h">
+    <ClInclude Include="Depth_Pass_Fbo_Handler.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="DirectionalLight.h">

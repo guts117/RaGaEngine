@@ -32,7 +32,7 @@
 #include "Equirectangular_to_CubeMap_Framebuffer.h"
 #include "PreFilter_Framebuffer.h"
 #include "BRDF_Pass_FBO_Handler.h"
-#include "Depth_Framebuffer.h"
+#include "Depth_Pass_Fbo_Handler.h"
 #include "SSAO_Framebuffer.h"
 #include "SSAOBlur_Framebuffer.h"
 #include "HDR_Framebuffer.h"
@@ -162,7 +162,7 @@ struct RenderEngineMain::Impl
 	std::shared_ptr < PreZPass_Shader> static_preZPassShader = std::make_shared<PreZPass_Shader>();
 	std::unique_ptr < PreZPass_Shader> anim_preZPassShader = std::make_unique<PreZPass_Shader>();
 	std::unique_ptr < Terrain_PreZPass_Shader> terrain_preZPassShader = std::make_unique<Terrain_PreZPass_Shader>();
-	std::unique_ptr < Depth_Framebuffer> depth = nullptr;
+	std::unique_ptr < Depth_Pass_Fbo_Handler> depth = nullptr;
 
 	std::unique_ptr < SSAO_Shader> ssaoShader = std::make_unique<SSAO_Shader>();
 	std::unique_ptr < SSAO_Framebuffer> ssao = nullptr;
@@ -519,8 +519,7 @@ struct RenderEngineMain::Impl
 		mesh_cube = std::make_unique < Static_Mesh>();
 		ccw_cube = std::make_unique <Static_Mesh>();
 
-		depth = std::make_unique < Depth_Framebuffer>();
-		depth->Init(ScreenWidth, ScreenHeight);
+		depth = std::make_unique < Depth_Pass_Fbo_Handler>(ScreenWidth, ScreenHeight);
 
 		ssao = std::make_unique < SSAO_Framebuffer>();
 		ssao->Init(ScreenWidth, ScreenHeight);
@@ -540,7 +539,7 @@ struct RenderEngineMain::Impl
 		finalFBO->Init(ScreenWidth, ScreenHeight);
 
 		resizeUpdateFramebuffers = std::make_unique<std::vector<std::function<void(int, int)>>>();
-		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { depth->ResizeFrameBuffer(width, height); });
+		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { depth->ResizeFBO(width, height); });
 		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { ssao->ResizeFrameBuffer(width, height); });
 		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { ssaoBlur->ResizeFrameBuffer(width, height); });
 		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { hdr->ResizeFrameBuffer(width, height); });
@@ -1455,7 +1454,7 @@ struct RenderEngineMain::Impl
 	void CullLight()
 	{
 		visibleClusterCompShader->UseShader();
-		depth->Read(GL_TEXTURE0);
+		depth->AttachFBOToTextureUnit(GL_TEXTURE0);
 		visibleClusterCompShader->Dispatch(ScreenWidth / 32, ScreenHeight / 30, 1);
 
 		//unsigned int count = 0;
@@ -1489,9 +1488,9 @@ struct RenderEngineMain::Impl
 	{
 		auto projectionMatrix = camera->GetProjectionMatrix();
 		auto viewMatrix = camera->CalculateViewMatrix();
-		glViewport(0, 0, depth->GetWidth(), depth->GetHeight());
+		glViewport(0, 0, depth->GetFBOWidth(), depth->GetFBOHeight());
 
-		depth->Write();
+		depth->WriteToFBO();
 		//clear everything
 		glClear(GL_DEPTH_BUFFER_BIT);
 
@@ -1537,7 +1536,7 @@ struct RenderEngineMain::Impl
 
 		ssaoShader->UseShader();
 
-		depth->Read(GL_TEXTURE1);
+		depth->AttachFBOToTextureUnit(GL_TEXTURE1);
 		ssaoShader->SetTexture(1);
 
 		SSAONoiseTexture->UseTexture(1);
@@ -1583,7 +1582,7 @@ struct RenderEngineMain::Impl
 		prefilterMap->Read(GL_TEXTURE9);
 		brdfMap->AttachFBOToTextureUnit(GL_TEXTURE10);
 		ssaoBlur->Read(GL_TEXTURE14);
-		depth->Read(GL_TEXTURE18);
+		depth->AttachFBOToTextureUnit(GL_TEXTURE18);
 
 		skybox->DrawHDRSkybox(viewMatrix, projectionMatrix, prevProj, prevView, environmentMap.get()); //should be at the end to prevent overdraw,here becoz of blending issues
 

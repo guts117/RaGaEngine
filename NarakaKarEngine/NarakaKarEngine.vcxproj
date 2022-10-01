@@ -71,7 +71,6 @@
     <ClCompile Include="Animated_Model.cpp" />
     <ClCompile Include="Billboard_Mesh.cpp" />
     <ClCompile Include="Billboard_Shader.cpp" />
-    <ClCompile Include="Blur_PingPong_FrameBuffer.cpp" />
     <ClCompile Include="Blur_Shader.cpp" />
     <ClCompile Include="Brdf_Pass_Fbo_Handler.cpp" />
     <ClCompile Include="BRDF_Shader.cpp" />
@@ -116,7 +115,7 @@
     <ClCompile Include="ShadowMap_FrameBuffer.cpp" />
     <ClCompile Include="Skybox.cpp" />
     <ClCompile Include="SpotLight.cpp" />
-    <ClCompile Include="Depth_Framebuffer.cpp" />
+    <ClCompile Include="Depth_Pass_Fbo_Handler.cpp" />
     <ClCompile Include="SSAO_Framebuffer.cpp" />
     <ClCompile Include="SSAOBlur_Framebuffer.cpp" />
     <ClCompile Include="SSAOBlur_Shader.cpp" />
@@ -145,7 +144,6 @@
     <ClInclude Include="Animated_Model.h" />
     <ClInclude Include="Billboard_Mesh.h" />
     <ClInclude Include="Billboard_Shader.h" />
-    <ClInclude Include="Blur_PingPong_Framebuffer.h" />
     <ClInclude Include="Blur_Shader.h" />
     <ClInclude Include="Brdf_Pass_Fbo_Handler.h" />
     <ClInclude Include="BRDF_Shader.h" />
@@ -186,7 +184,7 @@
     <ClInclude Include="Skybox.h" />
     <ClInclude Include="spimpl.h" />
     <ClInclude Include="SpotLight.h" />
-    <ClInclude Include="Depth_Framebuffer.h" />
+    <ClInclude Include="Depth_Pass_Fbo_Handler.h" />
     <ClInclude Include="SSAO_Framebuffer.h" />
     <ClInclude Include="SSAOBlur_Framebuffer.h" />
     <ClInclude Include="SSAOBlur_Shader.h" />

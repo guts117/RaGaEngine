@@ -8,35 +8,33 @@ struct FrameBufferObject::Impl
 {
 	GLuint m_FboId;
 	std::shared_ptr<FBOParams> m_FboParam;
-	std::vector<GLuint>m_ColorBuffers;
-	GLuint m_DepthBuffer;
-	GLuint m_StencilBuffer;
-	GLuint m_DepthStencilBuffer;
+	std::vector<GLuint>m_ReadWriteBuffers;
+	std::vector<GLuint>m_WriteBuffers;
 
 	Impl() = delete;
 
 	Impl(const std::shared_ptr<FBOParams>& fboParams)
 		: m_FboId{ 0 }
 		, m_FboParam{ fboParams }
-		, m_ColorBuffers{ std::vector<GLuint>() }
-		, m_DepthBuffer{ fboParams->DepthBufferFormat }
-		, m_StencilBuffer{ fboParams->StencilBufferFormat }
-		, m_DepthStencilBuffer{ fboParams->DepthStencilBufferFormat }
+		, m_ReadWriteBuffers{ std::vector<GLuint>() }
+		, m_WriteBuffers{ std::vector<GLuint>() }
+ 
 	{
 		glGenFramebuffers(1, &m_FboId);
 		glBindFramebuffer(GL_FRAMEBUFFER, m_FboId);
 
+		auto has_Color_Attachment = m_FboParam->Attachment == GL_COLOR_ATTACHMENT0;
 		for (auto fboTexParamIndex = 0; fboTexParamIndex < m_FboParam->FboTexGenParams.size(); ++fboTexParamIndex)
 		{
-			auto texCount = m_FboParam->FboTexGenParams[fboTexParamIndex].ColorBufferSize;
+			auto texCount = has_Color_Attachment ? m_FboParam->FboTexGenParams[fboTexParamIndex].ColorBufferSize : 1;
 			for (auto i = 0; i < texCount; ++i)
 			{
 				GLuint tempColorBuf = 0;
 				glGenTextures(1, &tempColorBuf);
-				m_ColorBuffers.push_back(tempColorBuf);
+				m_ReadWriteBuffers.push_back(tempColorBuf);
 
 				FBOTexGenParams& bufferParams = m_FboParam->FboTexGenParams[fboTexParamIndex];
-				glBindTexture(bufferParams.Target, m_ColorBuffers[i]);
+				glBindTexture(bufferParams.Target, m_ReadWriteBuffers[i]);
 				glTexImage2D(bufferParams.Target, bufferParams.Level, bufferParams.InternalFormat, m_FboParam->Width, m_FboParam->Height, bufferParams.Border, bufferParams.Format, bufferParams.Type, bufferParams.PixelData);
 				//ToDo: Add support for MipMap generation
 				for (auto j = 0; j < bufferParams.FboTexParams.size(); ++j)
@@ -44,25 +42,20 @@ struct FrameBufferObject::Impl
 					SetTexParams(bufferParams, j);
 				}
 
-				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, bufferParams.Target, m_ColorBuffers[i], 0);
-				glDrawBuffer(GL_COLOR_ATTACHMENT0 + i);
+				glFramebufferTexture2D(GL_FRAMEBUFFER, m_FboParam->Attachment + i, bufferParams.Target, m_ReadWriteBuffers[i], 0);
+				if (has_Color_Attachment)
+				{
+					glDrawBuffer(m_FboParam->Attachment + i);
+				}
 			}
 		}
 
-		if (m_FboParam->DepthBufferFormat)
+		for(auto rboParamIndex = 0; rboParamIndex < m_FboParam->FBORenderBufferParams.size(); ++rboParamIndex)
 		{
-			glGenRenderbuffers(1, &m_DepthBuffer);
-			glBindRenderbuffer(GL_RENDERBUFFER, m_DepthBuffer);
-			glRenderbufferStorage(GL_RENDERBUFFER, m_FboParam->DepthBufferFormat, m_FboParam->Width, m_FboParam->Height);
-			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_DepthBuffer);
-		}
-		if (m_FboParam->StencilBufferFormat)
-		{
-			//ToDo: Generate stencil buffer if needed
-		}
-		if (m_FboParam->DepthStencilBufferFormat)
-		{
-			//ToD: Generate Depth_Stencil buffer if needed
+			glGenRenderbuffers(1, &m_WriteBuffers[rboParamIndex]);
+			glBindRenderbuffer(GL_RENDERBUFFER, m_WriteBuffers[rboParamIndex]);
+			glRenderbufferStorage(GL_RENDERBUFFER, m_FboParam->FBORenderBufferParams[rboParamIndex].InternalFormat, m_FboParam->Width, m_FboParam->Height);
+			glFramebufferRenderbuffer(GL_FRAMEBUFFER, m_FboParam->FBORenderBufferParams[rboParamIndex].Attachment, GL_RENDERBUFFER, m_WriteBuffers[rboParamIndex]);
 		}
 
 		auto status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -110,7 +103,7 @@ struct FrameBufferObject::Impl
 	void AttachColorBufferToTexture(const GLenum& textureUnit, const GLuint& texParamIndex, const GLuint& bufferIndex) const
 	{
 		glActiveTexture(textureUnit);
-		glBindTexture(m_FboParam->FboTexGenParams[texParamIndex].Target, m_ColorBuffers[bufferIndex]);
+		glBindTexture(m_FboParam->FboTexGenParams[texParamIndex].Target, m_ReadWriteBuffers[bufferIndex]);
 	}
 
 	void ResizeBuffers(int width, int height)
@@ -124,25 +117,20 @@ struct FrameBufferObject::Impl
 			FBOTexGenParams& bufferParams = m_FboParam->FboTexGenParams[fboTexParamIndex];
 			for (auto i = 0; i < texCount; ++i)
 			{
-				glBindTexture(bufferParams.Target, m_ColorBuffers[i]);
+				glBindTexture(bufferParams.Target, m_ReadWriteBuffers[i]);
 				glTexImage2D(bufferParams.Target, 0, bufferParams.InternalFormat, width, height, bufferParams.Border, bufferParams.Format, bufferParams.Type, bufferParams.PixelData);
 			}
 			glBindTexture(bufferParams.Target, 0);
 		}
 
-		if (m_DepthBuffer)
+		for (auto rboParamIndex = 0; rboParamIndex < m_FboParam->FBORenderBufferParams.size(); ++rboParamIndex)
 		{
-			glNamedRenderbufferStorage(m_DepthBuffer, GL_DEPTH_COMPONENT, width, height);
-		}
-
-		if (m_StencilBuffer)
-		{
-			glNamedRenderbufferStorage(m_StencilBuffer, GL_STENCIL_ATTACHMENT, width, height);
-		}
-
-		if (m_DepthStencilBuffer)
-		{
-			glNamedRenderbufferStorage(m_DepthStencilBuffer, GL_DEPTH_STENCIL_ATTACHMENT, width, height);
+			glGenRenderbuffers(1, &m_WriteBuffers[rboParamIndex]);
+			glBindRenderbuffer(GL_RENDERBUFFER, m_WriteBuffers[rboParamIndex]);
+			glRenderbufferStorage(GL_RENDERBUFFER, m_FboParam->FBORenderBufferParams[rboParamIndex].InternalFormat, m_FboParam->Width, m_FboParam->Height);
+			glFramebufferRenderbuffer(GL_FRAMEBUFFER, m_FboParam->FBORenderBufferParams[rboParamIndex].Attachment, GL_RENDERBUFFER, m_WriteBuffers[rboParamIndex]);
+		
+			glNamedRenderbufferStorage(m_WriteBuffers[rboParamIndex], m_FboParam->FBORenderBufferParams[rboParamIndex].InternalFormat, width, height);
 		}
 	}
 
@@ -158,15 +146,15 @@ struct FrameBufferObject::Impl
 	~Impl()
 	{
 		if (m_FboId) { glDeleteFramebuffers(1, &m_FboId); }
-		for (auto i = 0; i < m_ColorBuffers.size(); ++i)
+		for (auto i = 0; i < m_ReadWriteBuffers.size(); ++i)
 		{
-			if (m_ColorBuffers[i]) { glDeleteTextures(1, &m_ColorBuffers[i]); }
+			if (m_ReadWriteBuffers[i]) { glDeleteTextures(1, &m_ReadWriteBuffers[i]); }
 		}
-		if (m_DepthBuffer) { glDeleteBuffers(1, &m_DepthBuffer); }
-		if (m_StencilBuffer) { glDeleteBuffers(1, &m_StencilBuffer); }
-		if (m_DepthStencilBuffer) { glDeleteBuffers(1, &m_DepthStencilBuffer); }
+		for (auto i = 0; i < m_WriteBuffers.size(); ++i)
+		{
+			if (m_WriteBuffers[i]) { glDeleteBuffers(1, &m_WriteBuffers[i]); }
+		}
 	}
-
 };
 
 FrameBufferObject::FrameBufferObject(const std::shared_ptr<FBOParams>& fboParams) : m_pImpl{ new Impl(fboParams) } {}

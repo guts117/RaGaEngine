@@ -1,5 +1,5 @@
-#ifndef FBO_HANDLER
-#define FBO_HANDLER
+#ifndef BLOOM_PASS_FBO_HANDLER
+#define BLOOM_PASS_FBO_HANDLER
 
 #include "pch.h"
 
