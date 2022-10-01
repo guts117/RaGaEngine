@@ -39,7 +39,7 @@
 #include "MotionBlur_FrameBuffer.h"
 #include "ShadowMap_FrameBuffer.h"
 
-#include "Blur_PingPong_Framebuffer.h"
+#include "Bloom_Pass_Fbo_Handler.h"
 
 #include "Static_Model.h"
 #include "Animated_Model.h"
@@ -183,7 +183,7 @@ struct RenderEngineMain::Impl
 	std::unique_ptr < MotionBlur_Shader> motionBlurShader = std::make_unique<MotionBlur_Shader>();
 	std::unique_ptr < MotionBlur_FrameBuffer> motionBlur = nullptr;
 	std::unique_ptr < Blur_Shader> blurShader = std::make_unique<Blur_Shader>();
-	std::unique_ptr < Blur_PingPong_Framebuffer> blur = nullptr;
+	std::unique_ptr < Bloom_Pass_Fbo_Handler> blur = nullptr;
 	std::unique_ptr < MotionBlur_FrameBuffer> finalFBO = nullptr;
 
 	std::vector< std::shared_ptr < Static_Mesh>> meshList;
@@ -531,8 +531,7 @@ struct RenderEngineMain::Impl
 		hdr = std::make_unique < HDR_Framebuffer>();
 		hdr->Init(ScreenWidth, ScreenHeight);
 
-		blur = std::make_unique < Blur_PingPong_Framebuffer>();
-		blur->Init(ScreenWidth, ScreenHeight);
+		blur = std::make_unique <Bloom_Pass_Fbo_Handler>(ScreenWidth, ScreenHeight);
 
 		motionBlur = std::make_unique < MotionBlur_FrameBuffer>();
 		motionBlur->Init(ScreenWidth, ScreenHeight);
@@ -545,7 +544,7 @@ struct RenderEngineMain::Impl
 		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { ssao->ResizeFrameBuffer(width, height); });
 		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { ssaoBlur->ResizeFrameBuffer(width, height); });
 		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { hdr->ResizeFrameBuffer(width, height); });
-		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { blur->ResizeFrameBuffer(width, height); });
+		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { blur->ResizeFBO(width, height); });
 		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { motionBlur->ResizeFrameBuffer(width, height); });
 		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { finalFBO->ResizeFrameBuffer(width, height); });
 
@@ -1719,17 +1718,17 @@ struct RenderEngineMain::Impl
 		blurShader->UseShader();
 		for (int i = 0; i < amount; i++)
 		{
-			blur->Write(horizontal);
+			blur->WriteToFBO(horizontal);
 			glUniform1i(blurShader->GetHorizontalLocation(), horizontal);
 			blurShader->Validate();
 			blurShader->SetTexture(1);
 			if (i < 1)
 			{
-				blur->ReadFirstIteration(hdr->GetColorBuffer(1));
+				hdr->Read(1);
 			}
 			else
 			{
-				blur->Read(!horizontal);
+				blur->AttachFBOToTextureUnit(GL_TEXTURE1, !horizontal);
 			}
 			quad->RenderQuad();
 			horizontal = !horizontal;
@@ -2155,7 +2154,7 @@ struct RenderEngineMain::Impl
 			glUniform1i(hdrShader->GetHDRLocation(), 1);
 			glUniform1f(hdrShader->GetExposureLocation(), 1.0f);
 
-			blur->Read(1);
+			blur->AttachFBOToTextureUnit(GL_TEXTURE1, 1);
 			glUniform1i(hdrShader->GetBlurLocation(), 1);
 
 			motionBlur->Read(GL_TEXTURE2);

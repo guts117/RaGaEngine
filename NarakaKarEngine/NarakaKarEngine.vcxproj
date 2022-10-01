@@ -82,6 +82,7 @@
     <ClCompile Include="EngineUIMain.cpp" />
     <ClCompile Include="Equirectangular_to_CubeMap_Framebuffer.cpp" />
     <ClCompile Include="Equirectangular_to_CubeMap_Shader.cpp" />
+    <ClCompile Include="Bloom_Pass_Fbo_Handler.cpp" />
     <ClCompile Include="Framebuffer.cpp" />
     <ClCompile Include="FrameBufferObject.cpp" />
     <ClCompile Include="HDR_Framebuffer.cpp" />
@@ -150,6 +151,7 @@
     <ClInclude Include="BRDF_Shader.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="EngineUIMain.h" />
+    <ClInclude Include="Bloom_Pass_Fbo_Handler.h" />
     <ClInclude Include="FrameBufferObject.h" />
     <ClInclude Include="RenderingCommonValues.h" />
     <ClInclude Include="Compute_Shader.h" />
