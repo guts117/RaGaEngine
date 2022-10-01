@@ -14,10 +14,10 @@ struct BRDF_Pass_FBO_Handler::Impl
 	Impl(const GLuint& width, const GLuint& height)
 	{
 		auto fboTexParams = std::vector<FBOTexParams>();
-		fboTexParams.push_back(FBOTexParams{ static_cast<GLenum>(GL_TEXTURE_MIN_FILTER),	static_cast<GLint>(GL_LINEAR) });
-		fboTexParams.push_back(FBOTexParams{ static_cast<GLenum>(GL_TEXTURE_MAG_FILTER),	static_cast<GLint>(GL_LINEAR) });
-		fboTexParams.push_back(FBOTexParams{ static_cast<GLenum>(GL_TEXTURE_WRAP_S),		static_cast<GLint>(GL_CLAMP_TO_EDGE) });
-		fboTexParams.push_back(FBOTexParams{ static_cast<GLenum>(GL_TEXTURE_WRAP_T),		static_cast<GLint>(GL_CLAMP_TO_EDGE) });
+		fboTexParams.push_back(FBOTexParams{ GL_TEXTURE_MIN_FILTER,	GL_LINEAR });
+		fboTexParams.push_back(FBOTexParams{ GL_TEXTURE_MAG_FILTER,	GL_LINEAR });
+		fboTexParams.push_back(FBOTexParams{ GL_TEXTURE_WRAP_S,		GL_CLAMP_TO_EDGE });
+		fboTexParams.push_back(FBOTexParams{ GL_TEXTURE_WRAP_T,		GL_CLAMP_TO_EDGE });
 
 		FBOTexGenParams fboTexGenParams{ 1, GL_TEXTURE_2D, 0, GL_RG16F, 0, GL_RG, GL_FLOAT, NULL, fboTexParams };
 
