@@ -1712,13 +1712,13 @@ struct RenderEngineMain::Impl
 
 	void Bloom()
 	{
-		bool horizontal = true;
+		bool isHorizontalFbo = BloomFBOType::Horizontal;
 		int amount = 10;
 		blurShader->UseShader();
 		for (int i = 0; i < amount; i++)
 		{
-			blur->WriteToFBO(horizontal);
-			glUniform1i(blurShader->GetHorizontalLocation(), horizontal);
+			blur->WriteToFBO(isHorizontalFbo);
+			glUniform1i(blurShader->GetHorizontalLocation(), isHorizontalFbo);
 			blurShader->Validate();
 			blurShader->SetTexture(1);
 			if (i < 1)
@@ -1727,10 +1727,10 @@ struct RenderEngineMain::Impl
 			}
 			else
 			{
-				blur->AttachFBOToTextureUnit(GL_TEXTURE1, !horizontal);
+				blur->AttachFBOToTextureUnit(GL_TEXTURE1, !isHorizontalFbo);
 			}
 			quad->RenderQuad();
-			horizontal = !horizontal;
+			isHorizontalFbo = !isHorizontalFbo;
 		}
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}

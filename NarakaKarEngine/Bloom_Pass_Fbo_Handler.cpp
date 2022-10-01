@@ -14,7 +14,7 @@ struct Bloom_Pass_Fbo_Handler::Impl
 	Impl(const GLuint& width, const GLuint& height)
 		: m_FboVec{ std::make_unique<std::vector<std::shared_ptr<FrameBufferObject>>>() }
 	{
-		for (unsigned int i = 0; i < 2; ++i)
+		for (unsigned int i = 0; i < BloomFBOType::Max; ++i)
 		{
 			auto fboTexParams = std::vector<FBOTexParams>();
 			fboTexParams.push_back(FBOTexParams{ GL_TEXTURE_MIN_FILTER,	GL_LINEAR });

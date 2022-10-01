@@ -13,19 +13,16 @@ struct Depth_Pass_Fbo_Handler::Impl
 
 	Impl(const GLuint& width, const GLuint& height)
 	{
-		for (unsigned int i = 0; i < 2; ++i)
-		{
-			auto fboTexParams = std::vector<FBOTexParams>();
-			fboTexParams.push_back(FBOTexParams{ GL_TEXTURE_MIN_FILTER,		GL_LINEAR });
-			fboTexParams.push_back(FBOTexParams{ GL_TEXTURE_MAG_FILTER,		GL_LINEAR });
-			fboTexParams.push_back(FBOTexParams{ GL_TEXTURE_WRAP_S,			GL_CLAMP_TO_EDGE });
-			fboTexParams.push_back(FBOTexParams{ GL_TEXTURE_WRAP_T,			GL_CLAMP_TO_EDGE });
-			fboTexParams.push_back(FBOTexParams{ GL_TEXTURE_COMPARE_MODE,	GL_NONE });
+		auto fboTexParams = std::vector<FBOTexParams>();
+		fboTexParams.push_back(FBOTexParams{ GL_TEXTURE_MIN_FILTER,		GL_LINEAR });
+		fboTexParams.push_back(FBOTexParams{ GL_TEXTURE_MAG_FILTER,		GL_LINEAR });
+		fboTexParams.push_back(FBOTexParams{ GL_TEXTURE_WRAP_S,			GL_CLAMP_TO_EDGE });
+		fboTexParams.push_back(FBOTexParams{ GL_TEXTURE_WRAP_T,			GL_CLAMP_TO_EDGE });
+		fboTexParams.push_back(FBOTexParams{ GL_TEXTURE_COMPARE_MODE,	GL_NONE });
 
-			FBOTexGenParams fboTexGenParams{ 1, GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL, fboTexParams };
-			auto fboParams = std::make_shared<FBOParams>(FBOParams{ width, height, GL_DEPTH_ATTACHMENT, std::vector<FBOTexGenParams>{fboTexGenParams}});
-			m_FboVec = std::make_unique<FrameBufferObject>(fboParams);
-		}
+		FBOTexGenParams fboTexGenParams{ 1, GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL, fboTexParams };
+		auto fboParams = std::make_shared<FBOParams>(FBOParams{ width, height, GL_DEPTH_ATTACHMENT, std::vector<FBOTexGenParams>{fboTexGenParams} });
+		m_FboVec = std::make_unique<FrameBufferObject>(fboParams);
 	}
 
 	Impl(Impl&& rhs) noexcept = default;

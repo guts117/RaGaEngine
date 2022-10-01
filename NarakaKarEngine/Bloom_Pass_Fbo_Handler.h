@@ -7,6 +7,13 @@ namespace NarakaKarEngine
 {
 	namespace RenderEngine
 	{
+		enum BloomFBOType
+		{
+			Veritcal,
+			Horizontal,
+			Max
+		};
+
 		class Bloom_Pass_Fbo_Handler
 		{
 		public:
