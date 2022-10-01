@@ -72,9 +72,6 @@
     <ClCompile Include="Framebuffer.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
-    <ClCompile Include="HDR_Framebuffer.cpp">
-      <Filter>Source Files\RenderEngine</Filter>
-    </ClCompile>
     <ClCompile Include="HDR_Shader.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
@@ -222,6 +219,9 @@
     <ClCompile Include="Bloom_Pass_Fbo_Handler.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
+    <ClCompile Include="Shading_Pass_Fbo_Handler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Animated_Mesh.h">
@@ -270,9 +270,6 @@
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="Framebuffer.h">
-      <Filter>Header Files\RenderEngine</Filter>
-    </ClInclude>
-    <ClInclude Include="HDR_Framebuffer.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="HDR_Shader.h">
@@ -427,6 +424,9 @@
     </ClInclude>
     <ClInclude Include="Bloom_Pass_Fbo_Handler.h">
       <Filter>Header Files\RenderEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="Shading_Pass_Fbo_Handler.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

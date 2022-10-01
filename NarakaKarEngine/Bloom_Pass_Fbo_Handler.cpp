@@ -82,4 +82,9 @@ const GLuint& Bloom_Pass_Fbo_Handler::GetFBOHeight(const GLuint& fboIndex) const
 	return Pimpl()->m_FboVec->at(fboIndex)->GetHeight();
 }
 
+const GLuint& Bloom_Pass_Fbo_Handler::GetFBOBuffer(const GLuint& fboIndex) const
+{
+	return Pimpl()->m_FboVec->at(fboIndex)->GetBuffer(0);
+}
+
 Bloom_Pass_Fbo_Handler::~Bloom_Pass_Fbo_Handler() = default;

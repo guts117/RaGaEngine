@@ -35,7 +35,7 @@
 #include "Depth_Pass_Fbo_Handler.h"
 #include "SSAO_Framebuffer.h"
 #include "SSAOBlur_Framebuffer.h"
-#include "HDR_Framebuffer.h"
+#include "Shading_Pass_Fbo_Handler.h"
 #include "MotionBlur_FrameBuffer.h"
 #include "ShadowMap_FrameBuffer.h"
 
@@ -179,7 +179,7 @@ struct RenderEngineMain::Impl
 	std::unique_ptr < Particle_Shader> particleShader = std::make_unique<Particle_Shader>();
 
 	std::unique_ptr < HDR_Shader> hdrShader = std::make_unique<HDR_Shader>();
-	std::unique_ptr < HDR_Framebuffer> hdr = nullptr;
+	std::unique_ptr < Shading_Pass_Fbo_Handler> hdr = nullptr;
 	std::unique_ptr < MotionBlur_Shader> motionBlurShader = std::make_unique<MotionBlur_Shader>();
 	std::unique_ptr < MotionBlur_FrameBuffer> motionBlur = nullptr;
 	std::unique_ptr < Blur_Shader> blurShader = std::make_unique<Blur_Shader>();
@@ -527,8 +527,7 @@ struct RenderEngineMain::Impl
 		ssaoBlur = std::make_unique < SSAOBlur_Framebuffer>();
 		ssaoBlur->Init(ScreenWidth, ScreenHeight);
 
-		hdr = std::make_unique < HDR_Framebuffer>();
-		hdr->Init(ScreenWidth, ScreenHeight);
+		hdr = std::make_unique < Shading_Pass_Fbo_Handler>(ScreenWidth, ScreenHeight);
 
 		blur = std::make_unique <Bloom_Pass_Fbo_Handler>(ScreenWidth, ScreenHeight);
 
@@ -542,7 +541,7 @@ struct RenderEngineMain::Impl
 		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { depth->ResizeFBO(width, height); });
 		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { ssao->ResizeFrameBuffer(width, height); });
 		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { ssaoBlur->ResizeFrameBuffer(width, height); });
-		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { hdr->ResizeFrameBuffer(width, height); });
+		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { /*hdr->ResizeFrameBuffer(width, height);*/ hdr->ResizeFBO(width, height); });
 		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { blur->ResizeFBO(width, height); });
 		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { motionBlur->ResizeFrameBuffer(width, height); });
 		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { finalFBO->ResizeFrameBuffer(width, height); });
@@ -1571,9 +1570,9 @@ struct RenderEngineMain::Impl
 		auto prevProj = camera->GetPreviousProjectionMatrix();
 		auto prevView = camera->GetPreviousViewMatrix();
 
-		glViewport(0, 0, hdr->GetWidth(), hdr->GetHeight());
+		glViewport(0, 0, hdr->GetFBOWidth(), hdr->GetFBOHeight());
 
-		hdr->Write();
+		hdr->WriteToFBO();
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -1723,7 +1722,7 @@ struct RenderEngineMain::Impl
 			blurShader->SetTexture(1);
 			if (i < 1)
 			{
-				hdr->Read(1);
+				hdr->AttachFBOToTextureUnit(GL_TEXTURE1, ShadingPassBufferType::SceneExposed);
 			}
 			else
 			{
@@ -1745,10 +1744,10 @@ struct RenderEngineMain::Impl
 
 		glUniform1f(motionBlurShader->GetVelocityScaleLocation(), fps / 30.0f);
 
-		hdr->ReadScene(GL_TEXTURE1);
+		hdr->AttachFBOToTextureUnit(GL_TEXTURE1, ShadingPassBufferType::Scene);
 		motionBlurShader->SetTexture(1);
 
-		hdr->ReadMotion(GL_TEXTURE2);
+		hdr->AttachFBOToTextureUnit(GL_TEXTURE2, ShadingPassBufferType::Motion);
 		motionBlurShader->SetMotionTexture(2);
 		quad->RenderQuad();
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);

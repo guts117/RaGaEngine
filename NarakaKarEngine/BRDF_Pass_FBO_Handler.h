@@ -25,6 +25,7 @@ namespace NarakaKarEngine
 
 			const GLuint& GetFBOWidth() const;
 			const GLuint& GetFBOHeight() const;
+			const GLuint& GetFBOBuffer(const GLuint& bufferIndex) const;
 
 			~Brdf_Pass_Fbo_Handler();
 

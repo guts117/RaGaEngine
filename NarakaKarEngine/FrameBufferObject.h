@@ -57,8 +57,9 @@ namespace NarakaKarEngine
 			void WriteToBuffer() const;
 			void AttachColorBufferToTexture(const GLenum& textureUnit, const GLuint& texGenParamIndex, const GLuint& bufferIndex) const;
 			void ResizeBuffers(int width, int height);
-			GLuint GetWidth() const;
-			GLuint GetHeight() const;
+			const GLuint& GetWidth() const;
+			const GLuint& GetHeight() const;
+			const GLuint& GetBuffer(const GLuint& bufferIndex) const;
 
 			~FrameBufferObject();
 

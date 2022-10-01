@@ -75,4 +75,9 @@ const GLuint& Brdf_Pass_Fbo_Handler::GetFBOHeight() const
 	return Pimpl()->m_Fbo->GetHeight();
 }
 
+const GLuint& Brdf_Pass_Fbo_Handler::GetFBOBuffer(const GLuint& bufferIndex) const
+{
+	return Pimpl()->m_Fbo->GetBuffer(bufferIndex);
+}
+
 Brdf_Pass_Fbo_Handler::~Brdf_Pass_Fbo_Handler() = default;

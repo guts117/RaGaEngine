@@ -84,7 +84,6 @@
     <ClCompile Include="Bloom_Pass_Fbo_Handler.cpp" />
     <ClCompile Include="Framebuffer.cpp" />
     <ClCompile Include="FrameBufferObject.cpp" />
-    <ClCompile Include="HDR_Framebuffer.cpp" />
     <ClCompile Include="HDR_Shader.cpp" />
     <ClCompile Include="EngineInputManager.cpp" />
     <ClCompile Include="Irradiance_Convolution_Shader.cpp" />
@@ -112,6 +111,7 @@
     <ClCompile Include="PreZPass_Shader.cpp" />
     <ClCompile Include="SceneViewer.cpp" />
     <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="Shading_Pass_Fbo_Handler.cpp" />
     <ClCompile Include="ShadowMap_FrameBuffer.cpp" />
     <ClCompile Include="Skybox.cpp" />
     <ClCompile Include="SpotLight.cpp" />
@@ -158,7 +158,6 @@
     <ClInclude Include="Equirectangular_to_CubeMap_Framebuffer.h" />
     <ClInclude Include="Equirectangular_to_CubeMap_Shader.h" />
     <ClInclude Include="Framebuffer.h" />
-    <ClInclude Include="HDR_Framebuffer.h" />
     <ClInclude Include="HDR_Shader.h" />
     <ClInclude Include="EngineInputManager.h" />
     <ClInclude Include="Irradiance_Convolution_Shader.h" />
@@ -180,6 +179,7 @@
     <ClInclude Include="PreZPass_Shader.h" />
     <ClInclude Include="SceneViewer.h" />
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="Shading_Pass_Fbo_Handler.h" />
     <ClInclude Include="ShadowMap_FrameBuffer.h" />
     <ClInclude Include="Skybox.h" />
     <ClInclude Include="spimpl.h" />

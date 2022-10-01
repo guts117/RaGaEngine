@@ -32,6 +32,7 @@ namespace NarakaKarEngine
 
 			const GLuint& GetFBOWidth(const GLuint& fboIndex = 0) const;
 			const GLuint& GetFBOHeight(const GLuint& fboIndex = 0) const;
+			const GLuint& GetFBOBuffer(const GLuint& fboIndex) const;
 
 			~Bloom_Pass_Fbo_Handler();
 

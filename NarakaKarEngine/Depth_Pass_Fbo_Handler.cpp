@@ -7,7 +7,7 @@ using namespace RenderEngine;
 
 struct Depth_Pass_Fbo_Handler::Impl
 {
-	std::unique_ptr<FrameBufferObject> m_FboVec;
+	std::unique_ptr<FrameBufferObject> m_Fbo;
 
 	Impl() = delete;
 
@@ -22,7 +22,7 @@ struct Depth_Pass_Fbo_Handler::Impl
 
 		FBOTexGenParams fboTexGenParams{ 1, GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL, fboTexParams };
 		auto fboParams = std::make_shared<FBOParams>(FBOParams{ width, height, GL_DEPTH_ATTACHMENT, std::vector<FBOTexGenParams>{fboTexGenParams} });
-		m_FboVec = std::make_unique<FrameBufferObject>(fboParams);
+		m_Fbo = std::make_unique<FrameBufferObject>(fboParams);
 	}
 
 	Impl(Impl&& rhs) noexcept = default;
@@ -33,17 +33,17 @@ struct Depth_Pass_Fbo_Handler::Impl
 
 	void WriteToFBO() const
 	{
-		m_FboVec->WriteToBuffer();
+		m_Fbo->WriteToBuffer();
 	}
 
 	void AttachFBOToTextureUnit(const GLenum& textureUnit) const
 	{
-		m_FboVec->AttachColorBufferToTexture(textureUnit, 0, 0);
+		m_Fbo->AttachColorBufferToTexture(textureUnit, 0, 0);
 	}
 
 	void ResizeFBO(const GLuint& width, const GLuint& height)
 	{
-		m_FboVec->ResizeBuffers(width, height);
+		m_Fbo->ResizeBuffers(width, height);
 	}
 
 	~Impl() = default;
@@ -68,12 +68,17 @@ void Depth_Pass_Fbo_Handler::ResizeFBO(const GLuint& width, const GLuint& height
 
 const GLuint& Depth_Pass_Fbo_Handler::GetFBOWidth() const
 {
-	return Pimpl()->m_FboVec->GetWidth();
+	return Pimpl()->m_Fbo->GetWidth();
 }
 
 const GLuint& Depth_Pass_Fbo_Handler::GetFBOHeight() const
 {
-	return Pimpl()->m_FboVec->GetHeight();
+	return Pimpl()->m_Fbo->GetHeight();
+}
+
+const GLuint& Depth_Pass_Fbo_Handler::GetFBOBuffer(const GLuint& bufferIndex) const
+{
+	return Pimpl()->m_Fbo->GetBuffer(bufferIndex);
 }
 
 Depth_Pass_Fbo_Handler::~Depth_Pass_Fbo_Handler() = default;
