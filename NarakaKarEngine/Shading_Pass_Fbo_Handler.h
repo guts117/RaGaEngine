@@ -26,7 +26,7 @@ namespace NarakaKarEngine
 			Shading_Pass_Fbo_Handler(const Shading_Pass_Fbo_Handler& rhs) noexcept = delete;
 			Shading_Pass_Fbo_Handler& operator=(const Shading_Pass_Fbo_Handler& rhs) noexcept = delete;
 
-			void WriteToFBO() const;
+			void BindFBO() const;
 			void AttachFBOToTextureUnit(const GLenum& textureUnit, const GLuint& bufferIndex) const;
 			void ResizeFBO(const GLuint& width, const GLuint& height);
 

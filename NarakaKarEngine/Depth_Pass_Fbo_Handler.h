@@ -19,7 +19,7 @@ namespace NarakaKarEngine
 			Depth_Pass_Fbo_Handler(const Depth_Pass_Fbo_Handler& rhs) noexcept = delete;
 			Depth_Pass_Fbo_Handler& operator=(const Depth_Pass_Fbo_Handler& rhs) noexcept = delete;
 
-			void WriteToFBO() const;
+			void BindFBO() const;
 			void AttachFBOToTextureUnit(const GLenum& textureUnit) const;
 			void ResizeFBO(const GLuint& width, const GLuint& height);
 

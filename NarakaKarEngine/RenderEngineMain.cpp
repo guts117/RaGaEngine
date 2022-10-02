@@ -29,7 +29,7 @@
 #include "Material.h"
 #include "Particle.h"
 
-#include "Equirectangular_to_CubeMap_Framebuffer.h"
+#include "Equirect_To_Cubemap_Pass_Fbo_Handler.h"
 #include "PreFilter_Framebuffer.h"
 #include "BRDF_Pass_FBO_Handler.h"
 #include "Depth_Pass_Fbo_Handler.h"
@@ -139,10 +139,10 @@ struct RenderEngineMain::Impl
 	std::unique_ptr <Model_Shader> fluidFragShader3D = std::make_unique<Model_Shader>();*/
 
 	std::unique_ptr<Equirectangular_to_CubeMap_Shader> environmentMapShader = std::make_unique<Equirectangular_to_CubeMap_Shader>();
-	std::unique_ptr<Equirectangular_to_CubeMap_Framebuffer> environmentMap;
+	std::unique_ptr<Equirect_To_Cubemap_Pass_Fbo_Handler> environmentMap;
 
 	std::unique_ptr <Irradiance_Convolution_Shader> irradianceConvolutionShader = std::make_unique<Irradiance_Convolution_Shader>();
-	std::unique_ptr <Equirectangular_to_CubeMap_Framebuffer> irradianceMap;
+	std::unique_ptr <Equirect_To_Cubemap_Pass_Fbo_Handler> irradianceMap;
 
 	std::unique_ptr <PreFilter_Shader> prefilterShader = std::make_unique<PreFilter_Shader>();
 	std::unique_ptr <PreFilter_Framebuffer> prefilterMap;
@@ -504,11 +504,9 @@ struct RenderEngineMain::Impl
 		anim->LoadModel("Models/boblampclean.md5mesh");
 		anim2->LoadModel("Models/model.dae");
 
-		environmentMap = std::make_unique<Equirectangular_to_CubeMap_Framebuffer>();
-		environmentMap->Init(ScreenWidth, ScreenWidth, true);
+		environmentMap = std::make_unique<Equirect_To_Cubemap_Pass_Fbo_Handler>(ScreenWidth, ScreenWidth, true);
 
-		irradianceMap = std::make_unique<Equirectangular_to_CubeMap_Framebuffer>();
-		irradianceMap->Init(32, 32, false);
+		irradianceMap = std::make_unique<Equirect_To_Cubemap_Pass_Fbo_Handler>(32, 32);
 
 		prefilterMap = std::make_unique <PreFilter_Framebuffer>();
 		prefilterMap->Init(128, 128);
@@ -1152,7 +1150,7 @@ struct RenderEngineMain::Impl
 	{
 		if (is_cubeMap)
 		{
-			environmentMap->Read(GL_TEXTURE1);
+			environmentMap->AttachFBOToTextureUnit(GL_TEXTURE1);
 		}
 		else
 		{
@@ -1283,20 +1281,19 @@ struct RenderEngineMain::Impl
 
 		glUniformMatrix4fv(environmentMapShader->GetProjectionLocation(), 1, GL_FALSE, glm::value_ptr(captureProjection));
 
-		glViewport(0, 0, environmentMap->GetWidth(), environmentMap->GetHeight());
-		environmentMap->Write(-1);
+		glViewport(0, 0, environmentMap->GetFBOWidth(), environmentMap->GetFBOHeight());
+		environmentMap->BindFBO();
 		for (unsigned int i = 0; i < 6; ++i)
 		{
 			glUniformMatrix4fv(environmentMapShader->GetViewLocation(), 1, GL_FALSE, glm::value_ptr(captureViews[i]));
-			environmentMap->Write(i);
+			environmentMap->WriteToFBOBuffer(i);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			environmentMapShader->Validate();
 
 			RenderEnvCubeMap(false);
 		}
+		environmentMap->CreateFBOMipMap();
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-		environmentMap->CreateFirstMipFace();
 	}
 
 	void IrradianceConvolutionPass()
@@ -1306,12 +1303,12 @@ struct RenderEngineMain::Impl
 
 		glUniformMatrix4fv(irradianceConvolutionShader->GetProjectionLocation(), 1, GL_FALSE, glm::value_ptr(captureProjection));
 
-		glViewport(0, 0, irradianceMap->GetWidth(), irradianceMap->GetHeight());
-		irradianceMap->Write(-1);
+		glViewport(0, 0, irradianceMap->GetFBOWidth(), irradianceMap->GetFBOHeight());
+		irradianceMap->BindFBO();
 		for (unsigned int i = 0; i < 6; ++i)
 		{
 			glUniformMatrix4fv(irradianceConvolutionShader->GetViewLocation(), 1, GL_FALSE, glm::value_ptr(captureViews[i]));
-			irradianceMap->Write(i);
+			irradianceMap->WriteToFBOBuffer(i);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			irradianceConvolutionShader->Validate();
 
@@ -1356,7 +1353,7 @@ struct RenderEngineMain::Impl
 	{
 		glViewport(0, 0, brdfMap->GetFBOWidth(), brdfMap->GetFBOHeight());
 
-		brdfMap->WriteToFBO();
+		brdfMap->BindFBO();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		brdfShader->UseShader();
@@ -1486,7 +1483,7 @@ struct RenderEngineMain::Impl
 		auto viewMatrix = camera->CalculateViewMatrix();
 		glViewport(0, 0, depth->GetFBOWidth(), depth->GetFBOHeight());
 
-		depth->WriteToFBO();
+		depth->BindFBO();
 		//clear everything
 		glClear(GL_DEPTH_BUFFER_BIT);
 
@@ -1527,7 +1524,7 @@ struct RenderEngineMain::Impl
 	void SSAOPass()
 	{
 		glViewport(0, 0, ssao->GetFBOWidth(), ssao->GetFBOHeight());
-		ssao->WriteToFBO();
+		ssao->BindFBO();
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		ssaoShader->UseShader();
@@ -1549,7 +1546,7 @@ struct RenderEngineMain::Impl
 	{
 		glViewport(0, 0, ssaoBlur->GetFBOWidth(), ssaoBlur->GetFBOHeight());
 
-		ssaoBlur->WriteToFBO();
+		ssaoBlur->BindFBO();
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		ssaoBlurShader->UseShader();
@@ -1569,12 +1566,12 @@ struct RenderEngineMain::Impl
 
 		glViewport(0, 0, hdr->GetFBOWidth(), hdr->GetFBOHeight());
 
-		hdr->WriteToFBO();
+		hdr->BindFBO();
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		mainLight->GetShadowMap()->Read(1, GL_TEXTURE2);
-		irradianceMap->Read(GL_TEXTURE8);
+		irradianceMap->AttachFBOToTextureUnit(GL_TEXTURE8);
 		prefilterMap->Read(GL_TEXTURE9);
 		brdfMap->AttachFBOToTextureUnit(GL_TEXTURE10);
 		ssaoBlur->AttachFBOToTextureUnit(GL_TEXTURE14);
@@ -1713,7 +1710,7 @@ struct RenderEngineMain::Impl
 		blurShader->UseShader();
 		for (int i = 0; i < amount; i++)
 		{
-			blur->WriteToFBO(isHorizontalFbo);
+			blur->BindFBO(isHorizontalFbo);
 			glUniform1i(blurShader->GetHorizontalLocation(), isHorizontalFbo);
 			blurShader->Validate();
 			blurShader->SetTexture(1);
@@ -1735,7 +1732,7 @@ struct RenderEngineMain::Impl
 	{
 		glViewport(0, 0, motionBlur->GetFBOWidth(), motionBlur->GetFBOHeight());
 
-		motionBlur->WriteToFBO();
+		motionBlur->BindFBO();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		motionBlurShader->UseShader();
 
@@ -2139,7 +2136,7 @@ struct RenderEngineMain::Impl
 		//{
 			glViewport(0, 0, finalFBO->GetFBOWidth(), finalFBO->GetFBOHeight());
 
-			finalFBO->WriteToFBO();
+			finalFBO->BindFBO();
 			//glViewport(0, 0, ScreenWidth, ScreenHeight);
 
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

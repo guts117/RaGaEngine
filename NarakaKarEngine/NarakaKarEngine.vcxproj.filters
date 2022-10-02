@@ -63,7 +63,7 @@
     <ClCompile Include="EngineInputManager.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
-    <ClCompile Include="Equirectangular_to_CubeMap_Framebuffer.cpp">
+    <ClCompile Include="Equirect_To_Cubemap_Pass_Fbo_Handler.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
     <ClCompile Include="Equirectangular_to_CubeMap_Shader.cpp">
@@ -263,7 +263,7 @@
     <ClInclude Include="EngineInputManager.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
-    <ClInclude Include="Equirectangular_to_CubeMap_Framebuffer.h">
+    <ClInclude Include="Equirect_To_Cubemap_Pass_Fbo_Handler.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="Equirectangular_to_CubeMap_Shader.h">

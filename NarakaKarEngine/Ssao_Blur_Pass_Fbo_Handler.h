@@ -19,7 +19,7 @@ namespace NarakaKarEngine
 			Ssao_Blur_Pass_Fbo_Handler(const Ssao_Blur_Pass_Fbo_Handler& rhs) noexcept = delete;
 			Ssao_Blur_Pass_Fbo_Handler& operator=(const Ssao_Blur_Pass_Fbo_Handler& rhs) noexcept = delete;
 
-			void WriteToFBO() const;
+			void BindFBO() const;
 			void AttachFBOToTextureUnit(const GLenum& textureUnit) const;
 			void ResizeFBO(const GLuint& width, const GLuint& height);
 

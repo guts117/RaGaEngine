@@ -26,7 +26,7 @@ namespace NarakaKarEngine
 			Bloom_Pass_Fbo_Handler(const Bloom_Pass_Fbo_Handler& rhs) noexcept = delete;
 			Bloom_Pass_Fbo_Handler& operator=(const Bloom_Pass_Fbo_Handler& rhs) noexcept = delete;
 
-			void WriteToFBO(const GLuint& fboIndex = 0) const;
+			void BindFBO(const GLuint& fboIndex = 0) const;
 			void AttachFBOToTextureUnit(const GLenum& textureUnit, const GLuint& fboIndex = 0) const;
 			void ResizeFBO(const GLuint& width, const GLuint& height);
 

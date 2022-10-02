@@ -8,7 +8,7 @@ namespace NarakaKarEngine
 	namespace RenderEngine
 	{
 		class Model_Shader;
-		class Equirectangular_to_CubeMap_Framebuffer;
+		class Equirect_To_Cubemap_Pass_Fbo_Handler;
 		class Static_Mesh;
 		class Texture;
 
@@ -20,7 +20,7 @@ namespace NarakaKarEngine
 
 			void DrawSkybox(glm::mat4 viewMatrix, glm::mat4 projectionMatrix, glm::mat4 prevP, glm::mat4 prevV);
 
-			void DrawHDRSkybox(glm::mat4 viewMatrix, glm::mat4 projectionMatrix, glm::mat4 prevP, glm::mat4 prevV, Equirectangular_to_CubeMap_Framebuffer* envMap);
+			void DrawHDRSkybox(glm::mat4 viewMatrix, glm::mat4 projectionMatrix, glm::mat4 prevP, glm::mat4 prevV, Equirect_To_Cubemap_Pass_Fbo_Handler* envMap);
 			~Skybox();
 
 		private:

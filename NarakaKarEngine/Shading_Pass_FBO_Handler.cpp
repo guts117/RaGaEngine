@@ -36,9 +36,9 @@ struct Shading_Pass_Fbo_Handler::Impl
 	Impl(const Impl& rhs) noexcept = delete;
 	Impl& operator=(const Impl& rhs) noexcept = delete;
 
-	void WriteToFBO() const
+	void BindFBO() const
 	{
-		m_Fbo->WriteToBuffer();
+		m_Fbo->Bind();
 	}
 
 	void AttachFBOToTextureUnit(const GLenum& textureUnit, const GLuint& bufferIndex) const
@@ -57,9 +57,9 @@ struct Shading_Pass_Fbo_Handler::Impl
 
 Shading_Pass_Fbo_Handler::Shading_Pass_Fbo_Handler(const GLuint& width, const GLuint& height) : m_pImpl{ new Impl(width, height) } {}
 
-void Shading_Pass_Fbo_Handler::WriteToFBO() const
+void Shading_Pass_Fbo_Handler::BindFBO() const
 {
-	Pimpl()->WriteToFBO();
+	Pimpl()->BindFBO();
 }
 
 void Shading_Pass_Fbo_Handler::AttachFBOToTextureUnit(const GLenum& textureUnit, const GLuint& bufferIndex) const

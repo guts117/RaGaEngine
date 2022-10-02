@@ -35,14 +35,23 @@ struct FrameBufferObject::Impl
 
 				FBOTexGenParams& bufferParams = m_FboParam->FboTexGenParams[fboTexParamIndex];
 				glBindTexture(bufferParams.Target, tempColorBuf);
-				glTexImage2D(bufferParams.Target, bufferParams.Level, bufferParams.InternalFormat, m_FboParam->Width, m_FboParam->Height, bufferParams.Border, bufferParams.Format, bufferParams.Type, bufferParams.PixelData);
-				//ToDo: Add support for MipMap generation
+				if (bufferParams.Target == GL_TEXTURE_CUBE_MAP)
+				{
+					for (size_t i = 0; i < 6; i++) 
+					{
+						glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, bufferParams.Level, bufferParams.InternalFormat, m_FboParam->Width, m_FboParam->Height, bufferParams.Border, bufferParams.Format, bufferParams.Type, bufferParams.PixelData);
+					}
+				}
+				else
+				{
+					glTexImage2D(bufferParams.Target, bufferParams.Level, bufferParams.InternalFormat, m_FboParam->Width, m_FboParam->Height, bufferParams.Border, bufferParams.Format, bufferParams.Type, bufferParams.PixelData);
+					glFramebufferTexture2D(GL_FRAMEBUFFER, m_FboParam->Attachment + m_ReadWriteBuffers.size(), bufferParams.Target, tempColorBuf, 0);
+				}
+
 				for (auto j = 0; j < bufferParams.FboTexParams.size(); ++j)
 				{
 					SetTexParams(bufferParams, j);
 				}
-
-				glFramebufferTexture2D(GL_FRAMEBUFFER, m_FboParam->Attachment + m_ReadWriteBuffers.size(), bufferParams.Target, tempColorBuf, 0);
 
 				m_ReadWriteBuffers.push_back(tempColorBuf);
 			}
@@ -106,15 +115,32 @@ struct FrameBufferObject::Impl
 		}
 	}
 
-	void WriteToBuffer() const
+	void Bind() const
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, m_FboId);
+	}
+
+	void WriteToBuffer(const GLuint& texParamIndex, const GLuint& bufferIndex, const GLuint& faceId) const
+	{
+		if (m_FboParam->FboTexGenParams[texParamIndex].Target == GL_TEXTURE_CUBE_MAP)
+		{
+			glFramebufferTexture2D(GL_FRAMEBUFFER, m_FboParam->Attachment + bufferIndex, GL_TEXTURE_CUBE_MAP_POSITIVE_X + faceId, m_ReadWriteBuffers[bufferIndex], 0);
+		}
 	}
 
 	void AttachColorBufferToTexture(const GLenum& textureUnit, const GLuint& texParamIndex, const GLuint& bufferIndex) const
 	{
 		glActiveTexture(textureUnit);
 		glBindTexture(m_FboParam->FboTexGenParams[texParamIndex].Target, m_ReadWriteBuffers[bufferIndex]);
+	}
+
+	void CreateMipMap(const GLuint& texParamIndex, const GLuint& bufferIndex) const
+	{
+		if (m_ReadWriteBuffers[bufferIndex])
+		{
+			glBindTexture(m_FboParam->FboTexGenParams[texParamIndex].Target, m_ReadWriteBuffers[bufferIndex]);
+			glGenerateMipmap(m_FboParam->FboTexGenParams[texParamIndex].Target);
+		}
 	}
 
 	void ResizeBuffers(int width, int height)
@@ -171,14 +197,24 @@ struct FrameBufferObject::Impl
 
 FrameBufferObject::FrameBufferObject(const std::shared_ptr<FBOParams>& fboParams) : m_pImpl{ new Impl(fboParams) } {}
 
-void FrameBufferObject::WriteToBuffer() const
+void FrameBufferObject::Bind() const
 {
-	Pimpl()->WriteToBuffer();
+	Pimpl()->Bind();
+}
+
+void FrameBufferObject::WriteToBuffer(const GLuint& texParamIndex, const GLuint& bufferIndex, const GLuint& faceId) const
+{
+	Pimpl()->WriteToBuffer(texParamIndex, bufferIndex, faceId);
 }
 
 void FrameBufferObject::AttachColorBufferToTexture(const GLenum& textureUnit, const GLuint& texParamIndex, const GLuint& bufferIndex) const
 {
 	Pimpl()->AttachColorBufferToTexture(textureUnit, texParamIndex, bufferIndex);
+}
+
+void FrameBufferObject::CreateMipMap(const GLuint& texParamIndex, const GLuint& bufferIndex) const
+{
+	Pimpl()->CreateMipMap(texParamIndex, bufferIndex);
 }
 
 void FrameBufferObject::ResizeBuffers(int width, int height)

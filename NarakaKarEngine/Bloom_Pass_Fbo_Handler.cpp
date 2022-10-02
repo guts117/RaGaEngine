@@ -34,9 +34,9 @@ struct Bloom_Pass_Fbo_Handler::Impl
 	Impl(const Impl& rhs) noexcept = delete;
 	Impl& operator=(const Impl& rhs) noexcept = delete;
 
-	void WriteToFBO(const GLuint& fboIndex) const
+	void Bind(const GLuint& fboIndex) const
 	{
-		m_FboVec->at(fboIndex)->WriteToBuffer();
+		m_FboVec->at(fboIndex)->Bind();
 	}
 
 	void AttachFBOToTextureUnit(const GLenum& textureUnit, const GLuint& fboIndex) const
@@ -57,9 +57,9 @@ struct Bloom_Pass_Fbo_Handler::Impl
 
 Bloom_Pass_Fbo_Handler::Bloom_Pass_Fbo_Handler(const GLuint& width, const GLuint& height) : m_pImpl{ new Impl(width, height) } {}
 
-void Bloom_Pass_Fbo_Handler::WriteToFBO(const GLuint& fboIndex) const
+void Bloom_Pass_Fbo_Handler::BindFBO(const GLuint& fboIndex) const
 {
-	Pimpl()->WriteToFBO(fboIndex);
+	Pimpl()->Bind(fboIndex);
 }
 
 void Bloom_Pass_Fbo_Handler::AttachFBOToTextureUnit(const GLenum& textureUnit, const GLuint& fboIndex) const
