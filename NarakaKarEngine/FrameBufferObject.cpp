@@ -45,7 +45,9 @@ struct FrameBufferObject::Impl
 				else
 				{
 					glTexImage2D(bufferParams.Target, bufferParams.Level, bufferParams.InternalFormat, m_FboParam->Width, m_FboParam->Height, bufferParams.Border, bufferParams.Format, bufferParams.Type, bufferParams.PixelData);
-					glFramebufferTexture2D(GL_FRAMEBUFFER, m_FboParam->Attachment + m_ReadWriteBuffers.size(), bufferParams.Target, tempColorBuf, 0);
+					//useless since OpenGL 4.5
+					//glFramebufferTexture2D(GL_FRAMEBUFFER, m_FboParam->Attachment + m_ReadWriteBuffers.size(), bufferParams.Target, tempColorBuf, 0);
+					glFramebufferTexture(GL_FRAMEBUFFER, m_FboParam->Attachment + m_ReadWriteBuffers.size(), tempColorBuf, 0);
 				}
 
 				for (auto j = 0; j < bufferParams.FboTexParams.size(); ++j)
@@ -124,7 +126,9 @@ struct FrameBufferObject::Impl
 	{
 		if (m_FboParam->FboTexGenParams[texParamIndex].Target == GL_TEXTURE_CUBE_MAP)
 		{
-			glFramebufferTexture2D(GL_FRAMEBUFFER, m_FboParam->Attachment + bufferIndex, GL_TEXTURE_CUBE_MAP_POSITIVE_X + faceId, m_ReadWriteBuffers[bufferIndex], 0);
+			glFramebufferTextureLayer(GL_FRAMEBUFFER, m_FboParam->Attachment + bufferIndex, m_ReadWriteBuffers[bufferIndex], 0, faceId);
+			//useless since OpenGL 4.5
+			//glFramebufferTexture2D(GL_FRAMEBUFFER, m_FboParam->Attachment + bufferIndex, GL_TEXTURE_CUBE_MAP_POSITIVE_X + faceId, m_ReadWriteBuffers[bufferIndex], 0);
 		}
 	}
 
