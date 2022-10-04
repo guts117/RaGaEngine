@@ -1,11 +1,11 @@
 #include "pch.h"
 #include "PointLight.h"
-#include "OmniShadowMap_Framebuffer.h"
+#include "Omni_Shadow_Pass_Fbo_Handler.h"
 
 using namespace NarakaKarEngine;
 using namespace RenderEngine;
 
-PointLight::PointLight() : Light(){
+PointLight::PointLight(){
 
 	position = glm::vec3(0.0f, 0.0f, 0.0f);
 }
@@ -14,17 +14,15 @@ PointLight::PointLight(GLuint shadowWidth, GLuint shadowHeight,
 						GLfloat near, GLfloat far, 
 						GLfloat red, GLfloat green, GLfloat blue,
 						GLfloat xPos, GLfloat yPos, GLfloat zPos) 
-	: Light(shadowWidth, shadowHeight, red, green, blue){
-
+{
 	position = glm::vec3(xPos, yPos, zPos);
-
+	color = glm::vec3(red, green, blue);
 	farPlane = far;
 
 	float aspect = static_cast<float>(shadowWidth / shadowHeight);
 	lightProj = glm::perspective(glm::radians(90.0f), aspect, near, far);
 
-	shadowMap = new OmniShadowMap_Framebuffer();
-	shadowMap->Init(shadowWidth, shadowHeight);
+	shadowMap = new Omni_Shadow_Pass_Fbo_Handler(shadowWidth, shadowHeight);
 }
 
 void PointLight::UseLight(GLuint ambientColorLocation,

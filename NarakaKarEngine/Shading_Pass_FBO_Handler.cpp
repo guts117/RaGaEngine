@@ -26,7 +26,7 @@ struct Shading_Pass_Fbo_Handler::Impl
 		FBOTexGenParams colorFboTexGenParams{ 2, GL_TEXTURE_2D, 0, GL_RGBA16F, 0, GL_RGBA, GL_FLOAT, NULL, colorFboTexParams };
 		FBOTexGenParams motionfboTexGenParams{ 1, GL_TEXTURE_2D, 0, GL_RG16F, 0, GL_RG, GL_FLOAT, NULL, motionFboTexParams };
 		FBORenderBufferParam fboRBParams{ GL_DEPTH_COMPONENT , GL_DEPTH_ATTACHMENT };
-		auto fboParams = std::make_shared<FBOParams>(FBOParams{ width, height, GL_COLOR_ATTACHMENT0, std::vector<FBOTexGenParams>{colorFboTexGenParams, motionfboTexGenParams }, std::vector<FBORenderBufferParam>{ fboRBParams } });
+		auto fboParams = std::make_shared<FBOParams>(FBOParams{ false, width, height, GL_COLOR_ATTACHMENT0, std::vector<FBOTexGenParams>{colorFboTexGenParams, motionfboTexGenParams }, std::vector<FBORenderBufferParam>{ fboRBParams } });
 		m_Fbo = std::make_unique<FrameBufferObject>(fboParams);
 	}
 

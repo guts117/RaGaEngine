@@ -45,6 +45,10 @@ struct FrameBufferObject::Impl
 				else
 				{
 					glTexImage2D(bufferParams.Target, bufferParams.Level, bufferParams.InternalFormat, m_FboParam->Width, m_FboParam->Height, bufferParams.Border, bufferParams.Format, bufferParams.Type, bufferParams.PixelData);
+				}
+
+				if (!m_FboParam->IsAttachBufferLater)
+				{
 					//useless since OpenGL 4.5
 					//glFramebufferTexture2D(GL_FRAMEBUFFER, m_FboParam->Attachment + m_ReadWriteBuffers.size(), bufferParams.Target, tempColorBuf, 0);
 					glFramebufferTexture(GL_FRAMEBUFFER, m_FboParam->Attachment + m_ReadWriteBuffers.size(), tempColorBuf, 0);

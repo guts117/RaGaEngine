@@ -4,8 +4,8 @@
 using namespace NarakaKarEngine;
 using namespace RenderEngine;
 
-DirectionalLight::DirectionalLight() : Light() {
-	
+DirectionalLight::DirectionalLight()
+{
 	direction = glm::vec3(0.0f, -1.0f, 0.0f);
 	lightProj = glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, 0.1f, 20.0f);
 }
@@ -13,10 +13,14 @@ DirectionalLight::DirectionalLight() : Light() {
 DirectionalLight::DirectionalLight(GLuint shadowWidth, GLuint shadowHeight,
 									GLfloat red, GLfloat green, GLfloat blue, 
 									GLfloat xDir, GLfloat yDir, GLfloat zDir)
-									: Light(shadowWidth, shadowHeight, red, green, blue) {
+{
 	
 	direction = glm::vec3(xDir, yDir, zDir);
 	lightProj = glm::ortho(-1000.0f, 1000.0f, -1000.0f, 1000.0f, 0.1f, 10000.0f);
+	shadowMap = new ShadowMap_Framebuffer();
+	shadowMap->Init(shadowWidth, shadowHeight);
+
+	color = glm::vec3(red, green, blue);
 }
 
 void DirectionalLight::UseLight(GLuint ambientColorLocation,GLuint directionLocation) {

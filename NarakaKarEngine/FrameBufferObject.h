@@ -35,6 +35,7 @@ namespace NarakaKarEngine
 
 		struct FBOParams
 		{
+			bool IsAttachBufferLater;
 			GLuint Width;
 			GLuint Height;
 			GLenum Attachment;

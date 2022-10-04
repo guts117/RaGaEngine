@@ -98,7 +98,7 @@ void Model_Shader::SetPointLight(std::shared_ptr<PointLight>* pLight, unsigned i
 	if (lightCount > MAX_POINT_LIGHTS_WITH_SHADOW) lightCount = MAX_POINT_LIGHTS_WITH_SHADOW;
 
 	for (size_t i = 0; i < lightCount; i++) {																									//pLight is already a pointer 
-		pLight[i]->GetShadowMap()->Read(0, GL_TEXTURE0 + textureUnit + i);
+		pLight[i]->GetShadowMap()->AttachFBOToTextureUnit(GL_TEXTURE0 + textureUnit + i);
 		glUniform1i(uniformOmniShadowMap[i + offset].shadowMap, textureUnit + i);
 		glUniform1f(uniformOmniShadowMap[i + offset].farPlane, pLight[i]->GetFarPlane());
 	}
@@ -115,7 +115,7 @@ void Model_Shader::SetSpotLight(std::shared_ptr<SpotLight>* sLight, unsigned int
 			uniformSpotLight[i].uniformPosition, uniformSpotLight[i].uniformDirection,
 			uniformSpotLight[i].uniformEdge);
 
-		sLight[i]->GetShadowMap()->Read(0, GL_TEXTURE0 + textureUnit + i);
+		sLight[i]->GetShadowMap()->AttachFBOToTextureUnit(GL_TEXTURE0 + textureUnit + i);
 		glUniform1i(uniformOmniShadowMap[i + offset].shadowMap, textureUnit + i);
 		glUniform1f(uniformOmniShadowMap[i + offset].farPlane, sLight[i]->GetFarPlane());
 	}

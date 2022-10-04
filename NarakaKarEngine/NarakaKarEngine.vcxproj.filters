@@ -78,9 +78,6 @@
     <ClCompile Include="Irradiance_Convolution_Shader.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
-    <ClCompile Include="Light.cpp">
-      <Filter>Source Files\RenderEngine</Filter>
-    </ClCompile>
     <ClCompile Include="Material.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
@@ -102,7 +99,7 @@
     <ClCompile Include="RenderEngineMain.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
-    <ClCompile Include="OmniShadowMap_FrameBuffer.cpp">
+    <ClCompile Include="Omni_Shadow_Pass_Fbo_Handler.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
     <ClCompile Include="Particle.cpp">
@@ -278,9 +275,6 @@
     <ClInclude Include="Irradiance_Convolution_Shader.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
-    <ClInclude Include="Light.h">
-      <Filter>Header Files\RenderEngine</Filter>
-    </ClInclude>
     <ClInclude Include="Material.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
@@ -302,7 +296,7 @@
     <ClInclude Include="RenderEngineMain.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
-    <ClInclude Include="OmniShadowMap_FrameBuffer.h">
+    <ClInclude Include="Omni_Shadow_Pass_Fbo_Handler.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="Particle.h">

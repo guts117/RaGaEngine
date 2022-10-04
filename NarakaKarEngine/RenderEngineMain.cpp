@@ -536,7 +536,7 @@ struct RenderEngineMain::Impl
 		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { depth->ResizeFBO(width, height); });
 		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { ssao->ResizeFBO(width, height); });
 		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { ssaoBlur->ResizeFBO(width, height); });
-		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { /*hdr->ResizeFrameBuffer(width, height);*/ hdr->ResizeFBO(width, height); });
+		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { hdr->ResizeFBO(width, height); });
 		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { blur->ResizeFBO(width, height); });
 		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { motionBlur->ResizeFBO(width, height); });
 		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { finalFBO->ResizeFBO(width, height); });
@@ -1415,9 +1415,9 @@ struct RenderEngineMain::Impl
 
 		omniShadowShader->UseShader();
 
-		glViewport(0, 0, light->GetShadowMap()->GetWidth(), light->GetShadowMap()->GetHeight());
+		glViewport(0, 0, light->GetShadowMap()->GetFBOWidth(), light->GetShadowMap()->GetFBOHeight());
 
-		light->GetShadowMap()->Write();
+		light->GetShadowMap()->BindFBO();
 		glClear(GL_DEPTH_BUFFER_BIT);
 
 		glUniform3f(omniShadowShader->GetOmniLightPosLocation(), light->GetPosition().x, light->GetPosition().y, light->GetPosition().z);

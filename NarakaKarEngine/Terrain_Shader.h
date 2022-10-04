@@ -23,7 +23,7 @@ namespace NarakaKarEngine
 			void SetDirectionalLight(DirectionalLight* dLight);
 			void SetPointLight(std::shared_ptr<PointLight>* pLight, unsigned int lightCount, unsigned int textureUnit, unsigned int offset);
 			void SetSpotLight(std::shared_ptr<SpotLight>* sLight, unsigned int lightCount, unsigned int textureUnit, unsigned int offset);
-			void SetDirectionalShadowMaps(Light* light, unsigned int i, GLuint textureUnit);
+			void SetDirectionalShadowMaps(DirectionalLight* light, unsigned int i, GLuint textureUnit);
 			void SetBlendMap(GLuint textureUnit);
 			void SetDisplacementMap(GLuint textureUnit);
 			void SetAOMap(GLuint textureUnit);
