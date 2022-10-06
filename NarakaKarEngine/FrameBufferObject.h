@@ -56,7 +56,7 @@ namespace NarakaKarEngine
 			FrameBufferObject& operator=(const FrameBufferObject& rhs) noexcept = delete;
 
 			void Bind() const;
-			void WriteToBuffer(const GLuint& texParamIndex, const GLuint& bufferIndex, const GLuint& faceId) const;
+			void WriteToBuffer(const GLuint& texParamIndex, const GLuint& bufferIndex, const GLuint& faceId, const GLuint& mipLevel = 0) const;
 			void AttachColorBufferToTexture(const GLenum& textureUnit, const GLuint& texGenParamIndex, const GLuint& bufferIndex) const;
 			void CreateMipMap(const GLuint& texParamIndex, const GLuint& bufferIndex) const;
 			void ResizeBuffers(int width, int height);

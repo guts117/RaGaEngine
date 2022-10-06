@@ -114,7 +114,7 @@
     <ClCompile Include="PointLight.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
-    <ClCompile Include="PreFilter_Framebuffer.cpp">
+    <ClCompile Include="Pre_Filter_Pass_Fbo_Handler.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
     <ClCompile Include="PreFilter_Shader.cpp">
@@ -311,7 +311,7 @@
     <ClInclude Include="PointLight.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
-    <ClInclude Include="PreFilter_Framebuffer.h">
+    <ClInclude Include="Pre_Filter_Pass_Fbo_Handler.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="PreFilter_Shader.h">

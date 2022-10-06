@@ -30,7 +30,7 @@
 #include "Particle.h"
 
 #include "Equirect_To_Cubemap_Pass_Fbo_Handler.h"
-#include "PreFilter_Framebuffer.h"
+#include "Pre_Filter_Pass_Fbo_Handler.h"
 #include "BRDF_Pass_FBO_Handler.h"
 #include "Depth_Pass_Fbo_Handler.h"
 #include "Ssao_Pass_Fbo_Handler.h"
@@ -145,7 +145,7 @@ struct RenderEngineMain::Impl
 	std::unique_ptr <Equirect_To_Cubemap_Pass_Fbo_Handler> irradianceMap;
 
 	std::unique_ptr <PreFilter_Shader> prefilterShader = std::make_unique<PreFilter_Shader>();
-	std::unique_ptr <PreFilter_Framebuffer> prefilterMap;
+	std::unique_ptr <Pre_Filter_Pass_Fbo_Handler> prefilterMap;
 
 	std::unique_ptr < BRDF_Shader > brdfShader = std::make_unique<BRDF_Shader>();
 	std::unique_ptr <Brdf_Pass_Fbo_Handler> brdfMap;
@@ -508,8 +508,7 @@ struct RenderEngineMain::Impl
 
 		irradianceMap = std::make_unique<Equirect_To_Cubemap_Pass_Fbo_Handler>(32, 32);
 
-		prefilterMap = std::make_unique <PreFilter_Framebuffer>();
-		prefilterMap->Init(128, 128);
+		prefilterMap = std::make_unique <Pre_Filter_Pass_Fbo_Handler>(128, 128);
 
 		brdfMap = std::make_unique < Brdf_Pass_Fbo_Handler>(ScreenWidth, ScreenWidth);
 
@@ -1323,15 +1322,15 @@ struct RenderEngineMain::Impl
 		prefilterShader->SetSkybox(1);
 		glUniformMatrix4fv(prefilterShader->GetProjectionLocation(), 1, GL_FALSE, glm::value_ptr(captureProjection));
 
-		prefilterMap->Write(-2, 0, 0, 0);
+		prefilterMap->BindFBO();
 		unsigned int maxMipLevels = 5;
 
 		for (unsigned int mip = 0; mip < maxMipLevels; ++mip)
 		{
 			//resize framebuffer according to mip-level size
-			unsigned int mipWidth = prefilterMap->GetWidth() * std::pow(0.5, mip);
-			unsigned int mipHeight = prefilterMap->GetHeight() * std::pow(0.5, mip);
-			prefilterMap->Write(-1, mipWidth, mipHeight, 0);
+			unsigned int mipWidth = prefilterMap->GetFBOWidth() * std::pow(0.5, mip);
+			unsigned int mipHeight = prefilterMap->GetFBOHeight() * std::pow(0.5, mip);
+			//prefilterMap->Write(-1, mipWidth, mipHeight, 0);
 			glViewport(0, 0, mipWidth, mipHeight);
 
 			float roughness = (float)mip / (float)(maxMipLevels - 1);
@@ -1339,7 +1338,7 @@ struct RenderEngineMain::Impl
 			for (unsigned int i = 0; i < 6; ++i) 
 			{
 				glUniformMatrix4fv(prefilterShader->GetViewLocation(), 1, GL_FALSE, glm::value_ptr(captureViews[i]));
-				prefilterMap->Write(i, 0, 0, mip);
+				prefilterMap->WriteToFBOBuffer(i, mip);
 				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 				prefilterShader->Validate();
 
@@ -1572,7 +1571,7 @@ struct RenderEngineMain::Impl
 
 		mainLight->GetShadowMap()->Read(1, GL_TEXTURE2);
 		irradianceMap->AttachFBOToTextureUnit(GL_TEXTURE8);
-		prefilterMap->Read(GL_TEXTURE9);
+		prefilterMap->AttachFBOToTextureUnit(GL_TEXTURE9);
 		brdfMap->AttachFBOToTextureUnit(GL_TEXTURE10);
 		ssaoBlur->AttachFBOToTextureUnit(GL_TEXTURE14);
 		depth->AttachFBOToTextureUnit(GL_TEXTURE18);

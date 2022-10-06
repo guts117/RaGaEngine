@@ -126,11 +126,11 @@ struct FrameBufferObject::Impl
 		glBindFramebuffer(GL_FRAMEBUFFER, m_FboId);
 	}
 
-	void WriteToBuffer(const GLuint& texParamIndex, const GLuint& bufferIndex, const GLuint& faceId) const
+	void WriteToBuffer(const GLuint& texParamIndex, const GLuint& bufferIndex, const GLuint& faceId, const GLuint& mipLevel) const
 	{
 		if (m_FboParam->FboTexGenParams[texParamIndex].Target == GL_TEXTURE_CUBE_MAP)
 		{
-			glFramebufferTextureLayer(GL_FRAMEBUFFER, m_FboParam->Attachment + bufferIndex, m_ReadWriteBuffers[bufferIndex], 0, faceId);
+			glFramebufferTextureLayer(GL_FRAMEBUFFER, m_FboParam->Attachment + bufferIndex, m_ReadWriteBuffers[bufferIndex], mipLevel, faceId);
 			//useless since OpenGL 4.5
 			//glFramebufferTexture2D(GL_FRAMEBUFFER, m_FboParam->Attachment + bufferIndex, GL_TEXTURE_CUBE_MAP_POSITIVE_X + faceId, m_ReadWriteBuffers[bufferIndex], 0);
 		}
@@ -210,9 +210,9 @@ void FrameBufferObject::Bind() const
 	Pimpl()->Bind();
 }
 
-void FrameBufferObject::WriteToBuffer(const GLuint& texParamIndex, const GLuint& bufferIndex, const GLuint& faceId) const
+void FrameBufferObject::WriteToBuffer(const GLuint& texParamIndex, const GLuint& bufferIndex, const GLuint& faceId, const GLuint& mipLevel) const
 {
-	Pimpl()->WriteToBuffer(texParamIndex, bufferIndex, faceId);
+	Pimpl()->WriteToBuffer(texParamIndex, bufferIndex, faceId, mipLevel);
 }
 
 void FrameBufferObject::AttachColorBufferToTexture(const GLenum& textureUnit, const GLuint& texParamIndex, const GLuint& bufferIndex) const
