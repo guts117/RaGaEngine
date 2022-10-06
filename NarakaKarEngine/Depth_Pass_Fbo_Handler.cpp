@@ -21,7 +21,7 @@ struct Depth_Pass_Fbo_Handler::Impl
 		fboTexParams.push_back(FBOTexParams{ GL_TEXTURE_COMPARE_MODE,	GL_NONE });
 
 		FBOTexGenParams fboTexGenParams{ 1, GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL, fboTexParams };
-		auto fboParams = std::make_shared<FBOParams>(FBOParams{ false, width, height, GL_DEPTH_ATTACHMENT, std::vector<FBOTexGenParams>{fboTexGenParams} });
+		auto fboParams = std::make_shared<FBOParams>(FBOParams{ false, width, height, GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, std::vector<FBOTexGenParams>{fboTexGenParams} });
 		m_Fbo = std::make_unique<FrameBufferObject>(fboParams);
 	}
 

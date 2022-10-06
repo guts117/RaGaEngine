@@ -23,7 +23,7 @@ struct Bloom_Pass_Fbo_Handler::Impl
 			fboTexParams.push_back(FBOTexParams{ GL_TEXTURE_WRAP_T,		GL_CLAMP_TO_EDGE });
 
 			FBOTexGenParams fboTexGenParams{ 1, GL_TEXTURE_2D, 0, GL_RGB16F, 0, GL_RGB, GL_FLOAT, NULL, fboTexParams };
-			auto fboParams = std::make_shared<FBOParams>(FBOParams{ false, width, height, GL_COLOR_ATTACHMENT0, std::vector<FBOTexGenParams>{fboTexGenParams} });
+			auto fboParams = std::make_shared<FBOParams>(FBOParams{ false, width, height, GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, std::vector<FBOTexGenParams>{fboTexGenParams} });
 			m_FboVec->push_back(std::make_shared<FrameBufferObject>(fboParams));
 		}
 	}

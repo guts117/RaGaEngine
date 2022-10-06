@@ -38,6 +38,7 @@ namespace NarakaKarEngine
 			bool IsAttachBufferLater;
 			GLuint Width;
 			GLuint Height;
+			GLenum Target;
 			GLenum Attachment;
 			std::vector<FBOTexGenParams> FboTexGenParams;		
 			std::vector<FBORenderBufferParam> FBORenderBufferParams;

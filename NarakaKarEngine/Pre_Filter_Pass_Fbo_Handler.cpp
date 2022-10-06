@@ -22,7 +22,7 @@ struct Pre_Filter_Pass_Fbo_Handler::Impl
 
 		FBOTexGenParams fboTexGenParams{ 1, GL_TEXTURE_CUBE_MAP, 0, GL_RGB16F, 0, GL_RGB, GL_FLOAT, NULL, fboTexParams };
 		FBORenderBufferParam fboRBParams{ GL_DEPTH_COMPONENT24 , GL_DEPTH_ATTACHMENT };
-		auto fboParams = std::make_shared<FBOParams>(FBOParams{ true, width, height, GL_COLOR_ATTACHMENT0, std::vector<FBOTexGenParams>{fboTexGenParams}, std::vector<FBORenderBufferParam>{fboRBParams} });
+		auto fboParams = std::make_shared<FBOParams>(FBOParams{ true, width, height, GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, std::vector<FBOTexGenParams>{fboTexGenParams}, std::vector<FBORenderBufferParam>{fboRBParams} });
 		m_Fbo = std::make_unique<FrameBufferObject>(fboParams);
 		CreateFBOMipMap();
 	}

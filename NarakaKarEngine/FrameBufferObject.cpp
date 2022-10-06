@@ -21,7 +21,7 @@ struct FrameBufferObject::Impl
  
 	{
 		glGenFramebuffers(1, &m_FboId);
-		glBindFramebuffer(GL_FRAMEBUFFER, m_FboId);
+		glBindFramebuffer(m_FboParam->Target, m_FboId);
 
 		auto has_Color_Attachment = m_FboParam->Attachment == GL_COLOR_ATTACHMENT0;
 
@@ -50,8 +50,8 @@ struct FrameBufferObject::Impl
 				if (!m_FboParam->IsAttachBufferLater)
 				{
 					//useless since OpenGL 4.5
-					//glFramebufferTexture2D(GL_FRAMEBUFFER, m_FboParam->Attachment + m_ReadWriteBuffers.size(), bufferParams.Target, tempColorBuf, 0);
-					glFramebufferTexture(GL_FRAMEBUFFER, m_FboParam->Attachment + m_ReadWriteBuffers.size(), tempColorBuf, 0);
+					//glFramebufferTexture2D(m_FboParam->Target, m_FboParam->Attachment + m_ReadWriteBuffers.size(), bufferParams.Target, tempColorBuf, 0);
+					glFramebufferTexture(m_FboParam->Target, m_FboParam->Attachment + m_ReadWriteBuffers.size(), tempColorBuf, 0);
 				}
 
 				for (auto j = 0; j < bufferParams.FboTexParams.size(); ++j)
@@ -80,17 +80,17 @@ struct FrameBufferObject::Impl
 			glGenRenderbuffers(1, &tempRbo);
 			glBindRenderbuffer(GL_RENDERBUFFER, tempRbo);
 			glRenderbufferStorage(GL_RENDERBUFFER, m_FboParam->FBORenderBufferParams[rboParamIndex].InternalFormat, m_FboParam->Width, m_FboParam->Height);
-			glFramebufferRenderbuffer(GL_FRAMEBUFFER, m_FboParam->FBORenderBufferParams[rboParamIndex].Attachment + m_WriteBuffers.size(), GL_RENDERBUFFER, tempRbo);
+			glFramebufferRenderbuffer(m_FboParam->Target, m_FboParam->FBORenderBufferParams[rboParamIndex].Attachment + m_WriteBuffers.size(), GL_RENDERBUFFER, tempRbo);
 			m_WriteBuffers.push_back(tempRbo);
 		}
 
-		auto status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		auto status = glCheckFramebufferStatus(m_FboParam->Target);
 		if (status != GL_FRAMEBUFFER_COMPLETE)
 		{
 			printf("Framebuffer Genereration failed \n error: %i\n", status);
 		}
 
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glBindFramebuffer(m_FboParam->Target, 0);
 	}
 
 	void SetTexParams(const FBOTexGenParams& params, const int& texParamIndex)
@@ -123,16 +123,16 @@ struct FrameBufferObject::Impl
 
 	void Bind() const
 	{
-		glBindFramebuffer(GL_FRAMEBUFFER, m_FboId);
+		glBindFramebuffer(m_FboParam->Target, m_FboId);
 	}
 
 	void WriteToBuffer(const GLuint& texParamIndex, const GLuint& bufferIndex, const GLuint& faceId, const GLuint& mipLevel) const
 	{
 		if (m_FboParam->FboTexGenParams[texParamIndex].Target == GL_TEXTURE_CUBE_MAP)
 		{
-			glFramebufferTextureLayer(GL_FRAMEBUFFER, m_FboParam->Attachment + bufferIndex, m_ReadWriteBuffers[bufferIndex], mipLevel, faceId);
+			glFramebufferTextureLayer(m_FboParam->Target, m_FboParam->Attachment + bufferIndex, m_ReadWriteBuffers[bufferIndex], mipLevel, faceId);
 			//useless since OpenGL 4.5
-			//glFramebufferTexture2D(GL_FRAMEBUFFER, m_FboParam->Attachment + bufferIndex, GL_TEXTURE_CUBE_MAP_POSITIVE_X + faceId, m_ReadWriteBuffers[bufferIndex], 0);
+			//glFramebufferTexture2D(m_FboParam->Target, m_FboParam->Attachment + bufferIndex, GL_TEXTURE_CUBE_MAP_POSITIVE_X + faceId, m_ReadWriteBuffers[bufferIndex], 0);
 		}
 	}
 
@@ -173,7 +173,7 @@ struct FrameBufferObject::Impl
 			glGenRenderbuffers(1, &m_WriteBuffers[rboParamIndex]);
 			glBindRenderbuffer(GL_RENDERBUFFER, m_WriteBuffers[rboParamIndex]);
 			glRenderbufferStorage(GL_RENDERBUFFER, m_FboParam->FBORenderBufferParams[rboParamIndex].InternalFormat, m_FboParam->Width, m_FboParam->Height);
-			glFramebufferRenderbuffer(GL_FRAMEBUFFER, m_FboParam->FBORenderBufferParams[rboParamIndex].Attachment, GL_RENDERBUFFER, m_WriteBuffers[rboParamIndex]);
+			glFramebufferRenderbuffer(m_FboParam->Target, m_FboParam->FBORenderBufferParams[rboParamIndex].Attachment, GL_RENDERBUFFER, m_WriteBuffers[rboParamIndex]);
 		
 			glNamedRenderbufferStorage(m_WriteBuffers[rboParamIndex], m_FboParam->FBORenderBufferParams[rboParamIndex].InternalFormat, width, height);
 		}
