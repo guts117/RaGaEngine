@@ -3,7 +3,7 @@
 #include "DirectionalLight.h"
 #include "PointLight.h"
 #include "SpotLight.h"
-#include "ShadowMap_FrameBuffer.h"
+#include "Shadow_Map_Pass_Fbo_Handler.h"
 
 using namespace NarakaKarEngine;
 using namespace RenderEngine;
@@ -155,7 +155,7 @@ void Terrain_Shader::SetDirectionalShadowMaps(DirectionalLight* light, unsigned 
 {
 	for (size_t j = 0; j < i; ++j) 
 	{
-		light->GetShadowMap()->Read(j, GL_TEXTURE2);
+		light->GetShadowMap()->AttachFBOToTextureUnit(GL_TEXTURE2 + j, j);
 		glUniform1i(uniformDirectionalShadowMaps[j].shadowMap, textureUnit + j);
 	}
 }

@@ -111,7 +111,7 @@
     <ClCompile Include="SceneViewer.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="Shading_Pass_Fbo_Handler.cpp" />
-    <ClCompile Include="ShadowMap_FrameBuffer.cpp" />
+    <ClCompile Include="Shadow_Map_Pass_Fbo_Handler.cpp" />
     <ClCompile Include="Skybox.cpp" />
     <ClCompile Include="SpotLight.cpp" />
     <ClCompile Include="Depth_Pass_Fbo_Handler.cpp" />
@@ -178,7 +178,7 @@
     <ClInclude Include="SceneViewer.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Shading_Pass_Fbo_Handler.h" />
-    <ClInclude Include="ShadowMap_FrameBuffer.h" />
+    <ClInclude Include="Shadow_Map_Pass_Fbo_Handler.h" />
     <ClInclude Include="Skybox.h" />
     <ClInclude Include="spimpl.h" />
     <ClInclude Include="SpotLight.h" />

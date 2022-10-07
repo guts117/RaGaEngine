@@ -27,8 +27,8 @@ struct FrameBufferObject::Impl
 
 		for (auto fboTexParamIndex = 0; fboTexParamIndex < m_FboParam->FboTexGenParams.size(); ++fboTexParamIndex)
 		{
-			auto texCount = has_Color_Attachment ? m_FboParam->FboTexGenParams[fboTexParamIndex].ColorBufferSize : 1;
-			for (auto i = 0; i < texCount; ++i)
+			auto texMaxCount = m_FboParam->FboTexGenParams[fboTexParamIndex].ColorBufferSize;
+			for (auto texCount = 0; texCount < texMaxCount; ++texCount)
 			{
 				GLuint tempColorBuf = 0;
 				glGenTextures(1, &tempColorBuf);
@@ -37,9 +37,9 @@ struct FrameBufferObject::Impl
 				glBindTexture(bufferParams.Target, tempColorBuf);
 				if (bufferParams.Target == GL_TEXTURE_CUBE_MAP)
 				{
-					for (size_t i = 0; i < 6; i++) 
+					for (size_t faceCnt = 0; faceCnt < 6; faceCnt++)
 					{
-						glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, bufferParams.Level, bufferParams.InternalFormat, m_FboParam->Width, m_FboParam->Height, bufferParams.Border, bufferParams.Format, bufferParams.Type, bufferParams.PixelData);
+						glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + faceCnt, bufferParams.Level, bufferParams.InternalFormat, m_FboParam->Width, m_FboParam->Height, bufferParams.Border, bufferParams.Format, bufferParams.Type, bufferParams.PixelData);
 					}
 				}
 				else
@@ -51,7 +51,7 @@ struct FrameBufferObject::Impl
 				{
 					//useless since OpenGL 4.5
 					//glFramebufferTexture2D(m_FboParam->Target, m_FboParam->Attachment + m_ReadWriteBuffers.size(), bufferParams.Target, tempColorBuf, 0);
-					glFramebufferTexture(m_FboParam->Target, m_FboParam->Attachment + m_ReadWriteBuffers.size(), tempColorBuf, 0);
+					glFramebufferTexture(m_FboParam->Target, m_FboParam->Attachment + (has_Color_Attachment ? m_ReadWriteBuffers.size() : 0), tempColorBuf, 0);
 				}
 
 				for (auto j = 0; j < bufferParams.FboTexParams.size(); ++j)
@@ -128,11 +128,16 @@ struct FrameBufferObject::Impl
 
 	void WriteToBuffer(const GLuint& texParamIndex, const GLuint& bufferIndex, const GLuint& faceId, const GLuint& mipLevel) const
 	{
+		//ToDo: Add support for other type of fbo buffers in the future
 		if (m_FboParam->FboTexGenParams[texParamIndex].Target == GL_TEXTURE_CUBE_MAP)
 		{
 			glFramebufferTextureLayer(m_FboParam->Target, m_FboParam->Attachment + bufferIndex, m_ReadWriteBuffers[bufferIndex], mipLevel, faceId);
 			//useless since OpenGL 4.5
 			//glFramebufferTexture2D(m_FboParam->Target, m_FboParam->Attachment + bufferIndex, GL_TEXTURE_CUBE_MAP_POSITIVE_X + faceId, m_ReadWriteBuffers[bufferIndex], 0);
+		}
+		else
+		{
+			glFramebufferTexture(m_FboParam->Target, m_FboParam->Attachment + (m_FboParam->Attachment == GL_COLOR_ATTACHMENT0 ? bufferIndex : 0), m_ReadWriteBuffers[bufferIndex], mipLevel);
 		}
 	}
 

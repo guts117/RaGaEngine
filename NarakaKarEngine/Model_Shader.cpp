@@ -3,7 +3,7 @@
 #include "DirectionalLight.h"
 #include "PointLight.h"
 #include "SpotLight.h"
-#include "ShadowMap_FrameBuffer.h"
+#include "Shadow_Map_Pass_Fbo_Handler.h"
 
 using namespace NarakaKarEngine;
 using namespace RenderEngine;

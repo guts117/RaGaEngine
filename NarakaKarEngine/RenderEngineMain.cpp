@@ -37,7 +37,7 @@
 #include "Ssao_Blur_Pass_Fbo_Handler.h"
 #include "Shading_Pass_Fbo_Handler.h"
 #include "Motion_Blur_Pass_Fbo_Handler.h"
-#include "ShadowMap_FrameBuffer.h"
+#include "Shadow_Map_Pass_Fbo_Handler.h"
 
 #include "Bloom_Pass_Fbo_Handler.h"
 
@@ -541,7 +541,7 @@ struct RenderEngineMain::Impl
 		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { finalFBO->ResizeFBO(width, height); });
 
 		mainLight = std::make_unique < DirectionalLight>(1024, 1024,
-			0.1f, 0.1f, 0.1f,
+			1.0f, 1.0f, 1.0f,
 			5500.0f, -5500.0f, -10000.0f);
 
 		pointLights[0] = std::make_unique < PointLight>(512, 512,
@@ -631,7 +631,7 @@ struct RenderEngineMain::Impl
 		terrainShader->UseShader();
 		for (size_t i = 0; i < NUM_CASCADES; ++i)
 		{
-			glm::vec4 vView(0.0f, 0.0f, mainLight->GetShadowMap()->GetCascadeEnd(i + 1), 1.0f);
+			glm::vec4 vView(0.0f, 0.0f, mainLight->GetCascadeEnd(i + 1), 1.0f);
 			glm::vec4 vClip = camera->GetProjectionMatrix() * vView;
 			printf("%F \n", vClip.z);
 			terrainShader->SetCascadeEndClipSpace(i, -vClip.z);
@@ -1364,19 +1364,22 @@ struct RenderEngineMain::Impl
 	void DirectionalShadowMapPass(DirectionalLight* light) {
 
 		testLitView[0] = light->CalculateCascadeLightTransform();
-		mainLight->GetShadowMap()->CalcOrthProjs(camera->CalculateViewMatrix(), testLitView, 60.0f);
+		mainLight->CalcOrthProjs(camera->CalculateViewMatrix(), testLitView, 60.0f);
 
 		for (unsigned int i = 0; i < NUM_CASCADES; ++i)
 		{
-			vView[i] = glm::lookAt(mainLight->GetShadowMap()->GetModlCent(i), mainLight->GetShadowMap()->GetModlCent(i) + glm::normalize(light->GetLightDirection()) * 0.2f, light->GetLightUp());
+			vView[i] = glm::lookAt(mainLight->GetModlCent(i), mainLight->GetModlCent(i) + glm::normalize(light->GetLightDirection()) * 0.2f, light->GetLightUp());
 		}
+
+		light->GetShadowMap()->BindFBO();
+
 		for (size_t i = 0; i < NUM_CASCADES; ++i)
 		{
-			glViewport(0, 0, light->GetShadowMap()->GetWidth(), light->GetShadowMap()->GetHeight());
-			light->GetShadowMap()->Write(i);
+			glViewport(0, 0, light->GetShadowMap()->GetFBOWidth(), light->GetShadowMap()->GetFBOHeight());
+			light->GetShadowMap()->WriteToFBOBuffer(i);
 			glClear(GL_DEPTH_BUFFER_BIT);
 
-			glm::mat4 projView = light->GetShadowMap()->GetProjMat(vView[i], i) * vView[i];
+			glm::mat4 projView = light->GetProjMat(vView[i], i) * vView[i];
 
 			directionalShadowShader->UseShader();
 			directionalShadowShader->SetDirectionalLightTransform(projView);
@@ -1569,7 +1572,7 @@ struct RenderEngineMain::Impl
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		mainLight->GetShadowMap()->Read(1, GL_TEXTURE2);
+		mainLight->GetShadowMap()->AttachFBOToTextureUnit(GL_TEXTURE2 + 1, 1);
 		irradianceMap->AttachFBOToTextureUnit(GL_TEXTURE8);
 		prefilterMap->AttachFBOToTextureUnit(GL_TEXTURE9);
 		brdfMap->AttachFBOToTextureUnit(GL_TEXTURE10);
@@ -1604,7 +1607,7 @@ struct RenderEngineMain::Impl
 
 		for (size_t i = 0; i < NUM_CASCADES; ++i)
 		{
-			glm::mat4 projView = mainLight->GetShadowMap()->GetProjMat(vView[i], i) * vView[i];
+			glm::mat4 projView = mainLight->GetProjMat(vView[i], i) * vView[i];
 			terrainShader->SetDirectionalLightTransforms(i, &projView);
 		}
 

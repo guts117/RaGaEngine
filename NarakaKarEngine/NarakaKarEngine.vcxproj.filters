@@ -126,7 +126,7 @@
     <ClCompile Include="Shader.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
-    <ClCompile Include="ShadowMap_FrameBuffer.cpp">
+    <ClCompile Include="Shadow_Map_Pass_Fbo_Handler.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
     <ClCompile Include="Skybox.cpp">
@@ -323,7 +323,7 @@
     <ClInclude Include="Shader.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
-    <ClInclude Include="ShadowMap_FrameBuffer.h">
+    <ClInclude Include="Shadow_Map_Pass_Fbo_Handler.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="Skybox.h">
