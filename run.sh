@@ -1,0 +1,1 @@
+(cd NarakaKarEngine && exec ../build/RenderEngine/RenderEngine)

@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "ShadowMap_Framebuffer.h"
+#include "ShadowMap_FrameBuffer.h"
 
 using namespace NarakaKarEngine;
 using namespace RenderEngine;

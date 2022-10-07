@@ -53,8 +53,8 @@ void Animated_Model::RenderModel() {
 void Animated_Model::LoadModel(const std::string& fileName)
 {
 	static Assimp::Importer importer;
-	scene = new aiScene(*importer.ReadFile(fileName, aiProcess_Triangulate | aiProcess_OptimizeMeshes | aiProcess_FlipUVs | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace));
-	importer.GetOrphanedScene();
+	scene = importer.ReadFile(fileName, aiProcess_Triangulate | aiProcess_OptimizeMeshes | aiProcess_FlipUVs | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace);
+	scene = importer.GetOrphanedScene();
 	if (!scene || scene->mFlags == AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 	{
 		std::cout << "error assimp : " << importer.GetErrorString() << std::endl;

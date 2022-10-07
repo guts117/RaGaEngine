@@ -7,6 +7,9 @@
 using namespace NarakaKarEngine;
 using namespace RenderEngine;
 
+#ifdef WIN32
+#define strtok_r strtok_s
+#endif
 
 struct Texture::Impl
 {
@@ -157,11 +160,11 @@ struct Texture::Impl
 		char* next_token = NULL;
 		auto loc = const_cast<char*>(m_fileLocation.c_str());
 		std::vector<char*> faceLocation;
-		auto token = strtok_s(loc, "\n", &next_token);
+		auto token = strtok_r(loc, "\n", &next_token);
 		while (token != NULL)
 		{
 			faceLocation.push_back(token);
-			token = strtok_s(NULL, "\n", &next_token);
+			token = strtok_r(NULL, "\n", &next_token);
 		}
 
 		for (size_t i = 0; i < 6; i++)

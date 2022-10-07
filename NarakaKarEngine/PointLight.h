@@ -1,7 +1,7 @@
 #ifndef POINTLIGHT
 #define POINTLIGHT
 
-#include "Light.h";
+#include "Light.h"
 
 namespace NarakaKarEngine
 {

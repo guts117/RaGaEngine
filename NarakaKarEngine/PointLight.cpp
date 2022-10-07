@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "PointLight.h"
-#include "OmniShadowMap_Framebuffer.h"
+#include "OmniShadowMap_FrameBuffer.h"
 
 using namespace NarakaKarEngine;
 using namespace RenderEngine;
