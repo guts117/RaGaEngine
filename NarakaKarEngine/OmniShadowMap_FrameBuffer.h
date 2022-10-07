@@ -1,7 +1,7 @@
 #ifndef	OMNISHADOWMAP_FRAMEBUFFER
 #define OMNISHADOWMAP_FRAMEBUFFER
 
-#include "ShadowMap_FrameBuffer.h"
+#include "ShadowMap_Framebuffer.h"
 
 namespace NarakaKarEngine
 {

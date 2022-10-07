@@ -16,11 +16,7 @@
 #include <string>
 #include <cstring>
 
-#ifdef WIN32
-    #include <Random>
-#else
-    #include <random>
-#endif
+#include <Random>
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
