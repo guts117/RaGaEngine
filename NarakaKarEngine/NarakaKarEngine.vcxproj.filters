@@ -69,9 +69,6 @@
     <ClCompile Include="Equirectangular_to_CubeMap_Shader.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
-    <ClCompile Include="Framebuffer.cpp">
-      <Filter>Source Files\RenderEngine</Filter>
-    </ClCompile>
     <ClCompile Include="HDR_Shader.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
@@ -264,9 +261,6 @@
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="Equirectangular_to_CubeMap_Shader.h">
-      <Filter>Header Files\RenderEngine</Filter>
-    </ClInclude>
-    <ClInclude Include="Framebuffer.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="HDR_Shader.h">

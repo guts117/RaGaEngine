@@ -82,7 +82,6 @@
     <ClCompile Include="Equirect_To_Cubemap_Pass_Fbo_Handler.cpp" />
     <ClCompile Include="Equirectangular_to_CubeMap_Shader.cpp" />
     <ClCompile Include="Bloom_Pass_Fbo_Handler.cpp" />
-    <ClCompile Include="Framebuffer.cpp" />
     <ClCompile Include="FrameBufferObject.cpp" />
     <ClCompile Include="HDR_Shader.cpp" />
     <ClCompile Include="EngineInputManager.cpp" />
@@ -156,7 +155,6 @@
     <ClInclude Include="DirectionalLight.h" />
     <ClInclude Include="Equirect_To_Cubemap_Pass_Fbo_Handler.h" />
     <ClInclude Include="Equirectangular_to_CubeMap_Shader.h" />
-    <ClInclude Include="Framebuffer.h" />
     <ClInclude Include="HDR_Shader.h" />
     <ClInclude Include="EngineInputManager.h" />
     <ClInclude Include="Irradiance_Convolution_Shader.h" />
