@@ -214,7 +214,7 @@
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
     <ClCompile Include="Shading_Pass_Fbo_Handler.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -414,7 +414,7 @@
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="Shading_Pass_Fbo_Handler.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

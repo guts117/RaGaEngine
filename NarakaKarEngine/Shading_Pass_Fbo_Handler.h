@@ -1,8 +1,6 @@
 #ifndef SHADING_PASS_FBO_HANDLER
 #define SHADING_PASS_FBO_HANDLER
 
-#include "Framebuffer.h"
-
 namespace NarakaKarEngine
 {
 	namespace RenderEngine
