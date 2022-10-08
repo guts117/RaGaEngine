@@ -410,4 +410,8 @@ const int Texture::GetBitDepth() {
 	return Pimpl()->m_bitDepth;
 }
 
+const GLuint Texture::GetTextureID() {
+	return Pimpl()->m_textureID;
+}
+
 Texture::~Texture() = default;

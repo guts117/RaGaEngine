@@ -45,6 +45,7 @@ namespace NarakaKarEngine
 			const int GetWidth();
 			const int GetHeight();
 			const int GetBitDepth();
+			const GLuint GetTextureID();
 
 			~Texture();
 		private:

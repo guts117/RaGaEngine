@@ -1,14 +1,14 @@
 #ifndef POINTLIGHT
 #define POINTLIGHT
 
-#include "Light.h";
+#include "pch.h";
+#include "Omni_Shadow_Pass_Fbo_Handler.h";
 
 namespace NarakaKarEngine
 {
 	namespace RenderEngine
 	{
-		class PointLight :
-			public Light
+		class PointLight
 		{
 		public:
 			PointLight();
@@ -24,13 +24,15 @@ namespace NarakaKarEngine
 			GLfloat GetFarPlane();
 			glm::vec3 GetPosition();
 			glm::vec3 GetColor();
-
+			Omni_Shadow_Pass_Fbo_Handler* GetShadowMap() { return shadowMap; }
 			~PointLight();
 
 		protected:
 			glm::vec3 position;
-
 			GLfloat farPlane{ 0.0f };
+			glm::vec3 color = glm::vec3(1.0f, 1.0f, 1.0f);;
+			glm::mat4 lightProj = glm::mat4();
+			Omni_Shadow_Pass_Fbo_Handler* shadowMap = nullptr;
 
 		};
 	}

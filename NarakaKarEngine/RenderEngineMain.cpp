@@ -29,17 +29,17 @@
 #include "Material.h"
 #include "Particle.h"
 
-#include "Equirectangular_to_CubeMap_Framebuffer.h"
-#include "PreFilter_Framebuffer.h"
-#include "BRDF_Framebuffer.h"
-#include "Depth_Framebuffer.h"
-#include "SSAO_Framebuffer.h"
-#include "SSAOBlur_Framebuffer.h"
-#include "HDR_Framebuffer.h"
-#include "MotionBlur_FrameBuffer.h"
-#include "ShadowMap_FrameBuffer.h"
+#include "Equirect_To_Cubemap_Pass_Fbo_Handler.h"
+#include "Pre_Filter_Pass_Fbo_Handler.h"
+#include "BRDF_Pass_FBO_Handler.h"
+#include "Depth_Pass_Fbo_Handler.h"
+#include "Ssao_Pass_Fbo_Handler.h"
+#include "Ssao_Blur_Pass_Fbo_Handler.h"
+#include "Shading_Pass_Fbo_Handler.h"
+#include "Motion_Blur_Pass_Fbo_Handler.h"
+#include "Shadow_Map_Pass_Fbo_Handler.h"
 
-#include "Blur_PingPong_Framebuffer.h"
+#include "Bloom_Pass_Fbo_Handler.h"
 
 #include "Static_Model.h"
 #include "Animated_Model.h"
@@ -56,14 +56,17 @@
 #include "Window.h"
 
 #include "PhysicsEngineMain.h"
+#include "EngineUIMain.h"
 
 using namespace NarakaKarEngine;
 using namespace RenderEngine;
+using namespace EngineUI;
 
 extern int ScreenWidth;
 extern int ScreenHeight;
 extern bool isUpdateFrameBuffersSize;
 extern std::unique_ptr<PhysicsEngineMain> physicsEngine;
+extern std::unique_ptr<EngineUIMain> engineUI;
 
 struct RenderEngineMain::Impl
 {
@@ -136,16 +139,16 @@ struct RenderEngineMain::Impl
 	std::unique_ptr <Model_Shader> fluidFragShader3D = std::make_unique<Model_Shader>();*/
 
 	std::unique_ptr<Equirectangular_to_CubeMap_Shader> environmentMapShader = std::make_unique<Equirectangular_to_CubeMap_Shader>();
-	std::unique_ptr<Equirectangular_to_CubeMap_Framebuffer> environmentMap;
+	std::unique_ptr<Equirect_To_Cubemap_Pass_Fbo_Handler> environmentMap;
 
 	std::unique_ptr <Irradiance_Convolution_Shader> irradianceConvolutionShader = std::make_unique<Irradiance_Convolution_Shader>();
-	std::unique_ptr <Equirectangular_to_CubeMap_Framebuffer> irradianceMap;
+	std::unique_ptr <Equirect_To_Cubemap_Pass_Fbo_Handler> irradianceMap;
 
 	std::unique_ptr <PreFilter_Shader> prefilterShader = std::make_unique<PreFilter_Shader>();
-	std::unique_ptr <PreFilter_Framebuffer> prefilterMap;
+	std::unique_ptr <Pre_Filter_Pass_Fbo_Handler> prefilterMap;
 
 	std::unique_ptr < BRDF_Shader > brdfShader = std::make_unique<BRDF_Shader>();
-	std::unique_ptr < BRDF_Framebuffer > brdfMap;
+	std::unique_ptr <Brdf_Pass_Fbo_Handler> brdfMap;
 
 	std::shared_ptr < Model_Shader > directionalShadowShader = std::make_shared<Model_Shader>();
 	std::shared_ptr < Model_Shader > omniShadowShader = std::make_shared<Model_Shader>();
@@ -159,13 +162,13 @@ struct RenderEngineMain::Impl
 	std::shared_ptr < PreZPass_Shader> static_preZPassShader = std::make_shared<PreZPass_Shader>();
 	std::unique_ptr < PreZPass_Shader> anim_preZPassShader = std::make_unique<PreZPass_Shader>();
 	std::unique_ptr < Terrain_PreZPass_Shader> terrain_preZPassShader = std::make_unique<Terrain_PreZPass_Shader>();
-	std::unique_ptr < Depth_Framebuffer> depth = nullptr;
+	std::unique_ptr < Depth_Pass_Fbo_Handler> depth = nullptr;
 
 	std::unique_ptr < SSAO_Shader> ssaoShader = std::make_unique<SSAO_Shader>();
-	std::unique_ptr < SSAO_Framebuffer> ssao = nullptr;
+	std::unique_ptr < Ssao_Pass_Fbo_Handler> ssao = nullptr;
 
 	std::unique_ptr < SSAOBlur_Shader > ssaoBlurShader = std::make_unique<SSAOBlur_Shader>();
-	std::unique_ptr < SSAOBlur_Framebuffer > ssaoBlur = nullptr;
+	std::unique_ptr < Ssao_Blur_Pass_Fbo_Handler > ssaoBlur = nullptr;
 
 	std::vector< std::shared_ptr < Model_Shader>> shaderList;
 	std::vector< std::shared_ptr < Model_Shader>> animShaderList;
@@ -176,11 +179,12 @@ struct RenderEngineMain::Impl
 	std::unique_ptr < Particle_Shader> particleShader = std::make_unique<Particle_Shader>();
 
 	std::unique_ptr < HDR_Shader> hdrShader = std::make_unique<HDR_Shader>();
-	std::unique_ptr < HDR_Framebuffer> hdr = nullptr;
+	std::unique_ptr < Shading_Pass_Fbo_Handler> hdr = nullptr;
 	std::unique_ptr < MotionBlur_Shader> motionBlurShader = std::make_unique<MotionBlur_Shader>();
-	std::unique_ptr < MotionBlur_FrameBuffer> motionBlur = nullptr;
+	std::unique_ptr < Motion_Blur_Pass_Fbo_Handler> motionBlur = nullptr;
 	std::unique_ptr < Blur_Shader> blurShader = std::make_unique<Blur_Shader>();
-	std::unique_ptr < Blur_PingPong_Framebuffer> blur = nullptr;
+	std::unique_ptr < Bloom_Pass_Fbo_Handler> blur = nullptr;
+	std::unique_ptr < Motion_Blur_Pass_Fbo_Handler> finalFBO = nullptr;
 
 	std::vector< std::shared_ptr < Static_Mesh>> meshList;
 	std::vector< std::shared_ptr < Static_Mesh>> terrainList;
@@ -354,7 +358,7 @@ struct RenderEngineMain::Impl
 	float simDt3D = 0.0f;
 	int simDim3D = 128;
 
-	GLFWwindow* Init()
+	void Init()
 	{
 		glEnable(GL_TEXTURE_3D);
 		mainWindow->Initialise();
@@ -500,50 +504,44 @@ struct RenderEngineMain::Impl
 		anim->LoadModel("Models/boblampclean.md5mesh");
 		anim2->LoadModel("Models/model.dae");
 
-		environmentMap = std::make_unique<Equirectangular_to_CubeMap_Framebuffer>();
-		environmentMap->Init(ScreenWidth, ScreenWidth, true);
+		environmentMap = std::make_unique<Equirect_To_Cubemap_Pass_Fbo_Handler>(ScreenWidth, ScreenWidth, true);
 
-		irradianceMap = std::make_unique<Equirectangular_to_CubeMap_Framebuffer>();
-		irradianceMap->Init(32, 32, false);
+		irradianceMap = std::make_unique<Equirect_To_Cubemap_Pass_Fbo_Handler>(32, 32);
 
-		prefilterMap = std::make_unique <PreFilter_Framebuffer>();
-		prefilterMap->Init(128, 128);
+		prefilterMap = std::make_unique <Pre_Filter_Pass_Fbo_Handler>(128, 128);
 
-		brdfMap = std::make_unique < BRDF_Framebuffer>();
-		brdfMap->Init(ScreenWidth, ScreenWidth);
+		brdfMap = std::make_unique < Brdf_Pass_Fbo_Handler>(ScreenWidth, ScreenWidth);
 
 		quad = std::make_unique < Static_Mesh>();
 		mesh_cube = std::make_unique < Static_Mesh>();
 		ccw_cube = std::make_unique <Static_Mesh>();
 
-		depth = std::make_unique < Depth_Framebuffer>();
-		depth->Init(ScreenWidth, ScreenHeight);
+		depth = std::make_unique < Depth_Pass_Fbo_Handler>(ScreenWidth, ScreenHeight);
 
-		ssao = std::make_unique < SSAO_Framebuffer>();
-		ssao->Init(ScreenWidth, ScreenHeight);
+		ssao = std::make_unique < Ssao_Pass_Fbo_Handler>(ScreenWidth, ScreenHeight);
 
-		ssaoBlur = std::make_unique < SSAOBlur_Framebuffer>();
-		ssaoBlur->Init(ScreenWidth, ScreenHeight);
+		ssaoBlur = std::make_unique < Ssao_Blur_Pass_Fbo_Handler>(ScreenWidth, ScreenHeight);
 
-		hdr = std::make_unique < HDR_Framebuffer>();
-		hdr->Init(ScreenWidth, ScreenHeight);
+		hdr = std::make_unique < Shading_Pass_Fbo_Handler>(ScreenWidth, ScreenHeight);
 
-		blur = std::make_unique < Blur_PingPong_Framebuffer>();
-		blur->Init(ScreenWidth, ScreenHeight);
+		blur = std::make_unique <Bloom_Pass_Fbo_Handler>(ScreenWidth, ScreenHeight);
 
-		motionBlur = std::make_unique < MotionBlur_FrameBuffer>();
-		motionBlur->Init(ScreenWidth, ScreenHeight);
+		motionBlur = std::make_unique < Motion_Blur_Pass_Fbo_Handler>(ScreenWidth, ScreenHeight);
+
+		//ToDo:
+		finalFBO = std::make_unique < Motion_Blur_Pass_Fbo_Handler>(ScreenWidth, ScreenHeight);
 
 		resizeUpdateFramebuffers = std::make_unique<std::vector<std::function<void(int, int)>>>();
-		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { depth->ResizeFrameBuffer(width, height); });
-		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { ssao->ResizeFrameBuffer(width, height); });
-		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { ssaoBlur->ResizeFrameBuffer(width, height); });
-		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { hdr->ResizeFrameBuffer(width, height); });
-		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { blur->ResizeFrameBuffer(width, height); });
-		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { motionBlur->ResizeFrameBuffer(width, height); });
+		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { depth->ResizeFBO(width, height); });
+		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { ssao->ResizeFBO(width, height); });
+		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { ssaoBlur->ResizeFBO(width, height); });
+		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { hdr->ResizeFBO(width, height); });
+		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { blur->ResizeFBO(width, height); });
+		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { motionBlur->ResizeFBO(width, height); });
+		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { finalFBO->ResizeFBO(width, height); });
 
 		mainLight = std::make_unique < DirectionalLight>(1024, 1024,
-			0.1f, 0.1f, 0.1f,
+			1.0f, 1.0f, 1.0f,
 			5500.0f, -5500.0f, -10000.0f);
 
 		pointLights[0] = std::make_unique < PointLight>(512, 512,
@@ -617,8 +615,6 @@ struct RenderEngineMain::Impl
 		IrradianceConvolutionPass();
 		PrefilterPass();
 		BRDFPass();
-
-		return mainWindow->GetWindow();
 	}
 
 	void InitSSAO() 
@@ -635,7 +631,7 @@ struct RenderEngineMain::Impl
 		terrainShader->UseShader();
 		for (size_t i = 0; i < NUM_CASCADES; ++i)
 		{
-			glm::vec4 vView(0.0f, 0.0f, mainLight->GetShadowMap()->GetCascadeEnd(i + 1), 1.0f);
+			glm::vec4 vView(0.0f, 0.0f, mainLight->GetCascadeEnd(i + 1), 1.0f);
 			glm::vec4 vClip = camera->GetProjectionMatrix() * vView;
 			printf("%F \n", vClip.z);
 			terrainShader->SetCascadeEndClipSpace(i, -vClip.z);
@@ -1153,7 +1149,7 @@ struct RenderEngineMain::Impl
 	{
 		if (is_cubeMap)
 		{
-			environmentMap->Read(GL_TEXTURE1);
+			environmentMap->AttachFBOToTextureUnit(GL_TEXTURE1);
 		}
 		else
 		{
@@ -1284,20 +1280,19 @@ struct RenderEngineMain::Impl
 
 		glUniformMatrix4fv(environmentMapShader->GetProjectionLocation(), 1, GL_FALSE, glm::value_ptr(captureProjection));
 
-		glViewport(0, 0, environmentMap->GetWidth(), environmentMap->GetHeight());
-		environmentMap->Write(-1);
+		glViewport(0, 0, environmentMap->GetFBOWidth(), environmentMap->GetFBOHeight());
+		environmentMap->BindFBO();
 		for (unsigned int i = 0; i < 6; ++i)
 		{
 			glUniformMatrix4fv(environmentMapShader->GetViewLocation(), 1, GL_FALSE, glm::value_ptr(captureViews[i]));
-			environmentMap->Write(i);
+			environmentMap->WriteToFBOBuffer(i);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			environmentMapShader->Validate();
 
 			RenderEnvCubeMap(false);
 		}
+		environmentMap->CreateFBOMipMap();
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-		environmentMap->CreateFirstMipFace();
 	}
 
 	void IrradianceConvolutionPass()
@@ -1307,12 +1302,12 @@ struct RenderEngineMain::Impl
 
 		glUniformMatrix4fv(irradianceConvolutionShader->GetProjectionLocation(), 1, GL_FALSE, glm::value_ptr(captureProjection));
 
-		glViewport(0, 0, irradianceMap->GetWidth(), irradianceMap->GetHeight());
-		irradianceMap->Write(-1);
+		glViewport(0, 0, irradianceMap->GetFBOWidth(), irradianceMap->GetFBOHeight());
+		irradianceMap->BindFBO();
 		for (unsigned int i = 0; i < 6; ++i)
 		{
 			glUniformMatrix4fv(irradianceConvolutionShader->GetViewLocation(), 1, GL_FALSE, glm::value_ptr(captureViews[i]));
-			irradianceMap->Write(i);
+			irradianceMap->WriteToFBOBuffer(i);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			irradianceConvolutionShader->Validate();
 
@@ -1327,15 +1322,15 @@ struct RenderEngineMain::Impl
 		prefilterShader->SetSkybox(1);
 		glUniformMatrix4fv(prefilterShader->GetProjectionLocation(), 1, GL_FALSE, glm::value_ptr(captureProjection));
 
-		prefilterMap->Write(-2, 0, 0, 0);
+		prefilterMap->BindFBO();
 		unsigned int maxMipLevels = 5;
 
 		for (unsigned int mip = 0; mip < maxMipLevels; ++mip)
 		{
 			//resize framebuffer according to mip-level size
-			unsigned int mipWidth = prefilterMap->GetWidth() * std::pow(0.5, mip);
-			unsigned int mipHeight = prefilterMap->GetHeight() * std::pow(0.5, mip);
-			prefilterMap->Write(-1, mipWidth, mipHeight, 0);
+			unsigned int mipWidth = prefilterMap->GetFBOWidth() * std::pow(0.5, mip);
+			unsigned int mipHeight = prefilterMap->GetFBOHeight() * std::pow(0.5, mip);
+			//prefilterMap->Write(-1, mipWidth, mipHeight, 0);
 			glViewport(0, 0, mipWidth, mipHeight);
 
 			float roughness = (float)mip / (float)(maxMipLevels - 1);
@@ -1343,7 +1338,7 @@ struct RenderEngineMain::Impl
 			for (unsigned int i = 0; i < 6; ++i) 
 			{
 				glUniformMatrix4fv(prefilterShader->GetViewLocation(), 1, GL_FALSE, glm::value_ptr(captureViews[i]));
-				prefilterMap->Write(i, 0, 0, mip);
+				prefilterMap->WriteToFBOBuffer(i, mip);
 				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 				prefilterShader->Validate();
 
@@ -1355,9 +1350,9 @@ struct RenderEngineMain::Impl
 
 	void BRDFPass()
 	{
-		glViewport(0, 0, brdfMap->GetWidth(), brdfMap->GetHeight());
+		glViewport(0, 0, brdfMap->GetFBOWidth(), brdfMap->GetFBOHeight());
 
-		brdfMap->Write();
+		brdfMap->BindFBO();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		brdfShader->UseShader();
@@ -1369,19 +1364,22 @@ struct RenderEngineMain::Impl
 	void DirectionalShadowMapPass(DirectionalLight* light) {
 
 		testLitView[0] = light->CalculateCascadeLightTransform();
-		mainLight->GetShadowMap()->CalcOrthProjs(camera->CalculateViewMatrix(), testLitView, 60.0f);
+		mainLight->CalcOrthProjs(camera->CalculateViewMatrix(), testLitView, 60.0f);
 
 		for (unsigned int i = 0; i < NUM_CASCADES; ++i)
 		{
-			vView[i] = glm::lookAt(mainLight->GetShadowMap()->GetModlCent(i), mainLight->GetShadowMap()->GetModlCent(i) + glm::normalize(light->GetLightDirection()) * 0.2f, light->GetLightUp());
+			vView[i] = glm::lookAt(mainLight->GetModlCent(i), mainLight->GetModlCent(i) + glm::normalize(light->GetLightDirection()) * 0.2f, light->GetLightUp());
 		}
+
+		light->GetShadowMap()->BindFBO();
+
 		for (size_t i = 0; i < NUM_CASCADES; ++i)
 		{
-			glViewport(0, 0, light->GetShadowMap()->GetWidth(), light->GetShadowMap()->GetHeight());
-			light->GetShadowMap()->Write(i);
+			glViewport(0, 0, light->GetShadowMap()->GetFBOWidth(), light->GetShadowMap()->GetFBOHeight());
+			light->GetShadowMap()->WriteToFBOBuffer(i);
 			glClear(GL_DEPTH_BUFFER_BIT);
 
-			glm::mat4 projView = light->GetShadowMap()->GetProjMat(vView[i], i) * vView[i];
+			glm::mat4 projView = light->GetProjMat(vView[i], i) * vView[i];
 
 			directionalShadowShader->UseShader();
 			directionalShadowShader->SetDirectionalLightTransform(projView);
@@ -1419,9 +1417,9 @@ struct RenderEngineMain::Impl
 
 		omniShadowShader->UseShader();
 
-		glViewport(0, 0, light->GetShadowMap()->GetWidth(), light->GetShadowMap()->GetHeight());
+		glViewport(0, 0, light->GetShadowMap()->GetFBOWidth(), light->GetShadowMap()->GetFBOHeight());
 
-		light->GetShadowMap()->Write();
+		light->GetShadowMap()->BindFBO();
 		glClear(GL_DEPTH_BUFFER_BIT);
 
 		glUniform3f(omniShadowShader->GetOmniLightPosLocation(), light->GetPosition().x, light->GetPosition().y, light->GetPosition().z);
@@ -1451,7 +1449,7 @@ struct RenderEngineMain::Impl
 	void CullLight()
 	{
 		visibleClusterCompShader->UseShader();
-		depth->Read(GL_TEXTURE0);
+		depth->AttachFBOToTextureUnit(GL_TEXTURE0);
 		visibleClusterCompShader->Dispatch(ScreenWidth / 32, ScreenHeight / 30, 1);
 
 		//unsigned int count = 0;
@@ -1485,9 +1483,9 @@ struct RenderEngineMain::Impl
 	{
 		auto projectionMatrix = camera->GetProjectionMatrix();
 		auto viewMatrix = camera->CalculateViewMatrix();
-		glViewport(0, 0, depth->GetWidth(), depth->GetHeight());
+		glViewport(0, 0, depth->GetFBOWidth(), depth->GetFBOHeight());
 
-		depth->Write();
+		depth->BindFBO();
 		//clear everything
 		glClear(GL_DEPTH_BUFFER_BIT);
 
@@ -1527,13 +1525,13 @@ struct RenderEngineMain::Impl
 
 	void SSAOPass()
 	{
-		glViewport(0, 0, ssao->GetWidth(), ssao->GetHeight());
-		ssao->Write();
+		glViewport(0, 0, ssao->GetFBOWidth(), ssao->GetFBOHeight());
+		ssao->BindFBO();
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		ssaoShader->UseShader();
 
-		depth->Read(GL_TEXTURE1);
+		depth->AttachFBOToTextureUnit(GL_TEXTURE1);
 		ssaoShader->SetTexture(1);
 
 		SSAONoiseTexture->UseTexture(1);
@@ -1548,13 +1546,13 @@ struct RenderEngineMain::Impl
 
 	void SSAOBlurPass()
 	{
-		glViewport(0, 0, ssaoBlur->GetWidth(), ssaoBlur->GetHeight());
+		glViewport(0, 0, ssaoBlur->GetFBOWidth(), ssaoBlur->GetFBOHeight());
 
-		ssaoBlur->Write();
+		ssaoBlur->BindFBO();
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		ssaoBlurShader->UseShader();
-		ssao->Read(GL_TEXTURE1);
+		ssao->AttachFBOToTextureUnit(GL_TEXTURE1);
 		ssaoBlurShader->SetTexture(1);
 
 		quad->RenderQuad();
@@ -1568,18 +1566,18 @@ struct RenderEngineMain::Impl
 		auto prevProj = camera->GetPreviousProjectionMatrix();
 		auto prevView = camera->GetPreviousViewMatrix();
 
-		glViewport(0, 0, hdr->GetWidth(), hdr->GetHeight());
+		glViewport(0, 0, hdr->GetFBOWidth(), hdr->GetFBOHeight());
 
-		hdr->Write();
+		hdr->BindFBO();
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		mainLight->GetShadowMap()->Read(1, GL_TEXTURE2);
-		irradianceMap->Read(GL_TEXTURE8);
-		prefilterMap->Read(GL_TEXTURE9);
-		brdfMap->Read(GL_TEXTURE10);
-		ssaoBlur->Read(GL_TEXTURE14);
-		depth->Read(GL_TEXTURE18);
+		mainLight->GetShadowMap()->AttachFBOToTextureUnit(GL_TEXTURE2 + 1, 1);
+		irradianceMap->AttachFBOToTextureUnit(GL_TEXTURE8);
+		prefilterMap->AttachFBOToTextureUnit(GL_TEXTURE9);
+		brdfMap->AttachFBOToTextureUnit(GL_TEXTURE10);
+		ssaoBlur->AttachFBOToTextureUnit(GL_TEXTURE14);
+		depth->AttachFBOToTextureUnit(GL_TEXTURE18);
 
 		skybox->DrawHDRSkybox(viewMatrix, projectionMatrix, prevProj, prevView, environmentMap.get()); //should be at the end to prevent overdraw,here becoz of blending issues
 
@@ -1609,7 +1607,7 @@ struct RenderEngineMain::Impl
 
 		for (size_t i = 0; i < NUM_CASCADES; ++i)
 		{
-			glm::mat4 projView = mainLight->GetShadowMap()->GetProjMat(vView[i], i) * vView[i];
+			glm::mat4 projView = mainLight->GetProjMat(vView[i], i) * vView[i];
 			terrainShader->SetDirectionalLightTransforms(i, &projView);
 		}
 
@@ -1709,43 +1707,43 @@ struct RenderEngineMain::Impl
 
 	void Bloom()
 	{
-		bool horizontal = true;
+		bool isHorizontalFbo = BloomFBOType::Horizontal;
 		int amount = 10;
 		blurShader->UseShader();
 		for (int i = 0; i < amount; i++)
 		{
-			blur->Write(horizontal);
-			glUniform1i(blurShader->GetHorizontalLocation(), horizontal);
+			blur->BindFBO(isHorizontalFbo);
+			glUniform1i(blurShader->GetHorizontalLocation(), isHorizontalFbo);
 			blurShader->Validate();
 			blurShader->SetTexture(1);
 			if (i < 1)
 			{
-				blur->ReadFirstIteration(hdr->GetColorBuffer(1));
+				hdr->AttachFBOToTextureUnit(GL_TEXTURE1, ShadingPassBufferType::SceneExposed);
 			}
 			else
 			{
-				blur->Read(!horizontal);
+				blur->AttachFBOToTextureUnit(GL_TEXTURE1, !isHorizontalFbo);
 			}
 			quad->RenderQuad();
-			horizontal = !horizontal;
+			isHorizontalFbo = !isHorizontalFbo;
 		}
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
 	void MotionBlurPass(float fps)
 	{
-		glViewport(0, 0, motionBlur->GetWidth(), motionBlur->GetHeight());
+		glViewport(0, 0, motionBlur->GetFBOWidth(), motionBlur->GetFBOHeight());
 
-		motionBlur->Write();
+		motionBlur->BindFBO();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		motionBlurShader->UseShader();
 
 		glUniform1f(motionBlurShader->GetVelocityScaleLocation(), fps / 30.0f);
 
-		hdr->ReadScene(GL_TEXTURE1);
+		hdr->AttachFBOToTextureUnit(GL_TEXTURE1, ShadingPassBufferType::Scene);
 		motionBlurShader->SetTexture(1);
 
-		hdr->ReadMotion(GL_TEXTURE2);
+		hdr->AttachFBOToTextureUnit(GL_TEXTURE2, ShadingPassBufferType::Motion);
 		motionBlurShader->SetMotionTexture(2);
 		quad->RenderQuad();
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -2138,7 +2136,10 @@ struct RenderEngineMain::Impl
 		//}
 		//else
 		//{
-			glViewport(0, 0, ScreenWidth, ScreenHeight);
+			glViewport(0, 0, finalFBO->GetFBOWidth(), finalFBO->GetFBOHeight());
+
+			finalFBO->BindFBO();
+			//glViewport(0, 0, ScreenWidth, ScreenHeight);
 
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -2147,15 +2148,16 @@ struct RenderEngineMain::Impl
 			glUniform1i(hdrShader->GetHDRLocation(), 1);
 			glUniform1f(hdrShader->GetExposureLocation(), 1.0f);
 
-			blur->Read(1);
+			blur->AttachFBOToTextureUnit(GL_TEXTURE1, 1);
 			glUniform1i(hdrShader->GetBlurLocation(), 1);
 
-			motionBlur->Read(GL_TEXTURE2);
+			motionBlur->AttachFBOToTextureUnit(GL_TEXTURE2);
 			hdrShader->SetTexture(2);
 
 			hdrShader->Validate();
 
 			quad->RenderQuad();
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		//}
 	}
 
@@ -2194,12 +2196,7 @@ struct RenderEngineMain::Impl
 	}
 };
 
-RenderEngineMain::RenderEngineMain() : m_pImpl{ std::make_unique<Impl>() } {};
-
-GLFWwindow* RenderEngineMain::Init()
-{
-	return Pimpl()->Init();
-}
+RenderEngineMain::RenderEngineMain() : m_pImpl{ std::make_unique<Impl>() } { Pimpl()->Init(); };
 
 void RenderEngineMain::Update()
 {	
@@ -2209,6 +2206,16 @@ void RenderEngineMain::Update()
 void RenderEngineMain::EndUpdate() 
 {
 	Pimpl()->EndUpdate();
+}
+
+GLFWwindow* RenderEngineMain::GetMainWindow()
+{	
+	return Pimpl()->mainWindow->GetWindow();
+}
+
+void RenderEngineMain::AddViewers()
+{
+	engineUI->AddSceneViewers(Pimpl()->finalFBO->GetFBOBuffer(0), "InGame", InGame);
 }
 
 bool RenderEngineMain:: IsEnd()
