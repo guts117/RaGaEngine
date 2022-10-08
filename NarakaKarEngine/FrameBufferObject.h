@@ -8,18 +8,21 @@ namespace NarakaKarEngine
 {
 	namespace RenderEngine
 	{
+		//ToDo: Serialize this
 		struct FBORenderBufferParam
 		{
 			GLenum InternalFormat;
 			GLenum Attachment;
 		};
 
+		//ToDo: Serialize this
 		struct FBOTexParams
 		{
 			GLenum ParamName;
 			std::variant<GLfloat, GLint, GLfloat*, GLint*, GLuint*> Params;
 		};
 
+		//ToDo: Serialize this
 		struct FBOTexGenParams
 		{
 			GLuint ColorBufferSize;
@@ -33,6 +36,7 @@ namespace NarakaKarEngine
 			std::vector<FBOTexParams> FboTexParams;
 		};
 
+		//ToDo: Serialize this
 		struct FBOParams
 		{
 			bool IsAttachBufferLater;
@@ -44,6 +48,7 @@ namespace NarakaKarEngine
 			std::vector<FBORenderBufferParam> FBORenderBufferParams;
 		};
 
+		//ToDo: Serialize this
 		class FrameBufferObject
 		{
 		public:
