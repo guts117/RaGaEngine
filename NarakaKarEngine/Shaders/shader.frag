@@ -1,5 +1,6 @@
 #version 460												
 
+const int NUM_CASCADES 				= 3;
 const int MAX_POINT_LIGHTS_SHADOW  	= 3;
 const int MAX_SPOT_LIGHTS 			= 3;
 const float MAX_REFLECTION_LOD 		= 4.0;
@@ -20,7 +21,9 @@ in vec2 TexCoord;
 in vec3 Normal;
 in mat3 TBN;
 in vec3 FragPos;
-in vec4 DirectionalLightSpacePos;
+
+in vec4 DirectionalLightSpacePos[NUM_CASCADES];
+in float ClipSpacePosZ;
 
 in vec4 ClipSpacePos;
 in vec4 PrevClipSpacePos;
@@ -106,7 +109,8 @@ uniform SpotLight spotLights[MAX_SPOT_LIGHTS];
 uniform samplerCube irradianceMap;
 uniform samplerCube prefilterMap;
 uniform sampler2D brdfLUT;
-uniform sampler2D DirectionalShadowMap;
+uniform float CascadeEndClipSpace[NUM_CASCADES];
+uniform DirectionalShadowMaps directionalShadowMaps[NUM_CASCADES];
 uniform sampler2D AOMap;
 uniform sampler2D depthMap;
 uniform OmniShadowMap omniShadowMaps[MAX_POINT_LIGHTS_SHADOW + MAX_SPOT_LIGHTS];
@@ -121,6 +125,9 @@ uniform float height_scale;
 uniform bool showAO;
 uniform bool showDepth;
 uniform bool showLightSlices;
+uniform bool showShadowSlices;
+
+vec4 cascadeCol 			= vec4(0.0, 0.0, 0.0, 0.0);
 
 vec3 colors[8] 				= vec3[](
    vec3(0, 0, 0),    vec3( 0,  0,  1), vec3( 0, 1, 0),  vec3(0, 1,  1),
@@ -133,9 +140,9 @@ vec2 CalcScreenTexCoord()
     return gl_FragCoord.xy / screenDimensions;
 }
 
-float CalcDirectionalShadowFactor(vec3 lightDir)
+float CalcDirectionalShadowFactor(int cascadeIndex, vec3 lightDir, vec4 lightSpacePos)
 {
-	vec3 projCoords 		= DirectionalLightSpacePos.xyz/DirectionalLightSpacePos.w;
+	vec3 projCoords 		= lightSpacePos.xyz / lightSpacePos.w;
 	projCoords 				= (projCoords * 0.5) + 0.5;
 	
 	float current 			= projCoords.z;
@@ -143,16 +150,24 @@ float CalcDirectionalShadowFactor(vec3 lightDir)
 	vec3 normal 			= normalize(Normal);
 	lightDir 				= normalize(lightDir);
 	
-	float bias 				= max(0.05 * (1 - dot(normal, lightDir)), 0.005);
+	float bias 				= 0.0;
+	if(cascadeIndex > 1) 
+	{
+		bias 				= max(0.001 * (1 - dot(normal, lightDir)), 0.0002);
+	}
+	else
+	{
+		bias 				= max(0.0001 * (1 - dot(normal, lightDir)), 0.0001);
+	}
 	
 	float shadow 			= 0.0;
 	
-	vec2 texelSize 			= 1.0 / textureSize(DirectionalShadowMap, 0);
+	vec2 texelSize 			= 1.0 / textureSize(directionalShadowMaps[cascadeIndex].shadowMap, 0);
 	for(int x = -1; x <= 1; ++x)
 	{
 		for(int y = -1; y <= 1; ++y)
 		{
-			float pcfDepth 	= texture(DirectionalShadowMap, projCoords.xy + vec2(x,y)* texelSize).r;
+			float pcfDepth 	= texture(directionalShadowMaps[cascadeIndex].shadowMap, projCoords.xy + vec2(x,y)* texelSize).r;
 			shadow 			+= current - bias > pcfDepth ? 1.0 : 0.0;
 		}
 	}
@@ -296,7 +311,22 @@ vec4 CalcLightByDirection(vec3 lightColor, vec3 lightDir, vec3 viewDir, vec3 nor
 
 vec4 CalcDirectionalLight(vec3 viewDir, vec3 normal, vec3 F0, vec3 albedo, float metallic, float roughness)
 {
-	float shadowFactor 		= CalcDirectionalShadowFactor(directionalLight.color);
+	float shadowFactor 		= 0.0;
+
+	for (int i = 0 ; i < NUM_CASCADES ; i++) 
+	{
+		if (ClipSpacePosZ <= CascadeEndClipSpace[i]) 
+		{
+			shadowFactor	= CalcDirectionalShadowFactor(i, directionalLight.direction, DirectionalLightSpacePos[i]);
+			if (i == 0) 
+				cascadeCol	= vec4(0.1, 0.0, 0.0, 0.0);
+			else if (i == 1)
+				cascadeCol	= vec4(0.0, 0.1, 0.0, 0.0);
+			else if (i == 2)
+				cascadeCol	= vec4(0.0, 0.0, 0.1, 0.0);
+			break;
+		}
+	}	
 	return CalcLightByDirection(directionalLight.color, -directionalLight.direction, viewDir, normal, F0, albedo, metallic, roughness, shadowFactor, true, -1);
 }
 

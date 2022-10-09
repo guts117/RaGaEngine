@@ -541,18 +541,18 @@ struct RenderEngineMain::Impl
 		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { finalFBO->ResizeFBO(width, height); });
 
 		mainLight = std::make_unique < DirectionalLight>(1024, 1024,
-			1.0f, 1.0f, 1.0f,
+			0.5f, 0.5f, 0.5f,
 			5500.0f, -5500.0f, -10000.0f);
 
 		pointLights[0] = std::make_unique < PointLight>(512, 512,
-			0.1f, 100.0f,
+			0.5f, 100.0f,
 			0.0f, 0.0f, 3.0f,
 			12.0f - terrainScaleFactor, 40.0f, 10.0f - terrainScaleFactor);
 
 		pointLightCount++;
 
 		pointLights[1] = std::make_unique < PointLight>(512, 512,
-			0.1f, 100.0f,
+			0.5f, 100.0f,
 			3.0f, 0.0f, 0.0f,
 			-12.0f - terrainScaleFactor, 40.0f, 10.0f - terrainScaleFactor);
 
@@ -635,6 +635,24 @@ struct RenderEngineMain::Impl
 			glm::vec4 vClip = camera->GetProjectionMatrix() * vView;
 			printf("%F \n", vClip.z);
 			terrainShader->SetCascadeEndClipSpace(i, -vClip.z);
+		}
+
+		shaderList[0]->UseShader();
+		for (size_t i = 0; i < NUM_CASCADES; ++i)
+		{
+			glm::vec4 vView(0.0f, 0.0f, mainLight->GetCascadeEnd(i + 1), 1.0f);
+			glm::vec4 vClip = camera->GetProjectionMatrix() * vView;
+			printf("%F \n", vClip.z);
+			shaderList[0]->SetCascadeEndClipSpace(i, -vClip.z);
+		}
+
+		animShaderList[0]->UseShader();
+		for (size_t i = 0; i < NUM_CASCADES; ++i)
+		{
+			glm::vec4 vView(0.0f, 0.0f, mainLight->GetCascadeEnd(i + 1), 1.0f);
+			glm::vec4 vClip = camera->GetProjectionMatrix() * vView;
+			printf("%F \n", vClip.z);
+			animShaderList[0]->SetCascadeEndClipSpace(i, -vClip.z);
 		}
 	}
 	
@@ -1572,7 +1590,6 @@ struct RenderEngineMain::Impl
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		mainLight->GetShadowMap()->AttachFBOToTextureUnit(GL_TEXTURE2 + 1, 1);
 		irradianceMap->AttachFBOToTextureUnit(GL_TEXTURE8);
 		prefilterMap->AttachFBOToTextureUnit(GL_TEXTURE9);
 		brdfMap->AttachFBOToTextureUnit(GL_TEXTURE10);
@@ -1627,8 +1644,14 @@ struct RenderEngineMain::Impl
 		shaderList[0]->SetDirectionalLight(mainLight.get());
 		shaderList[0]->SetPointLight(pointLights, pointLightCount, 3, 0);
 		shaderList[0]->SetSpotLight(spotLights, spotLightCount, 3 + pointLightCount, pointLightCount);
-		shaderList[0]->SetDirectionalLightTransform(mainLight->CalculateLightTransform());
+		
+		for (size_t i = 0; i < NUM_CASCADES; ++i)
+		{
+			glm::mat4 projView = mainLight->GetProjMat(vView[i], i) * vView[i];
+			shaderList[0]->SetDirectionalLightTransforms(i, &projView);
+		}
 
+		shaderList[0]->SetDirectionalShadowMaps(mainLight.get(), NUM_CASCADES, 19);
 		shaderList[0]->Validate();
 		RenderScene(shaderList[0]);
 
@@ -1656,9 +1679,14 @@ struct RenderEngineMain::Impl
 		animShaderList[0]->SetDirectionalLight(mainLight.get());
 		animShaderList[0]->SetPointLight(pointLights, pointLightCount, 3, 0);
 		animShaderList[0]->SetSpotLight(spotLights, spotLightCount, 3 + pointLightCount, pointLightCount);
-		animShaderList[0]->SetDirectionalLightTransform(mainLight->CalculateLightTransform());
+		
+		for (size_t i = 0; i < NUM_CASCADES; ++i)
+		{
+			glm::mat4 projView = mainLight->GetProjMat(vView[i], i) * vView[i];
+			animShaderList[0]->SetDirectionalLightTransforms(i, &projView);
+		}
 
-		animShaderList[0]->SetDirectionalShadowMap(2);
+		animShaderList[0]->SetDirectionalShadowMaps(mainLight.get(), NUM_CASCADES, 19);
 		animShaderList[0]->SetAOMap(14);
 		animShaderList[0]->SetDepthMap(18);
 		animShaderList[0]->SetIrradianceMap(8);
