@@ -16,8 +16,6 @@ EngineUIMain::EngineUIMain(GLFWwindow* window, const bool installCallbacks, cons
 	//Initialize IMGUI
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
-	auto io = ImGui::GetIO();
-	(void)io;
 	ImGui_ImplGlfw_InitForOpenGL(window, installCallbacks);
 	ImGui_ImplOpenGL3_Init(version.c_str());
 }
