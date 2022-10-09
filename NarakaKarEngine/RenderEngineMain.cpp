@@ -358,6 +358,8 @@ struct RenderEngineMain::Impl
 	float simDt3D = 0.0f;
 	int simDim3D = 128;
 
+	bool isWindowSelected;
+
 	void Init()
 	{
 		glEnable(GL_TEXTURE_3D);
@@ -696,7 +698,10 @@ struct RenderEngineMain::Impl
 			lastFrameTime += 1.0;
 		}
 
-		camera->keyControl(mainWindow->getKeys(), deltaTime);
+		if (isWindowSelected) 
+		{
+			camera->keyControl(mainWindow->getKeys(), deltaTime);
+		}
 
 		//ToDo: #20 simulation manager class
 		//if (mainWindow->getKeys()[GLFW_KEY_X]) 
@@ -734,7 +739,10 @@ struct RenderEngineMain::Impl
 
 		if (!drawFluidSim && !drawSmokeSim)
 		{
-			camera->mouseControl(mainWindow->getXChange(), mainWindow->getYChange());
+			if (isWindowSelected)
+			{
+				camera->mouseControl(mainWindow->getXChange(), mainWindow->getYChange());
+			}
 
 			if (direction) {
 				triOffset += triIncrement;
@@ -2243,7 +2251,7 @@ GLFWwindow* RenderEngineMain::GetMainWindow()
 
 void RenderEngineMain::AddViewers()
 {
-	engineUI->AddSceneViewers(Pimpl()->finalFBO->GetFBOBuffer(0), "InGame", InGame);
+	engineUI->AddSceneViewers(Pimpl()->finalFBO->GetFBOBuffer(0), "InGame", InGame, [this](bool isSelected) {Pimpl()->mainWindow->SetCursorActive(!isSelected); Pimpl()->isWindowSelected = isSelected; });
 }
 
 bool RenderEngineMain:: IsEnd()
