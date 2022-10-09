@@ -545,14 +545,14 @@ struct RenderEngineMain::Impl
 			5500.0f, -5500.0f, -10000.0f);
 
 		pointLights[0] = std::make_unique < PointLight>(512, 512,
-			0.5f, 100.0f,
+			0.1f, 100.0f,
 			0.0f, 0.0f, 3.0f,
 			12.0f - terrainScaleFactor, 40.0f, 10.0f - terrainScaleFactor);
 
 		pointLightCount++;
 
 		pointLights[1] = std::make_unique < PointLight>(512, 512,
-			0.5f, 100.0f,
+			0.1f, 100.0f,
 			3.0f, 0.0f, 0.0f,
 			-12.0f - terrainScaleFactor, 40.0f, 10.0f - terrainScaleFactor);
 
