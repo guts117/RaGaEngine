@@ -7,23 +7,26 @@ layout (location = 3) in vec3 tangent;
 layout (location = 4) in ivec4 BoneIDs;
 layout (location = 5) in vec4 Weights;
 
+const int NUM_CASCADES = 3;
+
 //out vec4 vCol;
 out vec2 TexCoord;												
 out vec3 Normal;
 out mat3 TBN;
 out mat3 TBN2;
 out vec3 FragPos;
-out vec4 DirectionalLightSpacePos;
-
-uniform mat4 prevPVM;
+out vec4 DirectionalLightSpacePos[NUM_CASCADES]; 
+out float ClipSpacePosZ;  
 
 out vec4 ClipSpacePos;
 out vec4 PrevClipSpacePos;
 
 uniform mat4 Model;						
 uniform mat4 Projection;
-uniform mat4 View;					
-uniform mat4 DirectionalLightTransform;
+uniform mat4 View;		
+
+uniform mat4 prevPVM;			
+uniform mat4 DirectionalLightTransforms[NUM_CASCADES]; 
 
 const int MAX_BONES = 100;
 uniform mat4 gBones[MAX_BONES];
@@ -55,7 +58,7 @@ void main()
 	vec4 PosL = BoneTransform * vec4(pos, 1.0);
 	vec4 ClipSpacePosition = Projection * View * Model * PosL;	
 	gl_Position = ClipSpacePosition;
-	DirectionalLightSpacePos = DirectionalLightTransform * Model * vec4(PosL.xyz, 1.0);	
+
 	//vCol = vec4(clamp(pos, 0.0f, 1.0f), 1.0f);
 
 	TexCoord = tex;	
@@ -66,12 +69,17 @@ void main()
 	TBN = CalcTBN(Normal, T);
 	FragPos = (Model * vec4(PosL.xyz, 1.0f)).xyz;
     
+	for (int i = 0 ; i < NUM_CASCADES ; i++) {
+       DirectionalLightSpacePos[i] = DirectionalLightTransforms[i]* vec4(FragPos, 1.0);
+    }
+	
 	//motion vector
 	mat4 PrevBoneTransform = gPrevBones[BoneIDs[0]] * Weights[0];
     PrevBoneTransform += gPrevBones[BoneIDs[1]] * Weights[1];
     PrevBoneTransform += gPrevBones[BoneIDs[2]] * Weights[2];
     PrevBoneTransform += gPrevBones[BoneIDs[3]] * Weights[3];
 
+	ClipSpacePosZ = gl_Position.z;
     ClipSpacePos = ClipSpacePosition;
     vec4 PrevPosL = PrevBoneTransform * vec4(pos, 1.0);
     PrevClipSpacePos =  prevPVM * PrevPosL;

@@ -61,10 +61,29 @@ void Model_Shader::CompileProgram()
 	uniformPrefilter = glGetUniformLocation(shaderID, "prefilterMap");
 	uniformBRDF = glGetUniformLocation(shaderID, "brdfLUT");
 	uniformDirectionalLightTransform = glGetUniformLocation(shaderID, "DirectionalLightTransform");
-	uniformDirectionalShadowMap = glGetUniformLocation(shaderID, "DirectionalShadowMap");
-
 	uniformOmniLightPos = glGetUniformLocation(shaderID, "lightPos");
 	uniformFarPlane = glGetUniformLocation(shaderID, "farPlane");
+
+	for (size_t i = 0; i < NUM_CASCADES; i++) {
+		char locBuff[100] = { '\0' };
+
+		snprintf(locBuff, sizeof(locBuff), "DirectionalLightTransforms[%zd]", i);
+		uniformDirectionalLightTransforms[i] = glGetUniformLocation(shaderID, locBuff);
+	}
+
+	for (size_t i = 0; i < NUM_CASCADES; i++) {
+		char locBuff[100] = { '\0' };
+
+		snprintf(locBuff, sizeof(locBuff), "directionalShadowMaps[%zd].shadowMap", i);
+		uniformDirectionalShadowMaps[i].shadowMap = glGetUniformLocation(shaderID, locBuff);
+	}
+
+	for (size_t i = 0; i < NUM_CASCADES; i++) {
+		char locBuff[100] = { '\0' };
+
+		snprintf(locBuff, sizeof(locBuff), "CascadeEndClipSpace[%zd]", i);
+		uniformCascadeEndClipSpace[i] = glGetUniformLocation(shaderID, locBuff);
+	}
 
 	for (size_t i = 0; i < 6; i++) {
 		char locBuff[100] = { '\0' };
@@ -121,6 +140,15 @@ void Model_Shader::SetSpotLight(std::shared_ptr<SpotLight>* sLight, unsigned int
 	}
 }
 
+void Model_Shader::SetDirectionalShadowMaps(DirectionalLight* light, unsigned int i, GLuint textureUnit)
+{
+	for (size_t j = 0; j < i; ++j)
+	{
+		light->GetShadowMap()->AttachFBOToTextureUnit(GL_TEXTURE19 + j, j);
+		glUniform1i(uniformDirectionalShadowMaps[j].shadowMap, textureUnit + j);
+	}
+}
+
 void Model_Shader::SetSkybox(GLuint textureUnit)
 {
 	glUniform1i(uniformSkybox, textureUnit);
@@ -141,11 +169,6 @@ void Model_Shader::SetBRDFLUT(GLuint textureUnit)
 	glUniform1i(uniformBRDF, textureUnit);
 }
 
-void Model_Shader::SetDirectionalShadowMap(GLuint textureUnit)
-{
-	glUniform1i(uniformDirectionalShadowMap, textureUnit);
-}
-
 void Model_Shader::SetAOMap(GLuint textureUnit)
 {
 	glUniform1i(uniformAO, textureUnit);
@@ -156,9 +179,19 @@ void Model_Shader::SetDepthMap(GLuint textureUnit)
 	glUniform1i(uniformDepth, textureUnit);
 }
 
+void Model_Shader::SetDirectionalLightTransforms(const GLuint& cascadeIndex, glm::mat4* lTransform)
+{
+	glUniformMatrix4fv(uniformDirectionalLightTransforms[cascadeIndex], 1, GL_FALSE, glm::value_ptr(*lTransform));
+}
+
 void Model_Shader::SetDirectionalLightTransform(glm::mat4 lTransform)
 {
 	glUniformMatrix4fv(uniformDirectionalLightTransform, 1, GL_FALSE, glm::value_ptr(lTransform));
+}
+
+void Model_Shader::SetCascadeEndClipSpace(int i, float z)
+{
+	glUniform1f(uniformCascadeEndClipSpace[i], z);
 }
 
 void Model_Shader::SetLightMatrices(std::vector<glm::mat4> lightMatrices)

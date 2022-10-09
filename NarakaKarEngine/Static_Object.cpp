@@ -76,7 +76,6 @@ void Static_Object::SetUniformLocations(std::shared_ptr<Shader> shader, std::sha
 	glUniform3f(m_uniformEyePosition, camera->getCameraPosition().x, camera->getCameraPosition().y, camera->getCameraPosition().z);
 	glUniform1f(m_uniformHeightScale, 0.02f);
 
-	shader->SetDirectionalShadowMap(2);
 	shader->SetIrradianceMap(8);
 	shader->SetPrefilterMap(9);
 	shader->SetBRDFLUT(10);
@@ -112,6 +111,7 @@ void Static_Object::DrawNativeObject(std::shared_ptr<Shader> shader, std::shared
 	glUniformMatrix4fv(m_uniformPrevPVM, 1, GL_FALSE, glm::value_ptr(m_prevPVM));
 
 	m_albedoTexture->UseTexture(albedoTexUnit);
+	m_metallicTexture->UseTexture(metallicTexUnit);
 	m_metallicTexture->UseTexture(metallicTexUnit);
 	m_normalTexture->UseTexture(normalTexUnit);
 	m_roughTexture->UseTexture(roughTexUnit);
