@@ -358,7 +358,9 @@ struct RenderEngineMain::Impl
 	float simDt3D = 0.0f;
 	int simDim3D = 128;
 
-	bool isWindowSelected;
+	bool isGameViewSelected;
+	bool isEditorViewSelected;
+
 
 	void Init()
 	{
@@ -698,7 +700,7 @@ struct RenderEngineMain::Impl
 			lastFrameTime += 1.0;
 		}
 
-		if (isWindowSelected) 
+		if (isGameViewSelected) 
 		{
 			camera->keyControl(mainWindow->getKeys(), deltaTime);
 		}
@@ -739,7 +741,7 @@ struct RenderEngineMain::Impl
 
 		if (!drawFluidSim && !drawSmokeSim)
 		{
-			if (isWindowSelected)
+			if (isGameViewSelected)
 			{
 				camera->mouseControl(mainWindow->getXChange(), mainWindow->getYChange());
 			}
@@ -2251,7 +2253,8 @@ GLFWwindow* RenderEngineMain::GetMainWindow()
 
 void RenderEngineMain::AddViewers()
 {
-	engineUI->AddSceneViewers(Pimpl()->finalFBO->GetFBOBuffer(0), "InGame", InGame, [this](bool isSelected) {Pimpl()->mainWindow->SetCursorActive(!isSelected); Pimpl()->isWindowSelected = isSelected; });
+	engineUI->AddSceneViewers(Pimpl()->ssaoBlur->GetFBOBuffer(0), "EditorScene", Editor, [this](bool isSelected) { Pimpl()->isEditorViewSelected = isSelected; });
+	engineUI->AddSceneViewers(Pimpl()->finalFBO->GetFBOBuffer(0), "InGameScene", InGame, [this](bool isSelected) { Pimpl()->mainWindow->SetCursorActive(!isSelected); Pimpl()->isGameViewSelected = isSelected; });
 }
 
 bool RenderEngineMain:: IsEnd()

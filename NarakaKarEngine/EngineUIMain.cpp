@@ -31,18 +31,21 @@ void EngineUIMain::Update()
 		ImGui::Begin(m_sceneList->at(i)->GetViewerName().c_str(), nullptr, ImGuiWindowFlags_NoFocusOnAppearing);
 		ImGui::SetWindowSize(ImVec2(ScreenWidth / 2, ScreenHeight / 2));
 		ImGui::Image((ImTextureID)m_sceneList->at(i)->GetTextureId(), ImGui::GetWindowSize(), ImVec2(0, 1), ImVec2(1, 0));
-		m_sceneList->at(i)->InvokeSelectCallback([]() -> bool
+		m_sceneList->at(i)->InvokeSelectCallback([&]() -> bool
 			{
 				auto isFocused = ImGui::IsWindowFocused();
-				if (isFocused)	
-				{ 
-					ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouse; 
-				}
-				else			
+				if (m_sceneList->at(i)->GetViewerType() == InGame) 
 				{
-					if ((ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_NoMouse) != 0) 
+					if (isFocused)
 					{
-						ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
+						ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouse;
+					}
+					else
+					{
+						if ((ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_NoMouse) != 0)
+						{
+							ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
+						}
 					}
 				}
 				return isFocused;
