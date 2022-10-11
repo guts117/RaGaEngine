@@ -54,16 +54,10 @@
     <ClCompile Include="Debug.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
-    <ClCompile Include="Depth_Pass_Fbo_Handler.cpp">
-      <Filter>Source Files\RenderEngine</Filter>
-    </ClCompile>
     <ClCompile Include="DirectionalLight.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
     <ClCompile Include="EngineInputManager.cpp">
-      <Filter>Source Files\RenderEngine</Filter>
-    </ClCompile>
-    <ClCompile Include="Equirect_To_Cubemap_Pass_Fbo_Handler.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
     <ClCompile Include="Equirectangular_to_CubeMap_Shader.cpp">
@@ -87,16 +81,10 @@
     <ClCompile Include="Model_Shader.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
-    <ClCompile Include="Motion_Blur_Pass_Fbo_Handler.cpp">
-      <Filter>Source Files\RenderEngine</Filter>
-    </ClCompile>
     <ClCompile Include="MotionBlur_Shader.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
     <ClCompile Include="RenderEngineMain.cpp">
-      <Filter>Source Files\RenderEngine</Filter>
-    </ClCompile>
-    <ClCompile Include="Omni_Shadow_Pass_Fbo_Handler.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
     <ClCompile Include="Particle.cpp">
@@ -111,9 +99,6 @@
     <ClCompile Include="PointLight.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
-    <ClCompile Include="Pre_Filter_Pass_Fbo_Handler.cpp">
-      <Filter>Source Files\RenderEngine</Filter>
-    </ClCompile>
     <ClCompile Include="PreFilter_Shader.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
@@ -123,22 +108,13 @@
     <ClCompile Include="Shader.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
-    <ClCompile Include="Shadow_Map_Pass_Fbo_Handler.cpp">
-      <Filter>Source Files\RenderEngine</Filter>
-    </ClCompile>
     <ClCompile Include="Skybox.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
     <ClCompile Include="SpotLight.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
-    <ClCompile Include="Ssao_Pass_Fbo_Handler.cpp">
-      <Filter>Source Files\RenderEngine</Filter>
-    </ClCompile>
     <ClCompile Include="SSAO_Shader.cpp">
-      <Filter>Source Files\RenderEngine</Filter>
-    </ClCompile>
-    <ClCompile Include="Ssao_Blur_Pass_Fbo_Handler.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
     <ClCompile Include="SSAOBlur_Shader.cpp">
@@ -207,20 +183,11 @@
     <ClCompile Include="FrameBufferObject.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
-    <ClCompile Include="Brdf_Pass_Fbo_Handler.cpp">
-      <Filter>Source Files\RenderEngine</Filter>
-    </ClCompile>
-    <ClCompile Include="Bloom_Pass_Fbo_Handler.cpp">
-      <Filter>Source Files\RenderEngine</Filter>
-    </ClCompile>
-    <ClCompile Include="Shading_Pass_Fbo_Handler.cpp">
+    <ClCompile Include="Scene_Fbo_Handler_Manager.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
     <ClCompile Include="Fbo_Handler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Scene_Fbo_Handler_Manager.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -254,16 +221,10 @@
     <ClInclude Include="Debug.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
-    <ClInclude Include="Depth_Pass_Fbo_Handler.h">
-      <Filter>Header Files\RenderEngine</Filter>
-    </ClInclude>
     <ClInclude Include="DirectionalLight.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="EngineInputManager.h">
-      <Filter>Header Files\RenderEngine</Filter>
-    </ClInclude>
-    <ClInclude Include="Equirect_To_Cubemap_Pass_Fbo_Handler.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="Equirectangular_to_CubeMap_Shader.h">
@@ -287,16 +248,10 @@
     <ClInclude Include="Model_Shader.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
-    <ClInclude Include="Motion_Blur_Pass_Fbo_Handler.h">
-      <Filter>Header Files\RenderEngine</Filter>
-    </ClInclude>
     <ClInclude Include="MotionBlur_Shader.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="RenderEngineMain.h">
-      <Filter>Header Files\RenderEngine</Filter>
-    </ClInclude>
-    <ClInclude Include="Omni_Shadow_Pass_Fbo_Handler.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="Particle.h">
@@ -311,9 +266,6 @@
     <ClInclude Include="PointLight.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
-    <ClInclude Include="Pre_Filter_Pass_Fbo_Handler.h">
-      <Filter>Header Files\RenderEngine</Filter>
-    </ClInclude>
     <ClInclude Include="PreFilter_Shader.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
@@ -323,22 +275,13 @@
     <ClInclude Include="Shader.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
-    <ClInclude Include="Shadow_Map_Pass_Fbo_Handler.h">
-      <Filter>Header Files\RenderEngine</Filter>
-    </ClInclude>
     <ClInclude Include="Skybox.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="SpotLight.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
-    <ClInclude Include="Ssao_Pass_Fbo_Handler.h">
-      <Filter>Header Files\RenderEngine</Filter>
-    </ClInclude>
     <ClInclude Include="SSAO_Shader.h">
-      <Filter>Header Files\RenderEngine</Filter>
-    </ClInclude>
-    <ClInclude Include="Ssao_Blur_Pass_Fbo_Handler.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="SSAOBlur_Shader.h">
@@ -413,20 +356,11 @@
     <ClInclude Include="FrameBufferObject.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
-    <ClInclude Include="Brdf_Pass_Fbo_Handler.h">
-      <Filter>Header Files\RenderEngine</Filter>
-    </ClInclude>
-    <ClInclude Include="Bloom_Pass_Fbo_Handler.h">
-      <Filter>Header Files\RenderEngine</Filter>
-    </ClInclude>
-    <ClInclude Include="Shading_Pass_Fbo_Handler.h">
+    <ClInclude Include="Scene_Fbo_Handler_Manager.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="Fbo_Handler.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene_Fbo_Handler_Manager.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
