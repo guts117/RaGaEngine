@@ -3,7 +3,7 @@
 #include "DirectionalLight.h"
 #include "PointLight.h"
 #include "SpotLight.h"
-#include "Shadow_Map_Pass_Fbo_Handler.h"
+#include "Fbo_Handler.h"
 
 using namespace NarakaKarEngine;
 using namespace RenderEngine;
@@ -128,7 +128,7 @@ void Terrain_Shader::SetPointLight(std::shared_ptr<PointLight>* pLight, unsigned
 	if (lightCount > MAX_POINT_LIGHTS_WITH_SHADOW) lightCount = MAX_POINT_LIGHTS_WITH_SHADOW;
 
 	for (size_t i = 0; i < lightCount; i++) {																									//pLight is already a pointer 
-		pLight[i]->GetShadowMap()->AttachFBOToTextureUnit(GL_TEXTURE0 + textureUnit + i);
+		pLight[i]->GetShadowMap()->AttachFBOToTextureUnit(0, GL_TEXTURE0 + textureUnit + i, 0, 0);
 		glUniform1i(uniformOmniShadowMap[i + offset].shadowMap, textureUnit + i);
 		glUniform1f(uniformOmniShadowMap[i + offset].farPlane, pLight[i]->GetFarPlane());
 	}
@@ -145,7 +145,7 @@ void Terrain_Shader::SetSpotLight(std::shared_ptr<SpotLight>* sLight, unsigned i
 			uniformSpotLight[i].uniformPosition, uniformSpotLight[i].uniformDirection,
 			uniformSpotLight[i].uniformEdge);
 
-		sLight[i]->GetShadowMap()->AttachFBOToTextureUnit(GL_TEXTURE0 + textureUnit + i);
+		sLight[i]->GetShadowMap()->AttachFBOToTextureUnit(0, GL_TEXTURE0 + textureUnit + i, 0, 0);
 		glUniform1i(uniformOmniShadowMap[i + offset].shadowMap, textureUnit + i);
 		glUniform1f(uniformOmniShadowMap[i + offset].farPlane, sLight[i]->GetFarPlane());
 	}
@@ -155,7 +155,7 @@ void Terrain_Shader::SetDirectionalShadowMaps(DirectionalLight* light, unsigned 
 {
 	for (size_t j = 0; j < i; ++j) 
 	{
-		light->GetShadowMap()->AttachFBOToTextureUnit(GL_TEXTURE2 + j, j);
+		light->GetShadowMap()->AttachFBOToTextureUnit(0, GL_TEXTURE2 + j, 0, j);
 		glUniform1i(uniformDirectionalShadowMaps[j].shadowMap, textureUnit + j);
 	}
 }

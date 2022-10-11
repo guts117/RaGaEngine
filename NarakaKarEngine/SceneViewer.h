@@ -14,10 +14,10 @@ namespace NarakaKarEngine
 			explicit SceneViewer() = default;
 			explicit SceneViewer(GLuint sceneTex, std::string sceneName, SceneViewerType viewerType, std::function<void(bool)> selectCallback);
 
-			GLuint GetTextureId()					{ return m_textureID; }
-			std::string GetViewerName()				{ return m_viewerName; }
-			SceneViewerType GetViewerType()			{ return m_viewerType; }
-			void InvokeSelectCallback(bool isSelected) { m_SelectSceneCallback(isSelected); }
+			GLuint GetTextureId()						{ return m_textureID; }
+			std::string GetViewerName()					{ return m_viewerName; }
+			SceneViewerType GetViewerType()				{ return m_viewerType; }
+			void InvokeSelectCallback(bool isSelected)	{ m_SelectSceneCallback(isSelected); }
 
 		private:
 			GLuint m_textureID;

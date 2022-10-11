@@ -216,6 +216,12 @@
     <ClCompile Include="Shading_Pass_Fbo_Handler.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
+    <ClCompile Include="Fbo_Handler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene_Fbo_Handler_Manager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Animated_Mesh.h">
@@ -415,6 +421,12 @@
     </ClInclude>
     <ClInclude Include="Shading_Pass_Fbo_Handler.h">
       <Filter>Header Files\RenderEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="Fbo_Handler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene_Fbo_Handler_Manager.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

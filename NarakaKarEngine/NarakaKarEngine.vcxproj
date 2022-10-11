@@ -82,6 +82,7 @@
     <ClCompile Include="Equirect_To_Cubemap_Pass_Fbo_Handler.cpp" />
     <ClCompile Include="Equirectangular_to_CubeMap_Shader.cpp" />
     <ClCompile Include="Bloom_Pass_Fbo_Handler.cpp" />
+    <ClCompile Include="Fbo_Handler.cpp" />
     <ClCompile Include="FrameBufferObject.cpp" />
     <ClCompile Include="HDR_Shader.cpp" />
     <ClCompile Include="EngineInputManager.cpp" />
@@ -108,6 +109,7 @@
     <ClCompile Include="PreFilter_Shader.cpp" />
     <ClCompile Include="PreZPass_Shader.cpp" />
     <ClCompile Include="SceneViewer.cpp" />
+    <ClCompile Include="Scene_Fbo_Handler_Manager.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="Shading_Pass_Fbo_Handler.cpp" />
     <ClCompile Include="Shadow_Map_Pass_Fbo_Handler.cpp" />
@@ -148,6 +150,7 @@
     <ClInclude Include="Camera.h" />
     <ClInclude Include="EngineUIMain.h" />
     <ClInclude Include="Bloom_Pass_Fbo_Handler.h" />
+    <ClInclude Include="Fbo_Handler.h" />
     <ClInclude Include="FrameBufferObject.h" />
     <ClInclude Include="RenderingCommonValues.h" />
     <ClInclude Include="Compute_Shader.h" />
@@ -174,6 +177,7 @@
     <ClInclude Include="PreFilter_Shader.h" />
     <ClInclude Include="PreZPass_Shader.h" />
     <ClInclude Include="SceneViewer.h" />
+    <ClInclude Include="Scene_Fbo_Handler_Manager.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Shading_Pass_Fbo_Handler.h" />
     <ClInclude Include="Shadow_Map_Pass_Fbo_Handler.h" />
