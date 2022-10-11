@@ -31,7 +31,7 @@
 
 #include "Equirect_To_Cubemap_Pass_Fbo_Handler.h"
 #include "Pre_Filter_Pass_Fbo_Handler.h"
-#include "BRDF_Pass_FBO_Handler.h"
+#include "Brdf_Pass_Fbo_Handler.h"
 #include "Depth_Pass_Fbo_Handler.h"
 #include "Ssao_Pass_Fbo_Handler.h"
 #include "Ssao_Blur_Pass_Fbo_Handler.h"
