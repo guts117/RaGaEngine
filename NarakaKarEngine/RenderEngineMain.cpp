@@ -501,8 +501,8 @@ struct RenderEngineMain::Impl
 		anymodel->SetUpImportedModelData("Models/Intergalactic_Spaceship-(Wavefront).obj");
 		//anymodel->SetUpImportedModelData("Models/Sponza.gltf");
 
-		anim->LoadModel("Models/boblampclean.md5mesh");
-		anim2->LoadModel("Models/model.dae");
+		//anim->LoadModel("Models/boblampclean.md5mesh");
+		//anim2->LoadModel("Models/model.dae");
 
 		environmentMap = std::make_unique<Equirect_To_Cubemap_Pass_Fbo_Handler>(ScreenWidth, ScreenWidth, true);
 
@@ -664,8 +664,8 @@ struct RenderEngineMain::Impl
 
 			auto invProj = glm::inverse(camera->GetProjectionMatrix());
 			glNamedBufferSubData(screenToViewSSBO, 0, sizeof(invProj), &invProj);
-			sizeX = (unsigned int)std::ceilf(ScreenWidth / (float)gridSizeX);
-			sizeY = (unsigned int)std::ceilf(ScreenHeight / (float)gridSizeY);
+			sizeX = (unsigned int)std::ceil(ScreenWidth / (float)gridSizeX);
+			sizeY = (unsigned int)std::ceil(ScreenHeight / (float)gridSizeY);
 			int data[4] = { sizeX, sizeY, ScreenWidth, ScreenHeight };
 			glNamedBufferSubData(screenToViewSSBO, 80, sizeof(data), &data);
 
@@ -801,8 +801,8 @@ struct RenderEngineMain::Impl
 	void InitSSBOs() 
 	{
 		//Setting up tile size on both X and Y 
-		sizeX = (unsigned int)std::ceilf(ScreenWidth / (float)gridSizeX);
-		sizeY = (unsigned int)std::ceilf(ScreenHeight / (float)gridSizeY);
+		sizeX = (unsigned int)std::ceil(ScreenWidth / (float)gridSizeX);
+		sizeY = (unsigned int)std::ceil(ScreenHeight / (float)gridSizeY);
 
 		//Buffer containing all the clusters
 		{
@@ -1239,6 +1239,7 @@ struct RenderEngineMain::Impl
 	}
 
 	void RenderAnimScene(bool shadow, bool depth) {
+		return;
 		glm::mat4 model;
 		glm::mat4 prevPVM = glm::mat4();
 
