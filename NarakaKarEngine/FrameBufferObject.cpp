@@ -161,13 +161,14 @@ struct FrameBufferObject::Impl
 		m_FboParam->Width = width;
 		m_FboParam->Height = height;
 
+		auto bufCnt = 0;
 		for (auto fboTexParamIndex = 0; fboTexParamIndex < m_FboParam->FboTexGenParams.size(); ++fboTexParamIndex)
 		{
 			auto texCount = m_FboParam->FboTexGenParams[fboTexParamIndex].ColorBufferSize;
 			FBOTexGenParams& bufferParams = m_FboParam->FboTexGenParams[fboTexParamIndex];
 			for (auto i = 0; i < texCount; ++i)
 			{
-				glBindTexture(bufferParams.Target, m_ReadWriteBuffers[i]);
+				glBindTexture(bufferParams.Target, m_ReadWriteBuffers[bufCnt++]);
 				glTexImage2D(bufferParams.Target, 0, bufferParams.InternalFormat, width, height, bufferParams.Border, bufferParams.Format, bufferParams.Type, bufferParams.PixelData);
 			}
 			glBindTexture(bufferParams.Target, 0);
