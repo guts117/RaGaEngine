@@ -25,7 +25,7 @@ namespace NarakaKarEngine
 			void Update();
 			void EndUpdate();
 
-			void AddSceneViewers(GLuint sceneTex, std::string sceneName, SceneViewerType viewerType);
+			void AddSceneViewers(GLuint sceneTex, std::string sceneName, SceneViewerType viewerType, std::function<void(bool)> selectCallback);
 
 			~EngineUIMain();
 		private: 

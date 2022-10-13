@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "PointLight.h"
-#include "Omni_Shadow_Pass_Fbo_Handler.h"
+#include "Scene_Fbo_Handler_Manager.h"
 
 using namespace NarakaKarEngine;
 using namespace RenderEngine;
@@ -13,7 +13,8 @@ PointLight::PointLight(){
 PointLight::PointLight(GLuint shadowWidth, GLuint shadowHeight,
 						GLfloat near, GLfloat far, 
 						GLfloat red, GLfloat green, GLfloat blue,
-						GLfloat xPos, GLfloat yPos, GLfloat zPos) 
+						GLfloat xPos, GLfloat yPos, GLfloat zPos,
+						std::shared_ptr<Scene_Fbo_Handler_Manager> sceneFboHndlrMgr)
 {
 	position = glm::vec3(xPos, yPos, zPos);
 	color = glm::vec3(red, green, blue);
@@ -22,7 +23,7 @@ PointLight::PointLight(GLuint shadowWidth, GLuint shadowHeight,
 	float aspect = static_cast<float>(shadowWidth / shadowHeight);
 	lightProj = glm::perspective(glm::radians(90.0f), aspect, near, far);
 
-	shadowMap = new Omni_Shadow_Pass_Fbo_Handler(shadowWidth, shadowHeight);
+	shadowMap = sceneFboHndlrMgr->FindFboHandler("Omni_Shadow_Map_Pass");
 }
 
 void PointLight::UseLight(GLuint ambientColorLocation,
@@ -63,12 +64,4 @@ glm::vec3 PointLight::GetPosition()
 glm::vec3 PointLight::GetColor() 
 {
 	return color;
-}
-
-PointLight::~PointLight() {
-	if (shadowMap != nullptr)
-	{
-		delete shadowMap;
-		shadowMap = nullptr;
-	}
 }

@@ -29,17 +29,8 @@
 #include "Material.h"
 #include "Particle.h"
 
-#include "Equirect_To_Cubemap_Pass_Fbo_Handler.h"
-#include "Pre_Filter_Pass_Fbo_Handler.h"
-#include "BRDF_Pass_FBO_Handler.h"
-#include "Depth_Pass_Fbo_Handler.h"
-#include "Ssao_Pass_Fbo_Handler.h"
-#include "Ssao_Blur_Pass_Fbo_Handler.h"
-#include "Shading_Pass_Fbo_Handler.h"
-#include "Motion_Blur_Pass_Fbo_Handler.h"
-#include "Shadow_Map_Pass_Fbo_Handler.h"
-
-#include "Bloom_Pass_Fbo_Handler.h"
+#include "Scene_Fbo_Handler_Manager.h"
+#include "Fbo_Handler.h"
 
 #include "Static_Model.h"
 #include "Animated_Model.h"
@@ -138,17 +129,24 @@ struct RenderEngineMain::Impl
 	std::unique_ptr<Compute_Shader> pressureProjectionCompShader3D = std::make_unique <Compute_Shader>();
 	std::unique_ptr <Model_Shader> fluidFragShader3D = std::make_unique<Model_Shader>();*/
 
+	std::shared_ptr<Scene_Fbo_Handler_Manager> m_SceneFboHandlerMgr;
+
 	std::unique_ptr<Equirectangular_to_CubeMap_Shader> environmentMapShader = std::make_unique<Equirectangular_to_CubeMap_Shader>();
-	std::unique_ptr<Equirect_To_Cubemap_Pass_Fbo_Handler> environmentMap;
-
 	std::unique_ptr <Irradiance_Convolution_Shader> irradianceConvolutionShader = std::make_unique<Irradiance_Convolution_Shader>();
-	std::unique_ptr <Equirect_To_Cubemap_Pass_Fbo_Handler> irradianceMap;
-
 	std::unique_ptr <PreFilter_Shader> prefilterShader = std::make_unique<PreFilter_Shader>();
-	std::unique_ptr <Pre_Filter_Pass_Fbo_Handler> prefilterMap;
-
 	std::unique_ptr < BRDF_Shader > brdfShader = std::make_unique<BRDF_Shader>();
-	std::unique_ptr <Brdf_Pass_Fbo_Handler> brdfMap;
+
+	std::shared_ptr <Fbo_Handler> environmentMap;
+	std::shared_ptr <Fbo_Handler> irradianceMap;
+	std::shared_ptr <Fbo_Handler> prefilterMap;
+	std::shared_ptr <Fbo_Handler> brdfMap;
+	std::shared_ptr <Fbo_Handler> depth;
+	std::shared_ptr <Fbo_Handler> ssao;
+	std::shared_ptr <Fbo_Handler> ssaoBlur;
+	std::shared_ptr <Fbo_Handler> hdr;
+	std::shared_ptr <Fbo_Handler> motionBlur;
+	std::shared_ptr <Fbo_Handler> blur;
+	std::shared_ptr <Fbo_Handler> finalFBO;
 
 	std::shared_ptr < Model_Shader > directionalShadowShader = std::make_shared<Model_Shader>();
 	std::shared_ptr < Model_Shader > omniShadowShader = std::make_shared<Model_Shader>();
@@ -162,13 +160,10 @@ struct RenderEngineMain::Impl
 	std::shared_ptr < PreZPass_Shader> static_preZPassShader = std::make_shared<PreZPass_Shader>();
 	std::unique_ptr < PreZPass_Shader> anim_preZPassShader = std::make_unique<PreZPass_Shader>();
 	std::unique_ptr < Terrain_PreZPass_Shader> terrain_preZPassShader = std::make_unique<Terrain_PreZPass_Shader>();
-	std::unique_ptr < Depth_Pass_Fbo_Handler> depth = nullptr;
 
 	std::unique_ptr < SSAO_Shader> ssaoShader = std::make_unique<SSAO_Shader>();
-	std::unique_ptr < Ssao_Pass_Fbo_Handler> ssao = nullptr;
 
 	std::unique_ptr < SSAOBlur_Shader > ssaoBlurShader = std::make_unique<SSAOBlur_Shader>();
-	std::unique_ptr < Ssao_Blur_Pass_Fbo_Handler > ssaoBlur = nullptr;
 
 	std::vector< std::shared_ptr < Model_Shader>> shaderList;
 	std::vector< std::shared_ptr < Model_Shader>> animShaderList;
@@ -179,12 +174,8 @@ struct RenderEngineMain::Impl
 	std::unique_ptr < Particle_Shader> particleShader = std::make_unique<Particle_Shader>();
 
 	std::unique_ptr < HDR_Shader> hdrShader = std::make_unique<HDR_Shader>();
-	std::unique_ptr < Shading_Pass_Fbo_Handler> hdr = nullptr;
 	std::unique_ptr < MotionBlur_Shader> motionBlurShader = std::make_unique<MotionBlur_Shader>();
-	std::unique_ptr < Motion_Blur_Pass_Fbo_Handler> motionBlur = nullptr;
 	std::unique_ptr < Blur_Shader> blurShader = std::make_unique<Blur_Shader>();
-	std::unique_ptr < Bloom_Pass_Fbo_Handler> blur = nullptr;
-	std::unique_ptr < Motion_Blur_Pass_Fbo_Handler> finalFBO = nullptr;
 
 	std::vector< std::shared_ptr < Static_Mesh>> meshList;
 	std::vector< std::shared_ptr < Static_Mesh>> terrainList;
@@ -276,12 +267,8 @@ struct RenderEngineMain::Impl
 
 	GLfloat aircraftAngle = 0.0f;
 
-	//Vertex Shader
 	const std::string vShader = "Shaders/shader.vert";
-
-	//Fragment Shaders
 	const std::string fShader = "Shaders/shader.frag";
-
 	const std::string avShader = "Shaders/animated_shader.vert";
 
 	std::vector<glm::vec3> ssaoNoiseData{ 16, glm::vec3(0.0f, 0.0f, 0.0f) };
@@ -357,6 +344,10 @@ struct RenderEngineMain::Impl
 	float simDt = 0.0f;
 	float simDt3D = 0.0f;
 	int simDim3D = 128;
+
+	bool isGameViewSelected;
+	bool isEditorViewSelected;
+
 
 	void Init()
 	{
@@ -504,57 +495,42 @@ struct RenderEngineMain::Impl
 		anim->LoadModel("Models/boblampclean.md5mesh");
 		anim2->LoadModel("Models/model.dae");
 
-		environmentMap = std::make_unique<Equirect_To_Cubemap_Pass_Fbo_Handler>(ScreenWidth, ScreenWidth, true);
+		m_SceneFboHandlerMgr = std::make_shared<Scene_Fbo_Handler_Manager>("InGame");
 
-		irradianceMap = std::make_unique<Equirect_To_Cubemap_Pass_Fbo_Handler>(32, 32);
-
-		prefilterMap = std::make_unique <Pre_Filter_Pass_Fbo_Handler>(128, 128);
-
-		brdfMap = std::make_unique < Brdf_Pass_Fbo_Handler>(ScreenWidth, ScreenWidth);
+		environmentMap = m_SceneFboHandlerMgr->FindFboHandler("Environment_Map_Pass");
+		irradianceMap = m_SceneFboHandlerMgr->FindFboHandler("Irradiance_Map_Pass");
+		prefilterMap = m_SceneFboHandlerMgr->FindFboHandler("Pre_Filter_Pass");
+		brdfMap = m_SceneFboHandlerMgr->FindFboHandler("Brdf_Pass");
+		depth	= m_SceneFboHandlerMgr->FindFboHandler("Depth_Pass");
+		ssao	= m_SceneFboHandlerMgr->FindFboHandler("Ssao_Pass");
+		ssaoBlur = m_SceneFboHandlerMgr->FindFboHandler("Ssao_Blur_Pass");
+		hdr = m_SceneFboHandlerMgr->FindFboHandler("Shading_Pass");
+		motionBlur = m_SceneFboHandlerMgr->FindFboHandler("Motion_Blur_Pass");
+		blur = m_SceneFboHandlerMgr->FindFboHandler("Bloom_Pass");
+		finalFBO = m_SceneFboHandlerMgr->FindFboHandler("Final_Output_Pass");
 
 		quad = std::make_unique < Static_Mesh>();
 		mesh_cube = std::make_unique < Static_Mesh>();
 		ccw_cube = std::make_unique <Static_Mesh>();
 
-		depth = std::make_unique < Depth_Pass_Fbo_Handler>(ScreenWidth, ScreenHeight);
-
-		ssao = std::make_unique < Ssao_Pass_Fbo_Handler>(ScreenWidth, ScreenHeight);
-
-		ssaoBlur = std::make_unique < Ssao_Blur_Pass_Fbo_Handler>(ScreenWidth, ScreenHeight);
-
-		hdr = std::make_unique < Shading_Pass_Fbo_Handler>(ScreenWidth, ScreenHeight);
-
-		blur = std::make_unique <Bloom_Pass_Fbo_Handler>(ScreenWidth, ScreenHeight);
-
-		motionBlur = std::make_unique < Motion_Blur_Pass_Fbo_Handler>(ScreenWidth, ScreenHeight);
-
-		//ToDo:
-		finalFBO = std::make_unique < Motion_Blur_Pass_Fbo_Handler>(ScreenWidth, ScreenHeight);
-
-		resizeUpdateFramebuffers = std::make_unique<std::vector<std::function<void(int, int)>>>();
-		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { depth->ResizeFBO(width, height); });
-		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { ssao->ResizeFBO(width, height); });
-		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { ssaoBlur->ResizeFBO(width, height); });
-		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { hdr->ResizeFBO(width, height); });
-		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { blur->ResizeFBO(width, height); });
-		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { motionBlur->ResizeFBO(width, height); });
-		resizeUpdateFramebuffers->push_back([&, this](int width, int height) { finalFBO->ResizeFBO(width, height); });
-
 		mainLight = std::make_unique < DirectionalLight>(1024, 1024,
 			0.5f, 0.5f, 0.5f,
-			5500.0f, -5500.0f, -10000.0f);
+			5500.0f, -5500.0f, -10000.0f, 
+			m_SceneFboHandlerMgr);
 
 		pointLights[0] = std::make_unique < PointLight>(512, 512,
 			0.1f, 100.0f,
 			0.0f, 0.0f, 3.0f,
-			12.0f - terrainScaleFactor, 40.0f, 10.0f - terrainScaleFactor);
+			12.0f - terrainScaleFactor, 40.0f, 10.0f - terrainScaleFactor, 
+			m_SceneFboHandlerMgr);
 
 		pointLightCount++;
 
 		pointLights[1] = std::make_unique < PointLight>(512, 512,
 			0.1f, 100.0f,
 			3.0f, 0.0f, 0.0f,
-			-12.0f - terrainScaleFactor, 40.0f, 10.0f - terrainScaleFactor);
+			-12.0f - terrainScaleFactor, 40.0f, 10.0f - terrainScaleFactor, 
+			m_SceneFboHandlerMgr);
 
 		pointLightCount++;
 
@@ -563,7 +539,7 @@ struct RenderEngineMain::Impl
 			10.0f, 10.0f, 10.0f,
 			0.0f, 0.0f, 0.0f,
 			0.0f, -1.0f, 0.0f,
-			10.0f);
+			10.0f, m_SceneFboHandlerMgr);
 
 		spotLightCount++;
 
@@ -669,10 +645,7 @@ struct RenderEngineMain::Impl
 			int data[4] = { sizeX, sizeY, ScreenWidth, ScreenHeight };
 			glNamedBufferSubData(screenToViewSSBO, 80, sizeof(data), &data);
 
-			for (int i = 0; i < resizeUpdateFramebuffers->size(); i++)
-			{
-				resizeUpdateFramebuffers->at(i)(ScreenWidth, ScreenHeight);
-			}
+			m_SceneFboHandlerMgr->ResizeScreenFboHandlers(ScreenWidth, ScreenHeight);
 
 			CalcDirLightShadowCascades();
 			CreateClusters();
@@ -696,7 +669,10 @@ struct RenderEngineMain::Impl
 			lastFrameTime += 1.0;
 		}
 
-		camera->keyControl(mainWindow->getKeys(), deltaTime);
+		if (isGameViewSelected) 
+		{
+			camera->keyControl(mainWindow->getKeys(), deltaTime);
+		}
 
 		//ToDo: #20 simulation manager class
 		//if (mainWindow->getKeys()[GLFW_KEY_X]) 
@@ -734,7 +710,10 @@ struct RenderEngineMain::Impl
 
 		if (!drawFluidSim && !drawSmokeSim)
 		{
-			camera->mouseControl(mainWindow->getXChange(), mainWindow->getYChange());
+			if (isGameViewSelected)
+			{
+				camera->mouseControl(mainWindow->getXChange(), mainWindow->getYChange());
+			}
 
 			if (direction) {
 				triOffset += triIncrement;
@@ -772,10 +751,10 @@ struct RenderEngineMain::Impl
 			DirectionalShadowMapPass(mainLight.get());
 
 			for (size_t i = 0; i < pointLightCount; i++) {
-				OmniShadowMapPass(pointLights[i].get());
+				OmniShadowMapPass(pointLights[i].get(), i);
 			}
 			for (size_t i = 0; i < spotLightCount; i++) {
-				OmniShadowMapPass(spotLights[i].get());
+				OmniShadowMapPass(spotLights[i].get(), pointLightCount + i);
 			}
 
 			PreZPass(deltaTime);
@@ -1167,7 +1146,7 @@ struct RenderEngineMain::Impl
 	{
 		if (is_cubeMap)
 		{
-			environmentMap->AttachFBOToTextureUnit(GL_TEXTURE1);
+			environmentMap->AttachFBOToTextureUnit(0, GL_TEXTURE1, 0, 0);
 		}
 		else
 		{
@@ -1300,16 +1279,16 @@ struct RenderEngineMain::Impl
 
 		glViewport(0, 0, environmentMap->GetFBOWidth(), environmentMap->GetFBOHeight());
 		environmentMap->BindFBO();
-		for (unsigned int i = 0; i < 6; ++i)
+		for (auto faceId = 0; faceId < 6; ++faceId)
 		{
-			glUniformMatrix4fv(environmentMapShader->GetViewLocation(), 1, GL_FALSE, glm::value_ptr(captureViews[i]));
-			environmentMap->WriteToFBOBuffer(i);
+			glUniformMatrix4fv(environmentMapShader->GetViewLocation(), 1, GL_FALSE, glm::value_ptr(captureViews[faceId]));
+			environmentMap->WriteToFBOBuffer(0, 0, 0, faceId);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			environmentMapShader->Validate();
 
 			RenderEnvCubeMap(false);
 		}
-		environmentMap->CreateFBOMipMap();
+		environmentMap->CreateFBOMipMap(0, 0, 0);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
@@ -1325,7 +1304,7 @@ struct RenderEngineMain::Impl
 		for (unsigned int i = 0; i < 6; ++i)
 		{
 			glUniformMatrix4fv(irradianceConvolutionShader->GetViewLocation(), 1, GL_FALSE, glm::value_ptr(captureViews[i]));
-			irradianceMap->WriteToFBOBuffer(i);
+			irradianceMap->WriteToFBOBuffer(0, 0, 0, i);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			irradianceConvolutionShader->Validate();
 
@@ -1353,10 +1332,10 @@ struct RenderEngineMain::Impl
 
 			float roughness = (float)mip / (float)(maxMipLevels - 1);
 			prefilterShader->SetRoughness(roughness);
-			for (unsigned int i = 0; i < 6; ++i) 
+			for (auto faceId = 0; faceId < 6; ++faceId)
 			{
-				glUniformMatrix4fv(prefilterShader->GetViewLocation(), 1, GL_FALSE, glm::value_ptr(captureViews[i]));
-				prefilterMap->WriteToFBOBuffer(i, mip);
+				glUniformMatrix4fv(prefilterShader->GetViewLocation(), 1, GL_FALSE, glm::value_ptr(captureViews[faceId]));
+				prefilterMap->WriteToFBOBuffer(0, 0, 0, faceId, mip);
 				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 				prefilterShader->Validate();
 
@@ -1394,7 +1373,7 @@ struct RenderEngineMain::Impl
 		for (size_t i = 0; i < NUM_CASCADES; ++i)
 		{
 			glViewport(0, 0, light->GetShadowMap()->GetFBOWidth(), light->GetShadowMap()->GetFBOHeight());
-			light->GetShadowMap()->WriteToFBOBuffer(i);
+			light->GetShadowMap()->WriteToFBOBuffer(0, 0, i, 0);
 			glClear(GL_DEPTH_BUFFER_BIT);
 
 			glm::mat4 projView = light->GetProjMat(vView[i], i) * vView[i];
@@ -1431,13 +1410,13 @@ struct RenderEngineMain::Impl
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
-	void OmniShadowMapPass(PointLight* light) {
+	void OmniShadowMapPass(PointLight* light, int lightIndex) {
 
 		omniShadowShader->UseShader();
 
-		glViewport(0, 0, light->GetShadowMap()->GetFBOWidth(), light->GetShadowMap()->GetFBOHeight());
+		glViewport(0, 0, light->GetShadowMap()->GetFBOWidth(lightIndex), light->GetShadowMap()->GetFBOHeight(lightIndex));
 
-		light->GetShadowMap()->BindFBO();
+		light->GetShadowMap()->BindFBO(lightIndex);
 		glClear(GL_DEPTH_BUFFER_BIT);
 
 		glUniform3f(omniShadowShader->GetOmniLightPosLocation(), light->GetPosition().x, light->GetPosition().y, light->GetPosition().z);
@@ -1467,7 +1446,7 @@ struct RenderEngineMain::Impl
 	void CullLight()
 	{
 		visibleClusterCompShader->UseShader();
-		depth->AttachFBOToTextureUnit(GL_TEXTURE0);
+		depth->AttachFBOToTextureUnit(0, GL_TEXTURE0, 0, 0);
 		visibleClusterCompShader->Dispatch(ScreenWidth / 32, ScreenHeight / 30, 1);
 
 		//unsigned int count = 0;
@@ -1549,7 +1528,7 @@ struct RenderEngineMain::Impl
 
 		ssaoShader->UseShader();
 
-		depth->AttachFBOToTextureUnit(GL_TEXTURE1);
+		depth->AttachFBOToTextureUnit(0, GL_TEXTURE1, 0, 0);
 		ssaoShader->SetTexture(1);
 
 		SSAONoiseTexture->UseTexture(1);
@@ -1570,7 +1549,7 @@ struct RenderEngineMain::Impl
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		ssaoBlurShader->UseShader();
-		ssao->AttachFBOToTextureUnit(GL_TEXTURE1);
+		ssao->AttachFBOToTextureUnit(0, GL_TEXTURE1, 0, 0);
 		ssaoBlurShader->SetTexture(1);
 
 		quad->RenderQuad();
@@ -1590,13 +1569,13 @@ struct RenderEngineMain::Impl
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		irradianceMap->AttachFBOToTextureUnit(GL_TEXTURE8);
-		prefilterMap->AttachFBOToTextureUnit(GL_TEXTURE9);
-		brdfMap->AttachFBOToTextureUnit(GL_TEXTURE10);
-		ssaoBlur->AttachFBOToTextureUnit(GL_TEXTURE14);
-		depth->AttachFBOToTextureUnit(GL_TEXTURE18);
+		irradianceMap->AttachFBOToTextureUnit(0, GL_TEXTURE8, 0, 0);
+		prefilterMap->AttachFBOToTextureUnit(0, GL_TEXTURE9, 0, 0);
+		brdfMap->AttachFBOToTextureUnit(0, GL_TEXTURE10, 0, 0);
+		ssaoBlur->AttachFBOToTextureUnit(0, GL_TEXTURE14, 0, 0);
+		depth->AttachFBOToTextureUnit(0, GL_TEXTURE18, 0, 0);
 
-		skybox->DrawHDRSkybox(viewMatrix, projectionMatrix, prevProj, prevView, environmentMap.get()); //should be at the end to prevent overdraw,here becoz of blending issues
+		skybox->DrawHDRSkybox(viewMatrix, projectionMatrix, prevProj, prevView, environmentMap); //should be at the end to prevent overdraw,here becoz of blending issues
 
 		terrainShader->UseShader();
 
@@ -1735,7 +1714,7 @@ struct RenderEngineMain::Impl
 
 	void Bloom()
 	{
-		bool isHorizontalFbo = BloomFBOType::Horizontal;
+		bool isHorizontalFbo = true;
 		int amount = 10;
 		blurShader->UseShader();
 		for (int i = 0; i < amount; i++)
@@ -1746,11 +1725,11 @@ struct RenderEngineMain::Impl
 			blurShader->SetTexture(1);
 			if (i < 1)
 			{
-				hdr->AttachFBOToTextureUnit(GL_TEXTURE1, ShadingPassBufferType::SceneExposed);
+				hdr->AttachFBOToTextureUnit(0, GL_TEXTURE1,0, 1);
 			}
 			else
 			{
-				blur->AttachFBOToTextureUnit(GL_TEXTURE1, !isHorizontalFbo);
+				blur->AttachFBOToTextureUnit(!isHorizontalFbo, GL_TEXTURE1, 0, 0);
 			}
 			quad->RenderQuad();
 			isHorizontalFbo = !isHorizontalFbo;
@@ -1768,10 +1747,10 @@ struct RenderEngineMain::Impl
 
 		glUniform1f(motionBlurShader->GetVelocityScaleLocation(), fps / 30.0f);
 
-		hdr->AttachFBOToTextureUnit(GL_TEXTURE1, ShadingPassBufferType::Scene);
+		hdr->AttachFBOToTextureUnit(0, GL_TEXTURE1, 0, 0);
 		motionBlurShader->SetTexture(1);
 
-		hdr->AttachFBOToTextureUnit(GL_TEXTURE2, ShadingPassBufferType::Motion);
+		hdr->AttachFBOToTextureUnit(0, GL_TEXTURE2, 1, 2);
 		motionBlurShader->SetMotionTexture(2);
 		quad->RenderQuad();
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -2176,10 +2155,10 @@ struct RenderEngineMain::Impl
 			glUniform1i(hdrShader->GetHDRLocation(), 1);
 			glUniform1f(hdrShader->GetExposureLocation(), 1.0f);
 
-			blur->AttachFBOToTextureUnit(GL_TEXTURE1, 1);
+			blur->AttachFBOToTextureUnit(1, GL_TEXTURE1, 0, 0);
 			glUniform1i(hdrShader->GetBlurLocation(), 1);
 
-			motionBlur->AttachFBOToTextureUnit(GL_TEXTURE2);
+			motionBlur->AttachFBOToTextureUnit(0, GL_TEXTURE2, 0, 0);
 			hdrShader->SetTexture(2);
 
 			hdrShader->Validate();
@@ -2243,7 +2222,8 @@ GLFWwindow* RenderEngineMain::GetMainWindow()
 
 void RenderEngineMain::AddViewers()
 {
-	engineUI->AddSceneViewers(Pimpl()->finalFBO->GetFBOBuffer(0), "InGame", InGame);
+	engineUI->AddSceneViewers(Pimpl()->ssaoBlur->GetFBOBuffer(0, 0), "EditorScene", Editor, [this](bool isSelected) { Pimpl()->isEditorViewSelected = isSelected; });
+	engineUI->AddSceneViewers(Pimpl()->finalFBO->GetFBOBuffer(0, 0), "InGameScene", InGame, [this](bool isSelected) { Pimpl()->mainWindow->SetCursorActive(!isSelected); Pimpl()->isGameViewSelected = isSelected; });
 }
 
 bool RenderEngineMain:: IsEnd()

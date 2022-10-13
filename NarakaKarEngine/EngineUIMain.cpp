@@ -16,8 +16,6 @@ EngineUIMain::EngineUIMain(GLFWwindow* window, const bool installCallbacks, cons
 	//Initialize IMGUI
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
-	auto io = ImGui::GetIO();
-	(void)io;
 	ImGui_ImplGlfw_InitForOpenGL(window, installCallbacks);
 	ImGui_ImplOpenGL3_Init(version.c_str());
 }
@@ -28,18 +26,37 @@ void EngineUIMain::Update()
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 
-	ImGui::Begin("Welcome to NarakaKarEngine");
-	ImGui::Text("Hello Game World!!!!");
-	ImGui::SetWindowSize(ImVec2(ScreenWidth / 2, ScreenHeight / 2));
-	ImGui::End();
-
 	for (int i = 0; i < m_sceneList->size(); ++i)
 	{
-		ImGui::Begin(m_sceneList->at(i)->GetViewerName().c_str());
+		ImGui::Begin(m_sceneList->at(i)->GetViewerName().c_str(), nullptr, ImGuiWindowFlags_NoFocusOnAppearing);
 		ImGui::SetWindowSize(ImVec2(ScreenWidth / 2, ScreenHeight / 2));
 		ImGui::Image((ImTextureID)m_sceneList->at(i)->GetTextureId(), ImGui::GetWindowSize(), ImVec2(0, 1), ImVec2(1, 0));
+		m_sceneList->at(i)->InvokeSelectCallback([&]() -> bool
+			{
+				auto isFocused = ImGui::IsWindowFocused();
+				if (m_sceneList->at(i)->GetViewerType() == InGame) 
+				{
+					if (isFocused)
+					{
+						ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouse;
+					}
+					else
+					{
+						if ((ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_NoMouse) != 0)
+						{
+							ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
+						}
+					}
+				}
+				return isFocused;
+			}());
 		ImGui::End();
 	}
+
+	ImGui::Begin("Hierarchy");
+	ImGui::Text("Put Scene Hierarchy Here!!!!");
+	ImGui::SetWindowSize(ImVec2(ScreenWidth / 2, ScreenHeight / 2));
+	ImGui::End();
 }
 
 void EngineUIMain::EndUpdate()
@@ -48,9 +65,9 @@ void EngineUIMain::EndUpdate()
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-void EngineUIMain::AddSceneViewers(GLuint sceneTex, std::string sceneName, SceneViewerType viewerType)
+void EngineUIMain::AddSceneViewers(GLuint sceneTex, std::string sceneName, SceneViewerType viewerType, std::function<void(bool)> selectCallback)
 {
-	auto scene = std::make_shared<SceneViewer>(sceneTex, sceneName, viewerType);
+	auto scene = std::make_shared<SceneViewer>(sceneTex, sceneName, viewerType, selectCallback);
 	m_sceneList->push_back(scene);
 }
 

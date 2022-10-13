@@ -53,7 +53,7 @@ namespace NarakaKarEngine
 		{
 		public:
 			FrameBufferObject() = delete;
-			explicit FrameBufferObject(const std::shared_ptr<FBOParams>& fboParams);
+			explicit FrameBufferObject(std::shared_ptr<FBOParams> fboParams);
 
 			FrameBufferObject(FrameBufferObject&& rhs) noexcept = default;
 			FrameBufferObject& operator=(FrameBufferObject&& rhs) noexcept = default;

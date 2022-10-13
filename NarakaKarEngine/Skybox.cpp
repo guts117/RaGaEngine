@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "Skybox.h"
-#include "Equirect_To_Cubemap_Pass_Fbo_Handler.h"
+#include "Fbo_Handler.h"
 #include "Model_Shader.h"
 #include "Static_Mesh.h"
 #include "Texture.h"
@@ -104,7 +104,7 @@ void Skybox::DrawSkybox(glm::mat4 viewMatrix, glm::mat4 projectionMatrix, glm::m
 	//glDepthMask(GL_TRUE);
 }
 
-void Skybox::DrawHDRSkybox(glm::mat4 viewMatrix, glm::mat4 projectionMatrix, glm::mat4 prevP, glm::mat4 prevV, Equirect_To_Cubemap_Pass_Fbo_Handler* envMap)
+void Skybox::DrawHDRSkybox(glm::mat4 viewMatrix, glm::mat4 projectionMatrix, glm::mat4 prevP, glm::mat4 prevV, std::shared_ptr<Fbo_Handler> envMap)
 {
 	viewMatrix = glm::mat4(glm::mat3(viewMatrix));
 	prevV = glm::mat4(glm::mat3(prevV));
@@ -121,7 +121,7 @@ void Skybox::DrawHDRSkybox(glm::mat4 viewMatrix, glm::mat4 projectionMatrix, glm
 	prevPV = prevP * prevV;
 	glUniformMatrix4fv(uniformPrevPV, 1, GL_FALSE, glm::value_ptr(prevPV));
 
-	envMap->AttachFBOToTextureUnit(GL_TEXTURE1);
+	envMap->AttachFBOToTextureUnit(0, GL_TEXTURE1, 0, 0);
 	skyShader->SetSkybox(1);
 
 	skyShader->Validate();

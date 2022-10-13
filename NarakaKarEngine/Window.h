@@ -25,7 +25,7 @@ namespace NarakaKarEngine
 			glm::vec2 GetCursorPos();
 
 			inline void swapBuffers() { glfwSwapBuffers(mainWindow); }
-			inline void SetCursorActive(bool isActive) { glfwSetInputMode(mainWindow, GLFW_CURSOR, isActive ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED); }
+			inline void SetCursorActive(bool isActive) { glfwSetInputMode(mainWindow, GLFW_CURSOR, isActive ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_HIDDEN); }
 			inline void ResizeWindow(GLuint x, GLuint y) { glfwSetWindowSize(mainWindow, x, y); }
 
 			bool isLeftMousePress;

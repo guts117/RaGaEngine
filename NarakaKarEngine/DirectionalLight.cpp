@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "DirectionalLight.h"
+#include "Scene_Fbo_Handler_Manager.h"
 
 using namespace NarakaKarEngine;
 using namespace RenderEngine;
@@ -15,12 +16,13 @@ DirectionalLight::DirectionalLight()
 
 DirectionalLight::DirectionalLight(GLuint shadowWidth, GLuint shadowHeight,
 									GLfloat red, GLfloat green, GLfloat blue, 
-									GLfloat xDir, GLfloat yDir, GLfloat zDir)
+									GLfloat xDir, GLfloat yDir, GLfloat zDir, 
+									std::shared_ptr<Scene_Fbo_Handler_Manager> sceneFboHndlrMgr)
 {
 	
 	direction = glm::vec3(xDir, yDir, zDir);
 	lightProj = glm::ortho(-1000.0f, 1000.0f, -1000.0f, 1000.0f, 0.1f, 10000.0f);
-	shadowMap = new Shadow_Map_Pass_Fbo_Handler(shadowWidth, shadowHeight);
+	shadowMap = sceneFboHndlrMgr->FindFboHandler("Shadow_Map_Pass");
 
 	color = glm::vec3(red, green, blue);
 }
@@ -148,13 +150,4 @@ glm::vec3 DirectionalLight::GetModlCent(unsigned int index)
 	}
 	glm::vec4 temp2 = temp / static_cast<float > (NUM_FRUSTUM_CORNERS);
 	return glm::vec3(temp2);
-}
-
-
-DirectionalLight::~DirectionalLight() {
-	if (shadowMap != nullptr)
-	{
-		delete shadowMap;
-		shadowMap = nullptr;
-	}
 }

@@ -13,10 +13,6 @@ EngineInputManager::EngineInputManager()
 void EngineInputManager::handleKeys(GLFWwindow* window, int key, int code, int action, int mode) {
 	Window* theWindow = static_cast<Window*>(glfwGetWindowUserPointer(window)); // grabbing that user pointer and casting it to Window*
 
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-		glfwSetWindowShouldClose(window, GL_TRUE);
-	}
-
 	if (key >= 0 && key < 1024) {
 		if (action == GLFW_PRESS) {
 			theWindow->keys[key] = true;
