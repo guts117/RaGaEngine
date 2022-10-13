@@ -751,10 +751,10 @@ struct RenderEngineMain::Impl
 			DirectionalShadowMapPass(mainLight.get());
 
 			for (size_t i = 0; i < pointLightCount; i++) {
-				OmniShadowMapPass(pointLights[i].get());
+				OmniShadowMapPass(pointLights[i].get(), i);
 			}
 			for (size_t i = 0; i < spotLightCount; i++) {
-				OmniShadowMapPass(spotLights[i].get());
+				OmniShadowMapPass(spotLights[i].get(), pointLightCount + i);
 			}
 
 			PreZPass(deltaTime);
@@ -1410,13 +1410,13 @@ struct RenderEngineMain::Impl
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
-	void OmniShadowMapPass(PointLight* light) {
+	void OmniShadowMapPass(PointLight* light, int lightIndex) {
 
 		omniShadowShader->UseShader();
 
-		glViewport(0, 0, light->GetShadowMap()->GetFBOWidth(), light->GetShadowMap()->GetFBOHeight());
+		glViewport(0, 0, light->GetShadowMap()->GetFBOWidth(lightIndex), light->GetShadowMap()->GetFBOHeight(lightIndex));
 
-		light->GetShadowMap()->BindFBO();
+		light->GetShadowMap()->BindFBO(lightIndex);
 		glClear(GL_DEPTH_BUFFER_BIT);
 
 		glUniform3f(omniShadowShader->GetOmniLightPosLocation(), light->GetPosition().x, light->GetPosition().y, light->GetPosition().z);
