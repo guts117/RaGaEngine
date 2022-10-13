@@ -40,6 +40,8 @@ namespace NarakaKarEngine
 			const GLuint& GetFBOHeight(const GLuint& fboIndex = 0) const;
 			const GLuint& GetFBOBuffer(const GLuint& fboIndex, const GLuint& bufferIndex) const;
 
+			bool IsBeingHandled = false;
+
 			~Fbo_Handler();
 
 		private:

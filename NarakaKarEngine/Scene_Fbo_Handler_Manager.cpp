@@ -126,18 +126,20 @@ struct Scene_Fbo_Handler_Manager::Impl
 		m_FboHandlerVec->push_back(fboHandlr);
 
 //Omni Shadow Map Pass
-		fboTexParams.clear();
-		fboTexParams.push_back(FBOTexParams{ GL_TEXTURE_MIN_FILTER,		GL_NEAREST });
-		fboTexParams.push_back(FBOTexParams{ GL_TEXTURE_MAG_FILTER,		GL_NEAREST });
-		fboTexParams.push_back(FBOTexParams{ GL_TEXTURE_WRAP_S,			GL_CLAMP_TO_EDGE });
-		fboTexParams.push_back(FBOTexParams{ GL_TEXTURE_WRAP_T,			GL_CLAMP_TO_EDGE });
-		fboTexParams.push_back(FBOTexParams{ GL_TEXTURE_WRAP_R,			GL_CLAMP_TO_EDGE });
-
-		fboTexGenParams = FBOTexGenParams{ 1, GL_TEXTURE_CUBE_MAP, 0, GL_DEPTH_COMPONENT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL, fboTexParams };
-		fboParams = std::make_shared<FBOParams>(FBOParams{ false, 512, 512, GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, std::vector<FBOTexGenParams>{fboTexGenParams} });
-		fbo = std::make_unique<FrameBufferObject>(fboParams);
 		fboVec = std::make_unique<std::vector<std::shared_ptr<FrameBufferObject>>>();
-		fboVec->push_back(fbo);
+		for (unsigned int i = 0; i < 3; ++i)
+		{
+			fboTexParams.clear();
+			fboTexParams.push_back(FBOTexParams{ GL_TEXTURE_MIN_FILTER,		GL_NEAREST });
+			fboTexParams.push_back(FBOTexParams{ GL_TEXTURE_MAG_FILTER,		GL_NEAREST });
+			fboTexParams.push_back(FBOTexParams{ GL_TEXTURE_WRAP_S,			GL_CLAMP_TO_EDGE });
+			fboTexParams.push_back(FBOTexParams{ GL_TEXTURE_WRAP_T,			GL_CLAMP_TO_EDGE });
+			fboTexParams.push_back(FBOTexParams{ GL_TEXTURE_WRAP_R,			GL_CLAMP_TO_EDGE });
+
+			fboTexGenParams = FBOTexGenParams{ 1, GL_TEXTURE_CUBE_MAP, 0, GL_DEPTH_COMPONENT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL, fboTexParams };
+			fboParams = std::make_shared<FBOParams>(FBOParams{ false, 512, 512, GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, std::vector<FBOTexGenParams>{fboTexGenParams} });
+			fboVec->push_back(std::make_shared<FrameBufferObject>(fboParams));
+		}
 		fboHandlr = std::make_shared<Fbo_Handler>(std::move(fboVec), "Omni_Shadow_Map_Pass", false, 0, 0, nullptr, nullptr);
 		m_FboHandlerVec->push_back(fboHandlr);
 
@@ -259,8 +261,16 @@ Scene_Fbo_Handler_Manager::Scene_Fbo_Handler_Manager(const std::string& sceneNam
 
 std::shared_ptr<Fbo_Handler> Scene_Fbo_Handler_Manager::FindFboHandler(const std::string& handlerName) const
 {
-	auto it = std::find_if(Pimpl()->m_FboHandlerVec->begin(), Pimpl()->m_FboHandlerVec->end(), [&](std::shared_ptr<Fbo_Handler> hndlr) {return hndlr->GetHandlerName() == handlerName; });
-	return  it != Pimpl()->m_FboHandlerVec->end() ? *it : nullptr;
+	auto it = std::find_if(Pimpl()->m_FboHandlerVec->begin(), Pimpl()->m_FboHandlerVec->end(), [&](std::shared_ptr<Fbo_Handler> hndlr) {return hndlr->GetHandlerName() == handlerName && !hndlr->IsBeingHandled});
+	if(it != Pimpl()->m_FboHandlerVec->end())
+	{
+		it->IsBeingHandled = true;
+		return *it;
+	}
+	else
+	{
+		return nullptr;
+	}
 }
 
 
