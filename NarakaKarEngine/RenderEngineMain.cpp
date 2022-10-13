@@ -267,12 +267,8 @@ struct RenderEngineMain::Impl
 
 	GLfloat aircraftAngle = 0.0f;
 
-	//Vertex Shader
 	const std::string vShader = "Shaders/shader.vert";
-
-	//Fragment Shaders
 	const std::string fShader = "Shaders/shader.frag";
-
 	const std::string avShader = "Shaders/animated_shader.vert";
 
 	std::vector<glm::vec3> ssaoNoiseData{ 16, glm::vec3(0.0f, 0.0f, 0.0f) };
