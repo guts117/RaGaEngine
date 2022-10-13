@@ -1,13 +1,10 @@
 #ifndef PHYSICS_ENGINE
 #define PHYSICS_ENGINE
-#ifdef _WIN32
-	#ifdef PHYSICS_ENGINE_EXPORTS
-	#define PHYSICS_ENGINE_API __declspec(dllexport)
-	#else
-	#define PHYSICS_ENGINE_API __declspec(dllimport)
-	#endif
+
+#ifdef PHYSICS_ENGINE_EXPORTS
+#define PHYSICS_ENGINE_API __declspec(dllexport)
 #else
-	#define PHYSICS_ENGINE_API
+#define PHYSICS_ENGINE_API __declspec(dllimport)
 #endif
 
 #include "physics_pch.h"

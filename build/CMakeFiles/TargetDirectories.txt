@@ -1,8 +1,0 @@
-/home/rabingajmer/Personal/NarakaKarEngine/build/CMakeFiles/rebuild_cache.dir
-/home/rabingajmer/Personal/NarakaKarEngine/build/CMakeFiles/edit_cache.dir
-/home/rabingajmer/Personal/NarakaKarEngine/build/PhysicsEngine/CMakeFiles/rebuild_cache.dir
-/home/rabingajmer/Personal/NarakaKarEngine/build/PhysicsEngine/CMakeFiles/edit_cache.dir
-/home/rabingajmer/Personal/NarakaKarEngine/build/PhysicsEngine/CMakeFiles/PhysicsEngine.dir
-/home/rabingajmer/Personal/NarakaKarEngine/build/RenderEngine/CMakeFiles/rebuild_cache.dir
-/home/rabingajmer/Personal/NarakaKarEngine/build/RenderEngine/CMakeFiles/edit_cache.dir
-/home/rabingajmer/Personal/NarakaKarEngine/build/RenderEngine/CMakeFiles/RenderEngine.dir
