@@ -492,8 +492,8 @@ struct RenderEngineMain::Impl
 		anymodel->SetUpImportedModelData("Models/Intergalactic_Spaceship-(Wavefront).obj");
 		//anymodel->SetUpImportedModelData("Models/Sponza.gltf");
 
-		anim->LoadModel("Models/boblampclean.md5mesh");
-		anim2->LoadModel("Models/model.dae");
+		//anim->LoadModel("Models/boblampclean.md5mesh");
+		//anim2->LoadModel("Models/model.dae");
 
 		m_SceneFboHandlerMgr = std::make_shared<Scene_Fbo_Handler_Manager>("InGame");
 
@@ -640,8 +640,8 @@ struct RenderEngineMain::Impl
 
 			auto invProj = glm::inverse(camera->GetProjectionMatrix());
 			glNamedBufferSubData(screenToViewSSBO, 0, sizeof(invProj), &invProj);
-			sizeX = (unsigned int)std::ceilf(ScreenWidth / (float)gridSizeX);
-			sizeY = (unsigned int)std::ceilf(ScreenHeight / (float)gridSizeY);
+			sizeX = (unsigned int)std::ceil(ScreenWidth / (float)gridSizeX);
+			sizeY = (unsigned int)std::ceil(ScreenHeight / (float)gridSizeY);
 			int data[4] = { sizeX, sizeY, ScreenWidth, ScreenHeight };
 			glNamedBufferSubData(screenToViewSSBO, 80, sizeof(data), &data);
 
@@ -751,10 +751,10 @@ struct RenderEngineMain::Impl
 			DirectionalShadowMapPass(mainLight.get());
 
 			for (size_t i = 0; i < pointLightCount; i++) {
-				OmniShadowMapPass(pointLights[i].get());
+				OmniShadowMapPass(pointLights[i].get(), i);
 			}
 			for (size_t i = 0; i < spotLightCount; i++) {
-				OmniShadowMapPass(spotLights[i].get());
+				OmniShadowMapPass(spotLights[i].get(), pointLightCount + i);
 			}
 
 			PreZPass(deltaTime);
@@ -780,8 +780,8 @@ struct RenderEngineMain::Impl
 	void InitSSBOs() 
 	{
 		//Setting up tile size on both X and Y 
-		sizeX = (unsigned int)std::ceilf(ScreenWidth / (float)gridSizeX);
-		sizeY = (unsigned int)std::ceilf(ScreenHeight / (float)gridSizeY);
+		sizeX = (unsigned int)std::ceil(ScreenWidth / (float)gridSizeX);
+		sizeY = (unsigned int)std::ceil(ScreenHeight / (float)gridSizeY);
 
 		//Buffer containing all the clusters
 		{
@@ -1218,6 +1218,7 @@ struct RenderEngineMain::Impl
 	}
 
 	void RenderAnimScene(bool shadow, bool depth) {
+		return;
 		glm::mat4 model;
 		glm::mat4 prevPVM = glm::mat4();
 
@@ -1410,13 +1411,13 @@ struct RenderEngineMain::Impl
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
-	void OmniShadowMapPass(PointLight* light) {
+	void OmniShadowMapPass(PointLight* light, int lightIndex) {
 
 		omniShadowShader->UseShader();
 
-		glViewport(0, 0, light->GetShadowMap()->GetFBOWidth(), light->GetShadowMap()->GetFBOHeight());
+		glViewport(0, 0, light->GetShadowMap()->GetFBOWidth(lightIndex), light->GetShadowMap()->GetFBOHeight(lightIndex));
 
-		light->GetShadowMap()->BindFBO();
+		light->GetShadowMap()->BindFBO(lightIndex);
 		glClear(GL_DEPTH_BUFFER_BIT);
 
 		glUniform3f(omniShadowShader->GetOmniLightPosLocation(), light->GetPosition().x, light->GetPosition().y, light->GetPosition().z);

@@ -7,7 +7,6 @@
 using namespace NarakaKarEngine;
 using namespace RenderEngine;
 
-
 struct Texture::Impl
 {
 	GLuint m_textureID			= 0;
