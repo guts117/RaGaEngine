@@ -13,7 +13,7 @@ struct FrameBufferObject::Impl
 
 	Impl() = delete;
 
-	Impl(const std::shared_ptr<FBOParams>& fboParams)
+	Impl(std::shared_ptr<FBOParams> fboParams)
 		: m_FboId{ 0 }
 		, m_FboParam{ fboParams }
 		, m_ReadWriteBuffers{ std::vector<GLuint>() }
@@ -209,7 +209,7 @@ struct FrameBufferObject::Impl
 	}
 };
 
-FrameBufferObject::FrameBufferObject(const std::shared_ptr<FBOParams>& fboParams) : m_pImpl{ new Impl(fboParams) } {}
+FrameBufferObject::FrameBufferObject(std::shared_ptr<FBOParams> fboParams) : m_pImpl{ new Impl(fboParams) } {}
 
 void FrameBufferObject::Bind() const
 {

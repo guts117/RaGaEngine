@@ -2,13 +2,15 @@
 #define DIRECTIONALLIGHT
 
 #include "pch.h"
-#include "Shadow_Map_Pass_Fbo_Handler.h"
 #include "RenderingCommonValues.h"
 
 namespace NarakaKarEngine
 {
 	namespace RenderEngine
 	{
+		class Fbo_Handler;
+		class Scene_Fbo_Handler_Manager;
+
 		class DirectionalLight
 		{
 		public:
@@ -16,7 +18,8 @@ namespace NarakaKarEngine
 
 			DirectionalLight(GLuint shadowWidth, GLuint shadowHeight,
 				GLfloat red, GLfloat green, GLfloat blue,
-				GLfloat xDir, GLfloat yDir, GLfloat zDir);
+				GLfloat xDir, GLfloat yDir, GLfloat zDir, 
+				std::shared_ptr<Scene_Fbo_Handler_Manager> sceneFboHndlrMgr);
 
 			void UseLight(GLuint ambientColorLocation, GLuint directionLocation);
 
@@ -24,13 +27,13 @@ namespace NarakaKarEngine
 			glm::mat4 CalculateCascadeLightTransform();
 			glm::vec3 GetLightUp();
 			glm::vec3 GetLightDirection();
-			Shadow_Map_Pass_Fbo_Handler* GetShadowMap() { return shadowMap; }
+			std::shared_ptr<Fbo_Handler> GetShadowMap() { return shadowMap; }
 			float GetCascadeEnd(unsigned int i);
 			void CalcOrthProjs(const glm::mat4& Cam, const glm::mat4* vView, const float& angle);
 			glm::mat4 GetProjMat(glm::mat4& view, unsigned int index);
 			float GetRatio(glm::mat4& view, int index);
 			glm::vec3 GetModlCent(unsigned int index);
-			~DirectionalLight();
+			~DirectionalLight() = default;
 		private:
 			glm::vec3 direction;
 			glm::vec3 up{ glm::vec3(0.0f, 1.0f, 0.0f) };
@@ -41,7 +44,7 @@ namespace NarakaKarEngine
 			glm::mat4 shadowOrthoProjInfo[NUM_CASCADES];
 			glm::vec4 modeldFrusCorns[NUM_CASCADES][NUM_FRUSTUM_CORNERS];
 
-			Shadow_Map_Pass_Fbo_Handler* shadowMap = nullptr;
+			std::shared_ptr<Fbo_Handler> shadowMap;
 		};
 	}
 }
