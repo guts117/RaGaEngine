@@ -261,8 +261,8 @@ Scene_Fbo_Handler_Manager::Scene_Fbo_Handler_Manager(const std::string& sceneNam
 
 std::shared_ptr<Fbo_Handler> Scene_Fbo_Handler_Manager::FindFboHandler(const std::string& handlerName) const
 {
-	auto it = std::find_if(Pimpl()->m_FboHandlerVec->begin(), Pimpl()->m_FboHandlerVec->end(), [&](std::shared_ptr<Fbo_Handler> hndlr) { return hndlr->GetHandlerName() == handlerName; });
-	return it != Pimpl()->m_FboHandlerVec->end() ? *it : nullptr;
+	auto it = std::find_if(Pimpl()->m_FboHandlerVec->begin(), Pimpl()->m_FboHandlerVec->end(), [&](std::shared_ptr<Fbo_Handler> hndlr) {return hndlr->GetHandlerName() == handlerName; });
+	return  it != Pimpl()->m_FboHandlerVec->end() ? *it : nullptr;
 }
 
 
