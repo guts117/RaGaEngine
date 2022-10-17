@@ -1056,7 +1056,7 @@ struct RenderEngineMain::Impl
 		ssaoBlurShader->CreateFromFiles("Shaders/framebuffer.vert", "Shaders/ssao_blur_framebuffer.frag");
 
 		std::shared_ptr<Model_Shader> shader1 = std::make_shared<Model_Shader>();
-		shader1->CreateFromFiles(vShader.c_str(), fShader.c_str());
+		shader1->CreateFromFiles(vShader.c_str(), fShader.c_str(), true);
 		shaderList.push_back(shader1);
 
 		std::shared_ptr<Model_Shader> shader2 = std::make_shared < Model_Shader>();

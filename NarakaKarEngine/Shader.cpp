@@ -4,6 +4,9 @@
 #include "DirectionalLight.h"
 #include "PointLight.h"
 #include "SpotLight.h"
+#include <iterator>
+#include <sstream>
+#include <regex>
 
 using namespace NarakaKarEngine;
 using namespace RenderEngine;
@@ -12,13 +15,96 @@ void Shader::CreateFromString(const char* vertexCode, const char* fragmentCode) 
 	CompileShader(vertexCode, fragmentCode);
 }
 
-void Shader::CreateFromFiles(const char* vertexLocation, const char* fragmentLocation) {
+struct structT
+{
+	std::string type;
+	std::string memberName;
+};
+
+void Shader::CreateFromFiles(const char* vertexLocation, const char* fragmentLocation, bool isYEs) {
 	std::string vertexString = ReadFile(vertexLocation);
 	std::string fragmentString = ReadFile(fragmentLocation);
 	const char* vertexCode = vertexString.c_str();
 	const char* fragmentCode = fragmentString.c_str();
 
 	CompileShader(vertexCode, fragmentCode);
+
+	if (isYEs) {
+		std::vector<std::string> defStructs;
+		std::vector<std::string> defUniforms;
+		std::vector<std::string> defConst;
+
+		std::istringstream ss(fragmentString);
+		std::string line;
+		bool isStructStart = false;
+		std::string structStr;
+
+		while (std::getline(ss, line))
+		{
+			if (line.starts_with("//")) continue;
+
+			if (line.starts_with("const") && line.ends_with(";"))
+			{
+				defConst.push_back(line);
+			}
+
+			if (line.starts_with("struct"))
+			{
+				isStructStart = true;
+			}
+			if (isStructStart)
+			{
+				structStr.append(line);
+				if (line.contains("}"))
+				{
+					defStructs.push_back(structStr);
+					isStructStart = false;
+					structStr = "";
+				}
+			}
+
+			if (line.starts_with("uniform"))
+			{
+				defUniforms.push_back(line);
+			}
+		}
+		
+		std::map<std::string, std::vector<structT>> structTMaps;
+
+		for(int i = 0; i< defStructs.size(); ++i)
+		{
+			std::string lastWord = "";
+			std::string word;
+			std::string lastStruct = "";
+			std::stringstream iss(defStructs[i]);
+			bool isType = true;
+			while (iss >> word) 		
+			{
+				word.erase(remove(word.begin(), word.end(), '{'), word.end());
+				word.erase(remove(word.begin(), word.end(), '}'), word.end());
+				word.erase(remove(word.begin(), word.end(), ';'), word.end());
+
+				if(lastWord == "struct")
+				{
+					structTMaps.emplace(word, std::vector<structT>());
+					lastStruct = word;
+					lastWord = "";
+					continue;
+				}
+
+				if(lastWord != lastStruct)
+				{
+					if (!isType) 
+					{
+						structTMaps[lastStruct].push_back(structT{ lastWord, word});
+					}
+					isType = !isType;
+				}
+
+				lastWord = word;
+			}
+		}
+	}
 }
 
 void Shader::CreateFromFiles(const char* vertexLocation, const char* geometryLocation, const char* fragmentLocation)
