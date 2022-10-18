@@ -7,6 +7,8 @@
 #include <iterator>
 #include <sstream>
 #include <regex>
+#include <any>
+#include <ctype.h>
 
 using namespace NarakaKarEngine;
 using namespace RenderEngine;
@@ -19,6 +21,13 @@ struct structT
 {
 	std::string type;
 	std::string memberName;
+};
+
+struct ShaderInputVariable
+{
+	std::string VarType;
+	std::string VarName;
+	GLint VarLocID;
 };
 
 void Shader::CreateFromFiles(const char* vertexLocation, const char* fragmentLocation, bool isYEs) {
@@ -99,6 +108,71 @@ void Shader::CreateFromFiles(const char* vertexLocation, const char* fragmentLoc
 						structTMaps[lastStruct].push_back(structT{ lastWord, word});
 					}
 					isType = !isType;
+				}
+
+				lastWord = word;
+			}
+		}
+
+		std::vector<ShaderInputVariable> shaderInputs;
+
+		for(auto var = 0; var < defUniforms.size(); ++var)
+		{
+			std::string lastWord = "";
+			std::string word;
+			std::stringstream iss(defUniforms[var]);
+
+			std::string type = "";	
+
+			std::vector<std::string> arraySizeVec;
+
+			int size = 1;
+
+			if (word.contains("["))
+			{
+				const std::regex pattern("\\[(.*?)\\]");
+
+				std::string s_size;
+				for (std::sregex_iterator it = std::sregex_iterator(
+					defUniforms[var].begin(), defUniforms[var].end(), pattern);
+					it != std::sregex_iterator(); it++)
+				{
+
+					std::smatch match;
+					match = *it;
+
+					s_size = match.str(1);
+					break;
+				}
+
+				//if (std::stoi(s_size))
+				//{
+				//		
+				//}
+				//std::stringstream sizess(s_size);
+				//while (iss >> word)
+				//{
+
+				//}
+				
+			}
+
+			while (iss >> word)
+			{
+				word.erase(remove(word.begin(), word.end(), ';'), word.end());
+
+				if (lastWord == "uniform")
+				{
+					type = word;
+					lastWord = "";
+					continue;
+				}
+				if (type != "")
+				{
+					for (auto i = 0; i < size; ++i)
+					{
+						shaderInputs.push_back(ShaderInputVariable{ type, word + "#" + std::to_string(i), glGetUniformLocation(shaderID, word.c_str())});
+					}
 				}
 
 				lastWord = word;

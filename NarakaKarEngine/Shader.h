@@ -18,7 +18,7 @@ namespace NarakaKarEngine
 			Shader() = default;
 
 			void CreateFromString(const char* vertexCode, const char* fragmentCode);
-			void CreateFromFiles(const char* vertexLocation, const char* fragmentLocation);
+			void CreateFromFiles(const char* vertexLocation, const char* fragmentLocation, bool isYEs = false);
 			void CreateFromFiles(const char* vertexLocation, const char* geometryLocation, const char* fragmentLocation);
 			void CreateFromFiles(const char* vertexLocation, const char* tesscontrolLocation, const char* tessevaluationLocation, const char* fragmentLocation);
 			void CreateFromFiles(const char* vertexLocation, const char* tesscontrolLocation, const char* tessevaluationLocation, const char* geometryLocation, const char* fragmentLocation);
