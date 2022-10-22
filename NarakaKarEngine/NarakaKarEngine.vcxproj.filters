@@ -189,6 +189,9 @@
     <ClCompile Include="Fbo_Handler.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
+    <ClCompile Include="Shader_Object.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Animated_Mesh.h">
@@ -361,6 +364,12 @@
     </ClInclude>
     <ClInclude Include="Fbo_Handler.h">
       <Filter>Header Files\RenderEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="Shader_Object.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="exprtk.hpp">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

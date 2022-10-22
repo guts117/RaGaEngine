@@ -105,6 +105,7 @@
     <ClCompile Include="SceneViewer.cpp" />
     <ClCompile Include="Scene_Fbo_Handler_Manager.cpp" />
     <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="Shader_Object.cpp" />
     <ClCompile Include="Skybox.cpp" />
     <ClCompile Include="SpotLight.cpp" />
     <ClCompile Include="SSAOBlur_Shader.cpp" />
@@ -137,6 +138,7 @@
     <ClInclude Include="BRDF_Shader.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="EngineUIMain.h" />
+    <ClInclude Include="exprtk.hpp" />
     <ClInclude Include="Fbo_Handler.h" />
     <ClInclude Include="FrameBufferObject.h" />
     <ClInclude Include="RenderingCommonValues.h" />
@@ -162,6 +164,7 @@
     <ClInclude Include="SceneViewer.h" />
     <ClInclude Include="Scene_Fbo_Handler_Manager.h" />
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="Shader_Object.h" />
     <ClInclude Include="Skybox.h" />
     <ClInclude Include="spimpl.h" />
     <ClInclude Include="SpotLight.h" />
@@ -259,6 +262,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(SolutionDir)PhysicsEngine</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -278,6 +282,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(SolutionDir)PhysicsEngine</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -300,6 +305,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(SolutionDir)PhysicsEngine</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -323,6 +329,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(SolutionDir)PhysicsEngine</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
