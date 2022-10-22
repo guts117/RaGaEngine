@@ -9,6 +9,8 @@
 #include <regex>
 #include <any>
 #include <ctype.h>
+#include <iostream>
+#include "exprtk.hpp"
 
 using namespace NarakaKarEngine;
 using namespace RenderEngine;
@@ -17,17 +19,28 @@ void Shader::CreateFromString(const char* vertexCode, const char* fragmentCode) 
 	CompileShader(vertexCode, fragmentCode);
 }
 
-struct structT
+struct SLStructMember
 {
-	std::string type;
-	std::string memberName;
+	std::string VarType;
+	std::string VarName;
+	GLint VarLocation;
+};
+
+struct SLStructArr
+{
+	std::vector<SLStructMember> StructMemArray;
+};
+
+struct SLDataTypeArr
+{
+	std::vector<GLint> VarLocArray;
 };
 
 struct ShaderInputVariable
 {
 	std::string VarType;
 	std::string VarName;
-	GLint VarLocID;
+	std::any VarData;
 };
 
 void Shader::CreateFromFiles(const char* vertexLocation, const char* fragmentLocation, bool isYEs) {
@@ -39,11 +52,23 @@ void Shader::CreateFromFiles(const char* vertexLocation, const char* fragmentLoc
 	CompileShader(vertexCode, fragmentCode);
 
 	if (isYEs) {
-		std::vector<std::string> defStructs;
-		std::vector<std::string> defUniforms;
-		std::vector<std::string> defConst;
+		struct slStructTemp
+		{
+			std::string type;
+			std::string memberName;
+		};
 
-		std::istringstream ss(fragmentString);
+		struct slUniformTemp
+		{
+			std::string type;
+			std::string name;
+		};
+		
+		std::vector<std::string> defStructs;
+		std::vector<slUniformTemp> defUniforms;
+		std::map<std::string, int> defConsts;
+
+		std::istringstream ss(fragmentCode);
 		std::string line;
 		bool isStructStart = false;
 		std::string structStr;
@@ -52,9 +77,59 @@ void Shader::CreateFromFiles(const char* vertexLocation, const char* fragmentLoc
 		{
 			if (line.starts_with("//")) continue;
 
-			if (line.starts_with("const") && line.ends_with(";"))
+			std::string lastWord = "";
+			std::string word = "";
+			std::string varName = "";
+			
+			if (line.starts_with("const"))
 			{
-				defConst.push_back(line);
+				std::istringstream css(line);
+
+				while (css >> word)
+				{
+					auto pos = word.find("=");
+
+					if (pos == std::string::npos)
+					{
+						if (varName == "") 
+						{
+							lastWord = word;
+							continue;
+						}
+					}
+					else if (pos == 0)
+					{
+						varName = lastWord;	
+						if (word.size() == 1) 
+						{
+							continue;
+						}
+					}
+					else if (pos == (word.size() - 1)) 
+					{
+						varName = word;
+						continue;
+					}
+					else
+					{
+						varName = word.substr(0, pos);
+						word = word.substr(pos);
+					}
+
+					if (varName != "")
+					{
+						word.erase(remove(word.begin(), word.end(), '='), word.end());
+						int val;
+						
+						if (!word.contains(".") && (val = std::stoi(word)) > 0)
+						{
+							varName.erase(remove(varName.begin(), varName.end(), '='), word.end());
+							word.erase(remove(word.begin(), word.end(), ';'), word.end());
+							defConsts.emplace(varName, val);
+						}
+						break;
+					}
+				}
 			}
 
 			if (line.starts_with("struct"))
@@ -72,13 +147,48 @@ void Shader::CreateFromFiles(const char* vertexLocation, const char* fragmentLoc
 				}
 			}
 
+			lastWord = "";
+			word = "";
+			std::string type = "";
+
 			if (line.starts_with("uniform"))
 			{
-				defUniforms.push_back(line);
+				std::istringstream uss(line);
+				while (uss >> word)
+				{
+					if (lastWord == "uniform")
+					{
+						type = word;
+						lastWord = "";
+						continue;
+					}
+					if (type != "")
+					{
+						if (word.ends_with(";")) 
+						{
+							word.erase(remove(word.begin(), word.end(), ';'), word.end());
+							defUniforms.push_back(slUniformTemp{ type, lastWord + word });
+						}
+						else if (word == ";") 
+						{
+							defUniforms.push_back(slUniformTemp{ type, lastWord });
+						}
+						else
+						{
+							lastWord += word;
+						}
+					}
+					else
+					{
+						lastWord = word;
+					}
+				}			
 			}
 		}
 		
-		std::map<std::string, std::vector<structT>> structTMaps;
+		std::map<std::string, std::vector<slStructTemp>> structTMaps;
+
+		std::vector<char> ign_struct = { '{', '}', ';' };
 
 		for(int i = 0; i< defStructs.size(); ++i)
 		{
@@ -87,15 +197,18 @@ void Shader::CreateFromFiles(const char* vertexLocation, const char* fragmentLoc
 			std::string lastStruct = "";
 			std::stringstream iss(defStructs[i]);
 			bool isType = true;
+
+
 			while (iss >> word) 		
 			{
-				word.erase(remove(word.begin(), word.end(), '{'), word.end());
-				word.erase(remove(word.begin(), word.end(), '}'), word.end());
-				word.erase(remove(word.begin(), word.end(), ';'), word.end());
+				word.erase(remove_if(word.begin(), word.end(), [&](char c) 
+					{
+						return std::find(ign_struct.begin(), ign_struct.end(), c) != ign_struct.end();
+					}), word.end());
 
 				if(lastWord == "struct")
 				{
-					structTMaps.emplace(word, std::vector<structT>());
+					structTMaps.emplace(word, std::vector<slStructTemp>());
 					lastStruct = word;
 					lastWord = "";
 					continue;
@@ -105,7 +218,7 @@ void Shader::CreateFromFiles(const char* vertexLocation, const char* fragmentLoc
 				{
 					if (!isType) 
 					{
-						structTMaps[lastStruct].push_back(structT{ lastWord, word});
+						structTMaps[lastStruct].push_back(slStructTemp{ lastWord, word});
 					}
 					isType = !isType;
 				}
@@ -118,64 +231,98 @@ void Shader::CreateFromFiles(const char* vertexLocation, const char* fragmentLoc
 
 		for(auto var = 0; var < defUniforms.size(); ++var)
 		{
-			std::string lastWord = "";
-			std::string word;
-			std::stringstream iss(defUniforms[var]);
+			auto type = defUniforms[var].type;
+			auto fullVarName = defUniforms[var].name;
 
-			std::string type = "";	
-
-			std::vector<std::string> arraySizeVec;
-
-			int size = 1;
-
-			if (word.contains("["))
+			if (fullVarName.ends_with("]"))
 			{
-				const std::regex pattern("\\[(.*?)\\]");
+				auto pos = fullVarName.find("[");
 
-				std::string s_size;
-				for (std::sregex_iterator it = std::sregex_iterator(
-					defUniforms[var].begin(), defUniforms[var].end(), pattern);
-					it != std::sregex_iterator(); it++)
-				{
+				auto varName = fullVarName.substr(0, pos);
+				auto arr = fullVarName.substr(pos + 1);
 
-					std::smatch match;
-					match = *it;
+				arr.erase(remove(arr.begin(), arr.end(), ']'), arr.end());
 
-					s_size = match.str(1);
-					break;
-				}
+				std::vector<std::tuple<int, char>> constVec = std::vector<std::tuple<int, char>>();
 
-				//if (std::stoi(s_size))
-				//{
-				//		
-				//}
-				//std::stringstream sizess(s_size);
-				//while (iss >> word)
-				//{
-
-				//}
+				auto hasArithmetic = false;
 				
-			}
-
-			while (iss >> word)
-			{
-				word.erase(remove(word.begin(), word.end(), ';'), word.end());
-
-				if (lastWord == "uniform")
+				for (auto& c : arr) 
 				{
-					type = word;
-					lastWord = "";
-					continue;
-				}
-				if (type != "")
-				{
-					for (auto i = 0; i < size; ++i)
+					if (c != '_' && !std::isalnum(c))
 					{
-						shaderInputs.push_back(ShaderInputVariable{ type, word + "#" + std::to_string(i), glGetUniformLocation(shaderID, word.c_str())});
-					}
+						hasArithmetic = true;
+						break;
+					}				
 				}
 
-				lastWord = word;
+				int arrSize = 0;
+
+				if (hasArithmetic)
+				{
+					for (const auto& key : defConsts) {
+						arr = std::regex_replace(arr, std::regex(key.first), std::to_string(key.second)); // replace 'key.first' -> 'key.second'
+					}
+
+					exprtk::symbol_table<float> symbol_table;
+					exprtk::expression<float> expression;
+					exprtk::parser<float> parser;
+					
+					expression.register_symbol_table(symbol_table);
+	
+					parser.compile(arr, expression);
+					arrSize = expression.value();
+				}
+				else
+				{
+					arrSize = defConsts.find(arr) != defConsts.end() ? defConsts[arr] : std::stoi(arr);
+				}
+
+				if (structTMaps.find(type) == structTMaps.end())
+				{
+					auto vecArr = std::vector<GLint>();
+					for (auto i = 0; i < arrSize; ++i)
+					{
+						char locBuff[100] = { '\0' };
+
+						snprintf(locBuff, sizeof(locBuff), (varName + "[% zd]").c_str(), i);
+						vecArr.push_back(glGetUniformLocation(shaderID, locBuff));
+					}
+					shaderInputs.push_back(ShaderInputVariable{ type, varName, SLDataTypeArr{vecArr} });
+				}
+				else
+				{
+					auto vecArr = std::vector<SLStructArr>();
+					for (auto i = 0; i < arrSize; ++i)
+					{
+						auto vec = std::vector<SLStructMember>();
+						for (auto j = 0; j < structTMaps[type].size(); ++j)
+						{
+							char locBuff[100] = { '\0' };
+
+							snprintf(locBuff, sizeof(locBuff), (varName + "[% zd]." + structTMaps[type][j].memberName).c_str(), i);
+							vec.push_back(SLStructMember{ structTMaps[type][j].type, structTMaps[type][j].memberName, glGetUniformLocation(shaderID, locBuff) });
+						}
+						vecArr.push_back(SLStructArr{ vec });
+					}
+					shaderInputs.push_back(ShaderInputVariable{ type, varName, vecArr });
+				}
+			}
+			else
+			{		
+				if (structTMaps.find(type) == structTMaps.end()) 
+				{
+					shaderInputs.push_back(ShaderInputVariable{ type, fullVarName, glGetUniformLocation(shaderID, fullVarName.c_str()) });
+				}
+				else
+				{
+					auto vec = std::vector<SLStructMember>();
+					for (auto i = 0; i < structTMaps[type].size(); ++i) 
+					{
+						vec.push_back(SLStructMember{ structTMaps[type][i].type,structTMaps[type][i].memberName, glGetUniformLocation(shaderID, (fullVarName + "." + structTMaps[type][i].memberName).c_str())});
+					}
+					shaderInputs.push_back(ShaderInputVariable{ type, fullVarName, SLStructArr{vec} });
+				}
 			}
 		}
 	}
