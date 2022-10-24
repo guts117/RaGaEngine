@@ -646,7 +646,7 @@ struct Shader_Object::Impl
 			}
 			else		
 			{
-				printf("Error Parsing Shader: Error parsing Data '%s'\n", typeid(data));
+				printf("Error Parsing Shader: Error parsing Data '%s'\n", it->VarData.type().name());
 			}
 		}
 		else
