@@ -3,6 +3,7 @@
 #include "RenderingCommonValues.h"
 #include <sstream>
 #include <regex>
+#include <iterator>
 #include "exprtk.hpp"
 
 using namespace NarakaKarEngine;
@@ -12,16 +13,60 @@ struct Shader_Object::Impl
 {	
 	struct ShaderCodeType
 	{
-		const char* Code;
+		std::string Code;
 		GLenum Type;
+	};
+
+	struct SLStructMember
+	{
+		std::string VarType;
+		std::string VarName;
+		GLint VarLocation;
+	};
+
+	struct SLStruct
+	{
+		std::vector<SLStructMember> StructMemArray;
+		explicit operator bool() const
+		{
+			return StructMemArray.size() != 0;
+		}
+	};
+
+	struct SLStructTypeArr
+	{
+		std::vector<SLStruct> StructArray;
+		explicit operator bool() const
+		{
+			return StructArray.size() != 0;
+		}
+	};
+
+	struct SLDataTypeArr
+	{
+		std::vector<GLint> VarLocArray;
+		explicit operator bool() const
+		{
+			return VarLocArray.size() != 0;
+		}
+	};
+
+	//ToDo: Serialize this
+	struct ShaderInputVariable
+	{
+		std::string VarType;
+		std::string VarName;
+		std::any VarData;
 	};
 
 	GLuint m_ShaderProgramID;
 	std::unique_ptr<std::vector<ShaderInputVariable>> m_ShaderInputs;
+	GLuint m_textureUnit;
 
 	Impl(const std::vector<std::string>& shaderLocs)
 		: m_ShaderProgramID { 0 }
 		, m_ShaderInputs{ std::make_unique<std::vector<ShaderInputVariable>>()}
+		, m_textureUnit { 0 }
 	{
 		std::vector<ShaderCodeType> shaderCodes;
 		for(auto locIndex = 0; locIndex < shaderLocs.size(); ++locIndex)
@@ -101,10 +146,10 @@ struct Shader_Object::Impl
 		auto shader = glCreateShader(codeType.Type);
 
 		const GLchar* theCode[1];
-		theCode[0] = codeType.Code;
+		theCode[0] = codeType.Code.c_str();
 
 		GLint codeLength[1];
-		codeLength[0] = strlen(codeType.Code);
+		codeLength[0] = strlen(codeType.Code.c_str());
 
 		glShaderSource(shader, 1, theCode, codeLength);
 		glCompileShader(shader);
@@ -122,6 +167,7 @@ struct Shader_Object::Impl
 		glAttachShader(theProgram, shader);
 	}
 
+	//ToDo: Rewrite and optimize after testing all the shaders
 	void CompileShaderProgram(const std::vector<ShaderCodeType>& shaderCodesTypes)
 	{
 		GLint result = 0;
@@ -207,7 +253,7 @@ struct Shader_Object::Impl
 							word.erase(remove(word.begin(), word.end(), '='), word.end());
 							int val;
 
-							if (!word.contains(".") && (val = std::stoi(word)) > 0)
+							if (word.find(".") == std::string::npos && (val = std::stoi(word)) > 0)
 							{
 								varName.erase(remove(varName.begin(), varName.end(), '='), word.end());
 								word.erase(remove(word.begin(), word.end(), ';'), word.end());
@@ -225,7 +271,7 @@ struct Shader_Object::Impl
 				if (isStructStart)
 				{
 					structStr.append(line);
-					if (line.contains("}"))
+					if (line.find("}") != std::string::npos)
 					{
 						defStructs.push_back(structStr);
 						isStructStart = false;
@@ -376,7 +422,7 @@ struct Shader_Object::Impl
 					}
 					else
 					{
-						auto vecArr = std::vector<SLStructArr>();
+						auto vecArr = std::vector<SLStruct>();
 						for (auto i = 0; i < arrSize; ++i)
 						{
 							auto vec = std::vector<SLStructMember>();
@@ -387,9 +433,9 @@ struct Shader_Object::Impl
 								snprintf(locBuff, sizeof(locBuff), (varName + "[% zd]." + structTMaps[type][j].memberName).c_str(), i);
 								vec.push_back(SLStructMember{ structTMaps[type][j].type, structTMaps[type][j].memberName, glGetUniformLocation(m_ShaderProgramID, locBuff) });
 							}
-							vecArr.push_back(SLStructArr{ vec });
+							vecArr.push_back(SLStruct{ vec });
 						}
-						m_ShaderInputs->push_back(ShaderInputVariable{ type, varName, vecArr });
+						m_ShaderInputs->push_back(ShaderInputVariable{ type, varName, SLStructTypeArr{vecArr} });
 					}
 				}
 				else
@@ -405,7 +451,7 @@ struct Shader_Object::Impl
 						{
 							vec.push_back(SLStructMember{ structTMaps[type][i].type,structTMaps[type][i].memberName, glGetUniformLocation(m_ShaderProgramID, (fullVarName + "." + structTMaps[type][i].memberName).c_str()) });
 						}
-						m_ShaderInputs->push_back(ShaderInputVariable{ type, fullVarName, SLStructArr{vec} });
+						m_ShaderInputs->push_back(ShaderInputVariable{ type, fullVarName, SLStruct{vec} });
 					}
 				}
 			}
@@ -423,6 +469,189 @@ struct Shader_Object::Impl
 			glGetShaderInfoLog(m_ShaderProgramID, sizeof(eLog), NULL, eLog);
 			printf("Error validating shader program: '%s'\n", eLog);
 			return;
+		}
+	}
+
+	template <typename T>
+	std::shared_ptr<T> CheckInputDataType(const std::any& data) const
+	{
+		try
+		{
+			auto dat = std::any_cast<T>(data);
+			return std::make_shared<T>(dat);
+		}
+		catch(const std::bad_any_cast& e)
+		{
+			std::cout << e.what() << std::endl;
+			return nullptr;
+		}
+	}
+
+	void SetShaderData(const std::string& type, const GLint& location, const std::any& value) const
+	{
+		if (type == "float")
+		{
+			if (auto val = CheckInputDataType<GLfloat>(value))
+			{
+				glUniform1f(location, *val);
+			}
+		}
+		else if (type == "vec2")
+		{
+			if (auto val = CheckInputDataType<glm::vec2>(value))
+			{
+				glUniform2f(location, val->x, val->y);
+			}
+		}
+		else if (type == "vec3")
+		{
+			if (auto val = CheckInputDataType<glm::vec3>(value))
+			{
+				glUniform3f(location, val->x, val->y, val->z);
+			}
+		}
+		else if (type == "vec4")
+		{
+			if (auto val = CheckInputDataType<glm::vec4>(value))
+			{
+				glUniform4f(location, val->x, val->y, val->z, val->w);
+			}
+		}
+		else if (type == "int" || type.find("sample") != std::string::npos)
+		{
+			if (auto val = CheckInputDataType<GLint>(value))
+			{
+				glUniform1i(location, *val);
+			}
+		}
+		else if (type == "ivec2")
+		{
+			if (auto val = CheckInputDataType<glm::ivec2>(value))
+			{
+				glUniform2i(location, val->x, val->y);
+			}
+		}
+		else if (type == "ivec3")
+		{
+			if (auto val = CheckInputDataType<glm::ivec3>(value))
+			{
+				glUniform3i(location, val->x, val->y, val->z);
+			}
+		}
+		else if (type == "ivec4")
+		{
+			if (auto val = CheckInputDataType<glm::ivec4>(value))
+			{
+				glUniform4i(location, val->x, val->y, val->z, val->w);
+			}
+		}
+		else if (type == "uint" || type == "bool")
+		{
+			if (auto val = CheckInputDataType<GLuint>(value))
+			{
+				glUniform1ui(location, *val);
+			}
+		}
+		else if (type == "uvec2")
+		{
+			if (auto val = CheckInputDataType<glm::uvec2>(value))
+			{
+				glUniform2ui(location, val->x, val->y);
+			}
+		}
+		else if (type == "uvec3")
+		{
+			if (auto val = CheckInputDataType<glm::uvec3>(value))
+			{
+				glUniform3ui(location, val->x, val->y, val->z);
+			}
+		}
+		else if (type == "uvec4")
+		{
+			if (auto val = CheckInputDataType<glm::uvec4>(value))
+			{
+				glUniform4ui(location, val->x, val->y, val->z, val->w);
+			}
+		}
+		else if (type == "mat2")
+		{
+			if (auto val = CheckInputDataType<glm::mat2>(value))
+			{
+				glUniformMatrix2fv(location, 1, GL_FALSE, glm::value_ptr(*val));
+			}
+		}
+		else if (type == "mat3")
+		{
+			if (auto val = CheckInputDataType<glm::mat3>(value))
+			{
+				glUniformMatrix3fv(location, 1, GL_FALSE, glm::value_ptr(*val));
+			}
+		}
+		else if (type == "mat4")
+		{
+			if (auto val = CheckInputDataType<glm::mat4>(value))
+			{
+				glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(*val));
+			}
+		}
+		else
+		{
+			printf("Error Parsing Shader: ToDo: Shader Data Type not supported yet. '%s'\n", type);
+		}
+	}
+
+	void SetVariable(const std::string& varName, const std::any& value, const GLuint& index = 0, const std::string& memName = "") const
+	{
+		auto it = std::find_if(m_ShaderInputs->begin(), m_ShaderInputs->end(), [&](ShaderInputVariable& var) {return var.VarName == varName; });
+
+		if (it != m_ShaderInputs->end())
+		{
+			if (auto data = CheckInputDataType<GLint>(it->VarData))
+			{			
+				SetShaderData(it->VarType, *data, value);
+			}
+			else if (auto data = CheckInputDataType<SLDataTypeArr>(it->VarData))
+			{
+				SetShaderData(it->VarType, data->VarLocArray[index], value);			
+			}
+			else if (auto data = CheckInputDataType<SLStruct>(it->VarData))
+			{
+				auto begin = data->StructMemArray.begin();
+				auto end = data->StructMemArray.end();
+				auto dat = std::find_if(begin, end, [&](SLStructMember& m) {return m.VarName == memName; });
+
+				if (dat != end) 
+				{
+					SetShaderData(dat->VarType, dat->VarLocation, value);
+				}
+				else
+				{
+					printf("Error Parsing Shader: Can't find member '%s'.'%s'\n", varName, memName);
+				}
+			}
+			else if (auto data = CheckInputDataType<SLStructTypeArr>(it->VarData))
+			{	
+				auto begin = data->StructArray[index].StructMemArray.begin();
+				auto end = data->StructArray[index].StructMemArray.end();
+				auto dat = std::find_if(begin, end, [&](SLStructMember& m) {return m.VarName == memName; });
+
+				if (dat != end)
+				{
+					SetShaderData(dat->VarType, dat->VarLocation, value);
+				}
+				else
+				{
+					printf("Error Parsing Shader: Can't find member '%s'['%d'].'%s'\n", varName, index, memName);
+				}
+			}
+			else		
+			{
+				printf("Error Parsing Shader: Error parsing Data '%s'\n", typeid(data));
+			}
+		}
+		else
+		{
+			printf("Error Parsing Shader: Variable doesn't exist \n");
 		}
 	}
 
@@ -452,6 +681,11 @@ const GLuint& Shader_Object::GetShaderObjectID() const
 void Shader_Object::UseShaderObject() const
 {
 	glUseProgram(Pimpl()->m_ShaderProgramID);
+}
+
+void Shader_Object::SetVariable(const std::string& varName, const std::any& value, const GLuint& index, const std::string& memName) const
+{
+	Pimpl()->SetVariable(varName, value, index, memName);
 }
 
 Shader_Object::~Shader_Object() = default;

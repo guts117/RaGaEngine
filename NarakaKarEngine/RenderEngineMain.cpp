@@ -48,6 +48,7 @@
 
 #include "PhysicsEngineMain.h"
 #include "EngineUIMain.h"
+#include "Shader_Object.h"
 
 using namespace NarakaKarEngine;
 using namespace RenderEngine;
@@ -170,7 +171,7 @@ struct RenderEngineMain::Impl
 
 	std::unique_ptr < Terrain_Shader> terrainShader = std::make_unique<Terrain_Shader>();
 
-	std::unique_ptr < Billboard_Shader> billboardShader = std::make_unique<Billboard_Shader>();
+	std::unique_ptr < Shader_Object > billboardShader;
 	std::unique_ptr < Particle_Shader> particleShader = std::make_unique<Particle_Shader>();
 
 	std::unique_ptr < HDR_Shader> hdrShader = std::make_unique<HDR_Shader>();
@@ -1064,7 +1065,7 @@ struct RenderEngineMain::Impl
 		animShaderList.push_back(shader2);
 
 		terrainShader->CreateFromFiles("Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain.tesse", "Shaders/terrain.frag");
-		billboardShader->CreateFromFiles("Shaders/billboard.vert", "Shaders/billboard.frag");
+		billboardShader = std::make_unique<Shader_Object>(std::vector<std::string>{"Shaders/billboard.vert", "Shaders/billboard.frag"});
 
 		particleShader->CreateFromFiles("Shaders/particles.vert", "Shaders/particles.frag");
 
@@ -1084,12 +1085,9 @@ struct RenderEngineMain::Impl
 
 	void RenderBillboardScene()
 	{
-		glm::mat4 prevPV = glm::mat4();
-		glUniform3f(billboardShader->GetPosLocation(), 6.0f - terrainScaleFactor, 29.0f, -terrainScaleFactor);
-		glUniform2f(billboardShader->GetSizeLocation(), 2.0f, 2.0f/*0.125f*/);
-
-		prevPV = camera->GetPreviousProjectionViewMatrix();
-		glUniformMatrix4fv(billboardShader->GetPrevPVMLocation(), 1, GL_FALSE, glm::value_ptr(prevPV));
+		billboardShader->SetVariable("BillboardPos", glm::vec3(6.0f - terrainScaleFactor, 29.0f, -terrainScaleFactor));
+		billboardShader->SetVariable("BillboardSize", glm::vec2(2.0f, 2.0f/*0.125f*/));
+		billboardShader->SetVariable("prevPV", camera->GetPreviousProjectionViewMatrix());
 
 		grassTexture->UseTexture(0);
 		billboardList[0]->RenderMesh();
@@ -1676,16 +1674,15 @@ struct RenderEngineMain::Impl
 
 		RenderAnimScene(false, false);
 
-		billboardShader->UseShader();
+		billboardShader->UseShaderObject();
 
-		glUniformMatrix4fv(billboardShader->GetProjectionLocation(), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
-		glUniformMatrix4fv(billboardShader->GetViewLocation(), 1, GL_FALSE, glm::value_ptr(viewMatrix));
-		glUniform3f(billboardShader->GetCameraUpLocation(), camera->getCameraUp().x, camera->getCameraUp().y, camera->getCameraUp().z);
-		glUniform3f(billboardShader->GetCameraRightLocation(), camera->getCameraRight().x, camera->getCameraRight().y, camera->getCameraRight().z);
+		billboardShader->SetVariable("Projection", projectionMatrix);
+		billboardShader->SetVariable("View", viewMatrix);
+		billboardShader->SetVariable("CameraUp_worldspace", camera->getCameraUp());
+		billboardShader->SetVariable("CameraRight_worldspace", camera->getCameraRight());
+		billboardShader->SetVariable("theTexture", 1);
 
-		billboardShader->SetTexture(1);
-
-		billboardShader->Validate();
+		billboardShader->ValidateShaderObject();
 
 		RenderBillboardScene();
 

@@ -2,37 +2,11 @@
 #define SHADER_OBJECT
 
 #include "pch.h"
-#include <any>
 
 namespace NarakaKarEngine
 {
 	namespace RenderEngine
 	{
-		struct SLStructMember
-		{
-			std::string VarType;
-			std::string VarName;
-			GLint VarLocation;
-		};
-
-		struct SLStructArr
-		{
-			std::vector<SLStructMember> StructMemArray;
-		};
-
-		struct SLDataTypeArr
-		{
-			std::vector<GLint> VarLocArray;
-		};
-
-		//ToDo: Serialize this
-		struct ShaderInputVariable
-		{
-			std::string VarType;
-			std::string VarName;
-			std::any VarData;
-		};
-
 		class Shader_Object
 		{
 		public:
@@ -42,6 +16,8 @@ namespace NarakaKarEngine
 			void ValidateShaderObject() const;
 			void UseShaderObject() const;
 			const GLuint& GetShaderObjectID() const;
+
+			void SetVariable(const std::string& varName, const std::any& value, const GLuint& index = 0, const std::string& memName = "") const;
 
 			~Shader_Object();
 
