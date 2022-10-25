@@ -509,6 +509,10 @@ struct Shader_Object::Impl
 			{
 				glUniform3f(location, val->x, val->y, val->z);
 			}
+			else if(auto val = CheckInputDataType<std::tuple<int, glm::vec3*>>(value))
+			{
+				glUniform3fv(location, val.first, glm::value_ptr(&val.second[0]));
+			}
 		}
 		else if (type == "vec4")
 		{

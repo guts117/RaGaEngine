@@ -1,10 +1,6 @@
 #include "pch.h"
 #include "RenderEngineMain.h"
 
-#include "Equirectangular_to_CubeMap_Shader.h"
-#include "Irradiance_Convolution_Shader.h"
-#include "PreFilter_Shader.h"
-#include "BRDF_Shader.h"
 #include "PreZPass_Shader.h"
 #include "Terrain_PreZPass_Shader.h"
 #include "SSAO_Shader.h"
@@ -132,10 +128,10 @@ struct RenderEngineMain::Impl
 
 	std::shared_ptr<Scene_Fbo_Handler_Manager> m_SceneFboHandlerMgr;
 
-	std::unique_ptr<Equirectangular_to_CubeMap_Shader> environmentMapShader = std::make_unique<Equirectangular_to_CubeMap_Shader>();
-	std::unique_ptr <Irradiance_Convolution_Shader> irradianceConvolutionShader = std::make_unique<Irradiance_Convolution_Shader>();
-	std::unique_ptr <PreFilter_Shader> prefilterShader = std::make_unique<PreFilter_Shader>();
-	std::unique_ptr < BRDF_Shader > brdfShader = std::make_unique<BRDF_Shader>();
+	std::unique_ptr <Shader_Object> environmentMapShader;
+	std::unique_ptr <Shader_Object> irradianceConvolutionShader;
+	std::unique_ptr <Shader_Object> prefilterShader;
+	std::unique_ptr <Shader_Object> brdfShader;
 
 	std::shared_ptr <Fbo_Handler> environmentMap;
 	std::shared_ptr <Fbo_Handler> irradianceMap;
@@ -1034,10 +1030,10 @@ struct RenderEngineMain::Impl
 		//jacobiCompShader3D->CreateFromFiles("Shaders/3DFluid/jacobi.comp");
 		//pressureProjectionCompShader3D->CreateFromFiles("Shaders/3DFluid/pressureProjection.comp");
 
-		environmentMapShader->CreateFromFiles("Shaders/cubemap.vert", "Shaders/equirectangular_to_cubemap.frag");
-		irradianceConvolutionShader->CreateFromFiles("Shaders/cubemap.vert", "Shaders/irradiance_covolution.frag");
-		prefilterShader->CreateFromFiles("Shaders/cubemap.vert", "Shaders/prefilter.frag");
-		brdfShader->CreateFromFiles("Shaders/framebuffer.vert", "Shaders/brdf.frag");
+		environmentMapShader 		= std::make_unique<Shader_Object>("Shaders/cubemap.vert", "Shaders/equirectangular_to_cubemap.frag");
+		irradianceConvolutionShader = std::make_unique<Shader_Object>("Shaders/cubemap.vert", "Shaders/irradiance_covolution.frag");
+		prefilterShader 			= std::make_unique<Shader_Object>("Shaders/cubemap.vert", "Shaders/prefilter.frag");
+		brdfShader 					= std::make_unique<Shader_Object>("Shaders/framebuffer.vert", "Shaders/brdf.frag");
 
 		directionalShadowShader->CreateFromFiles("Shaders/directional_shadow_map.vert", "Shaders/directional_shadow_map.frag");
 		omniShadowShader->CreateFromFiles("Shaders/omni_shadow_map.vert", "Shaders/omni_shadow_map.geom", "Shaders/omni_shadow_map.frag");
@@ -1270,19 +1266,18 @@ struct RenderEngineMain::Impl
 
 	void EnvironmentMapPass()
 	{
-		environmentMapShader->UseShader();
-		environmentMapShader->SetTexture(1);
-
-		glUniformMatrix4fv(environmentMapShader->GetProjectionLocation(), 1, GL_FALSE, glm::value_ptr(captureProjection));
+		environmentMapShader->UseShaderObject();
+		environmentMapShader->SetVariable("theTexture", 1);
+		environmentMapShader->SetVariable("Projection", captureProjection);
 
 		glViewport(0, 0, environmentMap->GetFBOWidth(), environmentMap->GetFBOHeight());
 		environmentMap->BindFBO();
 		for (auto faceId = 0; faceId < 6; ++faceId)
 		{
-			glUniformMatrix4fv(environmentMapShader->GetViewLocation(), 1, GL_FALSE, glm::value_ptr(captureViews[faceId]));
+			environmentMapShader->SetVariable("View", captureViews[faceId]);
 			environmentMap->WriteToFBOBuffer(0, 0, 0, faceId);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			environmentMapShader->Validate();
+			environmentMapShader->ValidateShaderObject();
 
 			RenderEnvCubeMap(false);
 		}
@@ -1292,19 +1287,18 @@ struct RenderEngineMain::Impl
 
 	void IrradianceConvolutionPass()
 	{
-		irradianceConvolutionShader->UseShader();
-		irradianceConvolutionShader->SetSkybox(1);
-
-		glUniformMatrix4fv(irradianceConvolutionShader->GetProjectionLocation(), 1, GL_FALSE, glm::value_ptr(captureProjection));
+		irradianceConvolutionShader->UseShaderObject();
+		irradianceConvolutionShader->SetVariable("skybox", 1);
+		irradianceConvolutionShader->SetVariable("Projection", captureProjection);
 
 		glViewport(0, 0, irradianceMap->GetFBOWidth(), irradianceMap->GetFBOHeight());
 		irradianceMap->BindFBO();
 		for (unsigned int i = 0; i < 6; ++i)
 		{
-			glUniformMatrix4fv(irradianceConvolutionShader->GetViewLocation(), 1, GL_FALSE, glm::value_ptr(captureViews[i]));
+			irradianceConvolutionShader->SetVariable("View", captureViews[faceId]);
 			irradianceMap->WriteToFBOBuffer(0, 0, 0, i);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			irradianceConvolutionShader->Validate();
+			irradianceConvolutionShader->ValidateShaderObject();
 
 			RenderEnvCubeMap(true);
 		}
@@ -1313,9 +1307,9 @@ struct RenderEngineMain::Impl
 
 	void PrefilterPass()
 	{
-		prefilterShader->UseShader();
-		prefilterShader->SetSkybox(1);
-		glUniformMatrix4fv(prefilterShader->GetProjectionLocation(), 1, GL_FALSE, glm::value_ptr(captureProjection));
+		prefilterShader->UseShaderObject();
+		prefilterShader->SetVariable("skybox", 1);
+		prefilterShader->SetVariable("Projection", captureProjection);
 
 		prefilterMap->BindFBO();
 		unsigned int maxMipLevels = 5;
@@ -1329,13 +1323,13 @@ struct RenderEngineMain::Impl
 			glViewport(0, 0, mipWidth, mipHeight);
 
 			float roughness = (float)mip / (float)(maxMipLevels - 1);
-			prefilterShader->SetRoughness(roughness);
+			prefilterShader->SetVariable("roughness", roughness);
 			for (auto faceId = 0; faceId < 6; ++faceId)
 			{
-				glUniformMatrix4fv(prefilterShader->GetViewLocation(), 1, GL_FALSE, glm::value_ptr(captureViews[faceId]));
+				prefilterShader->SetVariable("View", captureViews[faceId]);
 				prefilterMap->WriteToFBOBuffer(0, 0, 0, faceId, mip);
 				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-				prefilterShader->Validate();
+				prefilterShader->ValidateShaderObject();
 
 				RenderEnvCubeMap(true);
 			}
@@ -1350,7 +1344,7 @@ struct RenderEngineMain::Impl
 		brdfMap->BindFBO();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		brdfShader->UseShader();
+		brdfShader->UseShaderObject();
 		quad->RenderQuad();
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
