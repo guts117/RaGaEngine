@@ -1,19 +1,6 @@
 #include "pch.h"
 #include "RenderEngineMain.h"
 
-#include "PreZPass_Shader.h"
-#include "Terrain_PreZPass_Shader.h"
-#include "SSAO_Shader.h"
-#include "SSAOBlur_Shader.h"
-#include "Model_Shader.h"
-#include "Terrain_Shader.h"
-#include "Billboard_Shader.h"
-#include "Particle_Shader.h"
-#include "HDR_Shader.h"
-#include "Blur_Shader.h"
-#include "MotionBlur_Shader.h"
-#include "Compute_Shader.h"
-
 #include "Mesh.h"
 #include "Static_Mesh.h"
 #include "Billboard_Mesh.h"
@@ -99,9 +86,9 @@ struct RenderEngineMain::Impl
 		uniformAlbedoMap2 = 0, uniformMetallicMap2 = 0, uniformRoughnessMap2 = 0, uniformNormalMap2 = 0, uniformParallaxMap2 = 0,
 		uniformOmniLightPos2 = 0, uniformFarPlane2 = 0;
 
-	std::unique_ptr<Compute_Shader> buildAABBGridCompShader = std::make_unique<Compute_Shader>();
-	std::unique_ptr<Compute_Shader> visibleClusterCompShader = std::make_unique<Compute_Shader>();
-	std::unique_ptr<Compute_Shader> cullLightsCompShader = std::make_unique <Compute_Shader>();
+	std::unique_ptr<Shader_Object> buildAABBGridCompShader;
+	std::unique_ptr<Shader_Object> visibleClusterCompShader;
+	std::unique_ptr<Shader_Object> cullLightsCompShader;
 
 	//ToDo: #20 simulation manager class
 	/*std::unique_ptr<Compute_Shader> fluidFinalShader = std::make_unique <Compute_Shader>();
@@ -145,34 +132,34 @@ struct RenderEngineMain::Impl
 	std::shared_ptr <Fbo_Handler> blur;
 	std::shared_ptr <Fbo_Handler> finalFBO;
 
-	std::shared_ptr < Model_Shader > directionalShadowShader = std::make_shared<Model_Shader>();
-	std::shared_ptr < Model_Shader > omniShadowShader = std::make_shared<Model_Shader>();
+	std::shared_ptr <Shader_Object> directionalShadowShader;
+	std::shared_ptr <Shader_Object> omniShadowShader;
 
-	std::shared_ptr < Model_Shader > animDirectionalShadowShader = std::make_shared<Model_Shader>();
-	std::shared_ptr < Model_Shader > animOmniShadowShader = std::make_shared<Model_Shader>();
+	std::shared_ptr <Shader_Object> animDirectionalShadowShader;
+	std::shared_ptr <Shader_Object> animOmniShadowShader;
 
-	std::shared_ptr < Terrain_Shader> terrainDirectionalShadowShader = std::make_shared<Terrain_Shader>();
-	std::shared_ptr < Terrain_Shader> terrainOmniDirectionalShadowShader = std::make_shared<Terrain_Shader>();
+	std::shared_ptr <Shader_Object> terrainDirectionalShadowShader;
+	std::shared_ptr <Shader_Object> terrainOmniDirectionalShadowShader;
 
-	std::shared_ptr < PreZPass_Shader> static_preZPassShader = std::make_shared<PreZPass_Shader>();
-	std::unique_ptr < PreZPass_Shader> anim_preZPassShader = std::make_unique<PreZPass_Shader>();
-	std::unique_ptr < Terrain_PreZPass_Shader> terrain_preZPassShader = std::make_unique<Terrain_PreZPass_Shader>();
+	std::shared_ptr <Shader_Object> static_preZPassShader;
+	std::unique_ptr <Shader_Object> anim_preZPassShader;
+	std::unique_ptr <Shader_Object> terrain_preZPassShader;
 
-	std::unique_ptr < SSAO_Shader> ssaoShader = std::make_unique<SSAO_Shader>();
+	std::unique_ptr <Shader_Object> ssaoShader;
 
-	std::unique_ptr < SSAOBlur_Shader > ssaoBlurShader = std::make_unique<SSAOBlur_Shader>();
+	std::unique_ptr <Shader_Object> ssaoBlurShader;
 
-	std::vector< std::shared_ptr < Model_Shader>> shaderList;
-	std::vector< std::shared_ptr < Model_Shader>> animShaderList;
+	std::vector< std::shared_ptr <Shader_Object>> shaderList;
+	std::vector< std::shared_ptr <Shader_Object>> animShaderList;
 
-	std::unique_ptr < Terrain_Shader> terrainShader = std::make_unique<Terrain_Shader>();
+	std::unique_ptr <Shader_Object> terrainShader;
 
-	std::unique_ptr < Shader_Object > billboardShader;
-	std::unique_ptr < Particle_Shader> particleShader = std::make_unique<Particle_Shader>();
+	std::unique_ptr <Shader_Object> billboardShader;
+	std::unique_ptr <Shader_Object> particleShader;
 
-	std::unique_ptr < HDR_Shader> hdrShader = std::make_unique<HDR_Shader>();
-	std::unique_ptr < MotionBlur_Shader> motionBlurShader = std::make_unique<MotionBlur_Shader>();
-	std::unique_ptr < Blur_Shader> blurShader = std::make_unique<Blur_Shader>();
+	std::unique_ptr <Shader_Object> hdrShader;
+	std::unique_ptr <Shader_Object> motionBlurShader;
+	std::unique_ptr <Shader_Object> blurShader;
 
 	std::vector< std::shared_ptr < Static_Mesh>> meshList;
 	std::vector< std::shared_ptr < Static_Mesh>> terrainList;
@@ -593,39 +580,62 @@ struct RenderEngineMain::Impl
 	void InitSSAO() 
 	{
 		//SSAO initialization
-		ssaoShader->UseShader();
-		ssaoShader->GenKernel();
-		ssaoShader->GenNoise(ssaoNoiseData);
+		ssaoShader->UseShaderObject();
+
+		glm::vec3 kernel[64];
+
+		for (unsigned int i = 0; i < 64; i++) {
+			float scale = (float)i / (float)(64);
+			glm::vec3 v;
+			v.x = 2.0f * (float)rand() / RAND_MAX - 1.0f;
+			v.y = 2.0f * (float)rand() / RAND_MAX - 1.0f;
+			v.z = (float)rand() / RAND_MAX;
+			// Use an acceleration function so more points are
+			// located closer to the origin
+			v *= (0.1f + 0.9f * scale * scale);
+
+			kernel[i] = v;
+		}
+		ssaoShader->SetVariable("Kernel", std::tuple<int, glm::vec3*>(64, &kernel[0]));
+
+		for (unsigned int i = 0; i < 16; i++)
+		{
+			glm::vec3 noise(
+				2.0f * (float)rand() / RAND_MAX - 1.0f,
+				2.0f * (float)rand() / RAND_MAX - 1.0f,
+				0.0f);
+			ssaoNoiseData[i] = noise;
+		}
 		SSAONoiseTexture->LoadNativeTexture(ssaoNoiseData);
 	}
 
 	void CalcDirLightShadowCascades() 
 	{
-		terrainShader->UseShader();
+		terrainShader->UseShaderObject();
 		for (size_t i = 0; i < NUM_CASCADES; ++i)
 		{
 			glm::vec4 vView(0.0f, 0.0f, mainLight->GetCascadeEnd(i + 1), 1.0f);
 			glm::vec4 vClip = camera->GetProjectionMatrix() * vView;
 			printf("%F \n", vClip.z);
-			terrainShader->SetCascadeEndClipSpace(i, -vClip.z);
+			terrainShader->SetVariable("CascadeEndClipSpace", -vClip.z, i);
 		}
 
-		shaderList[0]->UseShader();
+		shaderList[0]->UseShaderObject();
 		for (size_t i = 0; i < NUM_CASCADES; ++i)
 		{
 			glm::vec4 vView(0.0f, 0.0f, mainLight->GetCascadeEnd(i + 1), 1.0f);
 			glm::vec4 vClip = camera->GetProjectionMatrix() * vView;
 			printf("%F \n", vClip.z);
-			shaderList[0]->SetCascadeEndClipSpace(i, -vClip.z);
+			shaderList[0]->SetVariable("CascadeEndClipSpace", -vClip.z, i);
 		}
 
-		animShaderList[0]->UseShader();
+		animShaderList[0]->UseShaderObject();
 		for (size_t i = 0; i < NUM_CASCADES; ++i)
 		{
 			glm::vec4 vView(0.0f, 0.0f, mainLight->GetCascadeEnd(i + 1), 1.0f);
 			glm::vec4 vClip = camera->GetProjectionMatrix() * vView;
 			printf("%F \n", vClip.z);
-			animShaderList[0]->SetCascadeEndClipSpace(i, -vClip.z);
+			animShaderList[0]->SetVariable("CascadeEndClipSpace", -vClip.z, i);
 		}
 	}
 	
@@ -881,8 +891,9 @@ struct RenderEngineMain::Impl
 	void CreateClusters() 
 	{
 		//Building the grid of AABB enclosing the view frustum clusters
-		buildAABBGridCompShader->UseShader();
-		buildAABBGridCompShader->Dispatch(1, 1, gridSizeZ);
+		buildAABBGridCompShader->UseShaderObject();
+		glDispatchCompute(1, 1, gridSizeZ);
+		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 	}
 
 	void CreateBillboard() {
@@ -1005,9 +1016,9 @@ struct RenderEngineMain::Impl
 
 	void CreateShaders() {
 
-		buildAABBGridCompShader->CreateFromFiles("Shaders/clusterShader.comp");
-		visibleClusterCompShader->CreateFromFiles("Shaders/clusterVisibleShader.comp");
-		cullLightsCompShader->CreateFromFiles("Shaders/clusterCullLightShader.comp");
+		buildAABBGridCompShader = std::make_unique<Shader_Object>(std::vector<std::string>{"Shaders/clusterShader.comp"});
+		visibleClusterCompShader = std::make_unique<Shader_Object>(std::vector<std::string>{"Shaders/clusterVisibleShader.comp"});
+		cullLightsCompShader = std::make_unique<Shader_Object>(std::vector<std::string>{"Shaders/clusterCullLightShader.comp"});
 		
 		//ToDo: #20 simulation manager class
 		//addSmokeSpotCompShader->CreateFromFiles("Shaders/2DFluid/addSmokeSpot.comp");
@@ -1035,41 +1046,39 @@ struct RenderEngineMain::Impl
 		prefilterShader 			= std::make_unique<Shader_Object>(std::vector<std::string>{"Shaders/cubemap.vert", "Shaders/prefilter.frag"});
 		brdfShader 					= std::make_unique<Shader_Object>(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/brdf.frag"});
 
-		directionalShadowShader->CreateFromFiles("Shaders/directional_shadow_map.vert", "Shaders/directional_shadow_map.frag");
-		omniShadowShader->CreateFromFiles("Shaders/omni_shadow_map.vert", "Shaders/omni_shadow_map.geom", "Shaders/omni_shadow_map.frag");
+		directionalShadowShader		= std::make_unique<Shader_Object>(std::vector<std::string>{"Shaders/directional_shadow_map.vert", "Shaders/directional_shadow_map.frag"});
+		omniShadowShader			= std::make_unique<Shader_Object>(std::vector<std::string>{"Shaders/omni_shadow_map.vert", "Shaders/omni_shadow_map.geom", "Shaders/omni_shadow_map.frag"});
 
-		animDirectionalShadowShader->CreateFromFiles("Shaders/anim_directional_shadow_map.vert", "Shaders/directional_shadow_map.frag");
-		animOmniShadowShader->CreateFromFiles("Shaders/anim_omni_shadow_map.vert", "Shaders/omni_shadow_map.geom", "Shaders/omni_shadow_map.frag");
+		animDirectionalShadowShader = std::make_unique<Shader_Object>(std::vector<std::string>{"Shaders/anim_directional_shadow_map.vert", "Shaders/directional_shadow_map.frag"});
+		animOmniShadowShader		= std::make_unique<Shader_Object>(std::vector<std::string>{"Shaders/anim_omni_shadow_map.vert", "Shaders/omni_shadow_map.geom", "Shaders/omni_shadow_map.frag"});
 
-		terrainDirectionalShadowShader->CreateFromFiles("Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain_directional_shadow_map.tesse", "Shaders/directional_shadow_map.frag");
+		terrainDirectionalShadowShader = std::make_unique<Shader_Object>(std::vector<std::string>{"Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain_directional_shadow_map.tesse", "Shaders/directional_shadow_map.frag"});
 		//terrainOmniDirectionalShadowShader.CreateFromFiles("Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain_omni_directional_shadow_map.tesse", "Shaders/omni_shadow_map.geom", "Shaders/directional_shadow_map.frag");
 
-		static_preZPassShader->CreateFromFiles("Shaders/depth_framebuffer.vert", "Shaders/depth_framebuffer.frag");
-		anim_preZPassShader->CreateFromFiles("Shaders/anim_depth_framebuffer.vert", "Shaders/depth_framebuffer.frag");
-		terrain_preZPassShader->CreateFromFiles("Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain_depth_framebuffer.tesse", "Shaders/depth_framebuffer.frag");
+		static_preZPassShader = std::make_unique<Shader_Object>(std::vector<std::string>{"Shaders/depth_framebuffer.vert", "Shaders/depth_framebuffer.frag"});
+		anim_preZPassShader = std::make_unique<Shader_Object>(std::vector<std::string>{"Shaders/anim_depth_framebuffer.vert", "Shaders/depth_framebuffer.frag"});
+		terrain_preZPassShader = std::make_unique<Shader_Object>(std::vector<std::string>{"Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain_depth_framebuffer.tesse", "Shaders/depth_framebuffer.frag"});
 
-		ssaoShader->CreateFromFiles("Shaders/ssao_framebuffer.vert", "Shaders/ssao_framebuffer.frag");
+		ssaoShader = std::make_unique<Shader_Object>(std::vector<std::string>{"Shaders/ssao_framebuffer.vert", "Shaders/ssao_framebuffer.frag"});
 
-		ssaoBlurShader->CreateFromFiles("Shaders/framebuffer.vert", "Shaders/ssao_blur_framebuffer.frag");
+		ssaoBlurShader = std::make_unique<Shader_Object>(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/ssao_blur_framebuffer.frag"});
 
-		std::shared_ptr<Model_Shader> shader1 = std::make_shared<Model_Shader>();
-		shader1->CreateFromFiles(vShader.c_str(), fShader.c_str(), true);
+		auto shader1 = std::make_shared<Shader_Object>(std::vector<std::string>{vShader, fShader});
 		shaderList.push_back(shader1);
 
-		std::shared_ptr<Model_Shader> shader2 = std::make_shared < Model_Shader>();
-		shader2->CreateFromFiles(avShader.c_str(), fShader.c_str());
+		auto shader2 = std::make_shared<Shader_Object>(std::vector<std::string>{avShader, fShader});
 		animShaderList.push_back(shader2);
 
-		terrainShader->CreateFromFiles("Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain.tesse", "Shaders/terrain.frag");
+		terrainShader = std::make_unique<Shader_Object>(std::vector<std::string>{"Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain.tesse", "Shaders/terrain.frag"});
 		billboardShader = std::make_unique<Shader_Object>(std::vector<std::string>{"Shaders/billboard.vert", "Shaders/billboard.frag"});
 
-		particleShader->CreateFromFiles("Shaders/particles.vert", "Shaders/particles.frag");
+		particleShader = std::make_unique<Shader_Object>(std::vector<std::string>{"Shaders/particles.vert", "Shaders/particles.frag"});
 
-		hdrShader->CreateFromFiles("Shaders/framebuffer.vert", "Shaders/hdr_framebuffer.frag");
+		hdrShader = std::make_unique<Shader_Object>(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/hdr_framebuffer.frag"});
 
-		motionBlurShader->CreateFromFiles("Shaders/framebuffer.vert", "Shaders/motionBlur_framebuffer.frag");
+		motionBlurShader = std::make_unique<Shader_Object>(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/motionBlur_framebuffer.frag"});
 
-		blurShader->CreateFromFiles("Shaders/framebuffer.vert", "Shaders/blur_framebuffer.frag");
+		blurShader = std::make_unique<Shader_Object>(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/blur_framebuffer.frag"});
 
 		//ToDo: #20 simulation manager class
 		//fluidFragShader->CreateFromFiles("Shaders/framebuffer.vert", "Shaders/2DFluid/fluid.frag");
