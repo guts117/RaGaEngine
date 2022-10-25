@@ -65,10 +65,10 @@ struct Shader_Object::Impl
 	GLuint m_textureUnit;
 
 	Impl(const std::vector<std::string>& shaderLocs)
-		: m_ShaderProgramID { -1 }
+		: m_ShaderProgramID { 0 }
 		, m_ShaderInputs{ std::make_unique<std::vector<ShaderInputVariable>>()}
-		, m_textureUnit { -1 }
-		, m_ShaderType { -1 }
+		, m_textureUnit { 0 }
+		, m_ShaderType { 0 }
 	{
 		std::vector<ShaderCodeType> shaderCodes;
 		for(auto locIndex = 0; locIndex < shaderLocs.size(); ++locIndex)
