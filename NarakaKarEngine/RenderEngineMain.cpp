@@ -1293,10 +1293,10 @@ struct RenderEngineMain::Impl
 
 		glViewport(0, 0, irradianceMap->GetFBOWidth(), irradianceMap->GetFBOHeight());
 		irradianceMap->BindFBO();
-		for (unsigned int i = 0; i < 6; ++i)
+		for (auto faceId = 0; faceId < 6; ++faceId)
 		{
 			irradianceConvolutionShader->SetVariable("View", captureViews[faceId]);
-			irradianceMap->WriteToFBOBuffer(0, 0, 0, i);
+			irradianceMap->WriteToFBOBuffer(0, 0, 0, faceId);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			irradianceConvolutionShader->ValidateShaderObject();
 
