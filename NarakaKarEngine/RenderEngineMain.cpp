@@ -1030,10 +1030,10 @@ struct RenderEngineMain::Impl
 		//jacobiCompShader3D->CreateFromFiles("Shaders/3DFluid/jacobi.comp");
 		//pressureProjectionCompShader3D->CreateFromFiles("Shaders/3DFluid/pressureProjection.comp");
 
-		environmentMapShader 		= std::make_unique<Shader_Object>(std::vector<Shader_Object>{"Shaders/cubemap.vert", "Shaders/equirectangular_to_cubemap.frag"});
-		irradianceConvolutionShader = std::make_unique<Shader_Object>(std::vector<Shader_Object>{"Shaders/cubemap.vert", "Shaders/irradiance_covolution.frag"});
-		prefilterShader 			= std::make_unique<Shader_Object>(std::vector<Shader_Object>{"Shaders/cubemap.vert", "Shaders/prefilter.frag"});
-		brdfShader 					= std::make_unique<Shader_Object>(std::vector<Shader_Object>{"Shaders/framebuffer.vert", "Shaders/brdf.frag"});
+		environmentMapShader 		= std::make_unique<Shader_Object>(std::vector<std::string>{"Shaders/cubemap.vert", "Shaders/equirectangular_to_cubemap.frag"});
+		irradianceConvolutionShader = std::make_unique<Shader_Object>(std::vector<std::string>{"Shaders/cubemap.vert", "Shaders/irradiance_covolution.frag"});
+		prefilterShader 			= std::make_unique<Shader_Object>(std::vector<std::string>{"Shaders/cubemap.vert", "Shaders/prefilter.frag"});
+		brdfShader 					= std::make_unique<Shader_Object>(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/brdf.frag"});
 
 		directionalShadowShader->CreateFromFiles("Shaders/directional_shadow_map.vert", "Shaders/directional_shadow_map.frag");
 		omniShadowShader->CreateFromFiles("Shaders/omni_shadow_map.vert", "Shaders/omni_shadow_map.geom", "Shaders/omni_shadow_map.frag");
