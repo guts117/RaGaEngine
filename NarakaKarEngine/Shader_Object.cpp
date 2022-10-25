@@ -61,12 +61,14 @@ struct Shader_Object::Impl
 
 	GLuint m_ShaderProgramID;
 	std::unique_ptr<std::vector<ShaderInputVariable>> m_ShaderInputs;
+	GLenum m_ShaderType;
 	GLuint m_textureUnit;
 
 	Impl(const std::vector<std::string>& shaderLocs)
-		: m_ShaderProgramID { 0 }
+		: m_ShaderProgramID { -1 }
 		, m_ShaderInputs{ std::make_unique<std::vector<ShaderInputVariable>>()}
-		, m_textureUnit { 0 }
+		, m_textureUnit { -1 }
+		, m_ShaderType { -1 }
 	{
 		std::vector<ShaderCodeType> shaderCodes;
 		for(auto locIndex = 0; locIndex < shaderLocs.size(); ++locIndex)
@@ -135,6 +137,12 @@ struct Shader_Object::Impl
 		{
 			type = GL_FRAGMENT_SHADER;
 		}
+		else if (fileLocation.find(".comp") != std::string::npos) 
+		{
+			type = GL_COMPUTE_SHADER;
+		}
+
+		m_ShaderType = type;
 
 		return ShaderCodeType{ content.c_str(), type };
 	}
@@ -685,6 +693,15 @@ const GLuint& Shader_Object::GetShaderObjectID() const
 void Shader_Object::UseShaderObject() const
 {
 	glUseProgram(Pimpl()->m_ShaderProgramID);
+}
+
+void Shader_Object::DispatchShaderObject(const glm::uvec3& threadGroupCnt) const
+{
+	if (Pimpl()->m_ShaderType == GL_COMPUTE_SHADER) 
+	{
+		glDispatchCompute(threadGroupCnt.x, threadGroupCnt.y, threadGroupCnt.z);
+		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+	}
 }
 
 void Shader_Object::SetVariable(const std::string& varName, const std::any& value, const GLuint& index, const std::string& memName) const
