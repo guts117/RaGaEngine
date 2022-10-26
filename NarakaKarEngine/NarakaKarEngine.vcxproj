@@ -102,8 +102,10 @@
     <ClCompile Include="PointLight.cpp" />
     <ClCompile Include="PreFilter_Shader.cpp" />
     <ClCompile Include="PreZPass_Shader.cpp" />
+    <ClCompile Include="Render_Object.cpp" />
     <ClCompile Include="SceneViewer.cpp" />
     <ClCompile Include="Scene_Fbo_Handler_Manager.cpp" />
+    <ClCompile Include="Scene_Handler.cpp" />
     <ClCompile Include="Scene_Render_Pass_Handler.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="Shader_Object.cpp" />
@@ -162,8 +164,10 @@
     <ClInclude Include="PointLight.h" />
     <ClInclude Include="PreFilter_Shader.h" />
     <ClInclude Include="PreZPass_Shader.h" />
+    <ClInclude Include="Render_Object.h" />
     <ClInclude Include="SceneViewer.h" />
     <ClInclude Include="Scene_Fbo_Handler_Manager.h" />
+    <ClInclude Include="Scene_Handler.h" />
     <ClInclude Include="Scene_Render_Pass_Handler.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Shader_Object.h" />

@@ -10,7 +10,7 @@ struct Scene_Render_Pass_Handler::Impl
 	std::shared_ptr<Fbo_Handler> m_fboHandler;
 	std::unique_ptr<std::vector<std::shared_ptr<Shader_Object>>> m_shaderVec;
 	std::vector<std::shared_ptr<std::any>> m_inputs;
-	std::vector<std::shared_ptr<std::any>> m_outputs;
+	std::vector<std::shared_ptr<GLint>> m_outputs;
 
 	Impl() = delete;
 
@@ -22,5 +22,9 @@ struct Scene_Render_Pass_Handler::Impl
 
 	~Impl() = default;
 };
+
+void NarakaKarEngine::RenderEngine::Scene_Render_Pass_Handler::Update(std::shared_ptr<std::vector<Render_Object>> renderObj, const CamParam& camParam)
+{
+}
 
 Scene_Render_Pass_Handler::~Scene_Render_Pass_Handler() = default;
