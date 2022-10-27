@@ -107,6 +107,7 @@
     <ClCompile Include="Scene_Fbo_Handler_Manager.cpp" />
     <ClCompile Include="Scene_Handler.cpp" />
     <ClCompile Include="Scene_Render_Pass_Handler.cpp" />
+    <ClCompile Include="Scene_Shader_Object_Manager.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="Shader_Object.cpp" />
     <ClCompile Include="Skybox.cpp" />
@@ -169,6 +170,7 @@
     <ClInclude Include="Scene_Fbo_Handler_Manager.h" />
     <ClInclude Include="Scene_Handler.h" />
     <ClInclude Include="Scene_Render_Pass_Handler.h" />
+    <ClInclude Include="Scene_Shader_Object_Manager.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Shader_Object.h" />
     <ClInclude Include="Skybox.h" />
