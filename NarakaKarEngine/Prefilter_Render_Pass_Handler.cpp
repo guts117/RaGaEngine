@@ -37,6 +37,7 @@ void Prefilter_Render_Pass_Handler::Update(std::shared_ptr<std::vector<std::shar
 		shader->UseShaderObject();
 		shader->SetVariable("skybox", 0);
 		shader->SetVariable("Projection", captureProjection);
+		shader->ResetTextureUnit(0);
 
 		for (auto mip = 0; mip < maxMipLevels; ++mip)
 		{
@@ -53,7 +54,6 @@ void Prefilter_Render_Pass_Handler::Update(std::shared_ptr<std::vector<std::shar
 				m_fboHandler->WriteToFBOBuffer(0, 0, 0, faceId, mip);
 				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 				shader->ValidateShaderObject();
-				shader->ResetTextureUnit(0);
 
 				try
 				{

@@ -49,6 +49,8 @@
 #include "PreZ_Render_Pass_Handler.h"
 #include "Brdf_Render_Pass_Handler.h"
 #include "Prefilter_Render_Pass_Handler.h"
+#include "Environment_Map_Render_Pass_Handler.h"
+#include "Irradiance_Convolution_Render_Pass_Handler.h"
 
 using namespace NarakaKarEngine;
 using namespace RenderEngine;
@@ -201,7 +203,7 @@ struct RenderEngineMain::Impl
 
 	std::unique_ptr < Skybox> skybox;
 
-	std::unique_ptr < Texture> environmentTexture;
+	std::shared_ptr < Texture> environmentTexture;
 	std::unique_ptr < Texture> skyboxTexture;
 
 	std::unique_ptr < Texture> terrainTextureDisp;
@@ -271,6 +273,8 @@ struct RenderEngineMain::Impl
 
 	std::shared_ptr<Brdf_Render_Pass_Handler> brdfRPHandler;
 	std::shared_ptr<Prefilter_Render_Pass_Handler> prefilterRPHandler;
+	std::shared_ptr<Environment_Map_Render_Pass_Handler> envMapRPHandler;
+	std::shared_ptr<Irradiance_Convolution_Render_Pass_Handler> irrConvRPHandler;
 
 	GLfloat aircraftAngle = 0.0f;
 
@@ -369,7 +373,7 @@ struct RenderEngineMain::Impl
 
 		camera = std::make_shared<Camera>(glm::vec3(-terrainScaleFactor, 40.0f, -terrainScaleFactor + 40.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f, 50.0f, 0.2f);
 
-		environmentTexture = std::make_unique<Texture>("Textures/HDR/GCanyon_C_YumaPoint_3k.hdr");
+		environmentTexture = std::make_shared<Texture>("Textures/HDR/GCanyon_C_YumaPoint_3k.hdr");
 		environmentTexture->LoadTextureHDR();
 
 		plainTexture = std::make_unique <Texture>("Textures/plain.png", true);
@@ -776,14 +780,25 @@ struct RenderEngineMain::Impl
 		CalcDirLightShadowCascades();
 		InitSSBOs();
 		CreateClusters();
-		EnvironmentMapPass();
-		IrradianceConvolutionPass();
 		
-		auto prefilterShaders = std::vector<std::shared_ptr<Shader_Object>>{ prefilterShader };
+		auto envMapShaders = std::vector<std::shared_ptr<Shader_Object>>{ environmentMapShader };
+		envMapRPHandler = std::make_shared<Environment_Map_Render_Pass_Handler>(environmentMap, envMapShaders);
+		auto envMapTexData = std::make_shared<std::map<TexType, std::vector<std::shared_ptr<Texture>>>>();
+		envMapTexData->emplace(Default, std::vector<std::shared_ptr<Texture>>{environmentTexture});
+		cwCubeRO->at(0)->SetTextures(envMapTexData);
+		envMapRPHandler->Update(cwCubeRO, camParam);
+		cwCubeRO->at(0)->SetTextures(nullptr);
+
+		auto irrConvShaders = std::vector<std::shared_ptr<Shader_Object>>{ irradianceConvolutionShader };
 		auto inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
 		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(environmentMap)));
+		irrConvRPHandler = std::make_shared<Irradiance_Convolution_Render_Pass_Handler>(irradianceMap, irrConvShaders, inputs);
+		irrConvRPHandler->Update(cwCubeRO, camParam);
+		
+		auto prefilterShaders = std::vector<std::shared_ptr<Shader_Object>>{ prefilterShader };
 		prefilterRPHandler = std::make_shared<Prefilter_Render_Pass_Handler>(prefilterMap, prefilterShaders, inputs);
 		prefilterRPHandler->Update(cwCubeRO, camParam);
+		
 		auto brdfShaders = std::vector<std::shared_ptr<Shader_Object>>{ brdfShader };
 		brdfRPHandler = std::make_shared<Brdf_Render_Pass_Handler>(brdfMap, brdfShaders);
 		brdfRPHandler->Update(quadRO, camParam);
@@ -1316,7 +1331,6 @@ struct RenderEngineMain::Impl
 		//prevPVM = camera->GetPreviousProjectionViewMatrix() * terrainList[0]->PrevMesh;
 		//glUniformMatrix4fv(uniformPrevPVM2, 1, GL_FALSE, glm::value_ptr(prevPVM));
 		terrainTextureDisp->UseTexture(0);
-		terrainTextureBlend->UseTexture(10);
 		if (shadow)
 		{
 			terrainDirectionalShadowShader->SetDisplacementMap(1);
@@ -1345,7 +1359,7 @@ struct RenderEngineMain::Impl
 	{
 		if (is_cubeMap)
 		{
-			environmentMap->AttachFBOToTextureUnit(0, GL_TEXTURE1, 0, 0);
+			environmentMap->AttachFBOToTextureUnit(0, GL_TEXTURE0, 0, 0);
 		}
 		else
 		{
@@ -1469,31 +1483,10 @@ struct RenderEngineMain::Impl
 		anim2->prevModel = model;
 	}
 
-	void EnvironmentMapPass()
-	{
-		environmentMapShader->UseShaderObject();
-		environmentMapShader->SetVariable("theTexture", 1);
-		environmentMapShader->SetVariable("Projection", captureProjection);
-
-		glViewport(0, 0, environmentMap->GetFBOWidth(), environmentMap->GetFBOHeight());
-		environmentMap->BindFBO();
-		for (auto faceId = 0; faceId < 6; ++faceId)
-		{
-			environmentMapShader->SetVariable("View", captureViews[faceId]);
-			environmentMap->WriteToFBOBuffer(0, 0, 0, faceId);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			environmentMapShader->ValidateShaderObject();
-
-			RenderEnvCubeMap(false);
-		}
-		environmentMap->CreateFBOMipMap(0, 0, 0);
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	}
-
 	void IrradianceConvolutionPass()
 	{
 		irradianceConvolutionShader->UseShaderObject();
-		irradianceConvolutionShader->SetVariable("skybox", 1);
+		irradianceConvolutionShader->SetVariable("skybox", 0);
 		irradianceConvolutionShader->SetVariable("Projection", captureProjection);
 
 		glViewport(0, 0, irradianceMap->GetFBOWidth(), irradianceMap->GetFBOHeight());
@@ -1680,11 +1673,11 @@ struct RenderEngineMain::Impl
 
 		ssaoShader->UseShader();
 
-		depth->AttachFBOToTextureUnit(0, GL_TEXTURE1, 0, 0);
-		ssaoShader->SetTexture(1);
+		depth->AttachFBOToTextureUnit(0, GL_TEXTURE0, 0, 0);
+		ssaoShader->SetTexture(0);
 
-		SSAONoiseTexture->UseTexture(1);
-		ssaoShader->SetNoiseTexture(2);
+		SSAONoiseTexture->UseTexture(0);
+		ssaoShader->SetNoiseTexture(1);
 
 		glUniform1f(ssaoShader->GetSampleRadiusLocation(), 0.1f);
 		glUniformMatrix4fv(ssaoShader->GetProjectionLocation(), 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
@@ -1701,8 +1694,8 @@ struct RenderEngineMain::Impl
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		ssaoBlurShader->UseShader();
-		ssao->AttachFBOToTextureUnit(0, GL_TEXTURE1, 0, 0);
-		ssaoBlurShader->SetTexture(1);
+		ssao->AttachFBOToTextureUnit(0, GL_TEXTURE0, 0, 0);
+		ssaoBlurShader->SetTexture(0);
 
 		quad->at(0)->RenderMesh();
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -1873,14 +1866,14 @@ struct RenderEngineMain::Impl
 			blur->BindFBO(isHorizontalFbo);
 			glUniform1i(blurShader->GetHorizontalLocation(), isHorizontalFbo);
 			blurShader->Validate();
-			blurShader->SetTexture(1);
+			blurShader->SetTexture(0);
 			if (i < 1)
 			{
-				hdr->AttachFBOToTextureUnit(0, GL_TEXTURE1,0, 1);
+				hdr->AttachFBOToTextureUnit(0, GL_TEXTURE0,0, 1);
 			}
 			else
 			{
-				blur->AttachFBOToTextureUnit(!isHorizontalFbo, GL_TEXTURE1, 0, 0);
+				blur->AttachFBOToTextureUnit(!isHorizontalFbo, GL_TEXTURE0, 0, 0);
 			}
 			quad->at(0)->RenderMesh();
 			isHorizontalFbo = !isHorizontalFbo;
@@ -1898,11 +1891,11 @@ struct RenderEngineMain::Impl
 
 		glUniform1f(motionBlurShader->GetVelocityScaleLocation(), fps / 30.0f);
 
-		hdr->AttachFBOToTextureUnit(0, GL_TEXTURE1, 0, 0);
-		motionBlurShader->SetTexture(1);
+		hdr->AttachFBOToTextureUnit(0, GL_TEXTURE0, 0, 0);
+		motionBlurShader->SetTexture(0);
 
-		hdr->AttachFBOToTextureUnit(0, GL_TEXTURE2, 1, 2);
-		motionBlurShader->SetMotionTexture(2);
+		hdr->AttachFBOToTextureUnit(0, GL_TEXTURE1, 1, 2);
+		motionBlurShader->SetMotionTexture(1);
 		quad->at(0)->RenderMesh();
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
@@ -2306,11 +2299,11 @@ struct RenderEngineMain::Impl
 			glUniform1i(hdrShader->GetHDRLocation(), 1);
 			glUniform1f(hdrShader->GetExposureLocation(), 1.0f);
 
-			blur->AttachFBOToTextureUnit(1, GL_TEXTURE1, 0, 0);
-			glUniform1i(hdrShader->GetBlurLocation(), 1);
+			blur->AttachFBOToTextureUnit(1, GL_TEXTURE0, 0, 0);
+			glUniform1i(hdrShader->GetBlurLocation(), 0);
 
-			motionBlur->AttachFBOToTextureUnit(0, GL_TEXTURE2, 0, 0);
-			hdrShader->SetTexture(2);
+			motionBlur->AttachFBOToTextureUnit(0, GL_TEXTURE1, 0, 0);
+			hdrShader->SetTexture(1);
 
 			hdrShader->Validate();
 

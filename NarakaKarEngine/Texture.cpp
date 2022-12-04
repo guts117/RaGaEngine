@@ -289,6 +289,11 @@ struct Texture::Impl
 		return true;
 	}
 
+	void UseTextureTemp(GLuint i) {
+		glActiveTexture(GL_TEXTURE0 + i);
+		glBindTexture(GL_TEXTURE_2D, m_textureID);
+	}
+
 	void UseTexture(GLuint i) {
 		glActiveTexture(GL_TEXTURE1 + i);
 		glBindTexture(GL_TEXTURE_2D, m_textureID);
@@ -371,6 +376,10 @@ bool Texture::CreateTexture3D(const glm::vec3& resolution, bool createMipMaps)
 bool Texture::CreateTexture(const glm::vec2& resolution)
 {
 	return Pimpl()->CreateTexture(resolution);
+}
+
+void Texture::UseTextureTemp(GLuint i) {
+	Pimpl()->UseTextureTemp(i);
 }
 
 void Texture::UseTexture(GLuint i) {

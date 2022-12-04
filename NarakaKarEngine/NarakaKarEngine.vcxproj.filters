@@ -57,13 +57,7 @@
     <ClCompile Include="EngineInputManager.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
-    <ClCompile Include="Equirectangular_to_CubeMap_Shader.cpp">
-      <Filter>Source Files\RenderEngine</Filter>
-    </ClCompile>
     <ClCompile Include="HDR_Shader.cpp">
-      <Filter>Source Files\RenderEngine</Filter>
-    </ClCompile>
-    <ClCompile Include="Irradiance_Convolution_Shader.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
     <ClCompile Include="Material.cpp">
@@ -201,6 +195,12 @@
     <ClCompile Include="Prefilter_Render_Pass_Handler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Environment_Map_Render_Pass_Handler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Irradiance_Convolution_Render_Pass_Handler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Animated_Model.h">
@@ -236,13 +236,7 @@
     <ClInclude Include="EngineInputManager.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
-    <ClInclude Include="Equirectangular_to_CubeMap_Shader.h">
-      <Filter>Header Files\RenderEngine</Filter>
-    </ClInclude>
     <ClInclude Include="HDR_Shader.h">
-      <Filter>Header Files\RenderEngine</Filter>
-    </ClInclude>
-    <ClInclude Include="Irradiance_Convolution_Shader.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="Material.h">
@@ -387,6 +381,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Prefilter_Render_Pass_Handler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Environment_Map_Render_Pass_Handler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Irradiance_Convolution_Render_Pass_Handler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

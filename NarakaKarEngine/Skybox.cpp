@@ -124,8 +124,8 @@ void Skybox::DrawHDRSkybox(glm::mat4 viewMatrix, glm::mat4 projectionMatrix, glm
 	prevPV = prevP * prevV;
 	glUniformMatrix4fv(uniformPrevPV, 1, GL_FALSE, glm::value_ptr(prevPV));
 
-	envMap->AttachFBOToTextureUnit(0, GL_TEXTURE1, 0, 0);
-	skyShader->SetSkybox(1);
+	envMap->AttachFBOToTextureUnit(0, GL_TEXTURE0, 0, 0);
+	skyShader->SetSkybox(0);
 
 	skyShader->Validate();
 

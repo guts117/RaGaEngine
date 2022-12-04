@@ -57,16 +57,43 @@ struct Render_Object::Impl
 
 		auto resetToTexUnit = shader->GetTextureUnit();
 
-		for (size_t i = 0; i < m_Meshes->size(); ++i) {
+		for (size_t i = 0; i < m_Meshes->size(); ++i) 
+		{
 			auto materialIndex = m_Meshes->at(i)->GetMaterialIndex();
 
-			if (m_TextureMap != nullptr && materialIndex < m_TextureMap->size() && m_TextureMap->at(Albedo)[materialIndex]) {
-				m_TextureMap->at(Albedo)[materialIndex]->UseTexture(shader->SetTextureUnit("material.albedoMap"));
-				m_TextureMap->at(Metallic)[materialIndex]->UseTexture(shader->SetTextureUnit("material.metallicMap"));
-				m_TextureMap->at(Roughness)[materialIndex]->UseTexture(shader->SetTextureUnit("material.roughnessMap"));
-				m_TextureMap->at(Normal)[materialIndex]->UseTexture(shader->SetTextureUnit("material.normalMap"));
-				m_TextureMap->at(Parallax)[materialIndex]->UseTexture(shader->SetTextureUnit("material.parallaxMap"));
-				m_TextureMap->at(Glow)[materialIndex]->UseTexture(shader->SetTextureUnit("material.glowMap"));
+			if (m_TextureMap != nullptr && materialIndex < m_TextureMap->size()) 
+			{
+				for (auto texType = 0; texType < Max; ++texType)
+				{
+					if (m_TextureMap->contains((TexType)texType))
+					{
+						switch ((TexType)texType)
+						{
+							case Albedo:
+								m_TextureMap->at(Albedo)[materialIndex]->UseTextureTemp(shader->SetTextureUnit("material.albedoMap"));
+								break;
+							case Metallic:
+								m_TextureMap->at(Metallic)[materialIndex]->UseTextureTemp(shader->SetTextureUnit("material.metallicMap"));
+								break;
+							case Roughness:
+								m_TextureMap->at(Roughness)[materialIndex]->UseTextureTemp(shader->SetTextureUnit("material.roughnessMap"));
+								break;
+							case Normal:
+								m_TextureMap->at(Normal)[materialIndex]->UseTextureTemp(shader->SetTextureUnit("material.normalMap"));
+								break;
+							case Parallax:
+								m_TextureMap->at(Parallax)[materialIndex]->UseTextureTemp(shader->SetTextureUnit("material.parallaxMap"));
+								break;
+							case Glow:
+								m_TextureMap->at(Glow)[materialIndex]->UseTextureTemp(shader->SetTextureUnit("material.glowMap"));
+								break;
+							default:
+								m_TextureMap->at(Default)[materialIndex]->UseTextureTemp(shader->SetTextureUnit("theTexture"));
+								break;
+						}
+					}
+				}
+				
 				//m_TextureMap->at(Displacement)[materialIndex]->UseTexture(shader->SetTextureUnit("displacementMap"));
 				//shader->SetVariable("dispFactor", );
 			}
@@ -82,6 +109,11 @@ Render_Object::Render_Object(std::shared_ptr<std::vector<std::shared_ptr<Mesh>>>
 			, std::shared_ptr<std::vector<BoneTransform>> boneMatrices)
 			: m_pImpl{std::make_unique<Impl>(meshes, textureMap, boneMatrices)}
 {
+}
+
+void Render_Object::SetTextures(std::shared_ptr<std::map<TexType, std::vector<std::shared_ptr<Texture>>>> textureMap)
+{
+	Pimpl()->m_TextureMap = textureMap;
 }
 
 void Render_Object::RenderObject(std::shared_ptr<Shader_Object> shader, const glm::mat4& prevPV, bool&& hasModelMatrix)

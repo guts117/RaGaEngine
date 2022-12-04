@@ -63,7 +63,7 @@ struct Shader_Object::Impl
 	GLuint m_ShaderProgramID;
 	std::unique_ptr<std::vector<ShaderInputVariable>> m_ShaderInputs;
 	GLenum m_ShaderType;
-	GLuint m_TextureUnit;
+	GLint m_TextureUnit;
 
 	Impl(const std::vector<std::string>& shaderLocs)
 		: m_ShaderLocs { std::make_unique<std::vector<std::string>>(shaderLocs) }
@@ -698,10 +698,9 @@ const GLuint& Shader_Object::GetShaderObjectProgramID() const
 
 const GLuint& Shader_Object::SetTextureUnit(std::string&& textureName)
 {
-	GLuint& texUnit = Pimpl()->m_TextureUnit;
+	GLint& texUnit = Pimpl()->m_TextureUnit;
 	SetVariable(std::move(textureName), texUnit);
-	texUnit++;
-	return texUnit;
+	return texUnit++;
 }
 
 const GLuint Shader_Object::GetTextureUnit()

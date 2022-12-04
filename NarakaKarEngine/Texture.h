@@ -10,6 +10,7 @@ namespace NarakaKarEngine
 	{
 		enum TexType
 		{
+			Default,
 			Albedo,
 			Metallic,
 			Roughness,
@@ -17,6 +18,7 @@ namespace NarakaKarEngine
 			Parallax,
 			Glow,
 			Displacement,
+			Max
 		};
 
 		class Texture
@@ -43,6 +45,8 @@ namespace NarakaKarEngine
 			bool CreateTexture3D(const glm::vec3& resolution, bool createMipMaps = false);
 
 			bool CreateTexture(const glm::vec2& resolution);
+
+			void UseTextureTemp(GLuint i);
 
 			void UseTexture(GLuint i);
 			void UseTextureArray(GLuint i);

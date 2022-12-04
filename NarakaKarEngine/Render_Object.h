@@ -27,6 +27,8 @@ namespace NarakaKarEngine
 								, std::shared_ptr<std::map<TexType, std::vector<std::shared_ptr<Texture>>>> textureMap = nullptr
 								, std::shared_ptr<std::vector<BoneTransform>> boneMatrices = nullptr);
 
+			void SetTextures(std::shared_ptr<std::map<TexType, std::vector<std::shared_ptr<Texture>>>> textureMap);
+
 			Render_Object(Render_Object&& rhs) noexcept = default;
 			Render_Object& operator=(Render_Object&& rhs) noexcept = default;
 
