@@ -33,7 +33,7 @@ namespace NarakaKarEngine
 			Render_Object(const Render_Object& rhs) noexcept = delete;
 			Render_Object& operator=(const Render_Object& rhs) noexcept = delete;
 
-			void RenderObject(std::shared_ptr<Shader_Object> shader, const glm::mat4& prevPV);
+			void RenderObject(std::shared_ptr<Shader_Object> shader, const glm::mat4& prevPV, bool&& hasModelMatrix = true);
 			
 			~Render_Object();
 		private:

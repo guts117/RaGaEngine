@@ -36,11 +36,14 @@ struct Render_Object::Impl
 
 	~Impl() = default;
 
-	void RenderObject(std::shared_ptr<Shader_Object> shader, const glm::mat4& prevVP)
+	void RenderObject(std::shared_ptr<Shader_Object> shader, const glm::mat4& prevVP, bool&& hasModelMatrix)
 	{
-		shader->SetVariable("Model", *m_ModelMatrix);
-		shader->SetVariable("PrevPMV", prevVP * *(m_PrevModelMatrix));		
-		*m_PrevModelMatrix = *m_ModelMatrix;
+		if (hasModelMatrix) 
+		{
+			shader->SetVariable("Model", *m_ModelMatrix);
+			shader->SetVariable("PrevPMV", prevVP * *(m_PrevModelMatrix));
+			*m_PrevModelMatrix = *m_ModelMatrix;
+		}
 
 		if (m_BoneMatrices != nullptr) 
 		{
@@ -81,9 +84,9 @@ Render_Object::Render_Object(std::shared_ptr<std::vector<std::shared_ptr<Mesh>>>
 {
 }
 
-void Render_Object::RenderObject(std::shared_ptr<Shader_Object> shader, const glm::mat4& prevPV)
+void Render_Object::RenderObject(std::shared_ptr<Shader_Object> shader, const glm::mat4& prevPV, bool&& hasModelMatrix)
 {
-	Pimpl()->RenderObject(shader, prevPV);
+	Pimpl()->RenderObject(shader, prevPV, std::move(hasModelMatrix));
 }
 
 Render_Object::~Render_Object() = default;

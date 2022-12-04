@@ -30,7 +30,7 @@ void Brdf_Render_Pass_Handler::Update(std::shared_ptr<std::vector<std::shared_pt
 
 		for (auto roIndex = 0; roIndex < renderObj->size(); ++roIndex)
 		{
-			renderObj->at(roIndex)->RenderObject(m_shaderVec->at(shaderIndex), camParam.PrevProjView);
+			renderObj->at(roIndex)->RenderObject(m_shaderVec->at(shaderIndex), camParam.PrevProjView, false);
 		}
 		m_shaderVec->at(shaderIndex)->ValidateShaderObject();
 	}

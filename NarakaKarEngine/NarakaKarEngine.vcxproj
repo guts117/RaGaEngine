@@ -84,6 +84,7 @@
     <ClCompile Include="EngineInputManager.cpp" />
     <ClCompile Include="Irradiance_Convolution_Shader.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Prefilter_Render_Pass_Handler.cpp" />
     <ClCompile Include="PreZ_Render_Pass_Handler.cpp" />
     <ClCompile Include="RenderEngineMain.cpp" />
     <ClCompile Include="Material.cpp" />
@@ -100,7 +101,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="PointLight.cpp" />
-    <ClCompile Include="PreFilter_Shader.cpp" />
     <ClCompile Include="PreZPass_Shader.cpp" />
     <ClCompile Include="Render_Object.cpp" />
     <ClCompile Include="SceneViewer.cpp" />
@@ -143,6 +143,7 @@
     <ClInclude Include="exprtk.hpp" />
     <ClInclude Include="Fbo_Handler.h" />
     <ClInclude Include="FrameBufferObject.h" />
+    <ClInclude Include="Prefilter_Render_Pass_Handler.h" />
     <ClInclude Include="PreZ_Render_Pass_Handler.h" />
     <ClInclude Include="RenderingCommonValues.h" />
     <ClInclude Include="Compute_Shader.h" />
@@ -162,7 +163,6 @@
     <ClInclude Include="Particle_Shader.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="PointLight.h" />
-    <ClInclude Include="PreFilter_Shader.h" />
     <ClInclude Include="PreZPass_Shader.h" />
     <ClInclude Include="Render_Object.h" />
     <ClInclude Include="SceneViewer.h" />

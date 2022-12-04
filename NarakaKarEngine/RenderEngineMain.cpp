@@ -48,6 +48,7 @@
 #include "Render_Object.h"
 #include "PreZ_Render_Pass_Handler.h"
 #include "Brdf_Render_Pass_Handler.h"
+#include "Prefilter_Render_Pass_Handler.h"
 
 using namespace NarakaKarEngine;
 using namespace RenderEngine;
@@ -183,10 +184,11 @@ struct RenderEngineMain::Impl
 	std::vector< std::shared_ptr < ParticleSystem>> particleList;
 
 	std::shared_ptr<std::vector<std::shared_ptr<Mesh>>> quad;
-	std::shared_ptr < Mesh> mesh_cube;
+	std::shared_ptr<std::vector<std::shared_ptr<Mesh>>> cwCube;
 	std::shared_ptr < Mesh> ccw_cube;
 	
 	std::shared_ptr<std::vector<std::shared_ptr<Render_Object>>> quadRO;
+	std::shared_ptr<std::vector<std::shared_ptr<Render_Object>>> cwCubeRO;
 
 	std::shared_ptr < Camera> camera;
 
@@ -268,6 +270,7 @@ struct RenderEngineMain::Impl
 	std::unique_ptr <Static_Object> bulbRed = std::make_unique<Static_Object>();
 
 	std::shared_ptr<Brdf_Render_Pass_Handler> brdfRPHandler;
+	std::shared_ptr<Prefilter_Render_Pass_Handler> prefilterRPHandler;
 
 	GLfloat aircraftAngle = 0.0f;
 
@@ -532,6 +535,7 @@ struct RenderEngineMain::Impl
 		quadRO = std::make_shared<std::vector<std::shared_ptr<Render_Object>>>();
 		quadRO->push_back(std::make_shared<Render_Object>(quad));
 
+		cwCube = std::make_shared<std::vector<std::shared_ptr<Mesh>>>();
 		std::vector<GLuint> cwCubeIndices = {
 			//front
 			0,1,2,
@@ -566,8 +570,10 @@ struct RenderEngineMain::Impl
 
 		};
 
-		mesh_cube = std::make_shared <Mesh>(0, std::move(cwCubeVertices), std::move(cwCubeIndices), std::move(MeshGenParams()));
-		
+		cwCube->push_back(std::make_shared<Mesh>(0, std::move(cwCubeVertices), std::move(cwCubeIndices), std::move(MeshGenParams())));
+		cwCubeRO = std::make_shared<std::vector<std::shared_ptr<Render_Object>>>();
+		cwCubeRO->push_back(std::make_shared<Render_Object>(cwCube));
+
 		//CW=======================================================================
 /*
 		// Back face
@@ -765,10 +771,6 @@ struct RenderEngineMain::Impl
 
 		//skyboxTexture.LoadCubeMapSRGB(skyboxFaces);
 
-		auto brdfShaders = std::vector<std::shared_ptr<Shader_Object>>();
-		brdfShaders.push_back(brdfShader);
-		brdfRPHandler = std::make_shared<Brdf_Render_Pass_Handler>(brdfMap, brdfShaders);
-
 		auto camParam = CamParam{ camera->getCameraPosition(), camera->GetProjectionMatrix(), camera->CalculateViewMatrix(), camera->GetPreviousProjectionMatrix() };
 		InitSSAO();
 		CalcDirLightShadowCascades();
@@ -776,7 +778,14 @@ struct RenderEngineMain::Impl
 		CreateClusters();
 		EnvironmentMapPass();
 		IrradianceConvolutionPass();
-		PrefilterPass();
+		
+		auto prefilterShaders = std::vector<std::shared_ptr<Shader_Object>>{ prefilterShader };
+		auto inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
+		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(environmentMap)));
+		prefilterRPHandler = std::make_shared<Prefilter_Render_Pass_Handler>(prefilterMap, prefilterShaders, inputs);
+		prefilterRPHandler->Update(cwCubeRO, camParam);
+		auto brdfShaders = std::vector<std::shared_ptr<Shader_Object>>{ brdfShader };
+		brdfRPHandler = std::make_shared<Brdf_Render_Pass_Handler>(brdfMap, brdfShaders);
 		brdfRPHandler->Update(quadRO, camParam);
 	}
 
@@ -1342,7 +1351,7 @@ struct RenderEngineMain::Impl
 		{
 			environmentTexture->UseTexture(0);
 		}
-		mesh_cube->RenderMesh();
+		cwCube->at(0)->RenderMesh();
 	}
 
 	void RenderScene(std::shared_ptr<Shader> shader) {
@@ -1497,38 +1506,6 @@ struct RenderEngineMain::Impl
 			irradianceConvolutionShader->ValidateShaderObject();
 
 			RenderEnvCubeMap(true);
-		}
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	}
-
-	void PrefilterPass()
-	{
-		prefilterShader->UseShaderObject();
-		prefilterShader->SetVariable("skybox", 1);
-		prefilterShader->SetVariable("Projection", captureProjection);
-
-		prefilterMap->BindFBO();
-		unsigned int maxMipLevels = 5;
-
-		for (unsigned int mip = 0; mip < maxMipLevels; ++mip)
-		{
-			//resize framebuffer according to mip-level size
-			unsigned int mipWidth = prefilterMap->GetFBOWidth() * std::pow(0.5, mip);
-			unsigned int mipHeight = prefilterMap->GetFBOHeight() * std::pow(0.5, mip);
-			//prefilterMap->Write(-1, mipWidth, mipHeight, 0);
-			glViewport(0, 0, mipWidth, mipHeight);
-
-			float roughness = (float)mip / (float)(maxMipLevels - 1);
-			prefilterShader->SetVariable("roughness", roughness);
-			for (auto faceId = 0; faceId < 6; ++faceId)
-			{
-				prefilterShader->SetVariable("View", captureViews[faceId]);
-				prefilterMap->WriteToFBOBuffer(0, 0, 0, faceId, mip);
-				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-				prefilterShader->ValidateShaderObject();
-
-				RenderEnvCubeMap(true);
-			}
 		}
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
