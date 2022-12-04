@@ -143,6 +143,19 @@ void Billboard_Mesh::RenderInstancedMesh()
 
 Billboard_Mesh::~Billboard_Mesh()
 {
+	if (VBO != 0) {
+		glDeleteBuffers(1, &VBO);
+		VBO = 0;
+	}
+	if (VAO != 0) {
+		glDeleteVertexArrays(1, &VAO);
+		VAO = 0;
+	}
+	if (IBO != 0) {
+		glDeleteBuffers(1, &IBO);
+		IBO = 0;
+	}
+
 	if (position_buffer != 0) {
 		glDeleteBuffers(1, &position_buffer);
 		position_buffer = 0;

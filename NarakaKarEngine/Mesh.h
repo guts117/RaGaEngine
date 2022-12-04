@@ -2,39 +2,45 @@
 #define MESH
 
 #include "pch.h"
+#include "VertexBoneData.h"
 
 namespace NarakaKarEngine
 {
 	namespace RenderEngine
-	{
-		class VertexBoneData;
-		
+	{	
+		struct MeshGenParams
+		{
+			bool&& HasNormal = false;
+			bool&& HasTangent = false;
+			bool&& IsTessellated = false;
+			GLuint&& InstanceCount = 0;
+			std::vector<VertexBoneData>&& BoneData = std::vector<VertexBoneData>();
+		};
+
 		class Mesh
 		{
 		public:
-			explicit Mesh() = default;
+			explicit Mesh() = delete;
 
-			Mesh(Mesh&& rhs) = default;
-			Mesh& operator= (Mesh&& rhs) = default;
+			explicit Mesh(GLuint&& materialIndex, std::vector<std::vector<GLfloat>>&& vertices, std::vector<GLuint>&& indices, MeshGenParams&& meshGenParams);
+
+			Mesh(Mesh&& rhs);
+			Mesh& operator= (Mesh&& rhs);
 
 			Mesh(const Mesh& rhs) = delete;
 			Mesh& operator= (const Mesh& rhs) = delete;
 
-			virtual void CreateMesh(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices);
-			virtual void CreateInstancedMesh(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices);
-			virtual void CreateMeshWithNormal(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices);
-			virtual void CreateMeshWithTangentNormal(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices);
-			virtual void CreateMeshWithBones(GLfloat Vertices[], unsigned int Indices[], GLuint numOfVertices, GLuint numOfIndices, std::vector<VertexBoneData>& Bones);
-			virtual void RenderMesh();
-			virtual void RenderInstancedMesh();
-			virtual void RenderTessellatedMesh();
+			void RenderMesh();
+			const GLuint& GetMaterialIndex() const;
 
-			glm::mat4 PrevMesh = glm::mat4(1.0);
+			~Mesh();
+		private:
+			struct Impl;
 
-			virtual ~Mesh() = 0;
+			const Impl* Pimpl() const { return m_pImpl.get(); }
+			Impl* Pimpl() { return m_pImpl.get(); }
 
-		protected:
-			GLuint indexCount = 0, vertexCount = 0, VAO = 0, VBO = 0, IBO = 0;
+			std::unique_ptr<Impl> m_pImpl;		
 		};
 	}
 }
