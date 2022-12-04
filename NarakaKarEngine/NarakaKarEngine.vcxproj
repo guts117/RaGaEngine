@@ -67,12 +67,11 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Animated_Mesh.cpp" />
     <ClCompile Include="Animated_Model.cpp" />
     <ClCompile Include="Billboard_Mesh.cpp" />
     <ClCompile Include="Billboard_Shader.cpp" />
     <ClCompile Include="Blur_Shader.cpp" />
-    <ClCompile Include="BRDF_Shader.cpp" />
+    <ClCompile Include="Brdf_Render_Pass_Handler.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Compute_Shader.cpp" />
     <ClCompile Include="Debug.cpp" />
@@ -85,6 +84,7 @@
     <ClCompile Include="EngineInputManager.cpp" />
     <ClCompile Include="Irradiance_Convolution_Shader.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="PreZ_Render_Pass_Handler.cpp" />
     <ClCompile Include="RenderEngineMain.cpp" />
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="Mesh.cpp" />
@@ -113,7 +113,6 @@
     <ClCompile Include="SpotLight.cpp" />
     <ClCompile Include="SSAOBlur_Shader.cpp" />
     <ClCompile Include="SSAO_Shader.cpp" />
-    <ClCompile Include="Static_Mesh.cpp" />
     <ClCompile Include="Static_Model.cpp" />
     <ClCompile Include="Model_Shader.cpp" />
     <ClCompile Include="Static_Object.cpp" />
@@ -133,17 +132,17 @@
     <ClInclude Include="..\deps\Common\include\imgui\imstb_rectpack.h" />
     <ClInclude Include="..\deps\Common\include\imgui\imstb_textedit.h" />
     <ClInclude Include="..\deps\Common\include\imgui\imstb_truetype.h" />
-    <ClInclude Include="Animated_Mesh.h" />
     <ClInclude Include="Animated_Model.h" />
     <ClInclude Include="Billboard_Mesh.h" />
     <ClInclude Include="Billboard_Shader.h" />
     <ClInclude Include="Blur_Shader.h" />
-    <ClInclude Include="BRDF_Shader.h" />
+    <ClInclude Include="Brdf_Render_Pass_Handler.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="EngineUIMain.h" />
     <ClInclude Include="exprtk.hpp" />
     <ClInclude Include="Fbo_Handler.h" />
     <ClInclude Include="FrameBufferObject.h" />
+    <ClInclude Include="PreZ_Render_Pass_Handler.h" />
     <ClInclude Include="RenderingCommonValues.h" />
     <ClInclude Include="Compute_Shader.h" />
     <ClInclude Include="Debug.h" />
@@ -176,7 +175,6 @@
     <ClInclude Include="SpotLight.h" />
     <ClInclude Include="SSAOBlur_Shader.h" />
     <ClInclude Include="SSAO_Shader.h" />
-    <ClInclude Include="Static_Mesh.h" />
     <ClInclude Include="Static_Model.h" />
     <ClInclude Include="Model_Shader.h" />
     <ClInclude Include="Static_Object.h" />

@@ -59,16 +59,18 @@ struct Shader_Object::Impl
 		std::any VarData;
 	};
 
+	std::unique_ptr<std::vector<std::string>> m_ShaderLocs;
 	GLuint m_ShaderProgramID;
 	std::unique_ptr<std::vector<ShaderInputVariable>> m_ShaderInputs;
 	GLenum m_ShaderType;
-	GLuint m_textureUnit;
+	GLuint m_TextureUnit;
 
 	Impl(const std::vector<std::string>& shaderLocs)
-		: m_ShaderProgramID { 0 }
+		: m_ShaderLocs { std::make_unique<std::vector<std::string>>(shaderLocs) }
+		, m_ShaderProgramID { 0 }
 		, m_ShaderInputs{ std::make_unique<std::vector<ShaderInputVariable>>()}
-		, m_textureUnit { 0 }
 		, m_ShaderType { 0 }
+		, m_TextureUnit { 0 }
 	{
 		std::vector<ShaderCodeType> shaderCodes;
 		for(auto locIndex = 0; locIndex < shaderLocs.size(); ++locIndex)
@@ -605,6 +607,10 @@ struct Shader_Object::Impl
 			{
 				glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(*val));
 			}
+			else if(auto val = CheckInputDataType<aiMatrix4x4>(value))
+			{
+				glUniformMatrix4fv(location, 1, GL_TRUE, (const GLfloat*)&val);
+			}
 		}
 		else
 		{
@@ -612,7 +618,7 @@ struct Shader_Object::Impl
 		}
 	}
 
-	void SetVariable(const std::string& varName, const std::any& value, const GLuint& index = 0, const std::string& memName = "") const
+	void SetVariable(std::string&& varName, const std::any& value, const GLuint& index = 0, std::string&& memName = "") const
 	{
 		auto it = std::find_if(m_ShaderInputs->begin(), m_ShaderInputs->end(), [&](ShaderInputVariable& var) {return var.VarName == varName; });
 
@@ -685,9 +691,27 @@ void Shader_Object::ValidateShaderObject() const
 	Pimpl()->Validate();
 }
 
-const GLuint& Shader_Object::GetShaderObjectID() const
+const GLuint& Shader_Object::GetShaderObjectProgramID() const
 {
 	return Pimpl()->m_ShaderProgramID;
+}
+
+const GLuint& Shader_Object::SetTextureUnit(std::string&& textureName)
+{
+	GLuint& texUnit = Pimpl()->m_TextureUnit;
+	SetVariable(std::move(textureName), texUnit);
+	texUnit++;
+	return texUnit;
+}
+
+const GLuint Shader_Object::GetTextureUnit()
+{
+	return Pimpl()->m_TextureUnit;
+}
+
+const void Shader_Object::ResetTextureUnit(GLuint&& resetToUnit)
+{
+	Pimpl()->m_TextureUnit = resetToUnit;
 }
 
 void Shader_Object::UseShaderObject() const
@@ -704,9 +728,9 @@ void Shader_Object::DispatchShaderObject(const glm::uvec3& threadGroupCnt) const
 	}
 }
 
-void Shader_Object::SetVariable(const std::string& varName, const std::any& value, const GLuint& index, const std::string& memName) const
+void Shader_Object::SetVariable(std::string&& varName, const std::any& value, const GLuint& index, std::string&& memName) const
 {
-	Pimpl()->SetVariable(varName, value, index, memName);
+	Pimpl()->SetVariable(std::move(varName), value, index, std::move(memName));
 }
 
 Shader_Object::~Shader_Object() = default;

@@ -5,25 +5,13 @@
 using namespace NarakaKarEngine;
 using namespace RenderEngine;
 
-struct Scene_Render_Pass_Handler::Impl
-{
-	std::shared_ptr<Fbo_Handler> m_fboHandler;
-	std::unique_ptr<std::vector<std::shared_ptr<Shader_Object>>> m_shaderVec;
-	std::vector<std::shared_ptr<std::any>> m_inputs;
-	std::vector<std::shared_ptr<GLint>> m_outputs;
-
-	Impl() = delete;
-
-	Impl(Impl&& rhs) noexcept = default;
-	Impl& operator=(Impl&& rhs) noexcept = default;
-
-	Impl(const Impl& rhs) noexcept = delete;
-	Impl& operator=(const Impl& rhs) noexcept = delete;
-
-	~Impl() = default;
-};
-
-void NarakaKarEngine::RenderEngine::Scene_Render_Pass_Handler::Update(std::shared_ptr<std::vector<Render_Object>> renderObj, const CamParam& camParam)
+Scene_Render_Pass_Handler::Scene_Render_Pass_Handler(std::shared_ptr<Fbo_Handler> fboHandlr
+													, const std::vector<std::shared_ptr<Shader_Object>>& shaderVec
+													, std::shared_ptr<std::vector<std::shared_ptr<std::any>>> inputs)
+													: m_fboHandler{ fboHandlr }
+													, m_shaderVec{ std::make_unique<std::vector<std::shared_ptr<Shader_Object>>>(shaderVec) }
+													, m_inputs{ inputs }
+													, m_outputs{ std::make_shared<std::vector<std::shared_ptr<GLint>>>() }
 {
 }
 

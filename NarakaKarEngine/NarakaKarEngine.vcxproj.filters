@@ -27,9 +27,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Animated_Mesh.cpp">
-      <Filter>Source Files\RenderEngine</Filter>
-    </ClCompile>
     <ClCompile Include="Animated_Model.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
@@ -42,7 +39,7 @@
     <ClCompile Include="Blur_Shader.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
-    <ClCompile Include="BRDF_Shader.cpp">
+    <ClCompile Include="Brdf_Render_Pass_Handler.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
     <ClCompile Include="Camera.cpp">
@@ -118,9 +115,6 @@
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
     <ClCompile Include="SSAOBlur_Shader.cpp">
-      <Filter>Source Files\RenderEngine</Filter>
-    </ClCompile>
-    <ClCompile Include="Static_Mesh.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
     <ClCompile Include="Static_Model.cpp">
@@ -201,11 +195,11 @@
     <ClCompile Include="Render_Object.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="PreZ_Render_Pass_Handler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Animated_Mesh.h">
-      <Filter>Header Files\RenderEngine</Filter>
-    </ClInclude>
     <ClInclude Include="Animated_Model.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
@@ -218,7 +212,7 @@
     <ClInclude Include="Blur_Shader.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
-    <ClInclude Include="BRDF_Shader.h">
+    <ClInclude Include="Brdf_Render_Pass_Handler.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="Camera.h">
@@ -297,9 +291,6 @@
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="SSAOBlur_Shader.h">
-      <Filter>Header Files\RenderEngine</Filter>
-    </ClInclude>
-    <ClInclude Include="Static_Mesh.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="Static_Model.h">
@@ -387,6 +378,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Render_Object.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PreZ_Render_Pass_Handler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

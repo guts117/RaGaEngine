@@ -16,9 +16,12 @@ namespace NarakaKarEngine
 			void ValidateShaderObject() const;
 			void UseShaderObject() const;
 			void DispatchShaderObject(const glm::uvec3& threadGroupCnt) const;
-			const GLuint& GetShaderObjectID() const;
+			const GLuint& GetShaderObjectProgramID() const;
+			const GLuint& SetTextureUnit(std::string&& textureName);
+			const GLuint GetTextureUnit();
+			const void ResetTextureUnit(GLuint&& resetToUnit);
 
-			void SetVariable(const std::string& varName, const std::any& value, const GLuint& index = 0, const std::string& memName = "") const;
+			void SetVariable(std::string&& varName, const std::any& value, const GLuint& index = 0, std::string&& memName = "") const;
 
 			~Shader_Object();
 
