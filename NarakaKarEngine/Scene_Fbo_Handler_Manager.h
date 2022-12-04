@@ -3,6 +3,8 @@
 
 #include "pch.h"
 
+//Loads and manages all the framebuffers 
+
 namespace NarakaKarEngine
 {
 	namespace RenderEngine 

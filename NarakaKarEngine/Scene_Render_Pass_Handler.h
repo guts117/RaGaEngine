@@ -3,10 +3,12 @@
 
 #include "pch.h"
 
+//Handles rendering 
+
 namespace NarakaKarEngine
 {
 	namespace RenderEngine
-	{
+	{	
 		class Render_Object;
 		class Shader_Object;
 		class Fbo_Handler;
@@ -19,6 +21,12 @@ namespace NarakaKarEngine
 			const glm::mat4& PrevProjView;
 		};
 
+		struct ShaderParam
+		{
+			std::shared_ptr<Shader_Object> shader;
+			std::shared_ptr<std::vector<std::any>> shaderInputs;
+		};
+
 		class Scene_Render_Pass_Handler
 		{
 		public:
@@ -26,6 +34,9 @@ namespace NarakaKarEngine
 			explicit Scene_Render_Pass_Handler(std::shared_ptr<Fbo_Handler> fboHandlr
 												, const std::vector<std::shared_ptr<Shader_Object>>& shaderVec
 												, std::shared_ptr<std::vector<std::shared_ptr<std::any>>> inputs = nullptr);
+
+			explicit Scene_Render_Pass_Handler(std::shared_ptr<Fbo_Handler> fboHandlr
+											, std::shared_ptr<ShaderParam> shaderParam);
 
 			Scene_Render_Pass_Handler(Scene_Render_Pass_Handler&& rhs) noexcept = default;
 			Scene_Render_Pass_Handler& operator=(Scene_Render_Pass_Handler&& rhs) noexcept = default;
