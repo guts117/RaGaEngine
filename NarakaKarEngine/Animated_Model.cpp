@@ -1,8 +1,7 @@
 #include "pch.h"
 #include "Animated_Model.h"
 #include "Texture.h"
-#include "Animated_Mesh.h"
-#include "VertexBoneData.h"
+#include "Mesh.h"
 
 using namespace NarakaKarEngine;
 using namespace RenderEngine;
@@ -32,7 +31,7 @@ void Animated_Model::RenderModel() {
 		glUniformMatrix4fv(m_prev_bone_location[i], 1, GL_TRUE, (const GLfloat*)&prevTransforms[i]);
 	}
 
-	for (size_t i = 0; i < anim_MeshList.size(); i++) {
+	for (size_t i = 0; i < MeshList.size(); i++) {
 		unsigned int materialIndex = meshToTex[i];
 
 		if (materialIndex < textureList.size() && textureList[materialIndex]) {
@@ -44,7 +43,7 @@ void Animated_Model::RenderModel() {
 			glowTextureList[materialIndex]->UseTexture(12);
 		}
 
-		anim_MeshList[i]->RenderMesh();
+		MeshList[i]->RenderMesh();
 	}
 
 	prevTransforms = transforms;
@@ -108,7 +107,6 @@ void Animated_Model::showNodeName(aiNode* node)
 
 void Animated_Model::LoadNode(aiNode* node, const aiScene* scene)
 {
-	Animated_Mesh mesh;
 	for (unsigned int i = 0; i < scene->mNumMeshes; i++)
 	{
 		aiMesh* ai_mesh = scene->mMeshes[i];
@@ -119,16 +117,17 @@ void Animated_Model::LoadNode(aiNode* node, const aiScene* scene)
 
 void Animated_Model::LoadMesh(aiMesh* mesh, const aiScene* scene)
 {
-	std::vector<GLfloat> vertices;
+	std::vector<std::vector<GLfloat>> vertices2D;
 	std::vector<unsigned int> indices;
 	std::vector<VertexBoneData> bones;
 
-	vertices.reserve(mesh->mNumVertices);
+	vertices2D.reserve(mesh->mNumVertices);
 	indices.reserve(mesh->mNumVertices);
 
 	bones.resize(mesh->mNumVertices);
 
 	for (size_t i = 0; i < mesh->mNumVertices; i++) {
+		auto vertices = std::vector<GLfloat>();
 		vertices.insert(vertices.end(), { mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z });
 
 		if (mesh->mTextureCoords[0]) {
@@ -151,6 +150,8 @@ void Animated_Model::LoadMesh(aiMesh* mesh, const aiScene* scene)
 		else {
 			vertices.insert(vertices.end(), { 0.0f, 0.0f, 0.0f });
 		}
+
+		vertices2D.push_back(vertices);
 	}
 
 	for (size_t i = 0; i < mesh->mNumFaces; i++) {
@@ -188,10 +189,9 @@ void Animated_Model::LoadMesh(aiMesh* mesh, const aiScene* scene)
 		}
 	}
 
-	Animated_Mesh* newMesh = new Animated_Mesh();
-	newMesh->CreateMeshWithBones(&vertices[0], &indices[0], vertices.size(), indices.size(), bones);
-	anim_MeshList.push_back(newMesh);
 	meshToTex.push_back(mesh->mMaterialIndex);
+	auto newMesh = std::make_shared<Mesh>(std::move(mesh->mMaterialIndex), std::move(vertices2D), std::move(indices), std::move(MeshGenParams{true, true, false, 0, std::move(bones)}));
+	MeshList.push_back(newMesh);
 
 	newMesh = nullptr;
 	LoadMaterials(scene);
@@ -639,13 +639,6 @@ aiQuaternion Animated_Model::nlerp(aiQuaternion a, aiQuaternion b, float blend)
 
 void Animated_Model::ClearModel()
 {
-
-	for (size_t i = 0; i < anim_MeshList.size(); i++) {
-		if (anim_MeshList[i]) {
-			delete anim_MeshList[i];
-			anim_MeshList[i] = nullptr;
-		}
-	}
 	for (size_t i = 0; i < textureList.size(); i++) {
 		if (textureList[i]) {
 			delete textureList[i];

@@ -15,7 +15,6 @@
 #include "Compute_Shader.h"
 
 #include "Mesh.h"
-#include "Static_Mesh.h"
 #include "Billboard_Mesh.h"
 #include "Camera.h"
 #include "Texture.h"
@@ -45,6 +44,10 @@
 #include "PhysicsEngineMain.h"
 #include "EngineUIMain.h"
 #include "Shader_Object.h"
+
+#include "Render_Object.h"
+#include "PreZ_Render_Pass_Handler.h"
+#include "Brdf_Render_Pass_Handler.h"
 
 using namespace NarakaKarEngine;
 using namespace RenderEngine;
@@ -128,10 +131,10 @@ struct RenderEngineMain::Impl
 
 	std::shared_ptr<Scene_Fbo_Handler_Manager> m_SceneFboHandlerMgr;
 
-	std::unique_ptr <Shader_Object> environmentMapShader;
-	std::unique_ptr <Shader_Object> irradianceConvolutionShader;
-	std::unique_ptr <Shader_Object> prefilterShader;
-	std::unique_ptr <Shader_Object> brdfShader;
+	std::shared_ptr <Shader_Object> environmentMapShader;
+	std::shared_ptr <Shader_Object> irradianceConvolutionShader;
+	std::shared_ptr <Shader_Object> prefilterShader;
+	std::shared_ptr <Shader_Object> brdfShader;
 
 	std::shared_ptr <Fbo_Handler> environmentMap;
 	std::shared_ptr <Fbo_Handler> irradianceMap;
@@ -174,14 +177,16 @@ struct RenderEngineMain::Impl
 	std::unique_ptr < MotionBlur_Shader> motionBlurShader = std::make_unique<MotionBlur_Shader>();
 	std::unique_ptr < Blur_Shader> blurShader = std::make_unique<Blur_Shader>();
 
-	std::vector< std::shared_ptr < Static_Mesh>> meshList;
-	std::vector< std::shared_ptr < Static_Mesh>> terrainList;
+	std::vector< std::shared_ptr < Mesh>> meshList;
+	std::vector< std::shared_ptr < Mesh>> terrainList;
 	std::vector< std::shared_ptr < Billboard_Mesh>> billboardList;
 	std::vector< std::shared_ptr < ParticleSystem>> particleList;
 
-	std::unique_ptr < Static_Mesh> quad;
-	std::unique_ptr < Static_Mesh> mesh_cube;
-	std::unique_ptr < Static_Mesh> ccw_cube;
+	std::shared_ptr<std::vector<std::shared_ptr<Mesh>>> quad;
+	std::shared_ptr < Mesh> mesh_cube;
+	std::shared_ptr < Mesh> ccw_cube;
+	
+	std::shared_ptr<std::vector<std::shared_ptr<Render_Object>>> quadRO;
 
 	std::shared_ptr < Camera> camera;
 
@@ -261,6 +266,8 @@ struct RenderEngineMain::Impl
 	std::unique_ptr <Static_Object> sphere = std::make_unique<Static_Object>();
 	std::unique_ptr <Static_Object> bulbWhite = std::make_unique<Static_Object>();
 	std::unique_ptr <Static_Object> bulbRed = std::make_unique<Static_Object>();
+
+	std::shared_ptr<Brdf_Render_Pass_Handler> brdfRPHandler;
 
 	GLfloat aircraftAngle = 0.0f;
 
@@ -506,9 +513,187 @@ struct RenderEngineMain::Impl
 		blur = m_SceneFboHandlerMgr->FindFboHandler("Bloom_Pass");
 		finalFBO = m_SceneFboHandlerMgr->FindFboHandler("Final_Output_Pass");
 
-		quad = std::make_unique < Static_Mesh>();
-		mesh_cube = std::make_unique < Static_Mesh>();
-		ccw_cube = std::make_unique <Static_Mesh>();
+		quad = std::make_shared <std::vector<std::shared_ptr<Mesh>>>();
+		
+		std::vector<GLuint> quadIndices = {
+			0, 1, 2,
+			2, 1, 3
+		};
+
+		std::vector<std::vector<GLfloat>> quadVertices =
+		{
+			std::vector<GLfloat>{ -1.0f, -1.0f, 0.0f,		 0.0f, 0.0f },
+			std::vector<GLfloat>{  1.0f, -1.0f, 0.0f,		 1.0f, 0.0f },
+			std::vector<GLfloat>{ -1.0f,  1.0f, 0.0f,		 0.0f, 1.0f },
+			std::vector<GLfloat>{  1.0f,  1.0f, 0.0f,		 1.0f, 1.0f },
+		};
+		
+		quad->push_back(std::make_shared<Mesh>(0, std::move(quadVertices), std::move(quadIndices), std::move(MeshGenParams())));
+		quadRO = std::make_shared<std::vector<std::shared_ptr<Render_Object>>>();
+		quadRO->push_back(std::make_shared<Render_Object>(quad));
+
+		std::vector<GLuint> cwCubeIndices = {
+			//front
+			0,1,2,
+			2,1,3,
+			//right
+			2,3,5,
+			5,3,7,
+			//back
+			5,7,4,
+			4,7,6,
+			//left
+			4,6,0,
+			0,6,1,
+			//top
+			4,0,5,
+			5,0,2,
+			//bottom
+			1,6,3,
+			3,6,7
+		};
+
+		std::vector<std::vector<GLfloat>>  cwCubeVertices = {
+			std::vector<GLfloat>{ -1.0f, 1.0f, -1.0f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f },
+			std::vector<GLfloat>{ -1.0f, -1.0f, -1.0f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f },
+			std::vector<GLfloat>{  1.0f, 1.0f, -1.0f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f },
+			std::vector<GLfloat>{  1.0f, -1.0f, -1.0f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f },
+
+			std::vector<GLfloat>{ -1.0f, 1.0f, 1.0f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f },
+			std::vector<GLfloat>{  1.0f, 1.0f, 1.0f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f },
+			std::vector<GLfloat>{ -1.0f, -1.0f, 1.0f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f },
+			std::vector<GLfloat>{  1.0f, -1.0f, 1.0f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f }
+
+		};
+
+		mesh_cube = std::make_shared <Mesh>(0, std::move(cwCubeVertices), std::move(cwCubeIndices), std::move(MeshGenParams()));
+		
+		//CW=======================================================================
+/*
+		// Back face
+		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, // Bottom-left
+		0.5f, -0.5f, -0.5f, 1.0f, 0.0f, // bottom-right
+		0.5f, 0.5f, -0.5f, 1.0f, 1.0f, // top-right
+		0.5f, 0.5f, -0.5f, 1.0f, 1.0f, // top-right
+		-0.5f, 0.5f, -0.5f, 0.0f, 1.0f, // top-left
+		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, // bottom-left
+		// Front face
+		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f, // bottom-left
+		0.5f, 0.5f, 0.5f, 1.0f, 1.0f, // top-right
+		0.5f, -0.5f, 0.5f, 1.0f, 0.0f, // bottom-right
+		0.5f, 0.5f, 0.5f, 1.0f, 1.0f, // top-right
+		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f, // bottom-left
+		-0.5f, 0.5f, 0.5f, 0.0f, 1.0f, // top-left
+		// Left face
+		-0.5f, 0.5f, 0.5f, 1.0f, 0.0f, // top-right
+		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f, // bottom-left
+		-0.5f, 0.5f, -0.5f, 1.0f, 1.0f, // top-left
+		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f, // bottom-left
+		-0.5f, 0.5f, 0.5f, 1.0f, 0.0f, // top-right
+		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f, // bottom-right
+		// Right face
+		0.5f, 0.5f, 0.5f, 1.0f, 0.0f, // top-left
+		0.5f, 0.5f, -0.5f, 1.0f, 1.0f, // top-right
+		0.5f, -0.5f, -0.5f, 0.0f, 1.0f, // bottom-right
+		0.5f, -0.5f, -0.5f, 0.0f, 1.0f, // bottom-right
+		0.5f, -0.5f, 0.5f, 0.0f, 0.0f, // bottom-left
+		0.5f, 0.5f, 0.5f, 1.0f, 0.0f, // top-left
+		// Bottom face
+		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f, // top-right
+		0.5f, -0.5f, 0.5f, 1.0f, 0.0f, // bottom-left
+		0.5f, -0.5f, -0.5f, 1.0f, 1.0f, // top-left
+		0.5f, -0.5f, 0.5f, 1.0f, 0.0f, // bottom-left
+		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f, // top-right
+		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f, // bottom-right
+		// Top face
+		-0.5f, 0.5f, -0.5f, 0.0f, 1.0f, // top-left
+		0.5f, 0.5f, -0.5f, 1.0f, 1.0f, // top-right
+		0.5f, 0.5f, 0.5f, 1.0f, 0.0f, // bottom-right
+		0.5f, 0.5f, 0.5f, 1.0f, 0.0f, // bottom-right
+		-0.5f, 0.5f, 0.5f, 0.0f, 0.0f, // bottom-left
+		-0.5f, 0.5f, -0.5f, 0.0f, 1.0f  // top-left
+*/
+		std::vector<GLuint> ccwCubeIndices = {
+			//back face (CCW)
+			3, 1, 0,
+			0, 2, 3,
+			//front face (CCW)
+			6, 7, 5,
+			5, 4, 6,
+			//left face (CCW)
+			1, 6, 4,
+			4, 0, 1,
+			//right face (CCW)
+			7, 3, 2,
+			2, 5, 7,
+			//bottom face (CCW)
+			1, 3, 7,
+			7, 6, 1,
+			// top face (CCW)
+			4, 5, 2,
+			2, 0, 4
+		};
+
+		std::vector<std::vector<GLfloat>> ccwCubeVertices = {
+			std::vector<GLfloat>{	-0.5f, 0.5f, -0.5f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f },	//0 -+-
+			std::vector<GLfloat>{	-0.5f, -0.5f, -0.5f,	0.0f, 0.0f,		0.0f, 0.0f, 0.0f },	//1 ---
+			std::vector<GLfloat>{	0.5f, 0.5f, -0.5f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f },	//2 ++-
+			std::vector<GLfloat>{	0.5f, -0.5f, -0.5f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f },	//3 +--
+
+			std::vector<GLfloat>{	-0.5f, 0.5f, 0.5f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f },	//4 -++
+			std::vector<GLfloat>{	0.5f, 0.5f, 0.5f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f },	//5	+++
+			std::vector<GLfloat>{	-0.5f, -0.5f, 0.5f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f },	//6 --+
+			std::vector<GLfloat>{	0.5f, -0.5f, 0.5f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f }	//7 +-+
+
+		};
+
+		//CCW==============================================================================================
+/*
+		// back face (CCW winding)
+		0.5f, -0.5f, -0.5f, 0.0f, 0.0f, // bottom-left
+		-0.5f, -0.5f, -0.5f, 1.0f, 0.0f, // bottom-right
+		-0.5f, 0.5f, -0.5f, 1.0f, 1.0f, // top-right
+		-0.5f, 0.5f, -0.5f, 1.0f, 1.0f, // top-right
+		0.5f, 0.5f, -0.5f, 0.0f, 1.0f, // top-left
+		0.5f, -0.5f, -0.5f, 0.0f, 0.0f, // bottom-left
+		// front face (CCW winding)
+		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f, // bottom-left
+		0.5f, -0.5f, 0.5f, 1.0f, 0.0f, // bottom-right
+		0.5f, 0.5f, 0.5f, 1.0f, 1.0f, // top-right
+		0.5f, 0.5f, 0.5f, 1.0f, 1.0f, // top-right
+		-0.5f, 0.5f, 0.5f, 0.0f, 1.0f, // top-left
+		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f, // bottom-left
+		// left face (CCW)
+		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, // bottom-left
+		-0.5f, -0.5f, 0.5f, 1.0f, 0.0f, // bottom-right
+		-0.5f, 0.5f, 0.5f, 1.0f, 1.0f, // top-right
+		-0.5f, 0.5f, 0.5f, 1.0f, 1.0f, // top-right
+		-0.5f, 0.5f, -0.5f, 0.0f, 1.0f, // top-left
+		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, // bottom-left
+		// right face (CCW)
+		0.5f, -0.5f, 0.5f, 0.0f, 0.0f, // bottom-left
+		0.5f, -0.5f, -0.5f, 1.0f, 0.0f, // bottom-right
+		0.5f, 0.5f, -0.5f, 1.0f, 1.0f, // top-right
+		0.5f, 0.5f, -0.5f, 1.0f, 1.0f, // top-right
+		0.5f, 0.5f, 0.5f, 0.0f, 1.0f, // top-left
+		0.5f, -0.5f, 0.5f, 0.0f, 0.0f, // bottom-left
+		// bottom face (CCW)
+		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, // bottom-left
+		0.5f, -0.5f, -0.5f, 1.0f, 0.0f, // bottom-right
+		0.5f, -0.5f, 0.5f, 1.0f, 1.0f, // top-right
+		0.5f, -0.5f, 0.5f, 1.0f, 1.0f, // top-right
+		-0.5f, -0.5f, 0.5f, 0.0f, 1.0f, // top-left
+		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, // bottom-left
+		// top face (CCW)
+		-0.5f, 0.5f, 0.5f, 0.0f, 0.0f, // bottom-left
+		0.5f, 0.5f, 0.5f, 1.0f, 0.0f, // bottom-right
+		0.5f, 0.5f, -0.5f, 1.0f, 1.0f, // top-right
+		0.5f, 0.5f, -0.5f, 1.0f, 1.0f, // top-right
+		-0.5f, 0.5f, -0.5f, 0.0f, 1.0f, // top-left
+		-0.5f, 0.5f, 0.5f, 0.0f, 0.0f, // bottom-left
+
+\*/
+		ccw_cube = std::make_shared <Mesh>(0, std::move(ccwCubeVertices), std::move(ccwCubeIndices), std::move(MeshGenParams()));
 
 		mainLight = std::make_unique < DirectionalLight>(1024, 1024,
 			0.5f, 0.5f, 0.5f,
@@ -580,6 +765,11 @@ struct RenderEngineMain::Impl
 
 		//skyboxTexture.LoadCubeMapSRGB(skyboxFaces);
 
+		auto brdfShaders = std::vector<std::shared_ptr<Shader_Object>>();
+		brdfShaders.push_back(brdfShader);
+		brdfRPHandler = std::make_shared<Brdf_Render_Pass_Handler>(brdfMap, brdfShaders);
+
+		auto camParam = CamParam{ camera->getCameraPosition(), camera->GetProjectionMatrix(), camera->CalculateViewMatrix(), camera->GetPreviousProjectionMatrix() };
 		InitSSAO();
 		CalcDirLightShadowCascades();
 		InitSSBOs();
@@ -587,7 +777,7 @@ struct RenderEngineMain::Impl
 		EnvironmentMapPass();
 		IrradianceConvolutionPass();
 		PrefilterPass();
-		BRDFPass();
+		brdfRPHandler->Update(quadRO, camParam);
 	}
 
 	void InitSSAO() 
@@ -929,77 +1119,83 @@ struct RenderEngineMain::Impl
 
 	void CreateTerrain()
 	{
-		unsigned int terrainIndices[] = {
+		std::vector<GLuint> terrainIndices = {
 			0, 2, 1,
 			1, 2, 3
 		};
 
-		GLfloat terrainVertices[] = {
-			-terrainScaleFactor1, 0.0f,-terrainScaleFactor1,		0.0f, 0.0f,								        0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f,
-			terrainScaleFactor1, 0.0f,-terrainScaleFactor1,			terrainScaleFactor1, 0.0f,						0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f,
-			-terrainScaleFactor1, 0.0f, terrainScaleFactor1,		0.0f, terrainScaleFactor1,						0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f,
-			terrainScaleFactor1, 0.0f,terrainScaleFactor1,			terrainScaleFactor1, terrainScaleFactor1,	    0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f
+		std::vector<std::vector<GLfloat>> terrainVertices = {
+			std::vector<GLfloat>{	-terrainScaleFactor1, 0.0f,-terrainScaleFactor1,		0.0f, 0.0f,								        0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f },
+			std::vector<GLfloat>{	terrainScaleFactor1, 0.0f,-terrainScaleFactor1,			terrainScaleFactor1, 0.0f,						0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f },
+			std::vector<GLfloat>{	-terrainScaleFactor1, 0.0f, terrainScaleFactor1,		0.0f, terrainScaleFactor1,						0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f },
+			std::vector<GLfloat>{	terrainScaleFactor1, 0.0f,terrainScaleFactor1,			terrainScaleFactor1, terrainScaleFactor1,	    0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f }
 		};
 
-		MathUtil::CalcAverageNormals(terrainIndices, 6, terrainVertices, 44, 11, 5);
-		MathUtil::CalcAverageTangents(terrainIndices, 6, terrainVertices, 44, 11, 8);
+		MathUtil::CalcAverageNormals(terrainIndices, terrainVertices, 5);
+		MathUtil::CalcAverageTangents(terrainIndices, terrainVertices, 8);
 
 		//Debug::DebugPrintReferenceTBN("ReferenceTBN", terrainVertices, 11, glm::vec3(0.0f, 1.0f, 0.0f));
 		//Debug::DebugPrintTBN("TerrainTBN", terrainVertices, 5, 8);
 
-		std::shared_ptr < Static_Mesh> obj = std::make_shared< Static_Mesh>();
-		obj->CreateMeshWithTangentNormal(terrainVertices, terrainIndices, 44, 6);
+		auto obj = std::make_shared<Mesh>(0, std::move(terrainVertices), std::move(terrainIndices), std::move(MeshGenParams{ true, true, true }));
 		terrainList.push_back(obj);
 	}
 
-	void CreateObject() {
-		unsigned int indices[] = {
-			1,3,0,
-			2,3,1,
-			0,3,2,
-			2,1,0
+	std::shared_ptr<Mesh> CreatePrism()
+	{
+		std::vector<GLuint> indices = {
+					1,3,0,
+					2,3,1,
+					0,3,2,
+					2,1,0
 		};
 
-		GLfloat vertices[] = {
+		std::vector<std::vector<GLfloat>> vertices = {
 			//x      y      z		u		v		nx    ny	nz      tx	  ty    tz
-			-1.0f, -1.0f, -0.6f,	 0.0f, 0.0f,		0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f,	//bottom left
-			0.0f, -1.0f, 1.0f,		 1.0f, 0.0f,		0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f,   // z axis point
-			1.0f, -1.0f, -0.6f,		 0.0f, 1.0f,		0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f,   //bottom right
-			0.0f, 1.0f, 0.0f,		 1.0f, 1.0f,		0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f    //top
+			std::vector<GLfloat>{	-1.0f, -1.0f, -0.6f,	 0.0f, 0.0f,		0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f	},	//bottom left
+			std::vector<GLfloat>{	0.0f, -1.0f, 1.0f,		 1.0f, 0.0f,		0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f	},   // z axis point
+			std::vector<GLfloat>{	1.0f, -1.0f, -0.6f,		 0.0f, 1.0f,		0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f	},   //bottom right
+			std::vector<GLfloat>{	0.0f, 1.0f, 0.0f,		 1.0f, 1.0f,		0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f	}    //top
 		};
 
-		unsigned int floorIndices[] = {
+		MathUtil::CalcAverageNormals(indices, vertices, 5);
+		MathUtil::CalcAverageTangents(indices, vertices, 8);
+	
+		return std::make_shared<Mesh>(0, std::move(vertices), std::move(indices), std::move(MeshGenParams()));
+	}
+
+	std::shared_ptr<Mesh> CreatePlane()
+	{
+		std::vector<GLuint> indices = {
 			0, 2, 1,
 			1, 2, 3
 		};
 
-		GLfloat floorVertices[] = {
-			-15.f, 0.0f, -15.0f,	0.0f, 0.0f,	    0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f,
-			15.0f, 0.0f, -15.0f,	1.0f, 0.0f,	    0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f,
-			-15.0f, 0.0f, 15.0f,	0.0f, 1.0f,	    0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f,
-			15.0f, 0.0f, 15.0f,		1.0f, 1.0f,	    0.0f, 0.0f, 0.0f,  0.0f, 0.0f, 0.0f
+		std::vector<std::vector<GLfloat>> vertices = {
+			std::vector<GLfloat>{	-15.f, 0.0f, -15.0f,	0.0f, 0.0f,	    0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f	},
+			std::vector<GLfloat>{	15.0f, 0.0f, -15.0f,	1.0f, 0.0f,	    0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f	},
+			std::vector<GLfloat>{	-15.0f, 0.0f, 15.0f,	0.0f, 1.0f,	    0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f	},
+			std::vector<GLfloat>{	15.0f, 0.0f, 15.0f,		1.0f, 1.0f,	    0.0f, 0.0f, 0.0f,  0.0f, 0.0f, 0.0f		}
 		};
 
+		MathUtil::CalcAverageNormals(indices, vertices, 5);
+		MathUtil::CalcAverageTangents(indices, vertices, 8);
 
-		MathUtil::CalcAverageNormals(indices, 12, vertices, 44, 11, 5);
-		MathUtil::CalcAverageTangents(indices, 12, vertices, 44, 11, 8);
-		MathUtil::CalcAverageNormals(floorIndices, 6, floorVertices, 44, 11, 5);
-		MathUtil::CalcAverageTangents(floorIndices, 6, floorVertices, 44, 11, 8);
+		return std::make_shared<Mesh>(0, std::move(vertices), std::move(indices), std::move(MeshGenParams()));
+	}
 
-		std::shared_ptr < Static_Mesh> obj1 = std::make_shared <Static_Mesh>();
-		obj1->CreateMeshWithTangentNormal(vertices, indices, 44, 12);
+	void CreateObject() 
+	{	
+		std::shared_ptr < Mesh> obj1 = std::move(CreatePrism());
 		meshList.push_back(obj1);
 
-		std::shared_ptr < Static_Mesh> obj2 = std::make_shared <Static_Mesh>();
-		obj2->CreateMeshWithTangentNormal(vertices, indices, 44, 12);
+		std::shared_ptr < Mesh> obj2 = std::move(CreatePrism());
 		meshList.push_back(obj2);
 
-		std::shared_ptr < Static_Mesh> obj3 = std::make_shared <Static_Mesh>();
-		obj3->CreateMeshWithTangentNormal(floorVertices, floorIndices, 44, 6);
+		std::shared_ptr < Mesh> obj3 = std::move(CreatePlane());
 		meshList.push_back(obj3);
 
-		std::shared_ptr < Static_Mesh> obj4 = std::make_shared <Static_Mesh>();
-		obj4->CreateMeshWithTangentNormal(floorVertices, floorIndices, 44, 6);
+		std::shared_ptr < Mesh> obj4 = std::move(CreatePlane());
 		meshList.push_back(obj4);
 	}
 
@@ -1030,10 +1226,10 @@ struct RenderEngineMain::Impl
 		//jacobiCompShader3D->CreateFromFiles("Shaders/3DFluid/jacobi.comp");
 		//pressureProjectionCompShader3D->CreateFromFiles("Shaders/3DFluid/pressureProjection.comp");
 
-		environmentMapShader 		= std::make_unique<Shader_Object>(std::vector<std::string>{"Shaders/cubemap.vert", "Shaders/equirectangular_to_cubemap.frag"});
-		irradianceConvolutionShader = std::make_unique<Shader_Object>(std::vector<std::string>{"Shaders/cubemap.vert", "Shaders/irradiance_covolution.frag"});
-		prefilterShader 			= std::make_unique<Shader_Object>(std::vector<std::string>{"Shaders/cubemap.vert", "Shaders/prefilter.frag"});
-		brdfShader 					= std::make_unique<Shader_Object>(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/brdf.frag"});
+		environmentMapShader 		= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/cubemap.vert", "Shaders/equirectangular_to_cubemap.frag"});
+		irradianceConvolutionShader = std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/cubemap.vert", "Shaders/irradiance_covolution.frag"});
+		prefilterShader 			= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/cubemap.vert", "Shaders/prefilter.frag"});
+		brdfShader 					= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/brdf.frag"});
 
 		directionalShadowShader->CreateFromFiles("Shaders/directional_shadow_map.vert", "Shaders/directional_shadow_map.frag");
 		omniShadowShader->CreateFromFiles("Shaders/omni_shadow_map.vert", "Shaders/omni_shadow_map.geom", "Shaders/omni_shadow_map.frag");
@@ -1108,8 +1304,8 @@ struct RenderEngineMain::Impl
 		//model = glm::rotate(model, curAngle * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));  //if you put the rotate at the last place(i.e on the top) it will have a bouncy effect
 		//model = glm::scale(model,glm::vec3(terrainScaleFactor, 1.0f, terrainScaleFactor));
 		glUniformMatrix4fv(uniformModel2, 1, GL_FALSE, glm::value_ptr(model));
-		prevPVM = camera->GetPreviousProjectionViewMatrix() * terrainList[0]->PrevMesh;
-		glUniformMatrix4fv(uniformPrevPVM2, 1, GL_FALSE, glm::value_ptr(prevPVM));
+		//prevPVM = camera->GetPreviousProjectionViewMatrix() * terrainList[0]->PrevMesh;
+		//glUniformMatrix4fv(uniformPrevPVM2, 1, GL_FALSE, glm::value_ptr(prevPVM));
 		terrainTextureDisp->UseTexture(0);
 		terrainTextureBlend->UseTexture(10);
 		if (shadow)
@@ -1132,8 +1328,8 @@ struct RenderEngineMain::Impl
 		terrainTexturePara->UseTextureArray(16);
 		dullTerrainMaterial->UseMaterial(uniformAlbedoMap2, uniformMetallicMap2, uniformNormalMap2, uniformRoughnessMap2, uniformParallaxMap2);
 
-		terrainList[0]->RenderTessellatedMesh();
-		terrainList[0]->PrevMesh = model;
+		terrainList[0]->RenderMesh();
+		//terrainList[0]->PrevMesh = model;
 	}
 
 	void RenderEnvCubeMap(bool is_cubeMap)
@@ -1146,7 +1342,7 @@ struct RenderEngineMain::Impl
 		{
 			environmentTexture->UseTexture(0);
 		}
-		mesh_cube->RenderCube();
+		mesh_cube->RenderMesh();
 	}
 
 	void RenderScene(std::shared_ptr<Shader> shader) {
@@ -1337,19 +1533,6 @@ struct RenderEngineMain::Impl
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
-	void BRDFPass()
-	{
-		glViewport(0, 0, brdfMap->GetFBOWidth(), brdfMap->GetFBOHeight());
-
-		brdfMap->BindFBO();
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		brdfShader->UseShaderObject();
-		quad->RenderQuad();
-
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	}
-
 	void DirectionalShadowMapPass(DirectionalLight* light) {
 
 		testLitView[0] = light->CalculateCascadeLightTransform();
@@ -1529,7 +1712,7 @@ struct RenderEngineMain::Impl
 		glUniform1f(ssaoShader->GetSampleRadiusLocation(), 0.1f);
 		glUniformMatrix4fv(ssaoShader->GetProjectionLocation(), 1, GL_FALSE, glm::value_ptr(camera->GetProjectionMatrix()));
 
-		quad->RenderQuad();
+		quad->at(0)->RenderMesh();
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
@@ -1544,7 +1727,7 @@ struct RenderEngineMain::Impl
 		ssao->AttachFBOToTextureUnit(0, GL_TEXTURE1, 0, 0);
 		ssaoBlurShader->SetTexture(1);
 
-		quad->RenderQuad();
+		quad->at(0)->RenderMesh();
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
@@ -1722,7 +1905,7 @@ struct RenderEngineMain::Impl
 			{
 				blur->AttachFBOToTextureUnit(!isHorizontalFbo, GL_TEXTURE1, 0, 0);
 			}
-			quad->RenderQuad();
+			quad->at(0)->RenderMesh();
 			isHorizontalFbo = !isHorizontalFbo;
 		}
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -1743,7 +1926,7 @@ struct RenderEngineMain::Impl
 
 		hdr->AttachFBOToTextureUnit(0, GL_TEXTURE2, 1, 2);
 		motionBlurShader->SetMotionTexture(2);
-		quad->RenderQuad();
+		quad->at(0)->RenderMesh();
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
@@ -2154,7 +2337,7 @@ struct RenderEngineMain::Impl
 
 			hdrShader->Validate();
 
-			quad->RenderQuad();
+			quad->at(0)->RenderMesh();
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		//}
 	}

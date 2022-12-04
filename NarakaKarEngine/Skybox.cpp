@@ -2,11 +2,51 @@
 #include "Skybox.h"
 #include "Fbo_Handler.h"
 #include "Model_Shader.h"
-#include "Static_Mesh.h"
+#include "Mesh.h"
 #include "Texture.h"
 
 using namespace NarakaKarEngine;
 using namespace RenderEngine;
+
+std::shared_ptr<Mesh> CreateSkyMesh()
+{
+	// Mesh setup
+	std::vector<GLuint> skyboxIndices = {
+		//front
+		0,1,2,
+		2,1,3,
+		//right
+		2,3,5,
+		5,3,7,
+		//back
+		5,7,4,
+		4,7,6,
+		//left
+		4,6,0,
+		0,6,1,
+		//top
+		4,0,5,
+		5,0,2,
+		//bottom
+		1,6,3,
+		3,6,7
+	};
+
+	std::vector<std::vector<GLfloat>> skyboxVertices = {
+		std::vector<GLfloat>{ - 1.0f, 1.0f, -1.0f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f },
+		std::vector<GLfloat>{ -1.0f, -1.0f, -1.0f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f },
+		std::vector<GLfloat>{ 1.0f, 1.0f, -1.0f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f },
+		std::vector<GLfloat>{ 1.0f, -1.0f, -1.0f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f },
+
+		std::vector<GLfloat>{ -1.0f, 1.0f, 1.0f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f },
+		std::vector<GLfloat>{ 1.0f, 1.0f, 1.0f,			0.0f, 0.0f,		0.0f, 0.0f, 0.0f },
+		std::vector<GLfloat>{ -1.0f, -1.0f, 1.0f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f },
+		std::vector<GLfloat>{ 1.0f, -1.0f, 1.0f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f }
+
+	};
+	
+	return std::make_shared<Mesh>(0, std::move(skyboxVertices), std::move(skyboxIndices), std::move(MeshGenParams()));
+}
 
 Skybox::Skybox()
 {
@@ -17,45 +57,7 @@ Skybox::Skybox()
 	uniformView = skyShader->GetViewLocation();
 	uniformPrevPV = skyShader->GetPrevPVMLocation();
 
-	skyMesh = new Static_Mesh();
-
-	//// Mesh setup
-	//unsigned int skyboxIndices[] = {
-	//	//front
-	//	0,1,2,
-	//	2,1,3,
-	//	//right
-	//	2,3,5,
-	//	5,3,7,
-	//	//back
-	//	5,7,4,
-	//	4,7,6,
-	//	//left
-	//	4,6,0,
-	//	0,6,1,
-	//	//top
-	//	4,0,5,
-	//	5,0,2,
-	//	//bottom
-	//	1,6,3,
-	//	3,6,7
-	//};
-
-	//float skyboxVertices[] = {
-	//	-1.0f, 1.0f, -1.0f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f,
-	//	-1.0f, -1.0f, -1.0f,	0.0f, 0.0f,		0.0f, 0.0f, 0.0f,
-	//	1.0f, 1.0f, -1.0f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f,
-	//	1.0f, -1.0f, -1.0f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f,
-
-	//	-1.0f, 1.0f, 1.0f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f,
-	//	1.0f, 1.0f, 1.0f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f,
-	//	-1.0f, -1.0f, 1.0f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f,
-	//	1.0f, -1.0f, 1.0f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f
-
-	//};
-
-	//skyMesh = new Static_Mesh();
-	//skyMesh->CreateMesh(skyboxVertices, skyboxIndices, 64, 36);
+	skyMesh = std::move(CreateSkyMesh());
 }
 
 Skybox::Skybox(std::vector<std::string> faceLocation)
@@ -67,7 +69,8 @@ Skybox::Skybox(std::vector<std::string> faceLocation)
 	uniformProjection = skyShader->GetProjectionLocation();
 	uniformView = skyShader->GetViewLocation();
 	uniformPrevPV = skyShader->GetPrevPVMLocation();
-	skyMesh = new Static_Mesh();
+
+	skyMesh = std::move(CreateSkyMesh());
 
 	auto loc = faceLocation[0];
 	for (int i = 1; i < 6; ++i) { loc += "\n" + faceLocation[i]; }
@@ -99,7 +102,7 @@ void Skybox::DrawSkybox(glm::mat4 viewMatrix, glm::mat4 projectionMatrix, glm::m
 
 	skyShader->Validate();
 
-	skyMesh->RenderCube();
+	skyMesh->RenderMesh();
 
 	//glDepthMask(GL_TRUE);
 }
@@ -126,7 +129,7 @@ void Skybox::DrawHDRSkybox(glm::mat4 viewMatrix, glm::mat4 projectionMatrix, glm
 
 	skyShader->Validate();
 
-	skyMesh->RenderCube();
+	skyMesh->RenderMesh();
 }
 
 Skybox::~Skybox()
@@ -134,10 +137,6 @@ Skybox::~Skybox()
 	if (skyShader != nullptr) {
 		delete skyShader;
 		skyShader = nullptr;
-	}
-	if (skyMesh != nullptr) {
-		delete skyMesh;
-		skyMesh = nullptr;
 	}
 	if(cubeMap != nullptr)
 	{

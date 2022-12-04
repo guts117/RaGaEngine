@@ -1,14 +1,14 @@
 #include "pch.h"
 #include "Static_Model.h"
 #include "Texture.h"
-#include "Static_Mesh.h"
+#include "Mesh.h"
 
 using namespace NarakaKarEngine;
 using namespace RenderEngine;
 
 void Static_Model::RenderModel()
 {
-	for (size_t i = 0; i < static_MeshList.size(); i++) {
+	for (size_t i = 0; i < MeshList.size(); i++) {
 		unsigned int materialIndex = meshToTex[i];
 
 		if (materialIndex < textureList.size() && textureList[materialIndex]) {
@@ -20,7 +20,7 @@ void Static_Model::RenderModel()
 			glowTextureList[materialIndex]->UseTexture(12);
 		}
 
-		static_MeshList[i]->RenderMesh();
+		MeshList[i]->RenderMesh();
 	}
 }
 
@@ -52,10 +52,11 @@ void Static_Model::LoadNode(aiNode* node, const aiScene* scene)
 
 void Static_Model::LoadMesh(aiMesh* mesh, const aiScene* scene)
 {
-	std::vector<GLfloat> vertices;
+	std::vector<std::vector<GLfloat>> vertices2D;
 	std::vector<unsigned int> indices;
 
 	for (size_t i = 0; i < mesh->mNumVertices; i++) {
+		std::vector<GLfloat> vertices;
 		vertices.insert(vertices.end(), { mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z });
 		if (mesh->mTextureCoords[0]) {
 			vertices.insert(vertices.end(), { mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y });
@@ -66,6 +67,7 @@ void Static_Model::LoadMesh(aiMesh* mesh, const aiScene* scene)
 		vertices.insert(vertices.end(), { mesh->mNormals[i].x, mesh->mNormals[i].y,  mesh->mNormals[i].z });
 		vertices.insert(vertices.end(), { mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z });
 		//vertices.insert(vertices.end(), { -mesh->mBitangents[i].x, -mesh->mBitangents[i].y, -mesh->mBitangents[i].z });
+		vertices2D.push_back(vertices);
 	}
 
 	for (size_t i = 0; i < mesh->mNumFaces; i++) {
@@ -74,9 +76,9 @@ void Static_Model::LoadMesh(aiMesh* mesh, const aiScene* scene)
 			indices.push_back(face.mIndices[j]);
 		}
 	}
-	Static_Mesh* newMesh = new Static_Mesh();
-	newMesh->CreateMeshWithTangentNormal(&vertices[0], &indices[0], vertices.size(), indices.size());
-	static_MeshList.push_back(newMesh);
+	auto matIndex = mesh->mMaterialIndex;
+	auto newMesh = std::make_shared<Mesh>(std::move(matIndex), std::move(vertices2D), std::move(indices), std::move(MeshGenParams{true, true}));
+	MeshList.push_back(newMesh);
 	meshToTex.push_back(mesh->mMaterialIndex);
 
 	newMesh = nullptr;
@@ -336,10 +338,34 @@ void Static_Model::LoadMaterials(const aiScene* scene)
 
 void Static_Model::ClearModel()
 {
-	for (size_t i = 0; i < static_MeshList.size(); i++) {
-		if (static_MeshList[i]) {
-			delete static_MeshList[i];
-			static_MeshList[i] = nullptr;
+	for (size_t i = 0; i < textureList.size(); i++) {
+		if (textureList[i]) {
+			delete textureList[i];
+			textureList[i] = nullptr;
+		}
+	}
+	for (size_t i = 0; i < metalTextureList.size(); i++) {
+		if (metalTextureList[i]) {
+			delete metalTextureList[i];
+			metalTextureList[i] = nullptr;
+		}
+	}
+	for (size_t i = 0; i < roughTextureList.size(); i++) {
+		if (roughTextureList[i]) {
+			delete roughTextureList[i];
+			roughTextureList[i] = nullptr;
+		}
+	}
+	for (size_t i = 0; i < parallaxTextureList.size(); i++) {
+		if (parallaxTextureList[i]) {
+			delete parallaxTextureList[i];
+			parallaxTextureList[i] = nullptr;
+		}
+	}
+	for (size_t i = 0; i < glowTextureList.size(); i++) {
+		if (glowTextureList[i]) {
+			delete glowTextureList[i];
+			glowTextureList[i] = nullptr;
 		}
 	}
 }

@@ -9,7 +9,7 @@ namespace NarakaKarEngine
 		class Texture;
 		class Material;
 		class Static_Model;
-		class Static_Mesh;
+		class Mesh;
 		class Shader;
 		class Camera;
 		class DirectionalLight;
@@ -21,7 +21,7 @@ namespace NarakaKarEngine
 		public:
 			Static_Object() = default;
 
-			void SetUpNativeModelData(std::shared_ptr<Static_Mesh> mesh,
+			void SetUpNativeModelData(std::shared_ptr<Mesh> mesh,
 				std::string albedoPath = "",
 				std::string metalPath = "",
 				std::string roughPath = "",
@@ -59,7 +59,7 @@ namespace NarakaKarEngine
 
 			std::unique_ptr <Material> m_material = std::make_unique<Material>();
 
-			std::shared_ptr <Static_Mesh> m_staticMesh = std::make_shared<Static_Mesh>();
+			std::shared_ptr <Mesh> m_staticMesh;
 			std::shared_ptr<Camera> m_camera = std::make_shared<Camera>();
 			std::shared_ptr<DirectionalLight> m_mainLight = std::make_shared<DirectionalLight>();
 			std::shared_ptr<SpotLight> m_firstSpotLight = std::make_shared<SpotLight>();

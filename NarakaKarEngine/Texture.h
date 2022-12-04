@@ -8,6 +8,17 @@ namespace NarakaKarEngine
 {
 	namespace RenderEngine
 	{
+		enum TexType
+		{
+			Albedo,
+			Metallic,
+			Roughness,
+			Normal,
+			Parallax,
+			Glow,
+			Displacement,
+		};
+
 		class Texture
 		{
 		public:

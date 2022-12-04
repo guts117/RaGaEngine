@@ -7,8 +7,7 @@ namespace NarakaKarEngine
 {
 	namespace RenderEngine
 	{
-		class Static_Mesh;
-		class Animated_Mesh;
+		class Mesh;
 		class VertexBoneData;
 		class Texture;
 
@@ -41,8 +40,7 @@ namespace NarakaKarEngine
 			virtual void LoadMaterials(const aiScene* scene);
 			void ClearModel();
 
-			std::vector<Static_Mesh*> static_MeshList;
-			std::vector<Animated_Mesh*> anim_MeshList;
+			std::vector<std::shared_ptr<Mesh>> MeshList;
 			std::vector<Texture*> textureList;
 			std::vector<Texture*> metalTextureList;
 			std::vector<Texture*> normalTextureList;

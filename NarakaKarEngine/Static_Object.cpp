@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "Static_Object.h"
 #include "Static_Model.h"
-#include "Static_Mesh.h"
+#include "Mesh.h"
 #include "Material.h"
 #include "Texture.h"
 #include "Shader.h"
@@ -14,7 +14,7 @@
 using namespace NarakaKarEngine;
 using namespace RenderEngine;
 
-void Static_Object::SetUpNativeModelData(std::shared_ptr<Static_Mesh> mesh,
+void Static_Object::SetUpNativeModelData(std::shared_ptr<Mesh> mesh,
 	std::string albedoPath,
 	std::string metalPath,
 	std::string roughPath,
@@ -107,8 +107,8 @@ void Static_Object::DrawNativeObject(std::shared_ptr<Shader> shader, std::shared
 
 	glUniformMatrix4fv(m_uniformModel, 1, GL_FALSE, glm::value_ptr(m_model));
 
-	m_prevPVM = camera->GetPreviousProjectionViewMatrix() * m_staticMesh->PrevMesh;
-	glUniformMatrix4fv(m_uniformPrevPVM, 1, GL_FALSE, glm::value_ptr(m_prevPVM));
+	//m_prevPVM = camera->GetPreviousProjectionViewMatrix() * m_staticMesh->PrevMesh;
+	//glUniformMatrix4fv(m_uniformPrevPVM, 1, GL_FALSE, glm::value_ptr(m_prevPVM));
 
 	m_albedoTexture->UseTexture(albedoTexUnit);
 	m_metallicTexture->UseTexture(metallicTexUnit);
@@ -120,7 +120,7 @@ void Static_Object::DrawNativeObject(std::shared_ptr<Shader> shader, std::shared
 	m_material->UseMaterial(m_uniformAlbedoMap, m_uniformMetallicMap, m_uniformNormalMap, m_uniformRoughnessMap, m_uniformParallaxMap, m_uniformGlowMap);
 	
 	m_staticMesh->RenderMesh();
-	m_staticMesh->PrevMesh = m_model;
+	//m_staticMesh->PrevMesh = m_model;
 	if (!isRigidBody) { m_model = glm::mat4(1.0f); }
 }
 

@@ -9,7 +9,7 @@ namespace NarakaKarEngine
 	{
 		class Model_Shader;
 		class Fbo_Handler;
-		class Static_Mesh;
+		class Mesh;
 		class Texture;
 
 		class Skybox
@@ -24,7 +24,7 @@ namespace NarakaKarEngine
 			~Skybox();
 
 		private:
-			Static_Mesh* skyMesh = nullptr;
+			std::shared_ptr<Mesh> skyMesh;
 			Model_Shader* skyShader = nullptr;
 
 			Texture* cubeMap;

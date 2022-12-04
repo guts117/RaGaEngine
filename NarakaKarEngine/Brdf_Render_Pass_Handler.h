@@ -1,0 +1,35 @@
+#ifndef BRDF_SHADER_PASS
+#define BRDF_SHADER_PASS
+
+#include "Scene_Render_Pass_Handler.h"
+
+namespace NarakaKarEngine
+{
+	namespace RenderEngine
+	{
+		class Render_Object;
+		class Shader_Object;
+		class Fbo_Handler;
+
+		class Brdf_Render_Pass_Handler final :
+			public Scene_Render_Pass_Handler
+		{
+		public:
+			explicit Brdf_Render_Pass_Handler() = delete;
+			explicit Brdf_Render_Pass_Handler(std::shared_ptr<Fbo_Handler> fboHandlr
+				, const std::vector<std::shared_ptr<Shader_Object>>& shaderVec
+				, std::shared_ptr<std::vector<std::shared_ptr<std::any>>> inputs = nullptr);
+
+			virtual void Update(std::shared_ptr<std::vector<std::shared_ptr<Render_Object>>> renderObj, const CamParam& camParam) override;
+
+			Brdf_Render_Pass_Handler(Brdf_Render_Pass_Handler&& rhs) noexcept = default;
+			Brdf_Render_Pass_Handler& operator=(Brdf_Render_Pass_Handler&& rhs) noexcept = default;
+
+			Brdf_Render_Pass_Handler(const Brdf_Render_Pass_Handler& rhs) noexcept = delete;
+			Brdf_Render_Pass_Handler& operator=(const Brdf_Render_Pass_Handler& rhs) noexcept = delete;
+
+			~Brdf_Render_Pass_Handler();
+		};
+	}
+}
+#endif
