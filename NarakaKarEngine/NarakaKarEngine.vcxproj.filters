@@ -201,6 +201,9 @@
     <ClCompile Include="Irradiance_Convolution_Render_Pass_Handler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Directional_Shadow_Map_Render_Pass_Handler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Animated_Model.h">
@@ -387,6 +390,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Irradiance_Convolution_Render_Pass_Handler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Directional_Shadow_Map_Render_Pass_Handler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

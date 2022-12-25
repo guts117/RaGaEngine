@@ -9,21 +9,23 @@ using namespace RenderEngine;
 
 struct Render_Object::Impl
 {
-	std::shared_ptr<std::vector<std::shared_ptr<Mesh>>> m_Meshes;
-	std::shared_ptr<std::map<TexType, std::vector<std::shared_ptr<Texture>>>> m_TextureMap;
-	std::shared_ptr<glm::mat4> m_ModelMatrix;
-	std::shared_ptr<glm::mat4> m_PrevModelMatrix;
-	std::shared_ptr<std::vector<BoneTransform>> m_BoneMatrices;
+	std::weak_ptr<std::vector<Mesh>> m_Meshes;
+	std::weak_ptr<std::map<TexType, std::vector<Texture>>> m_TextureMap;
+	std::weak_ptr<glm::mat4> m_ModelMatrix;
+	std::weak_ptr<glm::mat4> m_PrevModelMatrix;
+	std::weak_ptr<std::vector<BoneTransform>> m_BoneMatrices;
 
 	Impl() = delete;
 
-	Impl(std::shared_ptr<std::vector<std::shared_ptr<Mesh>>> meshes
-		, std::shared_ptr<std::map<TexType, std::vector<std::shared_ptr<Texture>>>> textureMap
+	Impl(std::shared_ptr<std::vector<Mesh>> meshes
+		, std::shared_ptr<std::map<TexType, std::vector<Texture>>> textureMap
+		, std::shared_ptr<glm::mat4> modelMatrix
+		, std::shared_ptr<glm::mat4> prevModelMatrix
 		, std::shared_ptr<std::vector<BoneTransform>> boneMatrices)
 		: m_Meshes{ meshes }
 		, m_TextureMap{ textureMap }
-		, m_ModelMatrix{ std::make_shared<glm::mat4>(1.0f) }
-		, m_PrevModelMatrix{ std::make_shared<glm::mat4>(1.0f) }
+		, m_ModelMatrix{ modelMatrix }
+		, m_PrevModelMatrix{ prevModelMatrix }
 		, m_BoneMatrices{ boneMatrices }
 	{
 	}
@@ -36,89 +38,124 @@ struct Render_Object::Impl
 
 	~Impl() = default;
 
-	void RenderObject(std::shared_ptr<Shader_Object> shader, const glm::mat4& prevVP, bool&& hasModelMatrix)
+	void RenderObject(Shader_Object& shader, const RenderObjectParams&& params)
 	{
-		if (hasModelMatrix) 
+		if (params.useWorldSpaceTransform && !m_ModelMatrix.expired())
 		{
-			shader->SetVariable("Model", *m_ModelMatrix);
-			shader->SetVariable("PrevPMV", prevVP * *(m_PrevModelMatrix));
-			*m_PrevModelMatrix = *m_ModelMatrix;
-		}
-
-		if (m_BoneMatrices != nullptr) 
-		{
-			for (auto i = 0; i < m_BoneMatrices->size(); i++) // move all matrices for actual model position to shader
+			auto modelMatrix = m_ModelMatrix.lock();
+			if(modelMatrix)
 			{
-				shader->SetVariable("gBones", *m_BoneMatrices->at(i).FinalWorldTransform);
-				shader->SetVariable("gPrevBones", *m_BoneMatrices->at(i).PrevFinalWorldTransfrom);
-				*m_BoneMatrices->at(i).PrevFinalWorldTransfrom = *m_BoneMatrices->at(i).FinalWorldTransform;
+				shader.SetVariable("Model", *modelMatrix);
+
+				if (params.prevViewProjection != nullptr && !m_PrevModelMatrix.expired())
+				{
+					auto prevModMat = m_PrevModelMatrix.lock();
+					shader.SetVariable("PrevPMV", *params.prevViewProjection * *(prevModMat));
+					*prevModMat = *modelMatrix;
+				}
 			}
 		}
 
-		auto resetToTexUnit = shader->GetTextureUnit();
-
-		for (size_t i = 0; i < m_Meshes->size(); ++i) 
+		if (auto boneMatrices = m_BoneMatrices.lock()) 
 		{
-			auto materialIndex = m_Meshes->at(i)->GetMaterialIndex();
-
-			if (m_TextureMap != nullptr && materialIndex < m_TextureMap->size()) 
+			for (auto i = 0; i < boneMatrices->size(); i++) // move all matrices for actual model position to shader
 			{
-				for (auto texType = 0; texType < Max; ++texType)
+				shader.SetVariable("gBones", *boneMatrices->at(i).FinalWorldTransform);
+				shader.SetVariable("gPrevBones", *boneMatrices->at(i).PrevFinalWorldTransfrom);
+				*boneMatrices->at(i).PrevFinalWorldTransfrom = *boneMatrices->at(i).FinalWorldTransform;
+			}
+		}
+
+		if (auto meshes = m_Meshes.lock()) 
+		{
+			auto resetToTexUnit = shader.GetTextureUnit();
+
+			auto textureMap = m_TextureMap.lock();
+
+			for (size_t i = 0; i < meshes->size(); ++i)
+			{
+				auto materialIndex = meshes->at(i)->GetMaterialIndex();
+
+				if (params.useTextures && textureMap)
 				{
-					if (m_TextureMap->contains((TexType)texType))
+					for (auto texType = 0; texType < Max; ++texType)
 					{
-						switch ((TexType)texType)
+						if (textureMap->contains((TexType)texType))
 						{
+							if (materialIndex >= textureMap->at((TexType)texType).size()) { continue; }
+
+							switch ((TexType)texType)
+							{
 							case Albedo:
-								m_TextureMap->at(Albedo)[materialIndex]->UseTextureTemp(shader->SetTextureUnit("material.albedoMap"));
+								textureMap->at(Albedo)[materialIndex]->UseTextureTemp(shader.SetTextureUnit("material.albedoMap"));
 								break;
 							case Metallic:
-								m_TextureMap->at(Metallic)[materialIndex]->UseTextureTemp(shader->SetTextureUnit("material.metallicMap"));
+								textureMap->at(Metallic)[materialIndex]->UseTextureTemp(shader.SetTextureUnit("material.metallicMap"));
 								break;
 							case Roughness:
-								m_TextureMap->at(Roughness)[materialIndex]->UseTextureTemp(shader->SetTextureUnit("material.roughnessMap"));
+								textureMap->at(Roughness)[materialIndex]->UseTextureTemp(shader.SetTextureUnit("material.roughnessMap"));
 								break;
 							case Normal:
-								m_TextureMap->at(Normal)[materialIndex]->UseTextureTemp(shader->SetTextureUnit("material.normalMap"));
+								textureMap->at(Normal)[materialIndex]->UseTextureTemp(shader.SetTextureUnit("material.normalMap"));
 								break;
 							case Parallax:
-								m_TextureMap->at(Parallax)[materialIndex]->UseTextureTemp(shader->SetTextureUnit("material.parallaxMap"));
+								textureMap->at(Parallax)[materialIndex]->UseTextureTemp(shader.SetTextureUnit("material.parallaxMap"));
 								break;
 							case Glow:
-								m_TextureMap->at(Glow)[materialIndex]->UseTextureTemp(shader->SetTextureUnit("material.glowMap"));
+								textureMap->at(Glow)[materialIndex]->UseTextureTemp(shader.SetTextureUnit("material.glowMap"));
+								break;
+							case Displacement:
+								textureMap->at(Displacement)[materialIndex]->UseTextureTemp(shader.SetTextureUnit("displacementMap"));
+								//ToDo: Add dispFactor through material or something
+								shader.SetVariable("dispFactor", 0.2f);
 								break;
 							default:
-								m_TextureMap->at(Default)[materialIndex]->UseTextureTemp(shader->SetTextureUnit("theTexture"));
+								textureMap->at(Default)[materialIndex]->UseTextureTemp(shader.SetTextureUnit("theTexture"));
 								break;
+							}
 						}
 					}
 				}
-				
-				//m_TextureMap->at(Displacement)[materialIndex]->UseTexture(shader->SetTextureUnit("displacementMap"));
-				//shader->SetVariable("dispFactor", );
-			}
 
-			m_Meshes->at(i)->RenderMesh();
+				meshes->at(i)->RenderMesh();
+			}
+			shader.ResetTextureUnit(std::move(resetToTexUnit));
 		}
-		shader->ResetTextureUnit(std::move(resetToTexUnit));
+	}
+
+	bool IsTesselated() const
+	{
+		auto check = [&](std::shared_ptr<Mesh> mesh)->bool {return mesh->IsTessellated(); };
+		if (auto meshes = m_Meshes.lock()) 
+		{
+			return std::find_if(meshes->begin(), meshes->end(), check) != meshes->end();
+		}
+		return false;
 	}
 };
 
-Render_Object::Render_Object(std::shared_ptr<std::vector<std::shared_ptr<Mesh>>> meshes
-			, std::shared_ptr<std::map<TexType, std::vector<std::shared_ptr<Texture>>>> textureMap
+Render_Object::Render_Object(std::shared_ptr<std::vector<Mesh>> meshes
+			, std::shared_ptr<std::map<TexType, std::vector<Texture>>> textureMap
+			, std::shared_ptr<glm::mat4> modelMatrix
+			, std::shared_ptr<glm::mat4> prevModelMatrix
 			, std::shared_ptr<std::vector<BoneTransform>> boneMatrices)
-			: m_pImpl{std::make_unique<Impl>(meshes, textureMap, boneMatrices)}
+			: m_pImpl{std::make_unique<Impl>(meshes, textureMap, modelMatrix, prevModelMatrix, boneMatrices)}
 {
 }
 
-void Render_Object::SetTextures(std::shared_ptr<std::map<TexType, std::vector<std::shared_ptr<Texture>>>> textureMap)
+void Render_Object::SetTextures(std::map<TexType, std::vector<Texture>>&& textureMap)
 {
-	Pimpl()->m_TextureMap = textureMap;
+	Pimpl()->m_TextureMap = std::make_shared<std::map<TexType, std::vector<Texture>>>(std::move(textureMap));
 }
 
-void Render_Object::RenderObject(std::shared_ptr<Shader_Object> shader, const glm::mat4& prevPV, bool&& hasModelMatrix)
+void Render_Object::RenderObject(Shader_Object& shader, const RenderObjectParams&& params)
 {
-	Pimpl()->RenderObject(shader, prevPV, std::move(hasModelMatrix));
+	Pimpl()->RenderObject(shader, std::move(params));
+}
+
+const bool Render_Object::IsTesselated() const
+{
+	return Pimpl()->IsTesselated();
 }
 
 Render_Object::~Render_Object() = default;

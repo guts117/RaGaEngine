@@ -703,7 +703,7 @@ const GLuint& Shader_Object::SetTextureUnit(std::string&& textureName)
 	return texUnit++;
 }
 
-const GLuint Shader_Object::GetTextureUnit()
+const GLuint Shader_Object::GetTextureUnit() const
 {
 	return Pimpl()->m_TextureUnit;
 }

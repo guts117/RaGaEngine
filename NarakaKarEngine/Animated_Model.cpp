@@ -31,7 +31,7 @@ void Animated_Model::RenderModel() {
 		glUniformMatrix4fv(m_prev_bone_location[i], 1, GL_TRUE, (const GLfloat*)&prevTransforms[i]);
 	}
 
-	for (size_t i = 0; i < MeshList.size(); i++) {
+	for (size_t i = 0; i < MeshList->size(); i++) {
 		unsigned int materialIndex = meshToTex[i];
 
 		if (materialIndex < textureList.size() && textureList[materialIndex]) {
@@ -43,7 +43,7 @@ void Animated_Model::RenderModel() {
 			glowTextureList[materialIndex]->UseTexture(12);
 		}
 
-		MeshList[i]->RenderMesh();
+		MeshList->at(i)->RenderMesh();
 	}
 
 	prevTransforms = transforms;
@@ -51,6 +51,8 @@ void Animated_Model::RenderModel() {
 
 void Animated_Model::LoadModel(const std::string& fileName)
 {
+	MeshList = std::make_shared<std::vector<std::shared_ptr<Mesh>>>();
+
 	static Assimp::Importer importer;
 	scene = new aiScene(*importer.ReadFile(fileName, aiProcess_Triangulate | aiProcess_OptimizeMeshes | aiProcess_FlipUVs | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace));
 	importer.GetOrphanedScene();
@@ -191,7 +193,7 @@ void Animated_Model::LoadMesh(aiMesh* mesh, const aiScene* scene)
 
 	meshToTex.push_back(mesh->mMaterialIndex);
 	auto newMesh = std::make_shared<Mesh>(std::move(mesh->mMaterialIndex), std::move(vertices2D), std::move(indices), std::move(MeshGenParams{true, true, false, 0, std::move(bones)}));
-	MeshList.push_back(newMesh);
+	MeshList->push_back(newMesh);
 
 	newMesh = nullptr;
 	LoadMaterials(scene);

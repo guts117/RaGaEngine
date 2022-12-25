@@ -150,6 +150,11 @@ const GLuint& Mesh::GetMaterialIndex() const
 	return Pimpl()->m_MaterialIndex;
 }
 
+const bool& Mesh::IsTessellated() const
+{
+	return Pimpl()->m_IsTesselated;
+}
+
 //ToDo: Add Support for Render with Static and Dynamic Batching.
 
 Mesh::~Mesh() = default;

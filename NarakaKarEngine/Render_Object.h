@@ -12,6 +12,13 @@ namespace NarakaKarEngine
 		class Texture;
 		class Shader_Object;
 
+		struct RenderObjectParams
+		{
+			const bool&& useWorldSpaceTransform = false;
+			const bool&& useTextures = false;
+			const glm::mat4* prevViewProjection = nullptr;	//has motion blur
+		};
+
 		struct BoneTransform
 		{
 			std::shared_ptr<const aiMatrix4x4> FinalWorldTransform;
@@ -23,11 +30,13 @@ namespace NarakaKarEngine
 		public:
 			explicit Render_Object() = delete;
 
-			explicit Render_Object(std::shared_ptr<std::vector<std::shared_ptr<Mesh>>> meshes
-								, std::shared_ptr<std::map<TexType, std::vector<std::shared_ptr<Texture>>>> textureMap = nullptr
+			explicit Render_Object(std::shared_ptr<std::vector<Mesh>> meshes
+								, std::shared_ptr<std::map<TexType, std::vector<Texture>>> textureMap = nullptr
+								, std::shared_ptr<glm::mat4> modelMatrix = nullptr
+								, std::shared_ptr<glm::mat4> prevModelMatrix = nullptr
 								, std::shared_ptr<std::vector<BoneTransform>> boneMatrices = nullptr);
 
-			void SetTextures(std::shared_ptr<std::map<TexType, std::vector<std::shared_ptr<Texture>>>> textureMap);
+			void SetTextures(std::map<TexType, std::vector<Texture>>&& textureMap);
 
 			Render_Object(Render_Object&& rhs) noexcept = default;
 			Render_Object& operator=(Render_Object&& rhs) noexcept = default;
@@ -35,8 +44,10 @@ namespace NarakaKarEngine
 			Render_Object(const Render_Object& rhs) noexcept = delete;
 			Render_Object& operator=(const Render_Object& rhs) noexcept = delete;
 
-			void RenderObject(std::shared_ptr<Shader_Object> shader, const glm::mat4& prevPV, bool&& hasModelMatrix = true);
-			
+			void RenderObject(Shader_Object& shader, const RenderObjectParams&& params);
+
+			const bool IsTesselated() const;
+
 			~Render_Object();
 		private:
 			struct Impl;

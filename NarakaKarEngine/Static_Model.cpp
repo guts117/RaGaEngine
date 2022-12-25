@@ -8,7 +8,7 @@ using namespace RenderEngine;
 
 void Static_Model::RenderModel()
 {
-	for (size_t i = 0; i < MeshList.size(); i++) {
+	for (size_t i = 0; i < MeshList->size(); i++) {
 		unsigned int materialIndex = meshToTex[i];
 
 		if (materialIndex < textureList.size() && textureList[materialIndex]) {
@@ -20,12 +20,13 @@ void Static_Model::RenderModel()
 			glowTextureList[materialIndex]->UseTexture(12);
 		}
 
-		MeshList[i]->RenderMesh();
+		MeshList->at(i)->RenderMesh();
 	}
 }
 
 void Static_Model::LoadModel(const std::string& fileName)
 {
+	MeshList = std::make_shared<std::vector<std::shared_ptr<Mesh>>>();
 	Assimp::Importer importer;
 	scene = importer.ReadFile(fileName, aiProcess_Triangulate | aiProcess_OptimizeMeshes | aiProcess_FlipUVs | aiProcess_GenSmoothNormals | aiProcess_JoinIdenticalVertices | aiProcess_CalcTangentSpace);
 
@@ -78,7 +79,7 @@ void Static_Model::LoadMesh(aiMesh* mesh, const aiScene* scene)
 	}
 	auto matIndex = mesh->mMaterialIndex;
 	auto newMesh = std::make_shared<Mesh>(std::move(matIndex), std::move(vertices2D), std::move(indices), std::move(MeshGenParams{true, true}));
-	MeshList.push_back(newMesh);
+	MeshList->push_back(newMesh);
 	meshToTex.push_back(mesh->mMaterialIndex);
 
 	newMesh = nullptr;

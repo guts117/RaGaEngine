@@ -23,23 +23,29 @@ void Static_Object::SetUpNativeModelData(std::shared_ptr<Mesh> mesh,
 	std::string glowPath)
 {
 
-	LoadTexture(m_albedoTexture, albedoPath, true);
-	LoadTexture(m_metallicTexture, metalPath);
-	LoadTexture(m_roughTexture, roughPath);
-	LoadTexture(m_normalTexture, normalPath);
-	LoadTexture(m_parallaxTexture, parallaxPath);
-	LoadTexture(m_glowTexture, glowPath);
+	LoadTexture(AlbedoTexture, albedoPath, true);
+	LoadTexture(MetallicTexture, metalPath);
+	LoadTexture(RoughTexture, roughPath);
+	LoadTexture(NormalTexture, normalPath);
+	LoadTexture(ParallaxTexture, parallaxPath);
+	LoadTexture(GlowTexture, glowPath);
 	m_staticMesh = mesh;
 	m_material = std::make_unique<Material>(1, 6, 7, 11, 12, 13);
+
+	Model = std::make_shared<glm::mat4>();
+	PrevModel = std::make_shared<glm::mat4>();
 }
 
 void Static_Object::SetUpImportedModelData(std::string modelPath)
 {
 	StaticModel->LoadModel(modelPath);
 	m_material = std::make_unique<Material>(1, 6, 7, 11, 12, 13);
+
+	Model = std::make_shared<glm::mat4>();
+	PrevModel = std::make_shared<glm::mat4>();
 }
 
-void Static_Object::LoadTexture(std::unique_ptr<Texture>& texture, std::string path, bool isSRGB)
+void Static_Object::LoadTexture(std::shared_ptr<Texture>& texture, std::string path, bool isSRGB)
 {
 	if (path != "")
 	{
@@ -85,10 +91,12 @@ void Static_Object::SetUniformLocations(std::shared_ptr<Shader> shader, std::sha
 
 void Static_Object::Translate(float x, float y, float z) {
 	m_model = glm::translate(m_model, glm::vec3(x, y, z));
+	*Model = m_model;
 }
 
 void Static_Object::Rotate(float angleInDegrees, float x, float y, float z) {
 	m_model = glm::rotate(m_model, angleInDegrees * toRadians, glm::vec3(x, y, z));
+	*Model = m_model;
 }
 
 glm::mat4* Static_Object::GetModelMatrixForPhysics()
@@ -99,6 +107,7 @@ glm::mat4* Static_Object::GetModelMatrixForPhysics()
 
 void Static_Object::Scale(float x, float y, float z) {
 	m_model = glm::scale(m_model, glm::vec3(x, y, z));
+	*Model = m_model;
 }
 
 void Static_Object::DrawNativeObject(std::shared_ptr<Shader> shader, std::shared_ptr<Camera> camera)
@@ -110,13 +119,13 @@ void Static_Object::DrawNativeObject(std::shared_ptr<Shader> shader, std::shared
 	//m_prevPVM = camera->GetPreviousProjectionViewMatrix() * m_staticMesh->PrevMesh;
 	//glUniformMatrix4fv(m_uniformPrevPVM, 1, GL_FALSE, glm::value_ptr(m_prevPVM));
 
-	m_albedoTexture->UseTexture(albedoTexUnit);
-	m_metallicTexture->UseTexture(metallicTexUnit);
-	m_metallicTexture->UseTexture(metallicTexUnit);
-	m_normalTexture->UseTexture(normalTexUnit);
-	m_roughTexture->UseTexture(roughTexUnit);
-	m_parallaxTexture->UseTexture(parallaxTexUnit);
-	m_glowTexture->UseTexture(glowTexUnit);
+	AlbedoTexture->UseTexture(albedoTexUnit);
+	MetallicTexture->UseTexture(metallicTexUnit);
+	MetallicTexture->UseTexture(metallicTexUnit);
+	NormalTexture->UseTexture(normalTexUnit);
+	RoughTexture->UseTexture(roughTexUnit);
+	ParallaxTexture->UseTexture(parallaxTexUnit);
+	GlowTexture->UseTexture(glowTexUnit);
 	m_material->UseMaterial(m_uniformAlbedoMap, m_uniformMetallicMap, m_uniformNormalMap, m_uniformRoughnessMap, m_uniformParallaxMap, m_uniformGlowMap);
 	
 	m_staticMesh->RenderMesh();

@@ -14,7 +14,7 @@ Prefilter_Render_Pass_Handler::Prefilter_Render_Pass_Handler(std::shared_ptr<Fbo
 {
 }
 
-void Prefilter_Render_Pass_Handler::Update(std::shared_ptr<std::vector<std::shared_ptr<Render_Object>>> renderObj, const CamParam& camParam)
+void Prefilter_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared_ptr<Render_Object>>>& renderObj, const CamParam* camParam, const LightParam* lightParam)
 {
 	auto captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);	
 
@@ -65,9 +65,9 @@ void Prefilter_Render_Pass_Handler::Update(std::shared_ptr<std::vector<std::shar
 					std::cout << e.what() << std::endl;
 				}
 
-				for (auto roIndex = 0; roIndex < renderObj->size(); ++roIndex)
+				for (auto roIndex = 0; roIndex < renderObj[shaderIndex].size(); ++roIndex)
 				{
-					renderObj->at(roIndex)->RenderObject(shader, camParam.PrevProjView, false);
+					renderObj[shaderIndex][roIndex]->RenderObject(*shader, std::move(RenderObjectParams{}));
 				}
 			}
 		}

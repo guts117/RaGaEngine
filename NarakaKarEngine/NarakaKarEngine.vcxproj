@@ -76,6 +76,7 @@
     <ClCompile Include="Compute_Shader.cpp" />
     <ClCompile Include="Debug.cpp" />
     <ClCompile Include="DirectionalLight.cpp" />
+    <ClCompile Include="Directional_Shadow_Map_Render_Pass_Handler.cpp" />
     <ClCompile Include="EngineUIMain.cpp" />
     <ClCompile Include="Environment_Map_Render_Pass_Handler.cpp" />
     <ClCompile Include="Fbo_Handler.cpp" />
@@ -139,6 +140,7 @@
     <ClInclude Include="Blur_Shader.h" />
     <ClInclude Include="Brdf_Render_Pass_Handler.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="Directional_Shadow_Map_Render_Pass_Handler.h" />
     <ClInclude Include="EngineUIMain.h" />
     <ClInclude Include="Environment_Map_Render_Pass_Handler.h" />
     <ClInclude Include="exprtk.hpp" />

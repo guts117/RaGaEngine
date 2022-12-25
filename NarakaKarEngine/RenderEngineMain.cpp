@@ -51,6 +51,7 @@
 #include "Prefilter_Render_Pass_Handler.h"
 #include "Environment_Map_Render_Pass_Handler.h"
 #include "Irradiance_Convolution_Render_Pass_Handler.h"
+#include "Directional_Shadow_Map_Render_Pass_Handler.h"
 
 using namespace NarakaKarEngine;
 using namespace RenderEngine;
@@ -153,12 +154,15 @@ struct RenderEngineMain::Impl
 
 	std::shared_ptr < Model_Shader > directionalShadowShader = std::make_shared<Model_Shader>();
 	std::shared_ptr < Model_Shader > omniShadowShader = std::make_shared<Model_Shader>();
+	std::shared_ptr<Shader_Object> dirShadowShader;
 
 	std::shared_ptr < Model_Shader > animDirectionalShadowShader = std::make_shared<Model_Shader>();
 	std::shared_ptr < Model_Shader > animOmniShadowShader = std::make_shared<Model_Shader>();
+	std::shared_ptr<Shader_Object> animDirShadowShader;
 
 	std::shared_ptr < Terrain_Shader> terrainDirectionalShadowShader = std::make_shared<Terrain_Shader>();
 	std::shared_ptr < Terrain_Shader> terrainOmniDirectionalShadowShader = std::make_shared<Terrain_Shader>();
+	std::shared_ptr<Shader_Object> terrDirShadowShader;
 
 	std::shared_ptr < PreZPass_Shader> static_preZPassShader = std::make_shared<PreZPass_Shader>();
 	std::unique_ptr < PreZPass_Shader> anim_preZPassShader = std::make_unique<PreZPass_Shader>();
@@ -180,17 +184,52 @@ struct RenderEngineMain::Impl
 	std::unique_ptr < MotionBlur_Shader> motionBlurShader = std::make_unique<MotionBlur_Shader>();
 	std::unique_ptr < Blur_Shader> blurShader = std::make_unique<Blur_Shader>();
 
-	std::vector< std::shared_ptr < Mesh>> meshList;
-	std::vector< std::shared_ptr < Mesh>> terrainList;
+	struct RenderObjectData
+	{
+		std::shared_ptr<std::vector<Mesh>> Meshes = nullptr;
+		std::shared_ptr<std::map<TexType, std::vector<Texture>>> TextureMap = nullptr;
+		std::shared_ptr<glm::mat4> ModelMatrix = nullptr;
+		std::shared_ptr<glm::mat4> PrevModelMatrix = nullptr;
+		std::shared_ptr<std::vector<BoneTransform>> BoneMatrices = nullptr;
+
+		void CreateTextureMap(TexType&& textype, std::string&& path)
+		{
+			auto texture = Texture(path, textype == TexType::Albedo);
+			//ToDo check for alpha channel/ currently incorrect use of find
+			if (path.find(".png" || ".gif" || ".tiff" || ".tga" || ".jp2" || ".jpx") != std::string::npos)
+			{
+				texture.LoadTextureWithAlpha();
+			}
+			else
+			{
+				texture.LoadTextureNoAlpha();
+			}
+			if (TextureMap->contains(textype)) 
+			{
+				auto vec = std::vector<Texture>();
+				vec.push_back(texture);
+				TextureMap->emplace(textype, vec);
+			}
+			else
+			{
+				TextureMap->at(textype).push_back(texture);
+			}
+		}
+	};
+
+	std::shared_ptr<std::vector<std::shared_ptr<RenderObjectData>>> renderObjDatas;
+
+	std::shared_ptr<std::vector< std::shared_ptr < Mesh>>> terrainList = std::make_shared<std::vector<std::shared_ptr<Mesh>>>();
 	std::vector< std::shared_ptr < Billboard_Mesh>> billboardList;
 	std::vector< std::shared_ptr < ParticleSystem>> particleList;
 
 	std::shared_ptr<std::vector<std::shared_ptr<Mesh>>> quad;
 	std::shared_ptr<std::vector<std::shared_ptr<Mesh>>> cwCube;
 	std::shared_ptr < Mesh> ccw_cube;
-	
-	std::shared_ptr<std::vector<std::shared_ptr<Render_Object>>> quadRO;
-	std::shared_ptr<std::vector<std::shared_ptr<Render_Object>>> cwCubeRO;
+
+	std::shared_ptr<std::vector<std::vector<std::shared_ptr<Render_Object>>>> quadRO;
+	std::shared_ptr<std::vector<std::vector<std::shared_ptr<Render_Object>>>> cwCubeRO;
+	std::shared_ptr<std::vector<std::vector<std::shared_ptr<Render_Object>>>> sceneObjRO;
 
 	std::shared_ptr < Camera> camera;
 
@@ -206,13 +245,13 @@ struct RenderEngineMain::Impl
 	std::shared_ptr < Texture> environmentTexture;
 	std::unique_ptr < Texture> skyboxTexture;
 
-	std::unique_ptr < Texture> terrainTextureDisp;
-	std::unique_ptr < Texture> terrainTextureBlend;
-	std::unique_ptr < Texture> terrainTexture;
-	std::unique_ptr < Texture> terrainTextureMetal;
-	std::unique_ptr < Texture> terrainTextureRough;
-	std::unique_ptr < Texture> terrainTextureNorm;
-	std::unique_ptr < Texture> terrainTexturePara;
+	std::shared_ptr < Texture> terrainTextureDisp;
+	std::shared_ptr < Texture> terrainTextureBlend;
+	std::shared_ptr < Texture> terrainTexture;
+	std::shared_ptr < Texture> terrainTextureMetal;
+	std::shared_ptr < Texture> terrainTextureRough;
+	std::shared_ptr < Texture> terrainTextureNorm;
+	std::shared_ptr < Texture> terrainTexturePara;
 	
 	//ToDo: #20 simulation manager class
 	//std::unique_ptr<Texture> velocitiesTexture;
@@ -275,6 +314,7 @@ struct RenderEngineMain::Impl
 	std::shared_ptr<Prefilter_Render_Pass_Handler> prefilterRPHandler;
 	std::shared_ptr<Environment_Map_Render_Pass_Handler> envMapRPHandler;
 	std::shared_ptr<Irradiance_Convolution_Render_Pass_Handler> irrConvRPHandler;
+	std::shared_ptr<Directional_Shadow_Map_Render_Pass_Handler> dirShadowRPHandler;
 
 	GLfloat aircraftAngle = 0.0f;
 
@@ -359,9 +399,10 @@ struct RenderEngineMain::Impl
 	bool isGameViewSelected;
 	bool isEditorViewSelected;
 
-
 	void Init()
 	{
+		renderObjDatas = std::make_shared<std::vector<std::shared_ptr<RenderObjectData>>>();
+
 		glEnable(GL_TEXTURE_3D);
 		mainWindow->Initialise();
 		lastFrameTime = static_cast<GLfloat>(glfwGetTime());
@@ -382,38 +423,37 @@ struct RenderEngineMain::Impl
 		grassTexture = std::make_unique <Texture>("Textures/grass.png", true);
 		grassTexture->LoadTextureWithAlpha();
 
+		//pyramid1 = std::make_unique<Static_Object>();
+		//pyramid1->SetUpNativeModelData(meshList[0], "Textures/rustediron2.png", "Textures/Metallic/rustediron2.png",
+		//	"Textures/Roughness/rustediron2.png", "Textures/Normal/rustediron2.png",
+		//	"Textures/Parallax/rustediron2.png", "Textures/Glow/rock.jpg");
+		//pyramid2 = std::make_unique<Static_Object>();
+		//pyramid2->SetUpNativeModelData(meshList[1], "Textures/small_metal_debris.jpg", "Textures/Metallic/small_metal_debris.jpg",
+		//	"Textures/Roughness/small_metal_debris.jpg", "Textures/Normal/small_metal_debris.jpg",
+		//	"Textures/Parallax/small_metal_debris.jpg", "Textures/Glow/small_metal_debris.jpg");
+		//rectangle1 = std::make_unique<Static_Object>();
+		//rectangle1->SetUpNativeModelData(meshList[2], "Textures/brick.jpg", "Textures/Metallic/brick.jpg",
+		//	"Textures/Roughness/brick.jpg", "Textures/Normal/brick.jpg",
+		//	"Textures/Parallax/brick.jpg", "Textures/Glow/brick.jpg");
+		//rectangle2 = std::make_unique<Static_Object>();
+		//rectangle2->SetUpNativeModelData(meshList[3], "Textures/brick_floor.png", "Textures/Metallic/brick_floor.png",
+		//	"Textures/Roughness/brick_floor.png", "Textures/Normal/brick_floor.png",
+		//	"Textures/Parallax/brick_floor.png", "Textures/Glow/brick_floor.png");
 
-		pyramid1 = std::make_unique<Static_Object>();
-		pyramid1->SetUpNativeModelData(meshList[0], "Textures/rustediron2.png", "Textures/Metallic/rustediron2.png",
-			"Textures/Roughness/rustediron2.png", "Textures/Normal/rustediron2.png",
-			"Textures/Parallax/rustediron2.png", "Textures/Glow/rock.jpg");
-		pyramid2 = std::make_unique<Static_Object>();
-		pyramid2->SetUpNativeModelData(meshList[1], "Textures/small_metal_debris.jpg", "Textures/Metallic/small_metal_debris.jpg",
-			"Textures/Roughness/small_metal_debris.jpg", "Textures/Normal/small_metal_debris.jpg",
-			"Textures/Parallax/small_metal_debris.jpg", "Textures/Glow/small_metal_debris.jpg");
-		rectangle1 = std::make_unique<Static_Object>();
-		rectangle1->SetUpNativeModelData(meshList[2], "Textures/brick.jpg", "Textures/Metallic/brick.jpg",
-			"Textures/Roughness/brick.jpg", "Textures/Normal/brick.jpg",
-			"Textures/Parallax/brick.jpg", "Textures/Glow/brick.jpg");
-		rectangle2 = std::make_unique<Static_Object>();
-		rectangle2->SetUpNativeModelData(meshList[3], "Textures/brick_floor.png", "Textures/Metallic/brick_floor.png",
-			"Textures/Roughness/brick_floor.png", "Textures/Normal/brick_floor.png",
-			"Textures/Parallax/brick_floor.png", "Textures/Glow/brick_floor.png");
 
-
-		terrainTextureDisp = std::make_unique <Texture>("Textures/Displacement/terrain.jpg");
+		terrainTextureDisp = std::make_shared <Texture>("Textures/Displacement/terrain.jpg");
 		terrainTextureDisp->LoadTextureNoAlpha();
-		terrainTextureBlend = std::make_unique <Texture>("Textures/Blend/terrain.jpg");
+		terrainTextureBlend = std::make_shared <Texture>("Textures/Blend/terrain.jpg");
 		terrainTextureBlend->LoadTextureNoAlpha();
-		terrainTexture = std::make_unique <Texture>("Textures/terrain.jpg", true);
+		terrainTexture = std::make_shared <Texture>("Textures/terrain.jpg", true);
 		terrainTexture->LoadTextureArray(glm::vec2(1024, 1024), NUM_TERRAIN_LAYERS);
-		terrainTextureMetal = std::make_unique <Texture>("Textures/Metallic/terrain.jpg");
+		terrainTextureMetal = std::make_shared <Texture>("Textures/Metallic/terrain.jpg");
 		terrainTextureMetal->LoadTextureArray(glm::vec2(256, 256), NUM_TERRAIN_LAYERS);
-		terrainTextureRough = std::make_unique <Texture>("Textures/Roughness/terrain.jpg");
+		terrainTextureRough = std::make_shared <Texture>("Textures/Roughness/terrain.jpg");
 		terrainTextureRough->LoadTextureArray(glm::vec2(256, 256), NUM_TERRAIN_LAYERS);
-		terrainTextureNorm = std::make_unique <Texture>("Textures/Normal/terrain.jpg");
+		terrainTextureNorm = std::make_shared <Texture>("Textures/Normal/terrain.jpg");
 		terrainTextureNorm->LoadTextureArray(glm::vec2(256, 256), NUM_TERRAIN_LAYERS);
-		terrainTexturePara = std::make_unique <Texture>("Textures/Parallax/terrain.jpg");
+		terrainTexturePara = std::make_shared <Texture>("Textures/Parallax/terrain.jpg");
 		terrainTexturePara->LoadTextureArray(glm::vec2(256, 256), NUM_TERRAIN_LAYERS);
 
 		//ToDo: #20 simulation manager class
@@ -536,8 +576,8 @@ struct RenderEngineMain::Impl
 		};
 		
 		quad->push_back(std::make_shared<Mesh>(0, std::move(quadVertices), std::move(quadIndices), std::move(MeshGenParams())));
-		quadRO = std::make_shared<std::vector<std::shared_ptr<Render_Object>>>();
-		quadRO->push_back(std::make_shared<Render_Object>(quad));
+		quadRO = std::make_shared<std::vector<std::vector<std::shared_ptr<Render_Object>>>>();
+		quadRO->push_back(std::vector<std::shared_ptr<Render_Object>>{std::make_shared<Render_Object>(quad)});
 
 		cwCube = std::make_shared<std::vector<std::shared_ptr<Mesh>>>();
 		std::vector<GLuint> cwCubeIndices = {
@@ -575,8 +615,8 @@ struct RenderEngineMain::Impl
 		};
 
 		cwCube->push_back(std::make_shared<Mesh>(0, std::move(cwCubeVertices), std::move(cwCubeIndices), std::move(MeshGenParams())));
-		cwCubeRO = std::make_shared<std::vector<std::shared_ptr<Render_Object>>>();
-		cwCubeRO->push_back(std::make_shared<Render_Object>(cwCube));
+		cwCubeRO = std::make_shared<std::vector<std::vector<std::shared_ptr<Render_Object>>>>();
+		cwCubeRO->push_back(std::vector<std::shared_ptr<Render_Object>>{std::make_shared<Render_Object>(cwCube)});
 
 		//CW=======================================================================
 /*
@@ -785,23 +825,120 @@ struct RenderEngineMain::Impl
 		envMapRPHandler = std::make_shared<Environment_Map_Render_Pass_Handler>(environmentMap, envMapShaders);
 		auto envMapTexData = std::make_shared<std::map<TexType, std::vector<std::shared_ptr<Texture>>>>();
 		envMapTexData->emplace(Default, std::vector<std::shared_ptr<Texture>>{environmentTexture});
-		cwCubeRO->at(0)->SetTextures(envMapTexData);
-		envMapRPHandler->Update(cwCubeRO, camParam);
-		cwCubeRO->at(0)->SetTextures(nullptr);
+		cwCubeRO->at(0)[0]->SetTextures(envMapTexData);
+		envMapRPHandler->Update(*cwCubeRO);
+		cwCubeRO->at(0)[0]->SetTextures(nullptr);
 
 		auto irrConvShaders = std::vector<std::shared_ptr<Shader_Object>>{ irradianceConvolutionShader };
 		auto inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
 		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(environmentMap)));
 		irrConvRPHandler = std::make_shared<Irradiance_Convolution_Render_Pass_Handler>(irradianceMap, irrConvShaders, inputs);
-		irrConvRPHandler->Update(cwCubeRO, camParam);
+		irrConvRPHandler->Update(*cwCubeRO);
 		
 		auto prefilterShaders = std::vector<std::shared_ptr<Shader_Object>>{ prefilterShader };
 		prefilterRPHandler = std::make_shared<Prefilter_Render_Pass_Handler>(prefilterMap, prefilterShaders, inputs);
-		prefilterRPHandler->Update(cwCubeRO, camParam);
+		prefilterRPHandler->Update(*cwCubeRO);
 		
 		auto brdfShaders = std::vector<std::shared_ptr<Shader_Object>>{ brdfShader };
 		brdfRPHandler = std::make_shared<Brdf_Render_Pass_Handler>(brdfMap, brdfShaders);
-		brdfRPHandler->Update(quadRO, camParam);
+		brdfRPHandler->Update(*quadRO);
+
+		auto dirShadowShaders = std::vector<std::shared_ptr<Shader_Object>>{ dirShadowShader/*, animDirShadowShader, terrDirShadowShader*/ };
+		dirShadowRPHandler = std::make_shared<Directional_Shadow_Map_Render_Pass_Handler>(mainLight->GetShadowMap(), dirShadowShaders);
+		sceneObjRO  = std::make_shared<std::vector<std::vector<std::shared_ptr<Render_Object>>>>();
+
+		auto unriggedSceneMeshes = std::vector<std::shared_ptr<Render_Object>>();
+		
+		for(auto rod : *renderObjDatas)
+		{
+			unriggedSceneMeshes.push_back(std::make_shared<Render_Object>(rod->Meshes, rod->TextureMap, rod->ModelMatrix, rod->PrevModelMatrix, rod->BoneMatrices));
+		}
+		
+		auto textureMap = std::make_shared<std::map<TexType, std::vector<std::shared_ptr<Texture>>>>();
+
+		textureMap = std::make_shared<std::map<TexType, std::vector<std::shared_ptr<Texture>>>>();
+		textureMap->emplace(TexType::Albedo, std::vector<std::shared_ptr<Texture>>{bulbWhite->AlbedoTexture});
+		textureMap->emplace(TexType::Metallic, std::vector<std::shared_ptr<Texture>>{bulbWhite->MetallicTexture});
+		textureMap->emplace(TexType::Roughness, std::vector<std::shared_ptr<Texture>>{bulbWhite->RoughTexture});
+		textureMap->emplace(TexType::Normal, std::vector<std::shared_ptr<Texture>>{bulbWhite->NormalTexture});
+		textureMap->emplace(TexType::Parallax, std::vector<std::shared_ptr<Texture>>{bulbWhite->ParallaxTexture});
+		textureMap->emplace(TexType::Glow, std::vector<std::shared_ptr<Texture>>{bulbWhite->GlowTexture});
+		unriggedSceneMeshes.push_back(std::make_shared<Render_Object>(bulbWhite->StaticModel->MeshList, textureMap, bulbWhite->Model, bulbWhite->PrevModel));
+		
+		textureMap = std::make_shared<std::map<TexType, std::vector<std::shared_ptr<Texture>>>>();
+		textureMap->emplace(TexType::Albedo, std::vector<std::shared_ptr<Texture>>{bulbRed->AlbedoTexture});
+		textureMap->emplace(TexType::Metallic, std::vector<std::shared_ptr<Texture>>{bulbRed->MetallicTexture});
+		textureMap->emplace(TexType::Roughness, std::vector<std::shared_ptr<Texture>>{bulbRed->RoughTexture});
+		textureMap->emplace(TexType::Normal, std::vector<std::shared_ptr<Texture>>{bulbRed->NormalTexture});
+		textureMap->emplace(TexType::Parallax, std::vector<std::shared_ptr<Texture>>{bulbRed->ParallaxTexture});
+		textureMap->emplace(TexType::Glow, std::vector<std::shared_ptr<Texture>>{bulbRed->GlowTexture});
+		unriggedSceneMeshes.push_back(std::make_shared<Render_Object>(bulbRed->StaticModel->MeshList, textureMap, bulbRed->Model, bulbRed->PrevModel));
+
+		textureMap = std::make_shared<std::map<TexType, std::vector<std::shared_ptr<Texture>>>>();
+		textureMap->emplace(TexType::Albedo, std::vector<std::shared_ptr<Texture>>{sphere->AlbedoTexture});
+		textureMap->emplace(TexType::Metallic, std::vector<std::shared_ptr<Texture>>{sphere->MetallicTexture});
+		textureMap->emplace(TexType::Roughness, std::vector<std::shared_ptr<Texture>>{sphere->RoughTexture});
+		textureMap->emplace(TexType::Normal, std::vector<std::shared_ptr<Texture>>{sphere->NormalTexture});
+		textureMap->emplace(TexType::Parallax, std::vector<std::shared_ptr<Texture>>{sphere->ParallaxTexture});
+		textureMap->emplace(TexType::Glow, std::vector<std::shared_ptr<Texture>>{sphere->GlowTexture});
+		unriggedSceneMeshes.push_back(std::make_shared<Render_Object>(sphere->StaticModel->MeshList, textureMap, sphere->Model, sphere->PrevModel));
+
+		textureMap = std::make_shared<std::map<TexType, std::vector<std::shared_ptr<Texture>>>>();
+		textureMap->emplace(TexType::Albedo, std::vector<std::shared_ptr<Texture>>{cube->AlbedoTexture});
+		textureMap->emplace(TexType::Metallic, std::vector<std::shared_ptr<Texture>>{cube->MetallicTexture});
+		textureMap->emplace(TexType::Roughness, std::vector<std::shared_ptr<Texture>>{cube->RoughTexture});
+		textureMap->emplace(TexType::Normal, std::vector<std::shared_ptr<Texture>>{cube->NormalTexture});
+		textureMap->emplace(TexType::Parallax, std::vector<std::shared_ptr<Texture>>{cube->ParallaxTexture});
+		textureMap->emplace(TexType::Glow, std::vector<std::shared_ptr<Texture>>{cube->GlowTexture});
+		unriggedSceneMeshes.push_back(std::make_shared<Render_Object>(cube->StaticModel->MeshList, textureMap, cube->Model, cube->PrevModel));
+
+		textureMap = std::make_shared<std::map<TexType, std::vector<std::shared_ptr<Texture>>>>();
+		textureMap->emplace(TexType::Albedo, std::vector<std::shared_ptr<Texture>>{sniper->AlbedoTexture});
+		textureMap->emplace(TexType::Metallic, std::vector<std::shared_ptr<Texture>>{sniper->MetallicTexture});
+		textureMap->emplace(TexType::Roughness, std::vector<std::shared_ptr<Texture>>{sniper->RoughTexture});
+		textureMap->emplace(TexType::Normal, std::vector<std::shared_ptr<Texture>>{sniper->NormalTexture});
+		textureMap->emplace(TexType::Parallax, std::vector<std::shared_ptr<Texture>>{sniper->ParallaxTexture});
+		textureMap->emplace(TexType::Glow, std::vector<std::shared_ptr<Texture>>{sniper->GlowTexture});
+		unriggedSceneMeshes.push_back(std::make_shared<Render_Object>(sniper->StaticModel->MeshList, textureMap, sniper->Model, sniper->PrevModel));
+
+		textureMap = std::make_shared<std::map<TexType, std::vector<std::shared_ptr<Texture>>>>();
+		textureMap->emplace(TexType::Albedo, std::vector<std::shared_ptr<Texture>>{gun->AlbedoTexture});
+		textureMap->emplace(TexType::Metallic, std::vector<std::shared_ptr<Texture>>{gun->MetallicTexture});
+		textureMap->emplace(TexType::Roughness, std::vector<std::shared_ptr<Texture>>{gun->RoughTexture});
+		textureMap->emplace(TexType::Normal, std::vector<std::shared_ptr<Texture>>{gun->NormalTexture});
+		textureMap->emplace(TexType::Parallax, std::vector<std::shared_ptr<Texture>>{gun->ParallaxTexture});
+		textureMap->emplace(TexType::Glow, std::vector<std::shared_ptr<Texture>>{gun->GlowTexture});
+		unriggedSceneMeshes.push_back(std::make_shared<Render_Object>(gun->StaticModel->MeshList, textureMap, gun->Model, gun->PrevModel));
+
+		textureMap = std::make_shared<std::map<TexType, std::vector<std::shared_ptr<Texture>>>>();
+		textureMap->emplace(TexType::Albedo, std::vector<std::shared_ptr<Texture>>{anymodel->AlbedoTexture});
+		textureMap->emplace(TexType::Metallic, std::vector<std::shared_ptr<Texture>>{anymodel->MetallicTexture});
+		textureMap->emplace(TexType::Roughness, std::vector<std::shared_ptr<Texture>>{anymodel->RoughTexture});
+		textureMap->emplace(TexType::Normal, std::vector<std::shared_ptr<Texture>>{anymodel->NormalTexture});
+		textureMap->emplace(TexType::Parallax, std::vector<std::shared_ptr<Texture>>{anymodel->ParallaxTexture});
+		textureMap->emplace(TexType::Glow, std::vector<std::shared_ptr<Texture>>{anymodel->GlowTexture});
+		unriggedSceneMeshes.push_back(std::make_shared<Render_Object>(anymodel->StaticModel->MeshList, textureMap, anymodel->Model, anymodel->PrevModel));
+
+		sceneObjRO->push_back(unriggedSceneMeshes);
+		
+		//auto riggedSceneMeshes = std::vector <std::shared_ptr<Render_Object>>();
+		//riggedSceneMeshes.push_back(std::make_shared<Render_Object>(std::make_shared<std::vector<std::shared_ptr<Mesh>>>(anim->MeshList)));
+		//riggedSceneMeshes.push_back(std::make_shared<Render_Object>(std::make_shared<std::vector<std::shared_ptr<Mesh>>>(anim2->MeshList)));
+
+		//sceneObjRO->push_back(riggedSceneMeshes);
+
+		//auto terrainSceneMeshes = std::vector<std::shared_ptr<Render_Object>>();
+
+		//textureMap = std::make_shared<std::map<TexType, std::vector<std::shared_ptr<Texture>>>>();
+		//textureMap->emplace(TexType::Albedo, std::vector<std::shared_ptr<Texture>>{terrainTexture});
+		//textureMap->emplace(TexType::Metallic, std::vector<std::shared_ptr<Texture>>{terrainTextureMetal});
+		//textureMap->emplace(TexType::Roughness, std::vector<std::shared_ptr<Texture>>{terrainTextureRough});
+		//textureMap->emplace(TexType::Normal, std::vector<std::shared_ptr<Texture>>{terrainTextureNorm});
+		//textureMap->emplace(TexType::Parallax, std::vector<std::shared_ptr<Texture>>{terrainTexturePara});
+		//textureMap->emplace(TexType::Displacement, std::vector<std::shared_ptr<Texture>>{terrainTextureDisp});
+		//terrainSceneMeshes.push_back(std::make_shared<Render_Object>(std::make_shared<std::vector<std::shared_ptr<Mesh>>>(std::vector<std::shared_ptr<Mesh>>{terrainList->at(0)}), textureMap, std::make_shared<glm::mat4>(1.0f), std::make_shared<glm::mat4>(1.0f)));
+
+		//sceneObjRO->push_back(terrainSceneMeshes);
 	}
 
 	void InitSSAO() 
@@ -959,7 +1096,9 @@ struct RenderEngineMain::Impl
 
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-			DirectionalShadowMapPass(mainLight.get());
+			UpdateObjectTransforms();
+			auto camParam = CamParam{ camera->getCameraPosition(), camera->GetProjectionMatrix(), camera->CalculateViewMatrix(), camera->GetPreviousProjectionMatrix() };
+			DirectionalShadowMapPass(mainLight.get(), camParam);
 
 			for (size_t i = 0; i < pointLightCount; i++) {
 				OmniShadowMapPass(pointLights[i].get(), i);
@@ -1162,10 +1301,10 @@ struct RenderEngineMain::Impl
 		//Debug::DebugPrintTBN("TerrainTBN", terrainVertices, 5, 8);
 
 		auto obj = std::make_shared<Mesh>(0, std::move(terrainVertices), std::move(terrainIndices), std::move(MeshGenParams{ true, true, true }));
-		terrainList.push_back(obj);
+		terrainList->push_back(obj);
 	}
 
-	std::shared_ptr<Mesh> CreatePrism()
+	std::vector<Mesh> CreatePrism()
 	{
 		std::vector<GLuint> indices = {
 					1,3,0,
@@ -1185,10 +1324,10 @@ struct RenderEngineMain::Impl
 		MathUtil::CalcAverageNormals(indices, vertices, 5);
 		MathUtil::CalcAverageTangents(indices, vertices, 8);
 	
-		return std::make_shared<Mesh>(0, std::move(vertices), std::move(indices), std::move(MeshGenParams()));
+		return std::vector<Mesh>{Mesh(0, std::move(vertices), std::move(indices), std::move(MeshGenParams()))};
 	}
 
-	std::shared_ptr<Mesh> CreatePlane()
+	std::vector<Mesh> CreatePlane()
 	{
 		std::vector<GLuint> indices = {
 			0, 2, 1,
@@ -1205,22 +1344,48 @@ struct RenderEngineMain::Impl
 		MathUtil::CalcAverageNormals(indices, vertices, 5);
 		MathUtil::CalcAverageTangents(indices, vertices, 8);
 
-		return std::make_shared<Mesh>(0, std::move(vertices), std::move(indices), std::move(MeshGenParams()));
+		return std::vector<Mesh>{Mesh(0, std::move(vertices), std::move(indices), std::move(MeshGenParams()))};
 	}
 
 	void CreateObject() 
 	{	
-		std::shared_ptr < Mesh> obj1 = std::move(CreatePrism());
-		meshList.push_back(obj1);
+		auto rob = RenderObjectData{ std::make_shared<std::vector<Mesh>>(CreatePrism()), std::make_shared<std::map<TexType, std::vector<Texture>>>(), std::make_shared<glm::mat4>(1.0f), std::make_shared<glm::mat4>(1.0f) };
+		rob.CreateTextureMap(TexType::Albedo, "Textures/rustediron2.png");
+		rob.CreateTextureMap(TexType::Metallic, "Textures/Metallic/rustediron2.png");
+		rob.CreateTextureMap(TexType::Roughness, "Textures/Roughness/rustediron2.png");
+		rob.CreateTextureMap(TexType::Normal, "Textures/Normal/rustediron2.png");
+		rob.CreateTextureMap(TexType::Parallax, "Textures/Parallax/rustediron2.png");
+		rob.CreateTextureMap(TexType::Glow, "Textures/Glow/rock.jpg");
+		renderObjDatas->push_back(std::make_shared<RenderObjectData>(rob));
 
-		std::shared_ptr < Mesh> obj2 = std::move(CreatePrism());
-		meshList.push_back(obj2);
 
-		std::shared_ptr < Mesh> obj3 = std::move(CreatePlane());
-		meshList.push_back(obj3);
+		rob = RenderObjectData{ std::make_shared<std::vector<Mesh>>(CreatePrism()), std::make_shared<std::map<TexType, std::vector<Texture>>>(), std::make_shared<glm::mat4>(1.0f), std::make_shared<glm::mat4>(1.0f) };
+		rob.CreateTextureMap(TexType::Albedo, "Textures/small_metal_debris.jpg");
+		rob.CreateTextureMap(TexType::Metallic, "Textures/Metallic/small_metal_debris.jpg");
+		rob.CreateTextureMap(TexType::Roughness, "Textures/Roughness/small_metal_debris.jpg");
+		rob.CreateTextureMap(TexType::Normal, "Textures/Normal/small_metal_debris.png");
+		rob.CreateTextureMap(TexType::Parallax, "Textures/Parallax/small_metal_debris.jpg");
+		rob.CreateTextureMap(TexType::Glow, "Textures/Glow/small_metal_debris.jpg");
+		renderObjDatas->push_back(std::make_shared<RenderObjectData>(rob));
 
-		std::shared_ptr < Mesh> obj4 = std::move(CreatePlane());
-		meshList.push_back(obj4);
+
+		rob = RenderObjectData{ std::make_shared<std::vector<Mesh>>(CreatePlane()), std::make_shared<std::map<TexType, std::vector<Texture>>>(), std::make_shared<glm::mat4>(1.0f), std::make_shared<glm::mat4>(1.0f) };
+		rob.CreateTextureMap(TexType::Albedo, "Textures/brick.jpg");
+		rob.CreateTextureMap(TexType::Metallic, "Textures/Metallic/brick.jpg");
+		rob.CreateTextureMap(TexType::Roughness, "Textures/Roughness/brick.jpg");
+		rob.CreateTextureMap(TexType::Normal, "Textures/Normal/brick.png");
+		rob.CreateTextureMap(TexType::Parallax, "Textures/Parallax/brick.jpg");
+		rob.CreateTextureMap(TexType::Glow, "Textures/Glow/brick.jpg");
+		renderObjDatas->push_back(std::make_shared<RenderObjectData>(rob));
+
+		rob = RenderObjectData{ std::make_shared<std::vector<Mesh>>(CreatePlane()), std::make_shared<std::map<TexType, std::vector<Texture>>>(), std::make_shared<glm::mat4>(1.0f), std::make_shared<glm::mat4>(1.0f) };
+		rob.CreateTextureMap(TexType::Albedo, "Textures/brick_floor.png");
+		rob.CreateTextureMap(TexType::Metallic, "Textures/Metallic/brick_floor.png");
+		rob.CreateTextureMap(TexType::Roughness, "Textures/Roughness/brick_floor.png");
+		rob.CreateTextureMap(TexType::Normal, "Textures/Normal/brick_floor.png");
+		rob.CreateTextureMap(TexType::Parallax, "Textures/Parallax/brick_floor.png");
+		rob.CreateTextureMap(TexType::Glow, "Textures/Glow/brick_floor.png");
+		renderObjDatas->push_back(std::make_shared<RenderObjectData>(rob));
 	}
 
 	void CreateShaders() {
@@ -1254,14 +1419,17 @@ struct RenderEngineMain::Impl
 		irradianceConvolutionShader = std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/cubemap.vert", "Shaders/irradiance_covolution.frag"});
 		prefilterShader 			= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/cubemap.vert", "Shaders/prefilter.frag"});
 		brdfShader 					= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/brdf.frag"});
+		dirShadowShader				= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/directional_shadow_map.vert", "Shaders/directional_shadow_map.frag"});
+		animDirShadowShader			= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/anim_directional_shadow_map.vert", "Shaders/directional_shadow_map.frag"});
+		terrDirShadowShader			= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain_directional_shadow_map.tesse", "Shaders/directional_shadow_map.frag"});
 
-		directionalShadowShader->CreateFromFiles("Shaders/directional_shadow_map.vert", "Shaders/directional_shadow_map.frag");
+		//directionalShadowShader->CreateFromFiles("Shaders/directional_shadow_map.vert", "Shaders/directional_shadow_map.frag");
 		omniShadowShader->CreateFromFiles("Shaders/omni_shadow_map.vert", "Shaders/omni_shadow_map.geom", "Shaders/omni_shadow_map.frag");
 
-		animDirectionalShadowShader->CreateFromFiles("Shaders/anim_directional_shadow_map.vert", "Shaders/directional_shadow_map.frag");
+		//animDirectionalShadowShader->CreateFromFiles("Shaders/anim_directional_shadow_map.vert", "Shaders/directional_shadow_map.frag");
 		animOmniShadowShader->CreateFromFiles("Shaders/anim_omni_shadow_map.vert", "Shaders/omni_shadow_map.geom", "Shaders/omni_shadow_map.frag");
 
-		terrainDirectionalShadowShader->CreateFromFiles("Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain_directional_shadow_map.tesse", "Shaders/directional_shadow_map.frag");
+		//terrainDirectionalShadowShader->CreateFromFiles("Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain_directional_shadow_map.tesse", "Shaders/directional_shadow_map.frag");
 		//terrainOmniDirectionalShadowShader.CreateFromFiles("Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain_omni_directional_shadow_map.tesse", "Shaders/omni_shadow_map.geom", "Shaders/directional_shadow_map.frag");
 
 		static_preZPassShader->CreateFromFiles("Shaders/depth_framebuffer.vert", "Shaders/depth_framebuffer.frag");
@@ -1320,6 +1488,7 @@ struct RenderEngineMain::Impl
 
 	void RenderTerrain(bool shadow, bool depth)
 	{
+		return;
 		glUniform1f(uniformDispFactor, (0.2f * terrainScaleFactor1));
 
 		glm::mat4 model;
@@ -1351,7 +1520,7 @@ struct RenderEngineMain::Impl
 		terrainTexturePara->UseTextureArray(16);
 		dullTerrainMaterial->UseMaterial(uniformAlbedoMap2, uniformMetallicMap2, uniformNormalMap2, uniformRoughnessMap2, uniformParallaxMap2);
 
-		terrainList[0]->RenderMesh();
+		terrainList->at(0)->RenderMesh();
 		//terrainList[0]->PrevMesh = model;
 	}
 
@@ -1366,6 +1535,55 @@ struct RenderEngineMain::Impl
 			environmentTexture->UseTexture(0);
 		}
 		cwCube->at(0)->RenderMesh();
+	}
+
+	void UpdateObjectTransforms() 
+	{
+		pyramid1->Translate(-terrainScaleFactor, 34.0f, -2.5f - terrainScaleFactor);
+		//pyramid1->Rotate(curAngle, 0.0f, 1.0f, 0.0f);
+		//pyramid1->Scale(0.4f, 0.4f, 1.0f);
+
+		pyramid2->Translate(-terrainScaleFactor, 30.0f, -2.5f - terrainScaleFactor);
+		//pyramid2->Rotate(curAngle, 0.0f, 1.0f, 0.0f);
+		//pyramid2->Scale(0.4f, 0.4f, 1.0f);
+
+		rectangle1->Translate(-15.0f - terrainScaleFactor, 43.0f, -terrainScaleFactor);
+		rectangle1->Rotate(90, 1.0f, 0.0f, 0.0f);
+		rectangle1->Rotate(-90, 0.0f, 0.0f, 1.0f);
+
+		rectangle2->Translate(-terrainScaleFactor, 43.0f, -15.0f - terrainScaleFactor);
+		rectangle2->Rotate(-90, 1.0f, 0.0f, 0.0f);
+		rectangle2->Rotate(180.0f, 0.0f, 0.0f, 1.0f);
+
+		cube->Translate(curScale - terrainScaleFactor, 32.0f, 4.5f - terrainScaleFactor);
+		//cube->Rotate(curAngle, 0.0f, 1.0f, 0.0f);
+		cube->Rotate(90.0f, 1.0f, 0.0f, 0.0f);
+		cube->Scale(0.1f, 0.1f, 0.1f);
+
+		//sphere->Translate(-terrainScaleFactor, 35.0f, 5.5f - terrainScaleFactor);
+		//sphere->Rotate(curAngle, 0.0f, 1.0f, 0.0f);
+		sphere->Scale(1.0f, 1.0f, 1.0f);
+
+		sniper->Translate(-terrainScaleFactor, 36.0f, 11.0f - terrainScaleFactor);
+		//sniper->Rotate(curAngle, 0.0f, 1.0f, 0.0f);
+		sniper->Rotate(90.0f, 1.0f, 0.0f, 0.0f);
+		sniper->Rotate(180.0f, 1.0f, 0.0f, 0.0f);
+		sniper->Scale(0.5f, 0.5f, 0.5f);
+
+		gun->Translate(5.0f - terrainScaleFactor, 33.0f, 10.0f - terrainScaleFactor);
+		//gun->Rotate(curAngle, 0.0f, 1.0f, 0.0f);
+		gun->Rotate(180.0f, 0.0f, 1.0f, 0.0f);
+		gun->Rotate(-90.0f, 1.0f, 0.0f, 0.0f);
+		gun->Scale(0.02f, 0.02f, 0.02f);
+
+		bulbWhite->Translate(pointLights[0]->GetPosition().x, pointLights[0]->GetPosition().y, pointLights[0]->GetPosition().z);
+		bulbWhite->Scale(10.0f, 10.f, 10.0f);
+
+		bulbRed->Translate(pointLights[1]->GetPosition().x, pointLights[1]->GetPosition().y, pointLights[1]->GetPosition().z);
+		bulbRed->Scale(10.0f, 10.f, 10.0f);
+
+		anymodel->Translate(-terrainScaleFactor, 37.0f, 1.0f - terrainScaleFactor);
+		anymodel->Scale(1.0f, 1.0f, 1.0f);
 	}
 
 	void RenderScene(std::shared_ptr<Shader> shader) {
@@ -1483,35 +1701,24 @@ struct RenderEngineMain::Impl
 		anim2->prevModel = model;
 	}
 
-	void IrradianceConvolutionPass()
-	{
-		irradianceConvolutionShader->UseShaderObject();
-		irradianceConvolutionShader->SetVariable("skybox", 0);
-		irradianceConvolutionShader->SetVariable("Projection", captureProjection);
-
-		glViewport(0, 0, irradianceMap->GetFBOWidth(), irradianceMap->GetFBOHeight());
-		irradianceMap->BindFBO();
-		for (auto faceId = 0; faceId < 6; ++faceId)
-		{
-			irradianceConvolutionShader->SetVariable("View", captureViews[faceId]);
-			irradianceMap->WriteToFBOBuffer(0, 0, 0, faceId);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			irradianceConvolutionShader->ValidateShaderObject();
-
-			RenderEnvCubeMap(true);
-		}
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	}
-
-	void DirectionalShadowMapPass(DirectionalLight* light) {
+	void DirectionalShadowMapPass(DirectionalLight* light, const CamParam& camParam) {
 
 		testLitView[0] = light->CalculateCascadeLightTransform();
 		mainLight->CalcOrthProjs(camera->CalculateViewMatrix(), testLitView, 60.0f);
 
-		for (unsigned int i = 0; i < NUM_CASCADES; ++i)
+		glm::mat4 vView[NUM_CASCADES];
+		glm::mat4 proj[NUM_CASCADES];
+
+		for (auto i = 0; i < NUM_CASCADES; ++i)
 		{
 			vView[i] = glm::lookAt(mainLight->GetModlCent(i), mainLight->GetModlCent(i) + glm::normalize(light->GetLightDirection()) * 0.2f, light->GetLightUp());
+			proj[i] = light->GetProjMat(vView[i], i);
 		}
+
+		auto lightParam = LightParam{ mainLight->GetLightDirection(), proj, vView };
+		dirShadowRPHandler->Update(*sceneObjRO, &camParam, &lightParam);
+
+		return;
 
 		light->GetShadowMap()->BindFBO();
 
@@ -1676,7 +1883,7 @@ struct RenderEngineMain::Impl
 		depth->AttachFBOToTextureUnit(0, GL_TEXTURE0, 0, 0);
 		ssaoShader->SetTexture(0);
 
-		SSAONoiseTexture->UseTexture(0);
+		SSAONoiseTexture->UseTextureTemp(1);
 		ssaoShader->SetNoiseTexture(1);
 
 		glUniform1f(ssaoShader->GetSampleRadiusLocation(), 0.1f);
@@ -2366,7 +2573,7 @@ GLFWwindow* RenderEngineMain::GetMainWindow()
 
 void RenderEngineMain::AddViewers()
 {
-	engineUI->AddSceneViewers(Pimpl()->ssaoBlur->GetFBOBuffer(0, 0), "EditorScene", Editor, [this](bool isSelected) { Pimpl()->isEditorViewSelected = isSelected; });
+	engineUI->AddSceneViewers(Pimpl()->mainLight->GetShadowMap()->GetFBOBuffer(0, 0), "EditorScene", Editor, [this](bool isSelected) { Pimpl()->isEditorViewSelected = isSelected; });
 	engineUI->AddSceneViewers(Pimpl()->finalFBO->GetFBOBuffer(0, 0), "InGameScene", InGame, [this](bool isSelected) { Pimpl()->mainWindow->SetCursorActive(!isSelected); Pimpl()->isGameViewSelected = isSelected; });
 }
 

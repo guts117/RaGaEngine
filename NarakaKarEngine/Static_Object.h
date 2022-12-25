@@ -44,22 +44,26 @@ namespace NarakaKarEngine
 			void DrawImportedObject(std::shared_ptr<Shader> shader, std::shared_ptr<Camera> camera);
 
 			~Static_Object() = default;
-		private:
-			void LoadTexture(std::unique_ptr<Texture>& texture, std::string path, bool isSRGB = false);
-			void SetUniformLocations(std::shared_ptr<Shader> shader, std::shared_ptr<Camera> camera);
 
 			std::shared_ptr <Static_Model> StaticModel = std::make_shared<Static_Model>();
 
-			std::unique_ptr <Texture> m_albedoTexture = nullptr;
-			std::unique_ptr <Texture> m_metallicTexture = nullptr;
-			std::unique_ptr <Texture> m_roughTexture = nullptr;
-			std::unique_ptr <Texture> m_normalTexture = nullptr;
-			std::unique_ptr <Texture> m_parallaxTexture = nullptr;
-			std::unique_ptr <Texture> m_glowTexture = nullptr;
+			std::shared_ptr <Texture> AlbedoTexture = nullptr;
+			std::shared_ptr <Texture> MetallicTexture = nullptr;
+			std::shared_ptr <Texture> RoughTexture = nullptr;
+			std::shared_ptr <Texture> NormalTexture = nullptr;
+			std::shared_ptr <Texture> ParallaxTexture = nullptr;
+			std::shared_ptr <Texture> GlowTexture = nullptr;
+			std::shared_ptr <glm::mat4> Model = nullptr;
+			std::shared_ptr <glm::mat4> PrevModel = nullptr;
+
+			std::shared_ptr <Mesh> m_staticMesh;
+
+		private:
+			void LoadTexture(std::shared_ptr<Texture>& texture, std::string path, bool isSRGB = false);
+			void SetUniformLocations(std::shared_ptr<Shader> shader, std::shared_ptr<Camera> camera);
 
 			std::unique_ptr <Material> m_material = std::make_unique<Material>();
 
-			std::shared_ptr <Mesh> m_staticMesh;
 			std::shared_ptr<Camera> m_camera = std::make_shared<Camera>();
 			std::shared_ptr<DirectionalLight> m_mainLight = std::make_shared<DirectionalLight>();
 			std::shared_ptr<SpotLight> m_firstSpotLight = std::make_shared<SpotLight>();

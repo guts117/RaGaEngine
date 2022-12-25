@@ -33,6 +33,7 @@ namespace NarakaKarEngine
 			Model& operator= (Model&&) = delete;
 
 			glm::mat4 prevModel = glm::mat4(1.0f);
+			std::shared_ptr<std::vector<std::shared_ptr<Mesh>>> MeshList;
 
 		protected:
 			virtual void LoadNode(aiNode* node, const aiScene* scene);
@@ -40,7 +41,6 @@ namespace NarakaKarEngine
 			virtual void LoadMaterials(const aiScene* scene);
 			void ClearModel();
 
-			std::vector<std::shared_ptr<Mesh>> MeshList;
 			std::vector<Texture*> textureList;
 			std::vector<Texture*> metalTextureList;
 			std::vector<Texture*> normalTextureList;

@@ -20,7 +20,7 @@ namespace NarakaKarEngine
 												, const std::vector<std::shared_ptr<Shader_Object>>& shaderVec
 												, std::shared_ptr<std::vector<std::shared_ptr<std::any>>> inputs = nullptr);
 
-			virtual void Update(std::shared_ptr<std::vector<std::shared_ptr<Render_Object>>> renderObj, const CamParam& camParam) override;
+			virtual void Update(const std::vector<std::vector<std::shared_ptr<Render_Object>>>& renderObj, const CamParam* camParam = nullptr, const LightParam* lightParam = nullptr) override;
 
 			PreZ_Render_Pass_Handler(PreZ_Render_Pass_Handler&& rhs) noexcept = default;
 			PreZ_Render_Pass_Handler& operator=(PreZ_Render_Pass_Handler&& rhs) noexcept = default;

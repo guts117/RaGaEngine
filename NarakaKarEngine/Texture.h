@@ -18,6 +18,7 @@ namespace NarakaKarEngine
 			Parallax,
 			Glow,
 			Displacement,
+			Blend,
 			Max
 		};
 

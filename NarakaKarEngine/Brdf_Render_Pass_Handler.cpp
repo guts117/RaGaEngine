@@ -14,7 +14,7 @@ Brdf_Render_Pass_Handler::Brdf_Render_Pass_Handler(std::shared_ptr<Fbo_Handler> 
 {
 }
 
-void Brdf_Render_Pass_Handler::Update(std::shared_ptr<std::vector<std::shared_ptr<Render_Object>>> renderObj, const CamParam& camParam)
+void Brdf_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared_ptr<Render_Object>>>& renderObj, const CamParam* camParam, const LightParam* lightParam)
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, m_fboHandler->GetFBOWidth(), m_fboHandler->GetFBOHeight());
@@ -28,9 +28,9 @@ void Brdf_Render_Pass_Handler::Update(std::shared_ptr<std::vector<std::shared_pt
 		m_shaderVec->at(shaderIndex)->ResetTextureUnit(0);
 		m_shaderVec->at(shaderIndex)->UseShaderObject();
 
-		for (auto roIndex = 0; roIndex < renderObj->size(); ++roIndex)
+		for (auto roIndex = 0; roIndex < renderObj[shaderIndex].size(); ++roIndex)
 		{
-			renderObj->at(roIndex)->RenderObject(m_shaderVec->at(shaderIndex), camParam.PrevProjView, false);
+			renderObj[shaderIndex][roIndex]->RenderObject(*m_shaderVec->at(shaderIndex), std::move(RenderObjectParams{}));
 		}
 		m_shaderVec->at(shaderIndex)->ValidateShaderObject();
 	}

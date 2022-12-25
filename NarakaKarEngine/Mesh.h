@@ -32,6 +32,7 @@ namespace NarakaKarEngine
 
 			void RenderMesh();
 			const GLuint& GetMaterialIndex() const;
+			const bool& IsTessellated() const;
 
 			~Mesh();
 		private:
