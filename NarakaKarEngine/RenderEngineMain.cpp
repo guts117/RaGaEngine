@@ -183,6 +183,32 @@ struct RenderEngineMain::Impl
 	std::unique_ptr < HDR_Shader> hdrShader = std::make_unique<HDR_Shader>();
 	std::unique_ptr < MotionBlur_Shader> motionBlurShader = std::make_unique<MotionBlur_Shader>();
 	std::unique_ptr < Blur_Shader> blurShader = std::make_unique<Blur_Shader>();
+	
+	//ToDo: To whomever it may concern. Probably me -_-
+	//ToDo: After a decently extensive research and thought on my part I want the following to be done
+	//ToDo: Add Memory Pooling.
+	//ToDo: Each Object will have the data stored here while they only store weak_ptrs maybe. Need to test.
+	//Pros: 
+		// 1: Faster Pimpl Idiom implementation
+		// 2: Better cache locality (both, temporal and spactial)
+		// 3: Less page faults when virtual memory is being used
+		// 4: Better memory coherency.
+		// 5: Partial Data oriented design, so faster for loops, especially when searching for data.
+		// 6: Contiguous data always wins.
+	//Cons:
+		// 1: Can have large memory footprint, especially when proper bucket size can't be found.
+		// 2: Pimpl can still be slow due to one unnecessary indirection.
+		// 3: May cause dangling pointer because RAII is not being used anymore with this design.
+		// 4: If weak_ptrs are used as references to the data in the pool then locking them in can be slow to being atomic operation.
+	//Possible solutions to the cons:
+		//(1) Runtime memory bucket creation depending on stride of the data type?? 
+		//(2) Can be alleviated if we store vector<Data> rather than vector<Data*> one less indirection for non-polymorphic classes.
+		//(3) Users should never handle deleting stuff by themselves? Weak_ptr being used guarantees intent of the creator tho.
+		//(4) Can be solved if we use seperate memory pools per each thread.
+
+	//ToDo: Write everything with the above design in mind.
+	std::shared_ptr<std::vector<std::shared_ptr<Texture>>> texturePool;
+	std::shared_ptr<std::vector<std::shared_ptr<Mesh>>> meshPool;
 
 	struct RenderObjectData
 	{
@@ -1717,49 +1743,6 @@ struct RenderEngineMain::Impl
 
 		auto lightParam = LightParam{ mainLight->GetLightDirection(), proj, vView };
 		dirShadowRPHandler->Update(*sceneObjRO, &camParam, &lightParam);
-
-		return;
-
-		light->GetShadowMap()->BindFBO();
-
-		for (size_t i = 0; i < NUM_CASCADES; ++i)
-		{
-			glViewport(0, 0, light->GetShadowMap()->GetFBOWidth(), light->GetShadowMap()->GetFBOHeight());
-			light->GetShadowMap()->WriteToFBOBuffer(0, 0, i, 0);
-			glClear(GL_DEPTH_BUFFER_BIT);
-
-			glm::mat4 projView = light->GetProjMat(vView[i], i) * vView[i];
-
-			directionalShadowShader->UseShader();
-			directionalShadowShader->SetDirectionalLightTransform(projView);
-			directionalShadowShader->Validate();
-
-			RenderScene(directionalShadowShader);
-
-
-			animDirectionalShadowShader->UseShader();
-
-			uniformModel1 = animDirectionalShadowShader->GetModelLocation();
-
-			animDirectionalShadowShader->SetDirectionalLightTransform(projView);
-
-			animDirectionalShadowShader->Validate();
-
-			RenderAnimScene(true, false);
-
-			terrainDirectionalShadowShader->UseShader();
-			uniformModel2 = terrainDirectionalShadowShader->GetModelLocation();
-			uniformEyePosition2 = terrainDirectionalShadowShader->GetEyePositionLocation();
-			uniformDispFactor = terrainDirectionalShadowShader->GetDispFactorLocation();
-
-			terrainDirectionalShadowShader->SetDirectionalLightTransform(&projView);
-			glUniform3f(uniformEyePosition2, camera->getCameraPosition().x, camera->getCameraPosition().y, camera->getCameraPosition().z);
-
-			terrainDirectionalShadowShader->Validate();
-
-			RenderTerrain(true, false);
-		}
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
 	void OmniShadowMapPass(PointLight* light, int lightIndex) {
