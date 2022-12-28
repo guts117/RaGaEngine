@@ -30,13 +30,15 @@ namespace NarakaKarEngine
 		public:
 			explicit Render_Object() = delete;
 
-			explicit Render_Object(std::shared_ptr<std::vector<Mesh>> meshes
-								, std::shared_ptr<std::map<TexType, std::vector<Texture>>> textureMap = nullptr
+			explicit Render_Object(std::unique_ptr<std::vector<std::weak_ptr<Mesh>>>&& meshes
+								, std::unique_ptr<std::map<TexType, std::vector<std::weak_ptr<Texture>>>> textureMap = nullptr
 								, std::shared_ptr<glm::mat4> modelMatrix = nullptr
 								, std::shared_ptr<glm::mat4> prevModelMatrix = nullptr
-								, std::shared_ptr<std::vector<BoneTransform>> boneMatrices = nullptr);
+								, std::unique_ptr<std::vector<std::weak_ptr<BoneTransform>>>&& boneMatrices = nullptr);
 
-			void SetTextures(std::map<TexType, std::vector<Texture>>&& textureMap);
+			void SetTextures(std::map<TexType, std::vector<std::weak_ptr<Texture>>>&& textureMap);
+
+			void ResetTextures();
 
 			Render_Object(Render_Object&& rhs) noexcept = default;
 			Render_Object& operator=(Render_Object&& rhs) noexcept = default;

@@ -32,8 +32,8 @@ namespace NarakaKarEngine
 			Model(const Model&&) = delete;
 			Model& operator= (Model&&) = delete;
 
-			glm::mat4 prevModel = glm::mat4(1.0f);
-			std::shared_ptr<std::vector<std::shared_ptr<Mesh>>> MeshList;
+			std::unique_ptr<std::vector<std::weak_ptr<Mesh>>> MeshList;
+			std::unique_ptr<std::map<TexType, std::vector<std::weak_ptr<Texture>>>> TextureMap;
 
 		protected:
 			virtual void LoadNode(aiNode* node, const aiScene* scene);
@@ -41,12 +41,6 @@ namespace NarakaKarEngine
 			virtual void LoadMaterials(const aiScene* scene);
 			void ClearModel();
 
-			std::vector<Texture*> textureList;
-			std::vector<Texture*> metalTextureList;
-			std::vector<Texture*> normalTextureList;
-			std::vector<Texture*> roughTextureList;
-			std::vector<Texture*> parallaxTextureList;
-			std::vector<Texture*> glowTextureList;
 			Texture* billboardTexture = nullptr;
 			std::vector<unsigned int> meshToTex;
 

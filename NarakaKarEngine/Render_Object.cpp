@@ -9,24 +9,24 @@ using namespace RenderEngine;
 
 struct Render_Object::Impl
 {
-	std::weak_ptr<std::vector<Mesh>> m_Meshes;
-	std::weak_ptr<std::map<TexType, std::vector<Texture>>> m_TextureMap;
+	std::unique_ptr<std::vector<std::weak_ptr<Mesh>>> m_Meshes;
+	std::unique_ptr<std::map<TexType, std::vector<std::weak_ptr<Texture>>>> m_TextureMap;
 	std::weak_ptr<glm::mat4> m_ModelMatrix;
 	std::weak_ptr<glm::mat4> m_PrevModelMatrix;
-	std::weak_ptr<std::vector<BoneTransform>> m_BoneMatrices;
+	std::unique_ptr<std::vector<std::weak_ptr<BoneTransform>>> m_BoneMatrices;
 
 	Impl() = delete;
 
-	Impl(std::shared_ptr<std::vector<Mesh>> meshes
-		, std::shared_ptr<std::map<TexType, std::vector<Texture>>> textureMap
+	Impl(std::unique_ptr<std::vector<std::weak_ptr<Mesh>>>&& meshes
+		, std::unique_ptr<std::map<TexType, std::vector<std::weak_ptr<Texture>>>>&& textureMap
 		, std::shared_ptr<glm::mat4> modelMatrix
 		, std::shared_ptr<glm::mat4> prevModelMatrix
-		, std::shared_ptr<std::vector<BoneTransform>> boneMatrices)
-		: m_Meshes{ meshes }
-		, m_TextureMap{ textureMap }
+		, std::unique_ptr<std::vector<std::weak_ptr<BoneTransform>>>&& boneMatrices)
+		: m_Meshes{ std::move(meshes)}
+		, m_TextureMap{ std::move(textureMap) }
 		, m_ModelMatrix{ modelMatrix }
 		, m_PrevModelMatrix{ prevModelMatrix }
-		, m_BoneMatrices{ boneMatrices }
+		, m_BoneMatrices{ std::move(boneMatrices) }
 	{
 	}
 
@@ -56,96 +56,109 @@ struct Render_Object::Impl
 			}
 		}
 
-		if (auto boneMatrices = m_BoneMatrices.lock()) 
+
+		if (!m_Meshes) { return; }
+
+		auto resetToTexUnit = shader.GetTextureUnit();
+
+		if (m_BoneMatrices)
 		{
-			for (auto i = 0; i < boneMatrices->size(); i++) // move all matrices for actual model position to shader
+			for (auto i = 0; i < m_BoneMatrices->size(); i++) // move all matrices for actual model position to shader
 			{
-				shader.SetVariable("gBones", *boneMatrices->at(i).FinalWorldTransform);
-				shader.SetVariable("gPrevBones", *boneMatrices->at(i).PrevFinalWorldTransfrom);
-				*boneMatrices->at(i).PrevFinalWorldTransfrom = *boneMatrices->at(i).FinalWorldTransform;
+				auto boneMatrix = m_BoneMatrices->at(i).lock();
+				shader.SetVariable("gBones", *boneMatrix->FinalWorldTransform);
+				shader.SetVariable("gPrevBones", *boneMatrix->PrevFinalWorldTransfrom);
+				*boneMatrix->PrevFinalWorldTransfrom = *boneMatrix->FinalWorldTransform;
 			}
 		}
 
-		if (auto meshes = m_Meshes.lock()) 
+		for (size_t i = 0; i < m_Meshes->size(); ++i)
 		{
-			auto resetToTexUnit = shader.GetTextureUnit();
-
-			auto textureMap = m_TextureMap.lock();
-
-			for (size_t i = 0; i < meshes->size(); ++i)
+			if(auto mesh = m_Meshes->at(i).lock())
 			{
-				auto materialIndex = meshes->at(i)->GetMaterialIndex();
+				auto materialIndex = mesh->GetMaterialIndex();
 
-				if (params.useTextures && textureMap)
+				if (params.useTextures && m_TextureMap)
 				{
 					for (auto texType = 0; texType < Max; ++texType)
 					{
-						if (textureMap->contains((TexType)texType))
+						if (m_TextureMap->contains((TexType)texType))
 						{
-							if (materialIndex >= textureMap->at((TexType)texType).size()) { continue; }
+							if (materialIndex >= m_TextureMap->at((TexType)texType).size()) { continue; }
 
-							switch ((TexType)texType)
+							if (auto texMap = m_TextureMap->at((TexType)texType)[materialIndex].lock()) 
 							{
-							case Albedo:
-								textureMap->at(Albedo)[materialIndex]->UseTextureTemp(shader.SetTextureUnit("material.albedoMap"));
-								break;
-							case Metallic:
-								textureMap->at(Metallic)[materialIndex]->UseTextureTemp(shader.SetTextureUnit("material.metallicMap"));
-								break;
-							case Roughness:
-								textureMap->at(Roughness)[materialIndex]->UseTextureTemp(shader.SetTextureUnit("material.roughnessMap"));
-								break;
-							case Normal:
-								textureMap->at(Normal)[materialIndex]->UseTextureTemp(shader.SetTextureUnit("material.normalMap"));
-								break;
-							case Parallax:
-								textureMap->at(Parallax)[materialIndex]->UseTextureTemp(shader.SetTextureUnit("material.parallaxMap"));
-								break;
-							case Glow:
-								textureMap->at(Glow)[materialIndex]->UseTextureTemp(shader.SetTextureUnit("material.glowMap"));
-								break;
-							case Displacement:
-								textureMap->at(Displacement)[materialIndex]->UseTextureTemp(shader.SetTextureUnit("displacementMap"));
-								//ToDo: Add dispFactor through material or something
-								shader.SetVariable("dispFactor", 0.2f);
-								break;
-							default:
-								textureMap->at(Default)[materialIndex]->UseTextureTemp(shader.SetTextureUnit("theTexture"));
-								break;
+								switch ((TexType)texType)
+								{
+								case Albedo:
+									texMap->UseTextureTemp(shader.SetTextureUnit("material.albedoMap"));
+									break;
+								case Metallic:
+									texMap->UseTextureTemp(shader.SetTextureUnit("material.metallicMap"));
+									break;
+								case Roughness:
+									texMap->UseTextureTemp(shader.SetTextureUnit("material.roughnessMap"));
+									break;
+								case Normal:
+									texMap->UseTextureTemp(shader.SetTextureUnit("material.normalMap"));
+									break;
+								case Parallax:
+									texMap->UseTextureTemp(shader.SetTextureUnit("material.parallaxMap"));
+									break;
+								case Glow:
+									texMap->UseTextureTemp(shader.SetTextureUnit("material.glowMap"));
+									break;
+								case Displacement:
+									texMap->UseTextureTemp(shader.SetTextureUnit("displacementMap"));
+									//ToDo: Add dispFactor through material or something
+									shader.SetVariable("dispFactor", 0.2f);
+									break;
+								default:
+									texMap->UseTextureTemp(shader.SetTextureUnit("theTexture"));
+									break;
+								}
 							}
 						}
 					}
 				}
 
-				meshes->at(i)->RenderMesh();
+				mesh->RenderMesh();
 			}
-			shader.ResetTextureUnit(std::move(resetToTexUnit));
 		}
+		shader.ResetTextureUnit(std::move(resetToTexUnit));
 	}
 
 	bool IsTesselated() const
 	{
-		auto check = [&](std::shared_ptr<Mesh> mesh)->bool {return mesh->IsTessellated(); };
-		if (auto meshes = m_Meshes.lock()) 
+		auto check = [&](std::weak_ptr<Mesh> mesh)->bool 
 		{
-			return std::find_if(meshes->begin(), meshes->end(), check) != meshes->end();
-		}
-		return false;
+			if (auto m = mesh.lock())
+			{
+				return m->IsTessellated();
+			}
+			return false;
+		};
+		return std::find_if(m_Meshes->begin(), m_Meshes->end(), check) != m_Meshes->end();
 	}
 };
 
-Render_Object::Render_Object(std::shared_ptr<std::vector<Mesh>> meshes
-			, std::shared_ptr<std::map<TexType, std::vector<Texture>>> textureMap
+Render_Object::Render_Object(std::unique_ptr<std::vector<std::weak_ptr<Mesh>>>&& meshes
+			, std::unique_ptr<std::map<TexType, std::vector<std::weak_ptr<Texture>>>> textureMap
 			, std::shared_ptr<glm::mat4> modelMatrix
 			, std::shared_ptr<glm::mat4> prevModelMatrix
-			, std::shared_ptr<std::vector<BoneTransform>> boneMatrices)
+			, std::unique_ptr<std::vector<std::weak_ptr<BoneTransform>>>&& boneMatrices)
 			: m_pImpl{std::make_unique<Impl>(meshes, textureMap, modelMatrix, prevModelMatrix, boneMatrices)}
 {
 }
 
-void Render_Object::SetTextures(std::map<TexType, std::vector<Texture>>&& textureMap)
+void Render_Object::SetTextures(std::map<TexType, std::vector<std::weak_ptr<Texture>>>&& textureMap)
 {
-	Pimpl()->m_TextureMap = std::make_shared<std::map<TexType, std::vector<Texture>>>(std::move(textureMap));
+	Pimpl()->m_TextureMap = std::make_unique<std::map<TexType, std::vector<std::weak_ptr<Texture>>>>(std::move(textureMap));
+}
+
+void Render_Object::ResetTextures()
+{
+	Pimpl()->m_TextureMap = nullptr;
 }
 
 void Render_Object::RenderObject(Shader_Object& shader, const RenderObjectParams&& params)

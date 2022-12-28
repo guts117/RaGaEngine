@@ -30,8 +30,6 @@
 #include "Static_Model.h"
 #include "Animated_Model.h"
 
-#include "Static_Object.h"
-
 #include "ParticleSystem.h"
 #include "Skybox.h"
 
@@ -183,7 +181,7 @@ struct RenderEngineMain::Impl
 	std::unique_ptr < HDR_Shader> hdrShader = std::make_unique<HDR_Shader>();
 	std::unique_ptr < MotionBlur_Shader> motionBlurShader = std::make_unique<MotionBlur_Shader>();
 	std::unique_ptr < Blur_Shader> blurShader = std::make_unique<Blur_Shader>();
-	
+
 	//ToDo: To whomever it may concern. Probably me -_-
 	//ToDo: After a decently extensive research and thought on my part I want the following to be done
 	//ToDo: Add Memory Pooling.
@@ -207,43 +205,56 @@ struct RenderEngineMain::Impl
 		//(4) Can be solved if we use seperate memory pools per each thread.
 
 	//ToDo: Write everything with the above design in mind.
-	std::shared_ptr<std::vector<std::shared_ptr<Texture>>> texturePool;
-	std::shared_ptr<std::vector<std::shared_ptr<Mesh>>> meshPool;
 
-	struct RenderObjectData
+	static std::shared_ptr<std::vector<std::shared_ptr<Texture>>> texturePool;
+	static std::shared_ptr<std::vector<std::shared_ptr<Mesh>>> meshPool;
+	static std::shared_ptr<std::vector<std::shared_ptr<glm::mat4>>> modelMatrixPool;
+	static std::shared_ptr<std::vector<std::shared_ptr<glm::mat4>>> prevModelMatrixPool;
+
+	static void AddToMeshPool(std::shared_ptr<Mesh>&& mesh)
 	{
-		std::shared_ptr<std::vector<Mesh>> Meshes = nullptr;
-		std::shared_ptr<std::map<TexType, std::vector<Texture>>> TextureMap = nullptr;
-		std::shared_ptr<glm::mat4> ModelMatrix = nullptr;
-		std::shared_ptr<glm::mat4> PrevModelMatrix = nullptr;
-		std::shared_ptr<std::vector<BoneTransform>> BoneMatrices = nullptr;
+		meshPool->push_back(std::move(mesh));
+	}
 
-		void CreateTextureMap(TexType&& textype, std::string&& path)
-		{
-			auto texture = Texture(path, textype == TexType::Albedo);
-			//ToDo check for alpha channel/ currently incorrect use of find
-			if (path.find(".png" || ".gif" || ".tiff" || ".tga" || ".jp2" || ".jpx") != std::string::npos)
-			{
-				texture.LoadTextureWithAlpha();
-			}
-			else
-			{
-				texture.LoadTextureNoAlpha();
-			}
-			if (TextureMap->contains(textype)) 
-			{
-				auto vec = std::vector<Texture>();
-				vec.push_back(texture);
-				TextureMap->emplace(textype, vec);
-			}
-			else
-			{
-				TextureMap->at(textype).push_back(texture);
-			}
-		}
+	struct TexMapData
+	{
+		TexType&& type;
+		std::string&& path;
 	};
 
-	std::shared_ptr<std::vector<std::shared_ptr<RenderObjectData>>> renderObjDatas;
+	static std::unique_ptr<std::map<TexType, std::vector<std::weak_ptr<Texture>>>> CreateTextureMap(std::vector<TexMapData>&& texMapData)
+	{
+		auto textureMap = std::make_unique<std::map<TexType, std::vector<std::weak_ptr<Texture>>>>();
+		
+		for(auto i = 0; i< texMapData.size(); ++i)
+		{
+			TexMapData& dat = texMapData[i];
+			auto texture = std::make_shared<Texture>(dat.path, dat.type == TexType::Albedo);
+			texturePool->push_back(texture);
+			auto wTexPtr = std::weak_ptr<Texture>(texture);
+			//ToDo check for alpha channel/ currently incorrect use of find
+			if (dat.path.find(".png" || ".gif" || ".tiff" || ".tga" || ".jp2" || ".jpx") != std::string::npos)
+			{
+				texture->LoadTextureWithAlpha();
+			}
+			else
+			{
+				texture->LoadTextureNoAlpha();
+			}
+			if (textureMap->contains(dat.type))
+			{
+				auto vec = std::vector<std::weak_ptr<Texture>>();
+				vec.push_back(texture);
+				textureMap->emplace(dat.type, vec);
+			}
+			else
+			{
+				textureMap->at(dat.type).push_back(texture);
+			}
+		}
+
+		return textureMap;
+	}
 
 	std::shared_ptr<std::vector< std::shared_ptr < Mesh>>> terrainList = std::make_shared<std::vector<std::shared_ptr<Mesh>>>();
 	std::vector< std::shared_ptr < Billboard_Mesh>> billboardList;
@@ -320,21 +331,21 @@ struct RenderEngineMain::Impl
 	std::unique_ptr < Material> shinyTerrainMaterial;
 	std::unique_ptr < Material> dullTerrainMaterial;
 
-	std::unique_ptr < Animated_Model> anim = std::make_unique<Animated_Model>();
-	std::unique_ptr < Animated_Model> anim2 = std::make_unique<Animated_Model>();
+	std::shared_ptr < Animated_Model> anim = std::make_shared<Animated_Model>();
+	std::shared_ptr < Animated_Model> anim2 = std::make_shared<Animated_Model>();
 
-	std::unique_ptr <Static_Object> pyramid1 = std::make_unique<Static_Object>();
-	std::unique_ptr <Static_Object> pyramid2 = std::make_unique<Static_Object>();
-	std::unique_ptr <Static_Object> rectangle1 = std::make_unique<Static_Object>();
-	std::unique_ptr <Static_Object> rectangle2 = std::make_unique<Static_Object>();
+	std::shared_ptr <Render_Object> pyramid1;
+	std::shared_ptr <Render_Object> pyramid2;
+	std::shared_ptr <Render_Object> rectangle1;
+	std::shared_ptr <Render_Object> rectangle2;
 
-	std::unique_ptr <Static_Object> sniper = std::make_unique<Static_Object>();
-	std::unique_ptr <Static_Object> gun = std::make_unique<Static_Object>();
-	std::unique_ptr <Static_Object> anymodel = std::make_unique<Static_Object>();
-	std::unique_ptr <Static_Object> cube = std::make_unique<Static_Object>();
-	std::unique_ptr <Static_Object> sphere = std::make_unique<Static_Object>();
-	std::unique_ptr <Static_Object> bulbWhite = std::make_unique<Static_Object>();
-	std::unique_ptr <Static_Object> bulbRed = std::make_unique<Static_Object>();
+	std::shared_ptr <Render_Object> sniper;
+	std::shared_ptr <Render_Object> gun;
+	std::shared_ptr <Render_Object> anymodel;
+	std::shared_ptr <Render_Object> cube;
+	std::shared_ptr <Render_Object> sphere;
+	std::shared_ptr <Render_Object> bulbWhite;
+	std::shared_ptr <Render_Object> bulbRed;
 
 	std::shared_ptr<Brdf_Render_Pass_Handler> brdfRPHandler;
 	std::shared_ptr<Prefilter_Render_Pass_Handler> prefilterRPHandler;
@@ -427,15 +438,13 @@ struct RenderEngineMain::Impl
 
 	void Init()
 	{
-		renderObjDatas = std::make_shared<std::vector<std::shared_ptr<RenderObjectData>>>();
-
 		glEnable(GL_TEXTURE_3D);
 		mainWindow->Initialise();
 		lastFrameTime = static_cast<GLfloat>(glfwGetTime());
-		CreateBillboard();
-		CreateParticles();
-		CreateTerrain();
-		CreateObject();
+		//CreateBillboard();
+		//CreateParticles();
+		//CreateTerrain();
+		//CreateObject();
 		CreateShaders();
 
 		camera = std::make_shared<Camera>(glm::vec3(-terrainScaleFactor, 40.0f, -terrainScaleFactor + 40.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f, 50.0f, 0.2f);
@@ -550,24 +559,47 @@ struct RenderEngineMain::Impl
 		shinyTerrainMaterial = std::make_unique<Material>(12, 13, 15, 16, 17);
 		dullTerrainMaterial = std::make_unique<Material>(12, 13, 15, 16, 17);
 
-		bulbWhite = std::make_unique<Static_Object>();
-		bulbWhite->SetUpImportedModelData("Models/Free_Antique_Bulb.obj");
-		bulbRed = std::make_unique<Static_Object>();
-		bulbRed->SetUpImportedModelData("Models/Free_Antique_Bulb.obj");
-		sphere = std::make_unique<Static_Object>();
-		sphere->SetUpImportedModelData("Models/sphere.obj");
-		physicsEngine->AddSphere(1.0f, -terrainScaleFactor, 80.0f, 5.5f - terrainScaleFactor, 1.0f, sphere->GetModelMatrixForPhysics());
+		auto unriggedSceneMeshes = std::vector<std::shared_ptr<Render_Object>>();
+
+		auto bulbModel = Static_Model();
+		bulbModel.LoadModel("Models/Free_Antique_Bulb.obj");
+		bulbWhite = std::make_shared<Render_Object>(std::move(bulbModel.MeshList), bulbModel.TextureMap);
+		unriggedSceneMeshes.push_back(bulbWhite);
+		
+		auto bulbRedModel = Static_Model();
+		bulbRedModel.LoadModel("Models/Free_Antique_Bulb.obj");
+		bulbRed = std::make_shared<Render_Object>(std::move(bulbRedModel.MeshList), bulbRedModel.TextureMap);
+		unriggedSceneMeshes.push_back(bulbRed);
+
+		auto sphereModel = Static_Model();
+		sphereModel.LoadModel("Models/sphere.obj");
+		sphere = std::make_shared<Render_Object>(std::move(sphereModel.MeshList), sphereModel.TextureMap);
+		unriggedSceneMeshes.push_back(sphere);
+		//physicsEngine->AddSphere(1.0f, -terrainScaleFactor, 80.0f, 5.5f - terrainScaleFactor, 1.0f, sphere->());
 		//ToDo: use heightmap to add terrain collider
 		physicsEngine->AddStaticPlane(0.0f, 27.0f, 0.0f, 0.0f, glm::vec3(0.0f, 0.9f, 0.1f), nullptr);
-		cube = std::make_unique<Static_Object>();
-		cube->SetUpImportedModelData("Models/cube.obj");
-		sniper = std::make_unique<Static_Object>();
-		sniper->SetUpImportedModelData("Models/Sniper_rifle_KSR-29.fbx");
-		gun = std::make_unique<Static_Object>();
-		gun->SetUpImportedModelData("Models/Cerberus_LP.fbx");
-		anymodel = std::make_unique<Static_Object>();
-		anymodel->SetUpImportedModelData("Models/Intergalactic_Spaceship-(Wavefront).obj");
-		//anymodel->SetUpImportedModelData("Models/Sponza.gltf");
+
+		auto cubeModel = Static_Model();
+		cubeModel.LoadModel("Models/cube.obj");
+		cube = std::make_shared<Render_Object>(std::move(cubeModel.MeshList), cubeModel.TextureMap);
+		unriggedSceneMeshes.push_back(cube);
+
+		auto sniperModel = Static_Model();
+		sniperModel.LoadModel("Models/Sniper_rifle_KSR-29.fbx");
+		sniper = std::make_shared<Render_Object>(std::move(sniperModel.MeshList), sniperModel.TextureMap);
+		unriggedSceneMeshes.push_back(sniper);
+
+		auto gunModel = Static_Model();
+		gunModel.LoadModel("Models/Cerberus_LP.fbx");
+		gun = std::make_shared<Render_Object>(std::move(gunModel.MeshList), gunModel.TextureMap);
+		unriggedSceneMeshes.push_back(gun);
+
+		auto anyModel = Static_Model();
+		anyModel.LoadModel("Models/Intergalactic_Spaceship-(Wavefront).obj");
+		anymodel = std::make_shared<Render_Object>(std::move(anyModel.MeshList), anyModel.TextureMap);
+		unriggedSceneMeshes.push_back(anymodel);
+
+		sceneObjRO->push_back(unriggedSceneMeshes);
 
 		anim->LoadModel("Models/boblampclean.md5mesh");
 		anim2->LoadModel("Models/model.dae");
@@ -849,11 +881,11 @@ struct RenderEngineMain::Impl
 		
 		auto envMapShaders = std::vector<std::shared_ptr<Shader_Object>>{ environmentMapShader };
 		envMapRPHandler = std::make_shared<Environment_Map_Render_Pass_Handler>(environmentMap, envMapShaders);
-		auto envMapTexData = std::make_shared<std::map<TexType, std::vector<std::shared_ptr<Texture>>>>();
-		envMapTexData->emplace(Default, std::vector<std::shared_ptr<Texture>>{environmentTexture});
-		cwCubeRO->at(0)[0]->SetTextures(envMapTexData);
+		auto envMapTexData = std::map<TexType, std::vector<std::weak_ptr<Texture>>>();
+		envMapTexData.emplace(Default, std::vector<std::weak_ptr<Texture>>{environmentTexture});
+		cwCubeRO->at(0)[0]->SetTextures(std::move(envMapTexData));
 		envMapRPHandler->Update(*cwCubeRO);
-		cwCubeRO->at(0)[0]->SetTextures(nullptr);
+		cwCubeRO->at(0)[0]->ResetTextures();
 
 		auto irrConvShaders = std::vector<std::shared_ptr<Shader_Object>>{ irradianceConvolutionShader };
 		auto inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
@@ -873,79 +905,15 @@ struct RenderEngineMain::Impl
 		dirShadowRPHandler = std::make_shared<Directional_Shadow_Map_Render_Pass_Handler>(mainLight->GetShadowMap(), dirShadowShaders);
 		sceneObjRO  = std::make_shared<std::vector<std::vector<std::shared_ptr<Render_Object>>>>();
 
-		auto unriggedSceneMeshes = std::vector<std::shared_ptr<Render_Object>>();
-		
-		for(auto rod : *renderObjDatas)
-		{
-			unriggedSceneMeshes.push_back(std::make_shared<Render_Object>(rod->Meshes, rod->TextureMap, rod->ModelMatrix, rod->PrevModelMatrix, rod->BoneMatrices));
-		}
-		
-		auto textureMap = std::make_shared<std::map<TexType, std::vector<std::shared_ptr<Texture>>>>();
+		//auto unriggedSceneMeshes = std::vector<std::shared_ptr<Render_Object>>();
+		////
+		////for(auto rod : *renderObjDatas)
+		////{
+		////	unriggedSceneMeshes.push_back(std::make_shared<Render_Object>(rod->Meshes, rod->TextureMap, rod->ModelMatrix, rod->PrevModelMatrix, rod->BoneMatrices));
+		////}
+		////
 
-		textureMap = std::make_shared<std::map<TexType, std::vector<std::shared_ptr<Texture>>>>();
-		textureMap->emplace(TexType::Albedo, std::vector<std::shared_ptr<Texture>>{bulbWhite->AlbedoTexture});
-		textureMap->emplace(TexType::Metallic, std::vector<std::shared_ptr<Texture>>{bulbWhite->MetallicTexture});
-		textureMap->emplace(TexType::Roughness, std::vector<std::shared_ptr<Texture>>{bulbWhite->RoughTexture});
-		textureMap->emplace(TexType::Normal, std::vector<std::shared_ptr<Texture>>{bulbWhite->NormalTexture});
-		textureMap->emplace(TexType::Parallax, std::vector<std::shared_ptr<Texture>>{bulbWhite->ParallaxTexture});
-		textureMap->emplace(TexType::Glow, std::vector<std::shared_ptr<Texture>>{bulbWhite->GlowTexture});
-		unriggedSceneMeshes.push_back(std::make_shared<Render_Object>(bulbWhite->StaticModel->MeshList, textureMap, bulbWhite->Model, bulbWhite->PrevModel));
-		
-		textureMap = std::make_shared<std::map<TexType, std::vector<std::shared_ptr<Texture>>>>();
-		textureMap->emplace(TexType::Albedo, std::vector<std::shared_ptr<Texture>>{bulbRed->AlbedoTexture});
-		textureMap->emplace(TexType::Metallic, std::vector<std::shared_ptr<Texture>>{bulbRed->MetallicTexture});
-		textureMap->emplace(TexType::Roughness, std::vector<std::shared_ptr<Texture>>{bulbRed->RoughTexture});
-		textureMap->emplace(TexType::Normal, std::vector<std::shared_ptr<Texture>>{bulbRed->NormalTexture});
-		textureMap->emplace(TexType::Parallax, std::vector<std::shared_ptr<Texture>>{bulbRed->ParallaxTexture});
-		textureMap->emplace(TexType::Glow, std::vector<std::shared_ptr<Texture>>{bulbRed->GlowTexture});
-		unriggedSceneMeshes.push_back(std::make_shared<Render_Object>(bulbRed->StaticModel->MeshList, textureMap, bulbRed->Model, bulbRed->PrevModel));
-
-		textureMap = std::make_shared<std::map<TexType, std::vector<std::shared_ptr<Texture>>>>();
-		textureMap->emplace(TexType::Albedo, std::vector<std::shared_ptr<Texture>>{sphere->AlbedoTexture});
-		textureMap->emplace(TexType::Metallic, std::vector<std::shared_ptr<Texture>>{sphere->MetallicTexture});
-		textureMap->emplace(TexType::Roughness, std::vector<std::shared_ptr<Texture>>{sphere->RoughTexture});
-		textureMap->emplace(TexType::Normal, std::vector<std::shared_ptr<Texture>>{sphere->NormalTexture});
-		textureMap->emplace(TexType::Parallax, std::vector<std::shared_ptr<Texture>>{sphere->ParallaxTexture});
-		textureMap->emplace(TexType::Glow, std::vector<std::shared_ptr<Texture>>{sphere->GlowTexture});
-		unriggedSceneMeshes.push_back(std::make_shared<Render_Object>(sphere->StaticModel->MeshList, textureMap, sphere->Model, sphere->PrevModel));
-
-		textureMap = std::make_shared<std::map<TexType, std::vector<std::shared_ptr<Texture>>>>();
-		textureMap->emplace(TexType::Albedo, std::vector<std::shared_ptr<Texture>>{cube->AlbedoTexture});
-		textureMap->emplace(TexType::Metallic, std::vector<std::shared_ptr<Texture>>{cube->MetallicTexture});
-		textureMap->emplace(TexType::Roughness, std::vector<std::shared_ptr<Texture>>{cube->RoughTexture});
-		textureMap->emplace(TexType::Normal, std::vector<std::shared_ptr<Texture>>{cube->NormalTexture});
-		textureMap->emplace(TexType::Parallax, std::vector<std::shared_ptr<Texture>>{cube->ParallaxTexture});
-		textureMap->emplace(TexType::Glow, std::vector<std::shared_ptr<Texture>>{cube->GlowTexture});
-		unriggedSceneMeshes.push_back(std::make_shared<Render_Object>(cube->StaticModel->MeshList, textureMap, cube->Model, cube->PrevModel));
-
-		textureMap = std::make_shared<std::map<TexType, std::vector<std::shared_ptr<Texture>>>>();
-		textureMap->emplace(TexType::Albedo, std::vector<std::shared_ptr<Texture>>{sniper->AlbedoTexture});
-		textureMap->emplace(TexType::Metallic, std::vector<std::shared_ptr<Texture>>{sniper->MetallicTexture});
-		textureMap->emplace(TexType::Roughness, std::vector<std::shared_ptr<Texture>>{sniper->RoughTexture});
-		textureMap->emplace(TexType::Normal, std::vector<std::shared_ptr<Texture>>{sniper->NormalTexture});
-		textureMap->emplace(TexType::Parallax, std::vector<std::shared_ptr<Texture>>{sniper->ParallaxTexture});
-		textureMap->emplace(TexType::Glow, std::vector<std::shared_ptr<Texture>>{sniper->GlowTexture});
-		unriggedSceneMeshes.push_back(std::make_shared<Render_Object>(sniper->StaticModel->MeshList, textureMap, sniper->Model, sniper->PrevModel));
-
-		textureMap = std::make_shared<std::map<TexType, std::vector<std::shared_ptr<Texture>>>>();
-		textureMap->emplace(TexType::Albedo, std::vector<std::shared_ptr<Texture>>{gun->AlbedoTexture});
-		textureMap->emplace(TexType::Metallic, std::vector<std::shared_ptr<Texture>>{gun->MetallicTexture});
-		textureMap->emplace(TexType::Roughness, std::vector<std::shared_ptr<Texture>>{gun->RoughTexture});
-		textureMap->emplace(TexType::Normal, std::vector<std::shared_ptr<Texture>>{gun->NormalTexture});
-		textureMap->emplace(TexType::Parallax, std::vector<std::shared_ptr<Texture>>{gun->ParallaxTexture});
-		textureMap->emplace(TexType::Glow, std::vector<std::shared_ptr<Texture>>{gun->GlowTexture});
-		unriggedSceneMeshes.push_back(std::make_shared<Render_Object>(gun->StaticModel->MeshList, textureMap, gun->Model, gun->PrevModel));
-
-		textureMap = std::make_shared<std::map<TexType, std::vector<std::shared_ptr<Texture>>>>();
-		textureMap->emplace(TexType::Albedo, std::vector<std::shared_ptr<Texture>>{anymodel->AlbedoTexture});
-		textureMap->emplace(TexType::Metallic, std::vector<std::shared_ptr<Texture>>{anymodel->MetallicTexture});
-		textureMap->emplace(TexType::Roughness, std::vector<std::shared_ptr<Texture>>{anymodel->RoughTexture});
-		textureMap->emplace(TexType::Normal, std::vector<std::shared_ptr<Texture>>{anymodel->NormalTexture});
-		textureMap->emplace(TexType::Parallax, std::vector<std::shared_ptr<Texture>>{anymodel->ParallaxTexture});
-		textureMap->emplace(TexType::Glow, std::vector<std::shared_ptr<Texture>>{anymodel->GlowTexture});
-		unriggedSceneMeshes.push_back(std::make_shared<Render_Object>(anymodel->StaticModel->MeshList, textureMap, anymodel->Model, anymodel->PrevModel));
-
-		sceneObjRO->push_back(unriggedSceneMeshes);
+		//sceneObjRO->push_back(unriggedSceneMeshes);
 		
 		//auto riggedSceneMeshes = std::vector <std::shared_ptr<Render_Object>>();
 		//riggedSceneMeshes.push_back(std::make_shared<Render_Object>(std::make_shared<std::vector<std::shared_ptr<Mesh>>>(anim->MeshList)));
@@ -1375,7 +1343,7 @@ struct RenderEngineMain::Impl
 
 	void CreateObject() 
 	{	
-		auto rob = RenderObjectData{ std::make_shared<std::vector<Mesh>>(CreatePrism()), std::make_shared<std::map<TexType, std::vector<Texture>>>(), std::make_shared<glm::mat4>(1.0f), std::make_shared<glm::mat4>(1.0f) };
+		/*auto rob = RenderObjectData{ std::make_shared<std::vector<Mesh>>(CreatePrism()), std::make_shared<std::map<TexType, std::vector<Texture>>>(), std::make_shared<glm::mat4>(1.0f), std::make_shared<glm::mat4>(1.0f) };
 		rob.CreateTextureMap(TexType::Albedo, "Textures/rustediron2.png");
 		rob.CreateTextureMap(TexType::Metallic, "Textures/Metallic/rustediron2.png");
 		rob.CreateTextureMap(TexType::Roughness, "Textures/Roughness/rustediron2.png");
@@ -1411,7 +1379,7 @@ struct RenderEngineMain::Impl
 		rob.CreateTextureMap(TexType::Normal, "Textures/Normal/brick_floor.png");
 		rob.CreateTextureMap(TexType::Parallax, "Textures/Parallax/brick_floor.png");
 		rob.CreateTextureMap(TexType::Glow, "Textures/Glow/brick_floor.png");
-		renderObjDatas->push_back(std::make_shared<RenderObjectData>(rob));
+		renderObjDatas->push_back(std::make_shared<RenderObjectData>(rob));*/
 	}
 
 	void CreateShaders() {

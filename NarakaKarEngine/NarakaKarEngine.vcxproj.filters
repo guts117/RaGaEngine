@@ -111,9 +111,6 @@
     <ClCompile Include="Static_Model.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
-    <ClCompile Include="Static_Object.cpp">
-      <Filter>Source Files\RenderEngine</Filter>
-    </ClCompile>
     <ClCompile Include="Terrain_PreZPass_Shader.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
@@ -291,9 +288,6 @@
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="Static_Model.h">
-      <Filter>Header Files\RenderEngine</Filter>
-    </ClInclude>
-    <ClInclude Include="Static_Object.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="Terrain_PreZPass_Shader.h">

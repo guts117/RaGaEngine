@@ -117,7 +117,6 @@
     <ClCompile Include="SSAO_Shader.cpp" />
     <ClCompile Include="Static_Model.cpp" />
     <ClCompile Include="Model_Shader.cpp" />
-    <ClCompile Include="Static_Object.cpp" />
     <ClCompile Include="Terrain_PreZPass_Shader.cpp" />
     <ClCompile Include="Terrain_Shader.cpp" />
     <ClCompile Include="Texture.cpp" />
@@ -181,7 +180,6 @@
     <ClInclude Include="SSAO_Shader.h" />
     <ClInclude Include="Static_Model.h" />
     <ClInclude Include="Model_Shader.h" />
-    <ClInclude Include="Static_Object.h" />
     <ClInclude Include="Terrain_PreZPass_Shader.h" />
     <ClInclude Include="Terrain_Shader.h" />
     <ClInclude Include="Texture.h" />
