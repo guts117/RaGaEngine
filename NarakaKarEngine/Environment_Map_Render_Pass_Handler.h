@@ -7,7 +7,7 @@ namespace NarakaKarEngine
 {
     namespace RenderEngine
     {
-        class Environment_Map_Render_Pass_Handler :
+        class Environment_Map_Render_Pass_Handler final :
             public Scene_Render_Pass_Handler
         {
         public:

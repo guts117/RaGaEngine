@@ -181,7 +181,7 @@ struct Model_Importer::Impl
 		}
 
 		auto newMesh = std::make_shared<Mesh>(std::move(mesh->mMaterialIndex), std::move(vertices2D), std::move(indices), std::move(MeshGenParams{ true, true, false, 0, std::move(bones) }));
-		MeshList->push_back(newMesh);
+		MeshList->push_back(std::move(newMesh));
 
 		newMesh = nullptr;
 		LoadMaterials(scene);

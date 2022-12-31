@@ -15,4 +15,8 @@ Scene_Render_Pass_Handler::Scene_Render_Pass_Handler(std::shared_ptr<Fbo_Handler
 {
 }
 
+void Scene_Render_Pass_Handler::Init()
+{
+}
+
 Scene_Render_Pass_Handler::~Scene_Render_Pass_Handler() = default;

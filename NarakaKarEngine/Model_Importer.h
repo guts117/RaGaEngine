@@ -26,6 +26,8 @@ namespace NarakaKarEngine
 		//};
 
 		class Mesh;
+		class Texture;
+		enum TexType;
 
 		class Model_Importer final
 		{

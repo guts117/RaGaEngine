@@ -38,7 +38,7 @@ struct Render_Object::Impl
 
 	~Impl() = default;
 
-	void RenderObject(Shader_Object& shader, const RenderObjectParams&& params)
+	void RenderObject(Shader_Object& shader, RenderObjectParams&& params)
 	{
 		if (params.useWorldSpaceTransform && !m_ModelMatrix.expired())
 		{
@@ -113,6 +113,11 @@ struct Render_Object::Impl
 									//ToDo: Add dispFactor through material or something
 									shader.SetVariable("dispFactor", 0.2f);
 									break;
+								case Noise:
+									texMap->UseTextureTemp(shader.SetTextureUnit("noise"));
+									//ToDo: Add noiseFactor through material or something
+									//shader.SetVariable("noiseFactor", 0.2f);
+									break;
 								default:
 									texMap->UseTextureTemp(shader.SetTextureUnit("theTexture"));
 									break;
@@ -147,7 +152,7 @@ Render_Object::Render_Object(std::unique_ptr<std::vector<std::weak_ptr<Mesh>>>&&
 			, std::shared_ptr<glm::mat4> modelMatrix
 			, std::shared_ptr<glm::mat4> prevModelMatrix
 			, std::unique_ptr<std::vector<std::weak_ptr<BoneTransform>>>&& boneMatrices)
-			: m_pImpl{std::make_unique<Impl>(meshes, textureMap, modelMatrix, prevModelMatrix, boneMatrices)}
+			: m_pImpl{std::make_unique<Impl>(std::move(meshes), std::move(textureMap), modelMatrix, prevModelMatrix, std::move(boneMatrices))}
 {
 }
 
@@ -161,7 +166,12 @@ void Render_Object::ResetTextures()
 	Pimpl()->m_TextureMap = nullptr;
 }
 
-void Render_Object::RenderObject(Shader_Object& shader, const RenderObjectParams&& params)
+const std::weak_ptr<glm::mat4>& Render_Object::GetModelMatrix() const
+{
+	return Pimpl()->m_ModelMatrix;
+}
+
+void Render_Object::RenderObject(Shader_Object& shader, RenderObjectParams&& params)
 {
 	Pimpl()->RenderObject(shader, std::move(params));
 }

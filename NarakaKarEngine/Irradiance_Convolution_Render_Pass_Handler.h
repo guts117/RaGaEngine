@@ -7,7 +7,7 @@ namespace NarakaKarEngine
 {
     namespace RenderEngine
     {
-        class Irradiance_Convolution_Render_Pass_Handler :
+        class Irradiance_Convolution_Render_Pass_Handler final :
             public Scene_Render_Pass_Handler
         {
         public:

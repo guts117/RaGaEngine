@@ -114,6 +114,7 @@
     <ClCompile Include="Skybox.cpp" />
     <ClCompile Include="SpotLight.cpp" />
     <ClCompile Include="SSAOBlur_Shader.cpp" />
+    <ClCompile Include="Ssao_Render_Pass_Handler.cpp" />
     <ClCompile Include="SSAO_Shader.cpp" />
     <ClCompile Include="Model_Shader.cpp" />
     <ClCompile Include="Terrain_PreZPass_Shader.cpp" />
@@ -176,6 +177,7 @@
     <ClInclude Include="spimpl.h" />
     <ClInclude Include="SpotLight.h" />
     <ClInclude Include="SSAOBlur_Shader.h" />
+    <ClInclude Include="Ssao_Render_Pass_Handler.h" />
     <ClInclude Include="SSAO_Shader.h" />
     <ClInclude Include="Model_Shader.h" />
     <ClInclude Include="Terrain_PreZPass_Shader.h" />

@@ -39,6 +39,7 @@ namespace NarakaKarEngine
 			void SetTextures(std::map<TexType, std::vector<std::weak_ptr<Texture>>>&& textureMap);
 
 			void ResetTextures();
+			const std::weak_ptr<glm::mat4>& GetModelMatrix() const ;
 
 			Render_Object(Render_Object&& rhs) noexcept = default;
 			Render_Object& operator=(Render_Object&& rhs) noexcept = default;
@@ -46,7 +47,7 @@ namespace NarakaKarEngine
 			Render_Object(const Render_Object& rhs) noexcept = delete;
 			Render_Object& operator=(const Render_Object& rhs) noexcept = delete;
 
-			void RenderObject(Shader_Object& shader, const RenderObjectParams&& params);
+			void RenderObject(Shader_Object& shader, RenderObjectParams&& params);
 
 			const bool IsTesselated() const;
 

@@ -7,7 +7,7 @@ namespace NarakaKarEngine
 {
     namespace RenderEngine
     {
-        class Directional_Shadow_Map_Render_Pass_Handler :
+        class Directional_Shadow_Map_Render_Pass_Handler final :
             public Scene_Render_Pass_Handler
         {
         public:

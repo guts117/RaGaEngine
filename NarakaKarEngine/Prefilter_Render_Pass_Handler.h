@@ -11,7 +11,7 @@ namespace NarakaKarEngine
         class Shader_Object;
         class Fbo_Handler;
 
-        class Prefilter_Render_Pass_Handler :
+        class Prefilter_Render_Pass_Handler final :
             public Scene_Render_Pass_Handler
         {
         public:

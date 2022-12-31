@@ -26,6 +26,7 @@ const int brdflutTexUnit	= 10;
 const int aoTexUnit			= 14;
 const float camNearZ		= 0.1f;
 const float camFarZ			= 1000.0f;
+const static int KERNEL_SIZE = 64;
 
 enum SceneViewerType
 {

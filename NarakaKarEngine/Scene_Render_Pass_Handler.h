@@ -48,6 +48,7 @@ namespace NarakaKarEngine
 			Scene_Render_Pass_Handler(const Scene_Render_Pass_Handler& rhs) noexcept = delete;
 			Scene_Render_Pass_Handler& operator=(const Scene_Render_Pass_Handler& rhs) noexcept = delete;
 
+			virtual void Init();
 			virtual void Update(const std::vector<std::vector<std::shared_ptr<Render_Object>>>& renderObj, const CamParam* camParam = nullptr, const LightParam* lightParam = nullptr) = 0;
 
 			virtual ~Scene_Render_Pass_Handler() = 0;

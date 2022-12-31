@@ -19,6 +19,7 @@ namespace NarakaKarEngine
 			Glow,
 			Displacement,
 			Blend,
+			Noise,
 			Max
 		};
 
