@@ -27,7 +27,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Animated_Model.cpp">
+    <ClCompile Include="Model_Importer.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
     <ClCompile Include="Billboard_Mesh.cpp">
@@ -64,9 +64,6 @@
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
     <ClCompile Include="Mesh.cpp">
-      <Filter>Source Files\RenderEngine</Filter>
-    </ClCompile>
-    <ClCompile Include="Model.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
     <ClCompile Include="Model_Shader.cpp">
@@ -106,9 +103,6 @@
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
     <ClCompile Include="SSAOBlur_Shader.cpp">
-      <Filter>Source Files\RenderEngine</Filter>
-    </ClCompile>
-    <ClCompile Include="Static_Model.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
     <ClCompile Include="Terrain_PreZPass_Shader.cpp">
@@ -201,9 +195,12 @@
     <ClCompile Include="Directional_Shadow_Map_Render_Pass_Handler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Model_Importer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Animated_Model.h">
+    <ClInclude Include="Model_Importer.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="Billboard_Mesh.h">
@@ -245,9 +242,6 @@
     <ClInclude Include="Mesh.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
-    <ClInclude Include="Model.h">
-      <Filter>Header Files\RenderEngine</Filter>
-    </ClInclude>
     <ClInclude Include="Model_Shader.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
@@ -285,9 +279,6 @@
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="SSAOBlur_Shader.h">
-      <Filter>Header Files\RenderEngine</Filter>
-    </ClInclude>
-    <ClInclude Include="Static_Model.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="Terrain_PreZPass_Shader.h">
@@ -387,6 +378,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Directional_Shadow_Map_Render_Pass_Handler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Model_Importer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
