@@ -102,7 +102,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="PointLight.cpp" />
-    <ClCompile Include="PreZPass_Shader.cpp" />
     <ClCompile Include="Render_Object.cpp" />
     <ClCompile Include="SceneViewer.cpp" />
     <ClCompile Include="Scene_Fbo_Handler_Manager.cpp" />
@@ -115,9 +114,7 @@
     <ClCompile Include="SpotLight.cpp" />
     <ClCompile Include="SSAOBlur_Shader.cpp" />
     <ClCompile Include="Ssao_Render_Pass_Handler.cpp" />
-    <ClCompile Include="SSAO_Shader.cpp" />
     <ClCompile Include="Model_Shader.cpp" />
-    <ClCompile Include="Terrain_PreZPass_Shader.cpp" />
     <ClCompile Include="Terrain_Shader.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="VertexBoneData.cpp" />
@@ -133,7 +130,6 @@
     <ClInclude Include="..\deps\Common\include\imgui\imstb_rectpack.h" />
     <ClInclude Include="..\deps\Common\include\imgui\imstb_textedit.h" />
     <ClInclude Include="..\deps\Common\include\imgui\imstb_truetype.h" />
-    <ClInclude Include="Model_Importer.h" />
     <ClInclude Include="Billboard_Mesh.h" />
     <ClInclude Include="Billboard_Shader.h" />
     <ClInclude Include="Blur_Shader.h" />
@@ -146,7 +142,6 @@
     <ClInclude Include="Fbo_Handler.h" />
     <ClInclude Include="FrameBufferObject.h" />
     <ClInclude Include="Irradiance_Convolution_Render_Pass_Handler.h" />
-    <ClInclude Include="Model_Importer.h" />
     <ClInclude Include="Prefilter_Render_Pass_Handler.h" />
     <ClInclude Include="PreZ_Render_Pass_Handler.h" />
     <ClInclude Include="RenderingCommonValues.h" />
@@ -164,7 +159,6 @@
     <ClInclude Include="Particle_Shader.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="PointLight.h" />
-    <ClInclude Include="PreZPass_Shader.h" />
     <ClInclude Include="Render_Object.h" />
     <ClInclude Include="SceneViewer.h" />
     <ClInclude Include="Scene_Fbo_Handler_Manager.h" />
@@ -178,9 +172,7 @@
     <ClInclude Include="SpotLight.h" />
     <ClInclude Include="SSAOBlur_Shader.h" />
     <ClInclude Include="Ssao_Render_Pass_Handler.h" />
-    <ClInclude Include="SSAO_Shader.h" />
     <ClInclude Include="Model_Shader.h" />
-    <ClInclude Include="Terrain_PreZPass_Shader.h" />
     <ClInclude Include="Terrain_Shader.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="MathUtil.h" />

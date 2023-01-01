@@ -1,9 +1,6 @@
 #include "pch.h"
 #include "RenderEngineMain.h"
 
-#include "PreZPass_Shader.h"
-#include "Terrain_PreZPass_Shader.h"
-#include "SSAO_Shader.h"
 #include "SSAOBlur_Shader.h"
 #include "Model_Shader.h"
 #include "Terrain_Shader.h"
@@ -167,10 +164,6 @@ struct RenderEngineMain::Impl
 	std::shared_ptr < Terrain_Shader> terrainDirectionalShadowShader = std::make_shared<Terrain_Shader>();
 	std::shared_ptr < Terrain_Shader> terrainOmniDirectionalShadowShader = std::make_shared<Terrain_Shader>();
 	std::shared_ptr<Shader_Object> terrDirShadowShader;
-
-	std::shared_ptr < PreZPass_Shader> static_preZPassShader = std::make_shared<PreZPass_Shader>();
-	std::unique_ptr < PreZPass_Shader> anim_preZPassShader = std::make_unique<PreZPass_Shader>();
-	std::unique_ptr < Terrain_PreZPass_Shader> terrain_preZPassShader = std::make_unique<Terrain_PreZPass_Shader>();
 
 	std::unique_ptr < SSAOBlur_Shader > ssaoBlurShader = std::make_unique<SSAOBlur_Shader>();
 
@@ -1500,39 +1493,39 @@ struct RenderEngineMain::Impl
 	void RenderTerrain(bool shadow, bool depth)
 	{
 		return;
-		glUniform1f(uniformDispFactor, (0.2f * terrainScaleFactor1));
+		//glUniform1f(uniformDispFactor, (0.2f * terrainScaleFactor1));
 
-		glm::mat4 model;
-		glm::mat4 prevPVM = glm::mat4();
-		//model = glm::translate(model, glm::vec3(0.0f,-10.0f, 0.0f));
-		//model = glm::rotate(model, curAngle * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));  //if you put the rotate at the last place(i.e on the top) it will have a bouncy effect
-		//model = glm::scale(model,glm::vec3(terrainScaleFactor, 1.0f, terrainScaleFactor));
-		glUniformMatrix4fv(uniformModel2, 1, GL_FALSE, glm::value_ptr(model));
-		//prevPVM = camera->GetPreviousProjectionViewMatrix() * terrainList[0]->PrevMesh;
-		//glUniformMatrix4fv(uniformPrevPVM2, 1, GL_FALSE, glm::value_ptr(prevPVM));
-		terrainTextureDisp->UseTexture(0);
-		if (shadow)
-		{
-			terrainDirectionalShadowShader->SetDisplacementMap(1);
-		}
-		else if (depth)
-		{
-			terrain_preZPassShader->SetDisplacementMap(1);
-		}
-		else
-		{
-			terrainShader->SetDisplacementMap(1);
-		}
-		terrainShader->SetBlendMap(11);
-		terrainTexture->UseTextureArray(11);
-		terrainTextureMetal->UseTextureArray(12);
-		terrainTextureNorm->UseTextureArray(14);
-		terrainTextureRough->UseTextureArray(15);
-		terrainTexturePara->UseTextureArray(16);
-		dullTerrainMaterial->UseMaterial(uniformAlbedoMap2, uniformMetallicMap2, uniformNormalMap2, uniformRoughnessMap2, uniformParallaxMap2);
+		//glm::mat4 model;
+		//glm::mat4 prevPVM = glm::mat4();
+		////model = glm::translate(model, glm::vec3(0.0f,-10.0f, 0.0f));
+		////model = glm::rotate(model, curAngle * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));  //if you put the rotate at the last place(i.e on the top) it will have a bouncy effect
+		////model = glm::scale(model,glm::vec3(terrainScaleFactor, 1.0f, terrainScaleFactor));
+		//glUniformMatrix4fv(uniformModel2, 1, GL_FALSE, glm::value_ptr(model));
+		////prevPVM = camera->GetPreviousProjectionViewMatrix() * terrainList[0]->PrevMesh;
+		////glUniformMatrix4fv(uniformPrevPVM2, 1, GL_FALSE, glm::value_ptr(prevPVM));
+		//terrainTextureDisp->UseTexture(0);
+		//if (shadow)
+		//{
+		//	terrainDirectionalShadowShader->SetDisplacementMap(1);
+		//}
+		//else if (depth)
+		//{
+		//	terrain_preZPassShader->SetDisplacementMap(1);
+		//}
+		//else
+		//{
+		//	terrainShader->SetDisplacementMap(1);
+		//}
+		//terrainShader->SetBlendMap(11);
+		//terrainTexture->UseTextureArray(11);
+		//terrainTextureMetal->UseTextureArray(12);
+		//terrainTextureNorm->UseTextureArray(14);
+		//terrainTextureRough->UseTextureArray(15);
+		//terrainTexturePara->UseTextureArray(16);
+		//dullTerrainMaterial->UseMaterial(uniformAlbedoMap2, uniformMetallicMap2, uniformNormalMap2, uniformRoughnessMap2, uniformParallaxMap2);
 
-		terrainList->at(0)->RenderMesh();
-		//terrainList[0]->PrevMesh = model;
+		//terrainList->at(0)->RenderMesh();
+		////terrainList[0]->PrevMesh = model;
 	}
 
 	//Will be in Transform class or VObject class
