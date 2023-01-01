@@ -192,6 +192,12 @@
     <ClCompile Include="Ssao_Render_Pass_Handler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Ssao_Blur_Render_Pass_handler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Omni_Directional_Shadow_Map_Render_Pass_Handler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Model_Importer.h">
@@ -366,6 +372,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Ssao_Render_Pass_Handler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Ssao_Blur_Render_Pass_handler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Omni_Directional_Shadow_Map_Render_Pass_Handler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

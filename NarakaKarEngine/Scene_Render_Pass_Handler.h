@@ -23,9 +23,11 @@ namespace NarakaKarEngine
 
 		struct LightParam
 		{
-			const glm::vec3& Position;
-			const glm::mat4* Projection;
-			const glm::mat4* View;
+			const glm::vec3* Position = nullptr;
+			const glm::mat4* Projection = nullptr;
+			const glm::mat4* View = nullptr;
+			const GLfloat* FarPlane = nullptr;
+			int&& Count = 0;
 		};
 
 		struct ShaderParam

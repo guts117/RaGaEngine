@@ -45,8 +45,10 @@
 #include "Environment_Map_Render_Pass_Handler.h"
 #include "Irradiance_Convolution_Render_Pass_Handler.h"
 #include "Directional_Shadow_Map_Render_Pass_Handler.h"
+#include "Omni_Directional_Shadow_Map_Render_Pass_Handler.h"
 #include "PreZ_Render_Pass_Handler.h"
 #include "Ssao_Render_Pass_Handler.h"
+#include "Ssao_Blur_Render_Pass_Handler.h"
 
 #include <glm/gtx/euler_angles.hpp>
 
@@ -140,6 +142,7 @@ struct RenderEngineMain::Impl
 	std::shared_ptr <Shader_Object> animPreZShader;
 	std::shared_ptr <Shader_Object> terrPreZShader;
 	std::shared_ptr <Shader_Object> ssaoShader;
+	std::shared_ptr <Shader_Object> ssaoBlurShader;
 
 	std::shared_ptr <Fbo_Handler> environmentMap;
 	std::shared_ptr <Fbo_Handler> irradianceMap;
@@ -153,19 +156,14 @@ struct RenderEngineMain::Impl
 	std::shared_ptr <Fbo_Handler> blur;
 	std::shared_ptr <Fbo_Handler> finalFBO;
 
-	std::shared_ptr < Model_Shader > directionalShadowShader = std::make_shared<Model_Shader>();
-	std::shared_ptr < Model_Shader > omniShadowShader = std::make_shared<Model_Shader>();
-	std::shared_ptr<Shader_Object> dirShadowShader;
+	std::shared_ptr <Shader_Object> omniShadowShader;
+	std::shared_ptr <Shader_Object> dirShadowShader;
 
-	std::shared_ptr < Model_Shader > animDirectionalShadowShader = std::make_shared<Model_Shader>();
-	std::shared_ptr < Model_Shader > animOmniShadowShader = std::make_shared<Model_Shader>();
-	std::shared_ptr<Shader_Object> animDirShadowShader;
+	std::shared_ptr <Shader_Object> animOmniShadowShader;
+	std::shared_ptr <Shader_Object> animDirShadowShader;
 
-	std::shared_ptr < Terrain_Shader> terrainDirectionalShadowShader = std::make_shared<Terrain_Shader>();
-	std::shared_ptr < Terrain_Shader> terrainOmniDirectionalShadowShader = std::make_shared<Terrain_Shader>();
-	std::shared_ptr<Shader_Object> terrDirShadowShader;
-
-	std::unique_ptr < SSAOBlur_Shader > ssaoBlurShader = std::make_unique<SSAOBlur_Shader>();
+	std::shared_ptr <Shader_Object> terrainOmniShadowShader;
+	std::shared_ptr <Shader_Object> terrDirShadowShader;
 
 	std::vector< std::shared_ptr < Model_Shader>> shaderList;
 	std::vector< std::shared_ptr < Model_Shader>> animShaderList;
@@ -268,6 +266,7 @@ struct RenderEngineMain::Impl
 	std::shared_ptr < DirectionalLight> mainLight;
 	std::shared_ptr < PointLight> pointLights[MAX_POINT_LIGHTS_WITH_SHADOW];
 	std::shared_ptr < SpotLight> spotLights[MAX_SPOT_LIGHTS];
+	std::shared_ptr <std::vector<std::shared_ptr<PointLight>>> omniDirLights;
 
 	unsigned int pointLightCount = 0;
 	unsigned int spotLightCount = 0;
@@ -344,8 +343,10 @@ struct RenderEngineMain::Impl
 	std::shared_ptr<Environment_Map_Render_Pass_Handler> envMapRPHandler;
 	std::shared_ptr<Irradiance_Convolution_Render_Pass_Handler> irrConvRPHandler;
 	std::shared_ptr<Directional_Shadow_Map_Render_Pass_Handler> dirShadowRPHandler;
+	std::shared_ptr<Omni_Directional_Shadow_Map_Render_Pass_Handler> omniShadowRPHandler;
 	std::shared_ptr<PreZ_Render_Pass_Handler> preZRPHandler;
 	std::shared_ptr<Ssao_Render_Pass_Handler> ssaoRPHandler;
+	std::shared_ptr<Ssao_Blur_Render_Pass_Handler> ssaoBlurRPHandler;
 
 	GLfloat aircraftAngle = 0.0f;
 
@@ -827,6 +828,10 @@ struct RenderEngineMain::Impl
 
 		spotLightCount++;
 
+		omniDirLights = std::make_shared<std::vector<std::shared_ptr<PointLight>>>();
+		for (auto i = 0; i < pointLightCount; ++i){ omniDirLights->push_back(pointLights[i]); }
+		for (auto i = 0; i < spotLightCount; ++i) { omniDirLights->push_back(spotLights[i]); }
+
 		//std::vector<std::string> skyboxFaces;
 		//skyboxFaces.push_back("Textures/Skybox/cupertin-lake_rt.tga");
 		//skyboxFaces.push_back("Textures/Skybox/cupertin-lake_lf.tga");
@@ -898,6 +903,10 @@ struct RenderEngineMain::Impl
 		dirShadowRPHandler = std::make_shared<Directional_Shadow_Map_Render_Pass_Handler>(mainLight->GetShadowMap(), dirShadowShaders);
 		sceneObjRO = std::make_shared<std::vector<std::vector<std::shared_ptr<Render_Object>>>>();
 
+		//ToDo;
+		//auto ommiShadowShaders = std::vector<std::shared_ptr<Shader_Object>>{ omniShadowShader, animOmniShadowShader };
+		//omniShadowRPHandler = std::make_shared<Directional_Shadow_Map_Render_Pass_Handler>(pointLights->GetShadowMap(), ommiShadowShaders);
+		//sceneObjRO = std::make_shared<std::vector<std::vector<std::shared_ptr<Render_Object>>>>();
 
 		auto prezShaders = std::vector<std::shared_ptr<Shader_Object>>{ preZShader, animPreZShader, terrPreZShader };
 		preZRPHandler = std::make_shared<PreZ_Render_Pass_Handler>(depth, prezShaders);
@@ -907,6 +916,11 @@ struct RenderEngineMain::Impl
 		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(depth)));
 		ssaoRPHandler = std::make_shared<Ssao_Render_Pass_Handler>(ssao, ssaoShaders, inputs);
 		InitSSAO();
+
+		auto ssaoBlurShaders = std::vector<std::shared_ptr<Shader_Object>>{ ssaoBlurShader };
+		inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
+		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(ssao)));
+		ssaoBlurRPHandler = std::make_shared<Ssao_Blur_Render_Pass_Handler>(ssaoBlur, ssaoBlurShaders, inputs);
 
 		//auto unriggedSceneMeshes = std::vector<std::shared_ptr<Render_Object>>();
 		////
@@ -1104,17 +1118,12 @@ struct RenderEngineMain::Impl
 			auto camParam = CamParam{ camera->getCameraPosition(), camera->GetProjectionMatrix(), camera->CalculateViewMatrix(), camera->GetPreviousProjectionMatrix() };
 			DirectionalShadowMapPass(mainLight.get(), camParam);
 
-			for (size_t i = 0; i < pointLightCount; i++) {
-				OmniShadowMapPass(pointLights[i].get(), i);
-			}
-			for (size_t i = 0; i < spotLightCount; i++) {
-				OmniShadowMapPass(spotLights[i].get(), pointLightCount + i);
-			}
+			OmniShadowMapPass(*omniDirLights);
 
-			PreZPass(deltaTime, camParam);
+			PreZPass(camParam);
 			CullLight();
 			SSAOPass(camParam);
-			SSAOBlurPass();
+			SSAOBlurPass(camParam);
 			RenderPass(deltaTime);
 			Bloom();
 			MotionBlurPass(framesPerSec);
@@ -1189,8 +1198,8 @@ struct RenderEngineMain::Impl
 			for (unsigned int i = 0; i < pointLightCount; ++i) {
 				//Fetching the light from the current scene
 				light = pointLights[i].get();
-				lightList.get()->at(i).position = glm::vec4(light->GetPosition(), 1.0f);
-				lightList.get()->at(i).color = glm::vec4(light->GetColor(), 1.0f);
+				lightList.get()->at(i).position = glm::vec4(light->position, 1.0f);
+				lightList.get()->at(i).color = glm::vec4(light->color, 1.0f);
 				lightList.get()->at(i).enabled = 1;
 				lightList.get()->at(i).intensity = 100.0f;
 				lightList.get()->at(i).range = 65.0f;
@@ -1426,23 +1435,17 @@ struct RenderEngineMain::Impl
 		dirShadowShader				= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/directional_shadow_map.vert", "Shaders/directional_shadow_map.frag"});
 		animDirShadowShader			= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/anim_directional_shadow_map.vert", "Shaders/directional_shadow_map.frag"});
 		terrDirShadowShader			= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain_directional_shadow_map.tesse", "Shaders/directional_shadow_map.frag"});
+		omniShadowShader			= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/omni_shadow_map.vert", "Shaders/omni_shadow_map.geom", "Shaders/omni_shadow_map.frag"});
+		animOmniShadowShader		= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/anim_omni_shadow_map.vert", "Shaders/omni_shadow_map.geom", "Shaders/omni_shadow_map.frag"});
 
-		//directionalShadowShader->CreateFromFiles("Shaders/directional_shadow_map.vert", "Shaders/directional_shadow_map.frag");
-		omniShadowShader->CreateFromFiles("Shaders/omni_shadow_map.vert", "Shaders/omni_shadow_map.geom", "Shaders/omni_shadow_map.frag");
-
-		//animDirectionalShadowShader->CreateFromFiles("Shaders/anim_directional_shadow_map.vert", "Shaders/directional_shadow_map.frag");
-		animOmniShadowShader->CreateFromFiles("Shaders/anim_omni_shadow_map.vert", "Shaders/omni_shadow_map.geom", "Shaders/omni_shadow_map.frag");
-
-		//terrainDirectionalShadowShader->CreateFromFiles("Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain_directional_shadow_map.tesse", "Shaders/directional_shadow_map.frag");
-		//terrainOmniDirectionalShadowShader.CreateFromFiles("Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain_omni_directional_shadow_map.tesse", "Shaders/omni_shadow_map.geom", "Shaders/directional_shadow_map.frag");
+		//terrainOmniShadowShader.CreateFromFiles("Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain_omni_directional_shadow_map.tesse", "Shaders/omni_shadow_map.geom", "Shaders/directional_shadow_map.frag");
 
 		preZShader = std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/depth_framebuffer.vert", "Shaders/depth_framebuffer.frag"});
 		animPreZShader = std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/anim_depth_framebuffer.vert", "Shaders/depth_framebuffer.frag"}); 
 		terrPreZShader = std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain_depth_framebuffer.tesse", "Shaders/depth_framebuffer.frag"});
 
-		ssaoShader = animPreZShader = std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/ssao_framebuffer.vert", "Shaders/ssao_framebuffer.frag"});
-
-		ssaoBlurShader->CreateFromFiles("Shaders/framebuffer.vert", "Shaders/ssao_blur_framebuffer.frag");
+		ssaoShader = std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/ssao_framebuffer.vert", "Shaders/ssao_framebuffer.frag"});
+		ssaoBlurShader = std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/ssao_blur_framebuffer.frag"});
 
 		std::shared_ptr<Model_Shader> shader1 = std::make_shared<Model_Shader>();
 		shader1->CreateFromFiles(vShader.c_str(), fShader.c_str(), true);
@@ -1691,41 +1694,26 @@ struct RenderEngineMain::Impl
 			proj[i] = light->GetProjMat(vView[i], i);
 		}
 
-		auto lightParam = LightParam{ mainLight->GetLightDirection(), proj, vView };
+		auto position = mainLight->GetLightDirection();
+		auto lightParam = LightParam{ &position, proj, vView};
 		dirShadowRPHandler->Update(*sceneObjRO, &camParam, &lightParam);
 	}
 
-	void OmniShadowMapPass(PointLight* light, int lightIndex) {
+	void OmniShadowMapPass(const std::vector<std::shared_ptr<PointLight>>& lights) 
+	{
+		std::vector<glm::vec3> positions;
+		std::vector<glm::mat4> projections;
+		std::vector<GLfloat> farplanes;
 
-		//omniShadowShader->UseShader();
+		for (auto i = 0; i < lights.size(); ++i) 
+		{
+			positions.push_back(lights[i]->position);
+			projections.push_back(lights[i]->lightProj);
+			farplanes.push_back(lights[i]->farPlane);
+		}
 
-		//glViewport(0, 0, light->GetShadowMap()->GetFBOWidth(lightIndex), light->GetShadowMap()->GetFBOHeight(lightIndex));
-
-		//light->GetShadowMap()->BindFBO(lightIndex);
-		//glClear(GL_DEPTH_BUFFER_BIT);
-
-		//glUniform3f(omniShadowShader->GetOmniLightPosLocation(), light->GetPosition().x, light->GetPosition().y, light->GetPosition().z);
-		//glUniform1f(omniShadowShader->GetFarPlaneLocation(), light->GetFarPlane());
-		//omniShadowShader->SetLightMatrices(light->CalculateLightTransform());
-
-		//omniShadowShader->Validate();
-		//RenderScene(omniShadowShader);
-
-		//animOmniShadowShader->UseShader();
-
-		//uniformModel1 = animOmniShadowShader->GetModelLocation();
-		//uniformOmniLightPos1 = animOmniShadowShader->GetOmniLightPosLocation();
-		//uniformFarPlane1 = animOmniShadowShader->GetFarPlaneLocation();
-
-		//glUniform3f(uniformOmniLightPos1, light->GetPosition().x, light->GetPosition().y, light->GetPosition().z);
-		//glUniform1f(uniformFarPlane1, light->GetFarPlane());
-		//animOmniShadowShader->SetLightMatrices(light->CalculateLightTransform());
-
-		//animOmniShadowShader->Validate();
-
-		//RenderAnimScene(true, false);
-
-		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		auto lightParam = LightParam(&positions[0], &projections[0], nullptr, &farplanes[0], lights.size());
+		omniShadowRPHandler->Update(*sceneObjRO, nullptr, &lightParam);
 	}
 
 	void CullLight()
@@ -1761,7 +1749,7 @@ struct RenderEngineMain::Impl
 		//	std::cout << count << " Clusters are Active" << std::endl;
 	}
 
-	void PreZPass(GLfloat deltaTime, const CamParam& camParam)
+	void PreZPass(const CamParam& camParam)
 	{
 		preZRPHandler->Update(*sceneObjRO, &camParam);
 	}
@@ -1771,25 +1759,13 @@ struct RenderEngineMain::Impl
 		auto ssaoTexData = std::map<TexType, std::vector<std::weak_ptr<Texture>>>();
 		ssaoTexData.emplace(Default, std::vector<std::weak_ptr<Texture>>{SSAONoiseTexture});
 		quadRO->at(0)[0]->SetTextures(std::move(ssaoTexData));
-		ssaoRPHandler->Update(*sceneObjRO, &camParam);
+		ssaoRPHandler->Update(*quadRO, &camParam);
 		quadRO->at(0)[0]->ResetTextures();
 	}
 
-	void SSAOBlurPass()
+	void SSAOBlurPass(const CamParam& camParam)
 	{
-		glViewport(0, 0, ssaoBlur->GetFBOWidth(), ssaoBlur->GetFBOHeight());
-
-		ssaoBlur->BindFBO();
-		glClear(GL_COLOR_BUFFER_BIT);
-
-		ssaoBlurShader->UseShader();
-		ssao->AttachFBOToTextureUnit(0, GL_TEXTURE0, 0, 0);
-		ssaoBlurShader->SetTexture(0);
-		if (auto q = quad->at(0).lock())
-		{
-			q->RenderMesh();
-		}
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		ssaoBlurRPHandler->Update(*quadRO, &camParam);
 	}
 
 	void RenderPass(GLfloat deltaTime)

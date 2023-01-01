@@ -519,7 +519,7 @@ struct Shader_Object::Impl
 			{
 				glUniform3f(location, val->x, val->y, val->z);
 			}
-			else if(auto val = CheckInputDataType<std::tuple<int, glm::vec3*>>(value))
+			else if(auto val = CheckInputDataType<std::tuple<GLuint, glm::vec3*>>(value))
 			{
 				auto size = std::get<0>(*val);
 				auto dataPtr = (const GLfloat*)std::get<1>(*val);

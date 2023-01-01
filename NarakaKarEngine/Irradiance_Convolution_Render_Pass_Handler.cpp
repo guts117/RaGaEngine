@@ -50,7 +50,7 @@ void Irradiance_Convolution_Render_Pass_Handler::Update(const std::vector<std::v
 			try
 			{
 				auto input = std::any_cast<std::shared_ptr<Fbo_Handler>>(*m_inputs->at(0));
-				input->AttachFBOToTextureUnit(0, GL_TEXTURE0, 0, 0);
+				input->AttachFBOToTextureUnit(0, shader->SetTextureUnit("skybox"), 0, 0);
 			}
 			catch (const std::bad_any_cast& e)
 			{

@@ -130,7 +130,7 @@ void Terrain_Shader::SetPointLight(std::shared_ptr<PointLight>* pLight, unsigned
 	for (size_t i = 0; i < lightCount; i++) {																									//pLight is already a pointer 
 		pLight[i]->GetShadowMap()->AttachFBOToTextureUnit(i + offset, GL_TEXTURE0 + textureUnit + i, 0, 0);
 		glUniform1i(uniformOmniShadowMap[i + offset].shadowMap, textureUnit + i);
-		glUniform1f(uniformOmniShadowMap[i + offset].farPlane, pLight[i]->GetFarPlane());
+		glUniform1f(uniformOmniShadowMap[i + offset].farPlane, pLight[i]->farPlane);
 	}
 }
 
@@ -147,7 +147,7 @@ void Terrain_Shader::SetSpotLight(std::shared_ptr<SpotLight>* sLight, unsigned i
 
 		sLight[i]->GetShadowMap()->AttachFBOToTextureUnit(i + offset, GL_TEXTURE0 + textureUnit + i, 0, 0);
 		glUniform1i(uniformOmniShadowMap[i + offset].shadowMap, textureUnit + i);
-		glUniform1f(uniformOmniShadowMap[i + offset].farPlane, sLight[i]->GetFarPlane());
+		glUniform1f(uniformOmniShadowMap[i + offset].farPlane, sLight[i]->farPlane);
 	}
 }
 

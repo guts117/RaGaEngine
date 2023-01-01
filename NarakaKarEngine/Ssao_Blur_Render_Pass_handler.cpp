@@ -1,0 +1,53 @@
+#include "pch.h"
+#include "Ssao_Blur_Render_Pass_Handler.h"
+#include "Fbo_Handler.h"
+#include "Shader_Object.h"
+#include "Render_Object.h"
+#include "RenderingCommonValues.h"
+
+using namespace NarakaKarEngine;
+using namespace RenderEngine;
+
+Ssao_Blur_Render_Pass_Handler::Ssao_Blur_Render_Pass_Handler(std::shared_ptr<Fbo_Handler> fboHandlr
+	, const std::vector<std::shared_ptr<Shader_Object>>& shaderVec
+	, std::shared_ptr<std::vector<std::shared_ptr<std::any>>> inputs)
+	: Scene_Render_Pass_Handler(fboHandlr, shaderVec, inputs)
+{
+}
+
+void Ssao_Blur_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared_ptr<Render_Object>>>& renderObj, const CamParam* camParam, const LightParam* lightParam)
+{
+	glViewport(0, 0, m_fboHandler->GetFBOWidth(), m_fboHandler->GetFBOHeight());
+
+	m_fboHandler->BindFBO();
+	//clear color buffer
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	for (auto shaderIndex = 0; shaderIndex < m_shaderVec->size(); ++shaderIndex)
+	{
+		auto shader = m_shaderVec->at(shaderIndex);
+
+		shader->ResetTextureUnit(0);
+		shader->UseShaderObject();
+
+		try
+		{
+			auto input = std::any_cast<std::shared_ptr<Fbo_Handler>>(*m_inputs->at(0));
+			input->AttachFBOToTextureUnit(0, shader->SetTextureUnit("theTexture"), 0, 0);
+		}
+		catch (const std::bad_any_cast& e)
+		{
+			std::cout << e.what() << std::endl;
+		}
+
+		for (auto roIndex = 0; roIndex < renderObj[shaderIndex].size(); ++roIndex)
+		{
+			renderObj[shaderIndex][roIndex]->RenderObject(*shader, std::move(RenderObjectParams{ true }));
+		}
+		shader->ValidateShaderObject();
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+Ssao_Blur_Render_Pass_Handler::~Ssao_Blur_Render_Pass_Handler() = default;

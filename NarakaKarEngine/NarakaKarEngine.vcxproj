@@ -86,6 +86,7 @@
     <ClCompile Include="Irradiance_Convolution_Render_Pass_Handler.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Model_Importer.cpp" />
+    <ClCompile Include="Omni_Directional_Shadow_Map_Render_Pass_Handler.cpp" />
     <ClCompile Include="Prefilter_Render_Pass_Handler.cpp" />
     <ClCompile Include="PreZ_Render_Pass_Handler.cpp" />
     <ClCompile Include="RenderEngineMain.cpp" />
@@ -113,6 +114,7 @@
     <ClCompile Include="Skybox.cpp" />
     <ClCompile Include="SpotLight.cpp" />
     <ClCompile Include="SSAOBlur_Shader.cpp" />
+    <ClCompile Include="Ssao_Blur_Render_Pass_handler.cpp" />
     <ClCompile Include="Ssao_Render_Pass_Handler.cpp" />
     <ClCompile Include="Model_Shader.cpp" />
     <ClCompile Include="Terrain_Shader.cpp" />
@@ -142,6 +144,7 @@
     <ClInclude Include="Fbo_Handler.h" />
     <ClInclude Include="FrameBufferObject.h" />
     <ClInclude Include="Irradiance_Convolution_Render_Pass_Handler.h" />
+    <ClInclude Include="Omni_Directional_Shadow_Map_Render_Pass_Handler.h" />
     <ClInclude Include="Prefilter_Render_Pass_Handler.h" />
     <ClInclude Include="PreZ_Render_Pass_Handler.h" />
     <ClInclude Include="RenderingCommonValues.h" />
@@ -171,6 +174,7 @@
     <ClInclude Include="spimpl.h" />
     <ClInclude Include="SpotLight.h" />
     <ClInclude Include="SSAOBlur_Shader.h" />
+    <ClInclude Include="Ssao_Blur_Render_Pass_handler.h" />
     <ClInclude Include="Ssao_Render_Pass_Handler.h" />
     <ClInclude Include="Model_Shader.h" />
     <ClInclude Include="Terrain_Shader.h" />
