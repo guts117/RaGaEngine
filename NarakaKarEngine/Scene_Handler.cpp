@@ -1,13 +1,13 @@
 #include "pch.h"
 #include "Scene_Handler.h"
-#include "Scene_Render_Pass_Handler.h"
+#include "Render_Pass_Handler.h"
 
 using namespace NarakaKarEngine;
 using namespace RenderEngine;
 
 struct Scene_Handler::Impl
 {
-	std::unique_ptr<std::vector<std::shared_ptr<Scene_Render_Pass_Handler>>> m_renderPasses;
+	std::unique_ptr<std::vector<std::shared_ptr<Render_Pass_Handler>>> m_renderPasses;
 
 	Impl() = delete;
 

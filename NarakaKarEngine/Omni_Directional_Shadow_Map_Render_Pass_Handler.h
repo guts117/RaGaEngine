@@ -1,14 +1,14 @@
 #ifndef OMNI_DIRECTIONAL_SHADOW_MAP_RENDER_PASS_HANDLER
 #define OMNI_DIRECTIONAL_SHADOW_MAP_RENDER_PASS_HANDLER
 
-#include "Scene_Render_Pass_Handler.h"
+#include "Render_Pass_Handler.h"
 
 namespace NarakaKarEngine
 {
     namespace RenderEngine
     {
         class Omni_Directional_Shadow_Map_Render_Pass_Handler final :
-            public Scene_Render_Pass_Handler
+            public Render_Pass_Handler
         {
         public:
             explicit Omni_Directional_Shadow_Map_Render_Pass_Handler() = delete;

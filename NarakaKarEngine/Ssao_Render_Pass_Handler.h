@@ -1,7 +1,7 @@
 #ifndef SSAO_RENDER_PASS_HANDLER
 #define SSAO_RENDER_PASS_HANDLER
 
-#include "Scene_Render_Pass_Handler.h"
+#include "Render_Pass_Handler.h"
 
 namespace NarakaKarEngine
 {
@@ -12,7 +12,7 @@ namespace NarakaKarEngine
 		class Fbo_Handler;
 
 		class Ssao_Render_Pass_Handler final :
-			public Scene_Render_Pass_Handler
+			public Render_Pass_Handler
 		{
 		public:
 			explicit Ssao_Render_Pass_Handler() = delete;

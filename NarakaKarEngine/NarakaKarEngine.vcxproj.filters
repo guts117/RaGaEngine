@@ -96,9 +96,6 @@
     <ClCompile Include="SpotLight.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
-    <ClCompile Include="SSAOBlur_Shader.cpp">
-      <Filter>Source Files\RenderEngine</Filter>
-    </ClCompile>
     <ClCompile Include="Terrain_Shader.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
@@ -159,7 +156,7 @@
     <ClCompile Include="Shader_Object.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Scene_Render_Pass_Handler.cpp">
+    <ClCompile Include="Render_Pass_Handler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Scene_Handler.cpp">
@@ -272,9 +269,6 @@
     <ClInclude Include="SpotLight.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
-    <ClInclude Include="SSAOBlur_Shader.h">
-      <Filter>Header Files\RenderEngine</Filter>
-    </ClInclude>
     <ClInclude Include="Terrain_Shader.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
@@ -344,7 +338,7 @@
     <ClInclude Include="exprtk.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Scene_Render_Pass_Handler.h">
+    <ClInclude Include="Render_Pass_Handler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Scene_Handler.h">

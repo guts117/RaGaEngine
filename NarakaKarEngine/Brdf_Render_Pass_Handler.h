@@ -1,7 +1,7 @@
 #ifndef BRDF_SHADER_PASS
 #define BRDF_SHADER_PASS
 
-#include "Scene_Render_Pass_Handler.h"
+#include "Render_Pass_Handler.h"
 
 namespace NarakaKarEngine
 {
@@ -12,7 +12,7 @@ namespace NarakaKarEngine
 		class Fbo_Handler;
 
 		class Brdf_Render_Pass_Handler final :
-			public Scene_Render_Pass_Handler
+			public Render_Pass_Handler
 		{
 		public:
 			explicit Brdf_Render_Pass_Handler() = delete;
