@@ -705,6 +705,13 @@ const GLuint& Shader_Object::SetTextureUnit(std::string&& textureName)
 	return texUnit++;
 }
 
+const GLuint& Shader_Object::SetTextureUnit(std::string&& varName, const GLuint& index, std::string&& texName)
+{
+	GLint& texUnit = Pimpl()->m_TextureUnit;
+	SetVariable(std::move(varName), texUnit, index, std::move(texName));
+	return texUnit++;
+}
+
 const GLuint Shader_Object::GetTextureUnit() const
 {
 	return Pimpl()->m_TextureUnit;

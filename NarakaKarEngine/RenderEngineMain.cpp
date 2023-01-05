@@ -1,13 +1,8 @@
 #include "pch.h"
 #include "RenderEngineMain.h"
 
-#include "Model_Shader.h"
-#include "Terrain_Shader.h"
 #include "Billboard_Shader.h"
 #include "Particle_Shader.h"
-#include "HDR_Shader.h"
-#include "Blur_Shader.h"
-#include "MotionBlur_Shader.h"
 #include "Compute_Shader.h"
 
 #include "Mesh.h"
@@ -48,6 +43,10 @@
 #include "PreZ_Render_Pass_Handler.h"
 #include "Ssao_Render_Pass_Handler.h"
 #include "Ssao_Blur_Render_Pass_Handler.h"
+#include "Scene_Render_Pass_Handler.h"
+#include "Bloom_Render_Pass_Handler.h"
+#include "Motion_Blur_Render_Pass_Handler.h"
+#include "Exposure_Render_Pass_Handler.h"
 
 #include <glm/gtx/euler_angles.hpp>
 
@@ -142,6 +141,18 @@ struct RenderEngineMain::Impl
 	std::shared_ptr <Shader_Object> terrPreZShader;
 	std::shared_ptr <Shader_Object> ssaoShader;
 	std::shared_ptr <Shader_Object> ssaoBlurShader;
+	std::shared_ptr <Shader_Object> omniShadowShader;
+	std::shared_ptr <Shader_Object> dirShadowShader;
+	std::shared_ptr <Shader_Object> animOmniShadowShader;
+	std::shared_ptr <Shader_Object> animDirShadowShader;
+	std::shared_ptr <Shader_Object> terrOmniShadowShader;
+	std::shared_ptr <Shader_Object> terrDirShadowShader;
+	std::shared_ptr <Shader_Object> unrigShader;
+	std::shared_ptr <Shader_Object> rigShader;
+	std::shared_ptr <Shader_Object> terrShader;
+	std::shared_ptr <Shader_Object> bloomShader;
+	std::shared_ptr <Shader_Object> motionBlurShader;
+	std::shared_ptr <Shader_Object> exposureShader;
 
 	std::shared_ptr <Fbo_Handler> environmentMap;
 	std::shared_ptr <Fbo_Handler> irradianceMap;
@@ -153,28 +164,10 @@ struct RenderEngineMain::Impl
 	std::shared_ptr <Fbo_Handler> hdr;
 	std::shared_ptr <Fbo_Handler> motionBlur;
 	std::shared_ptr <Fbo_Handler> blur;
-	std::shared_ptr <Fbo_Handler> finalFBO;
-
-	std::shared_ptr <Shader_Object> omniShadowShader;
-	std::shared_ptr <Shader_Object> dirShadowShader;
-
-	std::shared_ptr <Shader_Object> animOmniShadowShader;
-	std::shared_ptr <Shader_Object> animDirShadowShader;
-
-	std::shared_ptr <Shader_Object> terrainOmniShadowShader;
-	std::shared_ptr <Shader_Object> terrDirShadowShader;
-
-	std::vector< std::shared_ptr < Model_Shader>> shaderList;
-	std::vector< std::shared_ptr < Model_Shader>> animShaderList;
-
-	std::unique_ptr < Terrain_Shader> terrainShader = std::make_unique<Terrain_Shader>();
+	std::shared_ptr <Fbo_Handler> exposureFbo;
 
 	std::unique_ptr < Shader_Object > billboardShader;
 	std::unique_ptr < Particle_Shader> particleShader = std::make_unique<Particle_Shader>();
-
-	std::unique_ptr < HDR_Shader> hdrShader = std::make_unique<HDR_Shader>();
-	std::unique_ptr < MotionBlur_Shader> motionBlurShader = std::make_unique<MotionBlur_Shader>();
-	std::unique_ptr < Blur_Shader> blurShader = std::make_unique<Blur_Shader>();
 
 	//ToDo: To whomever it may concern. Probably me -_-
 	//ToDo: After a decently extensive research and thought on my part I want the following to be done
@@ -216,7 +209,6 @@ struct RenderEngineMain::Impl
 	{
 		meshPool->push_back(std::move(mesh));
 	}
-
 
 	std::unique_ptr<std::map<TexType, std::vector<std::weak_ptr<Texture>>>> CreateTextureMap(std::vector<TexMapData>&& texMapData)
 	{
@@ -346,12 +338,12 @@ struct RenderEngineMain::Impl
 	std::shared_ptr<PreZ_Render_Pass_Handler> preZRPHandler;
 	std::shared_ptr<Ssao_Render_Pass_Handler> ssaoRPHandler;
 	std::shared_ptr<Ssao_Blur_Render_Pass_Handler> ssaoBlurRPHandler;
+	std::shared_ptr<Scene_Render_Pass_Handler> sceneRPHandler;
+	std::shared_ptr<Bloom_Render_Pass_Handler> bloomRPHandler;
+	std::shared_ptr<Motion_Blur_Render_Pass_Handler> motionBlurRPHandler;
+	std::shared_ptr<Exposure_Render_Pass_Handler> exposureRPHandler;
 
 	GLfloat aircraftAngle = 0.0f;
-
-	const std::string vShader = "Shaders/shader.vert";
-	const std::string fShader = "Shaders/shader.frag";
-	const std::string avShader = "Shaders/animated_shader.vert";
 
 	glm::mat4 vView[NUM_CASCADES] = { glm::mat4() };
 	glm::mat4 testLitView[1] = { glm::mat4() };
@@ -608,7 +600,7 @@ struct RenderEngineMain::Impl
 		hdr = m_SceneFboHandlerMgr->FindFboHandler("Shading_Pass");
 		motionBlur = m_SceneFboHandlerMgr->FindFboHandler("Motion_Blur_Pass");
 		blur = m_SceneFboHandlerMgr->FindFboHandler("Bloom_Pass");
-		finalFBO = m_SceneFboHandlerMgr->FindFboHandler("Final_Output_Pass");
+		exposureFbo = m_SceneFboHandlerMgr->FindFboHandler("Final_Output_Pass");
 
 		quad = std::make_unique <std::vector<std::weak_ptr<Mesh>>>();
 
@@ -921,6 +913,25 @@ struct RenderEngineMain::Impl
 		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(ssao)));
 		ssaoBlurRPHandler = std::make_shared<Ssao_Blur_Render_Pass_Handler>(ssaoBlur, ssaoBlurShaders, inputs);
 
+		auto sceneShaders = std::vector<std::shared_ptr<Shader_Object>>{ unrigShader, rigShader, terrShader };
+		sceneRPHandler = std::make_shared<Scene_Render_Pass_Handler>(hdr, sceneShaders);
+
+		auto bloomShaders = std::vector<std::shared_ptr<Shader_Object>>{ bloomShader };
+		inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
+		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(hdr)));
+		bloomRPHandler = std::make_shared<Bloom_Render_Pass_Handler>(blur, bloomShaders, inputs);
+
+		auto motionBlurShaders = std::vector<std::shared_ptr<Shader_Object>>{ motionBlurShader };
+		inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
+		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(hdr)));
+		motionBlurRPHandler = std::make_shared<Motion_Blur_Render_Pass_Handler>(motionBlur, motionBlurShaders, inputs);
+
+		auto exosureShaders = std::vector<std::shared_ptr<Shader_Object>>{ exposureShader };
+		inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
+		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(blur)));
+		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(motionBlur)));
+		exposureRPHandler = std::make_shared<Exposure_Render_Pass_Handler>(exposureFbo, exosureShaders, inputs);
+
 		//auto unriggedSceneMeshes = std::vector<std::shared_ptr<Render_Object>>();
 		////
 		////for(auto rod : *renderObjDatas)
@@ -969,7 +980,8 @@ struct RenderEngineMain::Impl
 
 	void CalcDirLightShadowCascades() 
 	{
-		terrainShader->UseShader();
+		//ToDo;
+		/*terrainShader->UseShader();
 		for (size_t i = 0; i < NUM_CASCADES; ++i)
 		{
 			glm::vec4 vView(0.0f, 0.0f, mainLight->GetCascadeEnd(i + 1), 1.0f);
@@ -994,7 +1006,7 @@ struct RenderEngineMain::Impl
 			glm::vec4 vClip = camera->GetProjectionMatrix() * vView;
 			printf("%F \n", vClip.z);
 			animShaderList[0]->SetCascadeEndClipSpace(i, -vClip.z);
-		}
+		}*/
 	}
 	
 	void UpdateAtFrameBufferResize()
@@ -1114,7 +1126,7 @@ struct RenderEngineMain::Impl
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 			UpdateObjectTransforms();
-			auto camParam = CamParam{ camera->getCameraPosition(), camera->GetProjectionMatrix(), camera->CalculateViewMatrix(), camera->GetPreviousProjectionMatrix() };
+			auto camParam = CamParam{ camera->getCameraPosition(), camera->GetProjectionMatrix(), camera->CalculateViewMatrix(), camera->GetPreviousProjectionMatrix(), framesPerSec };
 			DirectionalShadowMapPass(mainLight.get(), camParam);
 
 			OmniShadowMapPass(*omniDirLights);
@@ -1123,9 +1135,13 @@ struct RenderEngineMain::Impl
 			CullLight();
 			SSAOPass(camParam);
 			SSAOBlurPass(camParam);
-			RenderPass(deltaTime);
+			RenderPass(camParam);
 			Bloom();
-			MotionBlurPass(framesPerSec);
+			MotionBlurPass(camParam);
+
+			auto lowerLight = camParam.Position;
+			lowerLight.y -= 0.1f;
+			spotLights[0]->SetFlash(lowerLight, camera->getCameraDirection());
 		}
 
 		RenderToDefaultFB();
@@ -1436,41 +1452,26 @@ struct RenderEngineMain::Impl
 		terrDirShadowShader			= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain_directional_shadow_map.tesse", "Shaders/directional_shadow_map.frag"});
 		omniShadowShader			= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/omni_shadow_map.vert", "Shaders/omni_shadow_map.geom", "Shaders/omni_shadow_map.frag"});
 		animOmniShadowShader		= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/anim_omni_shadow_map.vert", "Shaders/omni_shadow_map.geom", "Shaders/omni_shadow_map.frag"});
-
-		//terrainOmniShadowShader.CreateFromFiles("Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain_omni_directional_shadow_map.tesse", "Shaders/omni_shadow_map.geom", "Shaders/directional_shadow_map.frag");
-
-		preZShader = std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/depth_framebuffer.vert", "Shaders/depth_framebuffer.frag"});
-		animPreZShader = std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/anim_depth_framebuffer.vert", "Shaders/depth_framebuffer.frag"}); 
-		terrPreZShader = std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain_depth_framebuffer.tesse", "Shaders/depth_framebuffer.frag"});
-
-		ssaoShader = std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/ssao_framebuffer.vert", "Shaders/ssao_framebuffer.frag"});
-		ssaoBlurShader = std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/ssao_blur_framebuffer.frag"});
-
-		std::shared_ptr<Model_Shader> shader1 = std::make_shared<Model_Shader>();
-		shader1->CreateFromFiles(vShader.c_str(), fShader.c_str(), true);
-		shaderList.push_back(shader1);
-
-		std::shared_ptr<Model_Shader> shader2 = std::make_shared < Model_Shader>();
-		shader2->CreateFromFiles(avShader.c_str(), fShader.c_str());
-		animShaderList.push_back(shader2);
-
-		terrainShader->CreateFromFiles("Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain.tesse", "Shaders/terrain.frag");
-		billboardShader = std::make_unique<Shader_Object>(std::vector<std::string>{"Shaders/billboard.vert", "Shaders/billboard.frag"});
+		//terrOmniShadowShader.CreateFromFiles("Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain_omni_directional_shadow_map.tesse", "Shaders/omni_shadow_map.geom", "Shaders/directional_shadow_map.frag");
+		preZShader					= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/depth_framebuffer.vert", "Shaders/depth_framebuffer.frag"});
+		animPreZShader				= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/anim_depth_framebuffer.vert", "Shaders/depth_framebuffer.frag"}); 
+		terrPreZShader				= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain_depth_framebuffer.tesse", "Shaders/depth_framebuffer.frag"});
+		ssaoShader					= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/ssao_framebuffer.vert", "Shaders/ssao_framebuffer.frag"});
+		ssaoBlurShader				= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/ssao_blur_framebuffer.frag"});
+		unrigShader					= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/shader.vert", "Shaders/shader.frag"});
+		rigShader					= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/animated_shader.vert", "Shaders/shader.frag"});
+		terrShader					= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain.tesse", "Shaders/terrain.frag"});
+		bloomShader					= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/blur_framebuffer.frag"});
+		motionBlurShader			= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/motionBlur_framebuffer.frag"});
+		exposureShader				= std::make_unique<Shader_Object>(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/hdr_framebuffer.frag"});
+		
+		billboardShader				= std::make_unique<Shader_Object>(std::vector<std::string>{"Shaders/billboard.vert", "Shaders/billboard.frag"});
 
 		particleShader->CreateFromFiles("Shaders/particles.vert", "Shaders/particles.frag");
-
-		hdrShader->CreateFromFiles("Shaders/framebuffer.vert", "Shaders/hdr_framebuffer.frag");
-
-		motionBlurShader->CreateFromFiles("Shaders/framebuffer.vert", "Shaders/motionBlur_framebuffer.frag");
-
-		blurShader->CreateFromFiles("Shaders/framebuffer.vert", "Shaders/blur_framebuffer.frag");
 
 		//ToDo: #20 simulation manager class
 		//fluidFragShader->CreateFromFiles("Shaders/framebuffer.vert", "Shaders/2DFluid/fluid.frag");
 		//fluidFragShader3D->CreateFromFiles("Shaders/3DFluid/fluid.vert", "Shaders/3DFluid/fluid.frag");
-
-		shader1 = nullptr;
-		shader2 = nullptr;
 	}
 
 	void RenderBillboardScene()
@@ -1682,19 +1683,20 @@ struct RenderEngineMain::Impl
 	void DirectionalShadowMapPass(DirectionalLight* light, const CamParam& camParam) {
 
 		testLitView[0] = light->CalculateCascadeLightTransform();
-		mainLight->CalcOrthProjs(camera->CalculateViewMatrix(), testLitView, 60.0f);
+		light->CalcOrthProjs(camera->CalculateViewMatrix(), testLitView, 60.0f);
+
+		auto direction = mainLight->GetLightDirection();
 
 		glm::mat4 vView[NUM_CASCADES];
 		glm::mat4 proj[NUM_CASCADES];
 
 		for (auto i = 0; i < NUM_CASCADES; ++i)
 		{
-			vView[i] = glm::lookAt(mainLight->GetModlCent(i), mainLight->GetModlCent(i) + glm::normalize(light->GetLightDirection()) * 0.2f, light->GetLightUp());
+			vView[i] = glm::lookAt(mainLight->GetModlCent(i), mainLight->GetModlCent(i) + glm::normalize(direction) * 0.2f, light->GetLightUp());
 			proj[i] = light->GetProjMat(vView[i], i);
 		}
 
-		auto position = mainLight->GetLightDirection();
-		auto lightParam = LightParam{ &position, proj, vView};
+		auto lightParam = LightParam{ nullptr, proj, vView, &direction };
 		dirShadowRPHandler->Update(*sceneObjRO, &camParam, &lightParam);
 	}
 
@@ -1711,7 +1713,7 @@ struct RenderEngineMain::Impl
 			farplanes.push_back(lights[i]->farPlane);
 		}
 
-		auto lightParam = LightParam(&positions[0], &projections[0], nullptr, &farplanes[0], lights.size());
+		auto lightParam = LightParam(&positions[0], nullptr, &projections[0], nullptr, &farplanes[0], nullptr, lights.size());
 		omniShadowRPHandler->Update(*sceneObjRO, nullptr, &lightParam);
 	}
 
@@ -1767,209 +1769,19 @@ struct RenderEngineMain::Impl
 		ssaoBlurRPHandler->Update(*quadRO, &camParam);
 	}
 
-	void RenderPass(GLfloat deltaTime)
+	void RenderPass(const CamParam& camParam)
 	{
-		auto projectionMatrix = camera->GetProjectionMatrix();
-		auto viewMatrix = camera->CalculateViewMatrix();
-		auto prevProj = camera->GetPreviousProjectionMatrix();
-		auto prevView = camera->GetPreviousViewMatrix();
-
-		glViewport(0, 0, hdr->GetFBOWidth(), hdr->GetFBOHeight());
-
-		hdr->BindFBO();
-
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		//irradianceMap->AttachFBOToTextureUnit(0, GL_TEXTURE8, 0, 0);
-		//prefilterMap->AttachFBOToTextureUnit(0, GL_TEXTURE9, 0, 0);
-		//brdfMap->AttachFBOToTextureUnit(0, GL_TEXTURE10, 0, 0);
-		//ssaoBlur->AttachFBOToTextureUnit(0, GL_TEXTURE14, 0, 0);
-		//depth->AttachFBOToTextureUnit(0, GL_TEXTURE18, 0, 0);
-
-		skybox->DrawHDRSkybox(viewMatrix, projectionMatrix, prevProj, prevView, environmentMap); //should be at the end to prevent overdraw,here becoz of blending issues
-
-		//terrainShader->UseShader();
-
-		//uniformModel2 = terrainShader->GetModelLocation();
-		//uniformProjection2 = terrainShader->GetProjectionLocation();
-		//uniformView2 = terrainShader->GetViewLocation();
-		//uniformPrevPVM2 = terrainShader->GetPrevPVMLocation();
-		//uniformEyePosition2 = terrainShader->GetEyePositionLocation();
-		//uniformHeightScale2 = terrainShader->GetHeightScaleLocation();
-		//uniformDispFactor = terrainShader->GetDispFactorLocation();
-		//uniformAlbedoMap2 = terrainShader->GetAlbedoLocation();
-		//uniformMetallicMap2 = terrainShader->GetMetallicLocation();
-		//uniformNormalMap2 = terrainShader->GetNormalLocation();
-		//uniformRoughnessMap2 = terrainShader->GetRoughnessLocation();
-		//uniformParallaxMap2 = terrainShader->GetParallaxLocation();
-
-		//glUniformMatrix4fv(uniformProjection2, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
-		//glUniformMatrix4fv(uniformView2, 1, GL_FALSE, glm::value_ptr(viewMatrix));
-		//glUniform3f(uniformEyePosition2, camera->getCameraPosition().x, camera->getCameraPosition().y, camera->getCameraPosition().z);
-		//glUniform1f(uniformHeightScale2, 0.02f);
-
-		//terrainShader->SetDirectionalLight(mainLight.get());
-		//terrainShader->SetPointLight(pointLights, pointLightCount, 5, 0);
-		//terrainShader->SetSpotLight(spotLights, spotLightCount, 5 + pointLightCount, pointLightCount);
-
-		//for (size_t i = 0; i < NUM_CASCADES; ++i)
-		//{
-		//	glm::mat4 projView = mainLight->GetProjMat(vView[i], i) * vView[i];
-		//	terrainShader->SetDirectionalLightTransforms(i, &projView);
-		//}
-
-		//terrainShader->SetDirectionalShadowMaps(mainLight.get(), NUM_CASCADES, 2);
-		//terrainShader->SetAOMap(14);
-		//terrainShader->SetDepthMap(18);
-		//terrainShader->SetIrradianceMap(8);
-		//terrainShader->SetPrefilterMap(9);
-		//terrainShader->SetBRDFLUT(10);
-
-		//terrainShader->Validate();
-
-		//RenderTerrain(false, false);
-
-		//shaderList[0]->UseShader();
-
-		//shaderList[0]->SetDirectionalLight(mainLight.get());
-		//shaderList[0]->SetPointLight(pointLights, pointLightCount, 3, 0);
-		//shaderList[0]->SetSpotLight(spotLights, spotLightCount, 3 + pointLightCount, pointLightCount);
-		//
-		//for (size_t i = 0; i < NUM_CASCADES; ++i)
-		//{
-		//	glm::mat4 projView = mainLight->GetProjMat(vView[i], i) * vView[i];
-		//	shaderList[0]->SetDirectionalLightTransforms(i, &projView);
-		//}
-
-		//shaderList[0]->SetDirectionalShadowMaps(mainLight.get(), NUM_CASCADES, 19);
-		//shaderList[0]->Validate();
-		//RenderScene(shaderList[0]);
-
-		//animShaderList[0]->UseShader();
-
-		//uniformModel1 = animShaderList[0]->GetModelLocation();
-		//uniformProjection1 = animShaderList[0]->GetProjectionLocation();
-		//uniformView1 = animShaderList[0]->GetViewLocation();
-		//uniformPrevPVM1 = animShaderList[0]->GetPrevPVMLocation();
-		//uniformEyePosition1 = animShaderList[0]->GetEyePositionLocation();
-		//uniformHeightScale1 = animShaderList[0]->GetHeightScaleLocation();
-		//uniformAlbedoMap1 = animShaderList[0]->GetAlbedoLocation();
-		//uniformMetallicMap1 = animShaderList[0]->GetMetallicLocation();
-		//uniformNormalMap1 = animShaderList[0]->GetNormalLocation();
-		//uniformRoughnessMap1 = animShaderList[0]->GetRoughnessLocation();
-		//uniformParallaxMap1 = animShaderList[0]->GetParallaxLocation();
-		//uniformGlowMap1 = animShaderList[0]->GetGlowLocation();
-
-		//glUniformMatrix4fv(uniformProjection1, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
-		//glUniformMatrix4fv(uniformView1, 1, GL_FALSE, glm::value_ptr(viewMatrix));
-		//glUniform3f(uniformEyePosition1, camera->getCameraPosition().x, camera->getCameraPosition().y, camera->getCameraPosition().z);
-
-		//glUniform1f(uniformHeightScale1, 0.0f);
-
-		//animShaderList[0]->SetDirectionalLight(mainLight.get());
-		//animShaderList[0]->SetPointLight(pointLights, pointLightCount, 3, 0);
-		//animShaderList[0]->SetSpotLight(spotLights, spotLightCount, 3 + pointLightCount, pointLightCount);
-		//
-		//for (size_t i = 0; i < NUM_CASCADES; ++i)
-		//{
-		//	glm::mat4 projView = mainLight->GetProjMat(vView[i], i) * vView[i];
-		//	animShaderList[0]->SetDirectionalLightTransforms(i, &projView);
-		//}
-
-		//animShaderList[0]->SetDirectionalShadowMaps(mainLight.get(), NUM_CASCADES, 19);
-		//animShaderList[0]->SetAOMap(14);
-		//animShaderList[0]->SetDepthMap(18);
-		//animShaderList[0]->SetIrradianceMap(8);
-		//animShaderList[0]->SetPrefilterMap(9);
-		//animShaderList[0]->SetBRDFLUT(10);
-
-		//animShaderList[0]->Validate();
-
-		//RenderAnimScene(false, false);
-
-		//billboardShader->UseShaderObject();
-
-		//billboardShader->SetVariable("Projection", projectionMatrix);
-		//billboardShader->SetVariable("View", viewMatrix);
-		//billboardShader->SetVariable("CameraUp_worldspace", camera->getCameraUp());
-		//billboardShader->SetVariable("CameraRight_worldspace", camera->getCameraRight());
-		//billboardShader->SetVariable("theTexture", 1);
-
-		//billboardShader->ValidateShaderObject();
-
-		//RenderBillboardScene();
-
-		//particleShader->UseShader();
-
-		//glUniformMatrix4fv(particleShader->GetProjectionLocation(), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
-		//glUniformMatrix4fv(particleShader->GetViewLocation(), 1, GL_FALSE, glm::value_ptr(viewMatrix));
-		//glUniform3f(particleShader->GetCameraUpLocation(), camera->getCameraUp().x, camera->getCameraUp().y, camera->getCameraUp().z);
-		//glUniform3f(particleShader->GetCameraRightLocation(), camera->getCameraRight().x, camera->getCameraRight().y, camera->getCameraRight().z);
-
-		//particleShader->SetTexture(1);
-
-		//particleShader->Validate();
-
-		//RenderParticlesScene(deltaTime);
-
-		//ToDo: #20 simulation manager class
-		//Render3DSmoke();
-
-		glm::vec3 lowerLight = camera->getCameraPosition();
-		lowerLight.y -= 0.1f;
-		spotLights[0]->SetFlash(lowerLight, camera->getCameraDirection());
-
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		sceneRPHandler->Update(*sceneObjRO, &camParam);
 	}
 
 	void Bloom()
 	{
-		bool isHorizontalFbo = true;
-		int amount = 10;
-		blurShader->UseShader();
-		for (int i = 0; i < amount; i++)
-		{
-			blur->BindFBO(isHorizontalFbo);
-			glUniform1i(blurShader->GetHorizontalLocation(), isHorizontalFbo);
-			blurShader->Validate();
-			blurShader->SetTexture(0);
-			if (i < 1)
-			{
-				hdr->AttachFBOToTextureUnit(0, GL_TEXTURE0,0, 1);
-			}
-			else
-			{
-				blur->AttachFBOToTextureUnit(!isHorizontalFbo, GL_TEXTURE0, 0, 0);
-			}
-			if (auto q = quad->at(0).lock())
-			{
-				q->RenderMesh();
-			}
-			isHorizontalFbo = !isHorizontalFbo;
-		}
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		bloomRPHandler->Update(*quadRO);
 	}
 
-	void MotionBlurPass(float fps)
+	void MotionBlurPass(const CamParam& camParam)
 	{
-		glViewport(0, 0, motionBlur->GetFBOWidth(), motionBlur->GetFBOHeight());
-
-		motionBlur->BindFBO();
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		motionBlurShader->UseShader();
-
-		glUniform1f(motionBlurShader->GetVelocityScaleLocation(), fps / 30.0f);
-
-		hdr->AttachFBOToTextureUnit(0, GL_TEXTURE0, 0, 0);
-		motionBlurShader->SetTexture(0);
-
-		hdr->AttachFBOToTextureUnit(0, GL_TEXTURE1, 1, 2);
-		motionBlurShader->SetMotionTexture(1);
-		if (auto q = quad->at(0).lock())
-		{
-			q->RenderMesh();
-		}
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		motionBlurRPHandler->Update(*quadRO, &camParam);
 	}
 
 	//ToDo: #20 simulation manager class
@@ -2359,31 +2171,7 @@ struct RenderEngineMain::Impl
 		//}
 		//else
 		//{
-			glViewport(0, 0, finalFBO->GetFBOWidth(), finalFBO->GetFBOHeight());
-
-			finalFBO->BindFBO();
-			//glViewport(0, 0, ScreenWidth, ScreenHeight);
-
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-			hdrShader->UseShader();
-
-			glUniform1i(hdrShader->GetHDRLocation(), 1);
-			glUniform1f(hdrShader->GetExposureLocation(), 1.0f);
-
-			blur->AttachFBOToTextureUnit(1, GL_TEXTURE0, 0, 0);
-			glUniform1i(hdrShader->GetBlurLocation(), 0);
-
-			motionBlur->AttachFBOToTextureUnit(0, GL_TEXTURE1, 0, 0);
-			hdrShader->SetTexture(1);
-
-			hdrShader->Validate();
-
-			if (auto q = quad->at(0).lock())
-			{
-				q->RenderMesh();
-			}
-			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			exposureRPHandler->Update(*quadRO);
 		//}
 	}
 
@@ -2442,7 +2230,7 @@ GLFWwindow* RenderEngineMain::GetMainWindow()
 void RenderEngineMain::AddViewers()
 {
 	engineUI->AddSceneViewers(Pimpl()->mainLight->GetShadowMap()->GetFBOBuffer(0, 0), "EditorScene", Editor, [this](bool isSelected) { Pimpl()->isEditorViewSelected = isSelected; });
-	engineUI->AddSceneViewers(Pimpl()->finalFBO->GetFBOBuffer(0, 0), "InGameScene", InGame, [this](bool isSelected) { Pimpl()->mainWindow->SetCursorActive(!isSelected); Pimpl()->isGameViewSelected = isSelected; });
+	engineUI->AddSceneViewers(Pimpl()->exposureFbo->GetFBOBuffer(0, 0), "InGameScene", InGame, [this](bool isSelected) { Pimpl()->mainWindow->SetCursorActive(!isSelected); Pimpl()->isGameViewSelected = isSelected; });
 }
 
 bool RenderEngineMain:: IsEnd()

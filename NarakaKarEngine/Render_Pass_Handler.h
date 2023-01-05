@@ -19,6 +19,7 @@ namespace NarakaKarEngine
 			const glm::mat4& Projection;
 			const glm::mat4& View;
 			const glm::mat4& PrevProjView;
+			const float fps;
 		};
 
 		struct LightParam
@@ -26,8 +27,11 @@ namespace NarakaKarEngine
 			const glm::vec3* Position = nullptr;
 			const glm::mat4* Projection = nullptr;
 			const glm::mat4* View = nullptr;
+			const glm::vec3* Direction = nullptr;
 			const GLfloat* FarPlane = nullptr;
-			int&& Count = 0;
+			const GLfloat* Edge = nullptr;  //CascadeEnd
+			int Count = 0;
+			glm::vec4* Color = nullptr;
 		};
 
 		struct ShaderParam
@@ -49,13 +53,16 @@ namespace NarakaKarEngine
 
 			Render_Pass_Handler(const Render_Pass_Handler& rhs) noexcept = delete;
 			Render_Pass_Handler& operator=(const Render_Pass_Handler& rhs) noexcept = delete;
-
+	
 			virtual void Init();
 			virtual void Update(const std::vector<std::vector<std::shared_ptr<Render_Object>>>& renderObj, const CamParam* camParam = nullptr, const LightParam* lightParam = nullptr) = 0;
 
 			virtual ~Render_Pass_Handler() = 0;
 
 		protected:
+
+			template <typename T> std::shared_ptr<T> CheckInputDataType(const std::any& data);
+
 			std::shared_ptr<Fbo_Handler> m_fboHandler;
 			std::unique_ptr<std::vector<std::shared_ptr<Shader_Object>>> m_shaderVec;
 			std::shared_ptr<std::vector<std::shared_ptr<std::any>>> m_inputs;
