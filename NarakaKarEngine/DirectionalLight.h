@@ -1,5 +1,5 @@
-#ifndef DIRECTIONALLIGHT
-#define DIRECTIONALLIGHT
+#ifndef DIRECTIONAL_LIGHT
+#define DIRECTIONAL_LIGHT
 
 #include "pch.h"
 #include "RenderingCommonValues.h"
@@ -34,10 +34,11 @@ namespace NarakaKarEngine
 			float GetRatio(glm::mat4& view, int index);
 			glm::vec3 GetModlCent(unsigned int index);
 			~DirectionalLight() = default;
+
+			glm::vec3 color = glm::vec3(1.0f, 1.0f, 1.0f);;
 		private:
 			glm::vec3 direction;
 			glm::vec3 up{ glm::vec3(0.0f, 1.0f, 0.0f) };
-			glm::vec3 color = glm::vec3(1.0f, 1.0f, 1.0f);;
 			glm::mat4 lightProj = glm::mat4();
 
 			GLfloat cascadeEnd[NUM_CASCADES + 1] = { 0.1f,  50.0f,  200.0f, 1000.0f/*, 1000.0f*/ };

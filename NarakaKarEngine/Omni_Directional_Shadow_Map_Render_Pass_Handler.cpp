@@ -17,18 +17,21 @@ Omni_Directional_Shadow_Map_Render_Pass_Handler::Omni_Directional_Shadow_Map_Ren
 
 void SetLightTransform(const Shader_Object* shader, const int& lightIndex, const LightParam* lightParam)
 {
-	std::vector<glm::mat4> lightMatrices;
 	auto position = lightParam->Position[lightIndex];
 	auto projection = lightParam->Projection[lightIndex];
-	//+x, -x
-	lightMatrices.push_back(projection * glm::lookAt(position, position + glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)));
-	lightMatrices.push_back(projection * glm::lookAt(position, position + glm::vec3(-1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)));
-	//+y, -y
-	lightMatrices.push_back(projection * glm::lookAt(position, position + glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, 0.0, 1.0)));
-	lightMatrices.push_back(projection * glm::lookAt(position, position + glm::vec3(0.0, -1.0, 0.0), glm::vec3(0.0, 0.0, -1.0)));
-	//+z,  -z
-	lightMatrices.push_back(projection * glm::lookAt(position, position + glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, -1.0, 0.0)));
-	lightMatrices.push_back(projection * glm::lookAt(position, position + glm::vec3(0.0, 0.0, -1.0), glm::vec3(0.0, -1.0, 0.0)));
+
+	std::vector<glm::mat4> lightMatrices = 
+	{
+		//+x, -x
+		projection * glm::lookAt(position, position + glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)),
+		projection * glm::lookAt(position, position + glm::vec3(-1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)),
+		//+y, -y
+		projection * glm::lookAt(position, position + glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, 0.0, 1.0)),
+		projection * glm::lookAt(position, position + glm::vec3(0.0, -1.0, 0.0), glm::vec3(0.0, 0.0, -1.0)),
+		//+z,  -z
+		projection * glm::lookAt(position, position + glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, -1.0, 0.0)),
+		projection * glm::lookAt(position, position + glm::vec3(0.0, 0.0, -1.0), glm::vec3(0.0, -1.0, 0.0)),
+	};
 
 	for (auto i = 0; i < lightMatrices.size(); ++i) 
 	{

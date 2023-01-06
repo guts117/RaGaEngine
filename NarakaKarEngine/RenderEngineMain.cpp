@@ -225,8 +225,8 @@ struct RenderEngineMain::Impl
 		{
 			TexMapData& dat = texMapData[i];
 			auto texture = std::make_shared<Texture>(dat.path, dat.type == TexType::Albedo);
-			texturePool->push_back(texture);
 			auto wTexPtr = std::weak_ptr<Texture>(texture);
+			texturePool->push_back(texture);
 			//ToDo check for alpha channel/ currently incorrect use of find
 			if (dat.path.find(".png" || ".gif" || ".tiff" || ".tga" || ".jp2" || ".jpx") != std::string::npos)
 			{
@@ -238,13 +238,13 @@ struct RenderEngineMain::Impl
 			}
 			if (textureMap->contains(dat.type))
 			{
-				auto vec = std::vector<std::weak_ptr<Texture>>();
-				vec.push_back(texture);
-				textureMap->emplace(dat.type, vec);
+				textureMap->at(dat.type).push_back(texture);
 			}
 			else
 			{
-				textureMap->at(dat.type).push_back(texture);
+				auto vec = std::vector<std::weak_ptr<Texture>>();
+				vec.push_back(wTexPtr);
+				textureMap->emplace(dat.type, vec);
 			}
 		}
 
@@ -336,7 +336,6 @@ struct RenderEngineMain::Impl
 	GLfloat aircraftAngle = 0.0f;
 
 	glm::mat4 vView[NUM_CASCADES] = { glm::mat4() };
-	glm::mat4 testLitView[1] = { glm::mat4() };
 
 	glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
 	glm::mat4 captureViews[6] =
@@ -418,7 +417,17 @@ struct RenderEngineMain::Impl
 		//CreateBillboard();
 		//CreateParticles();
 
+		texturePool = std::make_shared<std::vector<std::shared_ptr<Texture>>>();
+		meshPool = std::make_shared<std::vector<std::shared_ptr<Mesh>>>();
+		modelMatrixPool = std::make_shared<std::vector<std::shared_ptr<glm::mat4>>>();
+		prevModelMatrixPool = std::make_shared<std::vector<std::shared_ptr<glm::mat4>>>();
 		sceneObjRO = std::make_shared<std::vector<std::vector<std::shared_ptr<Render_Object>>>>();
+
+		texturePool->reserve(100);
+		meshPool->reserve(100);
+		modelMatrixPool->reserve(100);
+		prevModelMatrixPool->reserve(100);
+		sceneObjRO->reserve(100);
 
 		CreateTerrain();
 		CreateObject();
@@ -1108,7 +1117,7 @@ struct RenderEngineMain::Impl
 			CullLight();
 			SSAOPass(camParam);
 			SSAOBlurPass(camParam);
-			RenderPass(camParam);
+			RenderPass(camParam, mainLight.get(), pointLights[0].get(), spotLights[0].get());
 			//skybox->DrawHDRSkybox();
 			Bloom();
 			MotionBlurPass(camParam);
@@ -1352,15 +1361,13 @@ struct RenderEngineMain::Impl
 	void CreateObject() 
 	{	
 		auto mesh0 = CreatePrism();
-		auto texMapDatas = std::vector<TexMapData>
-		{
-			TexMapData{TexType::Albedo,		"Textures/rustediron2.png"},
-			TexMapData{TexType::Metallic,	"Textures/Metallic/rustediron2.png"},
-			TexMapData{TexType::Roughness,	"Textures/Roughness/rustediron2.png"},
-			TexMapData{TexType::Normal,		"Textures/Normal/rustediron2.png"},
-			TexMapData{TexType::Parallax,	"Textures/Parallax/rustediron2.png"},
-			TexMapData{TexType::Glow,		"Textures/Glow/rock.jpg"}
-		};
+		auto texMapDatas = std::vector<TexMapData>();
+		texMapDatas.push_back(TexMapData{ TexType::Albedo,		"Textures/rustediron2.png" });
+		texMapDatas.push_back(TexMapData{ TexType::Metallic,	"Textures/Metallic/rustediron2.png" });
+		texMapDatas.push_back(TexMapData{TexType::Roughness,	"Textures/Roughness/rustediron2.png"});
+		texMapDatas.push_back(TexMapData{ TexType::Normal,		"Textures/Normal/rustediron2.png" });
+		texMapDatas.push_back(TexMapData{ TexType::Parallax,	"Textures/Parallax/rustediron2.png" });
+		texMapDatas.push_back(TexMapData{ TexType::Glow,		"Textures/Glow/rock.jpg" });
 		auto modelMatrix = std::make_shared<glm::mat4>(1.0f);
 		auto prevModelMatrix = std::make_shared<glm::mat4>(1.0f);
 
@@ -1370,7 +1377,7 @@ struct RenderEngineMain::Impl
 		mesh->push_back(mesh0);
 		AddToMeshPool(std::move(mesh0));
 		
-		auto mro = std::make_shared<Render_Object>(std::move(mesh), texMap, modelMatrix, prevModelMatrix);
+		auto mro = std::make_shared<Render_Object>(std::move(mesh), std::move(texMap), modelMatrix, prevModelMatrix);
 
 		AddToModelMatrixPool(std::move(modelMatrix));
 		AddToPrevModelMatrixPool(std::move(prevModelMatrix));
@@ -1572,10 +1579,10 @@ struct RenderEngineMain::Impl
 	void UpdateObjectTransforms() 
 	{
 		//ToDo: Temporary
-		for (auto obj : *vObjectPool)
-		{
-			Transform(obj->render_object, *obj->transform);
-		}
+		//for (auto obj : *vObjectPool)
+		//{
+		//	Transform(obj->render_object, *obj->transform);
+		//}
 		//pyramid1->Translate(-terrainScaleFactor, 34.0f, -2.5f - terrainScaleFactor);
 		////pyramid1->Rotate(curAngle, 0.0f, 1.0f, 0.0f);
 		////pyramid1->Scale(0.4f, 0.4f, 1.0f);
@@ -1673,17 +1680,16 @@ struct RenderEngineMain::Impl
 
 	void DirectionalShadowMapPass(DirectionalLight* light, const CamParam& camParam) {
 
-		testLitView[0] = light->CalculateCascadeLightTransform();
-		light->CalcOrthProjs(camera->CalculateViewMatrix(), testLitView, 60.0f);
+		auto testLitView = light->CalculateCascadeLightTransform();
+		light->CalcOrthProjs(camera->CalculateViewMatrix(), &testLitView, 60.0f);
 
-		auto direction = mainLight->GetLightDirection();
+		auto direction = light->GetLightDirection();
 
-		glm::mat4 vView[NUM_CASCADES];
 		glm::mat4 proj[NUM_CASCADES];
 
 		for (auto i = 0; i < NUM_CASCADES; ++i)
 		{
-			vView[i] = glm::lookAt(mainLight->GetModlCent(i), mainLight->GetModlCent(i) + glm::normalize(direction) * 0.2f, light->GetLightUp());
+			vView[i] = glm::lookAt(mainLight->GetModlCent(i), light->GetModlCent(i) + glm::normalize(direction) * 0.2f, light->GetLightUp());
 			proj[i] = light->GetProjMat(vView[i], i);
 		}
 
@@ -1704,7 +1710,7 @@ struct RenderEngineMain::Impl
 			farplanes.push_back(lights[i]->farPlane);
 		}
 
-		auto lightParam = LightParam(&positions[0], nullptr, &projections[0], nullptr, &farplanes[0], nullptr, lights.size());
+		auto lightParam = LightParam(&positions[0], &projections[0], nullptr, nullptr, &farplanes[0], nullptr, lights.size());
 		omniShadowRPHandler->Update(*sceneObjRO, nullptr, &lightParam);
 	}
 
@@ -1760,9 +1766,60 @@ struct RenderEngineMain::Impl
 		ssaoBlurRPHandler->Update(*quadRO, &camParam);
 	}
 
-	void RenderPass(const CamParam& camParam)
+	void RenderPass(const CamParam& camParam, DirectionalLight* dirlight, PointLight* pointLights, SpotLight* spotLights)
 	{
-		sceneRPHandler->Update(*sceneObjRO, &camParam);
+		auto direction = dirlight->GetLightDirection();
+		auto dirColor = dirlight->color;
+		glm::mat4 proj[NUM_CASCADES];
+
+		for (auto i = 0; i < NUM_CASCADES; ++i)
+		{
+			proj[i] = dirlight->GetProjMat(vView[i], i);
+		}
+
+		auto lightParams = std::vector<LightParam>();
+		auto lightParam = LightParam{ nullptr, proj, vView, &direction, nullptr, nullptr, 1, &dirColor };
+		lightParams.push_back(lightParam);
+
+		std::vector<glm::vec3> positions;
+		std::vector<glm::vec3> directions;
+		std::vector<glm::mat4> projections;
+		std::vector<GLfloat> farplanes;
+		std::vector<GLfloat> edges;
+		std::vector<glm::vec3> colors;
+
+		for (auto i = 0; i < pointLightCount; ++i)
+		{
+			positions.push_back(pointLights[i].position);
+			projections.push_back(pointLights[i].lightProj);
+			farplanes.push_back(pointLights[i].farPlane);
+			colors.push_back(pointLights[i].color);
+		}
+
+		lightParam = LightParam(&positions[0], &projections[0], nullptr, nullptr, &farplanes[0], nullptr, pointLightCount, &colors[0]);
+		lightParams.push_back(lightParam);
+
+		positions.clear();
+		directions.clear();
+		projections.clear();
+		farplanes.clear();
+		edges.clear();
+		colors.clear();
+
+		for (auto i = 0; i < spotLightCount; ++i)
+		{
+			positions.push_back(spotLights[i].position);
+			directions.push_back(spotLights[i].direction);
+			projections.push_back(spotLights[i].lightProj);
+			farplanes.push_back(spotLights[i].farPlane);
+			edges.push_back(spotLights[i].procEdge);
+			colors.push_back(spotLights[i].color);
+		}
+
+		lightParam = LightParam(&positions[0], &projections[0], nullptr, &directions[0], &farplanes[0], &edges[0], spotLightCount, &colors[0]);
+		lightParams.push_back(lightParam);
+
+		sceneRPHandler->Update(*sceneObjRO, &camParam, &lightParams[0]);
 	}
 
 	void Bloom()

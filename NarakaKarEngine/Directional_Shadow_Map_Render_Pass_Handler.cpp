@@ -36,7 +36,7 @@ void Directional_Shadow_Map_Render_Pass_Handler::Update(const std::vector<std::v
 
 			for (auto roIndex = 0; roIndex < renderObj[shaderIndex].size(); ++roIndex)
 			{
-				auto ro = renderObj[shaderIndex][roIndex];
+				auto& ro = renderObj[shaderIndex][roIndex];
 				if (ro->IsTesselated()) 
 				{
 					shader->SetVariable("eyePosition", camParam->Position); 

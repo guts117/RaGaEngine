@@ -29,10 +29,12 @@ namespace NarakaKarEngine
 			void Toggle() { isOn = !isOn; }
 
 			~SpotLight();
-		private:
-			glm::vec3 direction;
 
-			GLfloat edge, procEdge;
+			glm::vec3 direction;
+			GLfloat procEdge;
+		private:
+
+			GLfloat edge;
 
 			bool isOn;
 

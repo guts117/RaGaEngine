@@ -38,7 +38,6 @@ void Scene_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared
 		shader->SetVariable("eyePosition", camParam->Position);
 		shader->SetVariable("height_scale", 0.02f);
 
-
 		auto inputOffset = 0;
 		std::shared_ptr<Fbo_Handler> val;
 
@@ -67,7 +66,7 @@ void Scene_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared
 				}
 				else
 				{
-					auto spotlightIndex = lightParam[2].FarPlane[omniLightIndex - lightParam[1].Count];
+					auto spotlightIndex = omniLightIndex - lightParam[1].Count;
 					shader->SetVariable("omniShadowMaps", lightParam[2].FarPlane, omniLightIndex, "farPlane");
 					shader->SetVariable("spotLights", lightParam[2].Position, spotlightIndex, "position");
 					shader->SetVariable("spotLights", lightParam[2].Color, spotlightIndex, "color");

@@ -32,7 +32,7 @@ namespace NarakaKarEngine
 			const GLfloat* FarPlane = nullptr;
 			const GLfloat* Edge = nullptr;  //CascadeEnd
 			int Count = 0;
-			glm::vec4* Color = nullptr;
+			glm::vec3* Color = nullptr;
 		};
 
 		struct ShaderParam
