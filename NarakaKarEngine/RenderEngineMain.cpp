@@ -208,6 +208,14 @@ struct RenderEngineMain::Impl
 	{
 		meshPool->push_back(std::move(mesh));
 	}
+	void AddToModelMatrixPool(std::shared_ptr<glm::mat4>&& mat)
+	{
+		modelMatrixPool->push_back(std::move(mat));
+	}
+	void AddToPrevModelMatrixPool(std::shared_ptr<glm::mat4>&& mat)
+	{
+		prevModelMatrixPool->push_back(std::move(mat));
+	}
 
 	std::unique_ptr<std::map<TexType, std::vector<std::weak_ptr<Texture>>>> CreateTextureMap(std::vector<TexMapData>&& texMapData)
 	{
@@ -1298,7 +1306,7 @@ struct RenderEngineMain::Impl
 		//terrainList->push_back(obj);
 	}
 
-	std::vector<Mesh> CreatePrism()
+	std::shared_ptr<Mesh> CreatePrism()
 	{
 		std::vector<GLuint> indices = {
 					1,3,0,
@@ -1318,10 +1326,10 @@ struct RenderEngineMain::Impl
 		MathUtil::CalcAverageNormals(indices, vertices, 5);
 		MathUtil::CalcAverageTangents(indices, vertices, 8);
 	
-		return std::vector<Mesh>{Mesh(0, std::move(vertices), std::move(indices), std::move(MeshGenParams()))};
+		return std::make_shared<Mesh>(0, std::move(vertices), std::move(indices), std::move(MeshGenParams()));
 	}
 
-	std::vector<Mesh> CreatePlane()
+	std::shared_ptr<Mesh> CreatePlane()
 	{
 		std::vector<GLuint> indices = {
 			0, 2, 1,
@@ -1332,54 +1340,71 @@ struct RenderEngineMain::Impl
 			std::vector<GLfloat>{	-15.f, 0.0f, -15.0f,	0.0f, 0.0f,	    0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f	},
 			std::vector<GLfloat>{	15.0f, 0.0f, -15.0f,	1.0f, 0.0f,	    0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f	},
 			std::vector<GLfloat>{	-15.0f, 0.0f, 15.0f,	0.0f, 1.0f,	    0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f	},
-			std::vector<GLfloat>{	15.0f, 0.0f, 15.0f,		1.0f, 1.0f,	    0.0f, 0.0f, 0.0f,  0.0f, 0.0f, 0.0f		}
+			std::vector<GLfloat>{	15.0f, 0.0f, 15.0f,		1.0f, 1.0f,	    0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f	}
 		};
 
 		MathUtil::CalcAverageNormals(indices, vertices, 5);
 		MathUtil::CalcAverageTangents(indices, vertices, 8);
 
-		return std::vector<Mesh>{Mesh(0, std::move(vertices), std::move(indices), std::move(MeshGenParams()))};
+		return std::make_shared<Mesh>(0, std::move(vertices), std::move(indices), std::move(MeshGenParams()));
 	}
 
 	void CreateObject() 
 	{	
-		/*auto rob = RenderObjectData{ std::make_shared<std::vector<Mesh>>(CreatePrism()), std::make_shared<std::map<TexType, std::vector<Texture>>>(), std::make_shared<glm::mat4>(1.0f), std::make_shared<glm::mat4>(1.0f) };
-		rob.CreateTextureMap(TexType::Albedo, "Textures/rustediron2.png");
-		rob.CreateTextureMap(TexType::Metallic, "Textures/Metallic/rustediron2.png");
-		rob.CreateTextureMap(TexType::Roughness, "Textures/Roughness/rustediron2.png");
-		rob.CreateTextureMap(TexType::Normal, "Textures/Normal/rustediron2.png");
-		rob.CreateTextureMap(TexType::Parallax, "Textures/Parallax/rustediron2.png");
-		rob.CreateTextureMap(TexType::Glow, "Textures/Glow/rock.jpg");
-		renderObjDatas->push_back(std::make_shared<RenderObjectData>(rob));
+		auto mesh0 = CreatePrism();
+		auto texMapDatas = std::vector<TexMapData>
+		{
+			TexMapData{TexType::Albedo,		"Textures/rustediron2.png"},
+			TexMapData{TexType::Metallic,	"Textures/Metallic/rustediron2.png"},
+			TexMapData{TexType::Roughness,	"Textures/Roughness/rustediron2.png"},
+			TexMapData{TexType::Normal,		"Textures/Normal/rustediron2.png"},
+			TexMapData{TexType::Parallax,	"Textures/Parallax/rustediron2.png"},
+			TexMapData{TexType::Glow,		"Textures/Glow/rock.jpg"}
+		};
+		auto modelMatrix = std::make_shared<glm::mat4>(1.0f);
+		auto prevModelMatrix = std::make_shared<glm::mat4>(1.0f);
+
+		auto texMap = CreateTextureMap(std::move(texMapDatas));
+
+		std::unique_ptr<std::vector<std::weak_ptr<Mesh>>> mesh = std::make_unique<std::vector<std::weak_ptr<Mesh>>>();
+		mesh->push_back(mesh0);
+		AddToMeshPool(std::move(mesh0));
+		
+		auto mro = std::make_shared<Render_Object>(std::move(mesh), texMap, modelMatrix, prevModelMatrix);
+
+		AddToModelMatrixPool(std::move(modelMatrix));
+		AddToPrevModelMatrixPool(std::move(prevModelMatrix));
+
+		sceneObjRO->push_back(std::vector<std::shared_ptr<Render_Object>>{mro});
 
 
-		rob = RenderObjectData{ std::make_shared<std::vector<Mesh>>(CreatePrism()), std::make_shared<std::map<TexType, std::vector<Texture>>>(), std::make_shared<glm::mat4>(1.0f), std::make_shared<glm::mat4>(1.0f) };
-		rob.CreateTextureMap(TexType::Albedo, "Textures/small_metal_debris.jpg");
-		rob.CreateTextureMap(TexType::Metallic, "Textures/Metallic/small_metal_debris.jpg");
-		rob.CreateTextureMap(TexType::Roughness, "Textures/Roughness/small_metal_debris.jpg");
-		rob.CreateTextureMap(TexType::Normal, "Textures/Normal/small_metal_debris.png");
-		rob.CreateTextureMap(TexType::Parallax, "Textures/Parallax/small_metal_debris.jpg");
-		rob.CreateTextureMap(TexType::Glow, "Textures/Glow/small_metal_debris.jpg");
-		renderObjDatas->push_back(std::make_shared<RenderObjectData>(rob));
+		//auto rob = RenderObjectData{ std::make_shared<std::vector<Mesh>>(CreatePrism()), std::make_shared<std::map<TexType, std::vector<Texture>>>(), std::make_shared<glm::mat4>(1.0f), std::make_shared<glm::mat4>(1.0f) };
+		//rob.CreateTextureMap(TexType::Albedo, "Textures/small_metal_debris.jpg");
+		//rob.CreateTextureMap(TexType::Metallic, "Textures/Metallic/small_metal_debris.jpg");
+		//rob.CreateTextureMap(TexType::Roughness, "Textures/Roughness/small_metal_debris.jpg");
+		//rob.CreateTextureMap(TexType::Normal, "Textures/Normal/small_metal_debris.png");
+		//rob.CreateTextureMap(TexType::Parallax, "Textures/Parallax/small_metal_debris.jpg");
+		//rob.CreateTextureMap(TexType::Glow, "Textures/Glow/small_metal_debris.jpg");
+		//renderObjDatas->push_back(std::make_shared<RenderObjectData>(rob));
 
 
-		rob = RenderObjectData{ std::make_shared<std::vector<Mesh>>(CreatePlane()), std::make_shared<std::map<TexType, std::vector<Texture>>>(), std::make_shared<glm::mat4>(1.0f), std::make_shared<glm::mat4>(1.0f) };
-		rob.CreateTextureMap(TexType::Albedo, "Textures/brick.jpg");
-		rob.CreateTextureMap(TexType::Metallic, "Textures/Metallic/brick.jpg");
-		rob.CreateTextureMap(TexType::Roughness, "Textures/Roughness/brick.jpg");
-		rob.CreateTextureMap(TexType::Normal, "Textures/Normal/brick.png");
-		rob.CreateTextureMap(TexType::Parallax, "Textures/Parallax/brick.jpg");
-		rob.CreateTextureMap(TexType::Glow, "Textures/Glow/brick.jpg");
-		renderObjDatas->push_back(std::make_shared<RenderObjectData>(rob));
+		//rob = RenderObjectData{ std::make_shared<std::vector<Mesh>>(CreatePlane()), std::make_shared<std::map<TexType, std::vector<Texture>>>(), std::make_shared<glm::mat4>(1.0f), std::make_shared<glm::mat4>(1.0f) };
+		//rob.CreateTextureMap(TexType::Albedo, "Textures/brick.jpg");
+		//rob.CreateTextureMap(TexType::Metallic, "Textures/Metallic/brick.jpg");
+		//rob.CreateTextureMap(TexType::Roughness, "Textures/Roughness/brick.jpg");
+		//rob.CreateTextureMap(TexType::Normal, "Textures/Normal/brick.png");
+		//rob.CreateTextureMap(TexType::Parallax, "Textures/Parallax/brick.jpg");
+		//rob.CreateTextureMap(TexType::Glow, "Textures/Glow/brick.jpg");
+		//renderObjDatas->push_back(std::make_shared<RenderObjectData>(rob));
 
-		rob = RenderObjectData{ std::make_shared<std::vector<Mesh>>(CreatePlane()), std::make_shared<std::map<TexType, std::vector<Texture>>>(), std::make_shared<glm::mat4>(1.0f), std::make_shared<glm::mat4>(1.0f) };
-		rob.CreateTextureMap(TexType::Albedo, "Textures/brick_floor.png");
-		rob.CreateTextureMap(TexType::Metallic, "Textures/Metallic/brick_floor.png");
-		rob.CreateTextureMap(TexType::Roughness, "Textures/Roughness/brick_floor.png");
-		rob.CreateTextureMap(TexType::Normal, "Textures/Normal/brick_floor.png");
-		rob.CreateTextureMap(TexType::Parallax, "Textures/Parallax/brick_floor.png");
-		rob.CreateTextureMap(TexType::Glow, "Textures/Glow/brick_floor.png");
-		renderObjDatas->push_back(std::make_shared<RenderObjectData>(rob));*/
+		//rob = RenderObjectData{ std::make_shared<std::vector<Mesh>>(CreatePlane()), std::make_shared<std::map<TexType, std::vector<Texture>>>(), std::make_shared<glm::mat4>(1.0f), std::make_shared<glm::mat4>(1.0f) };
+		//rob.CreateTextureMap(TexType::Albedo, "Textures/brick_floor.png");
+		//rob.CreateTextureMap(TexType::Metallic, "Textures/Metallic/brick_floor.png");
+		//rob.CreateTextureMap(TexType::Roughness, "Textures/Roughness/brick_floor.png");
+		//rob.CreateTextureMap(TexType::Normal, "Textures/Normal/brick_floor.png");
+		//rob.CreateTextureMap(TexType::Parallax, "Textures/Parallax/brick_floor.png");
+		//rob.CreateTextureMap(TexType::Glow, "Textures/Glow/brick_floor.png");
+		//renderObjDatas->push_back(std::make_shared<RenderObjectData>(rob));
 	}
 
 	void CreateShaders() {
