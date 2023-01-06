@@ -71,7 +71,6 @@
     <ClCompile Include="Exposure_Render_Pass_Handler.cpp" />
     <ClCompile Include="Billboard_Mesh.cpp" />
     <ClCompile Include="Billboard_Shader.cpp" />
-    <ClCompile Include="Blur_Shader.cpp" />
     <ClCompile Include="Brdf_Render_Pass_Handler.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Compute_Shader.cpp" />
@@ -82,7 +81,6 @@
     <ClCompile Include="Environment_Map_Render_Pass_Handler.cpp" />
     <ClCompile Include="Fbo_Handler.cpp" />
     <ClCompile Include="FrameBufferObject.cpp" />
-    <ClCompile Include="HDR_Shader.cpp" />
     <ClCompile Include="EngineInputManager.cpp" />
     <ClCompile Include="Irradiance_Convolution_Render_Pass_Handler.cpp" />
     <ClCompile Include="main.cpp" />
@@ -92,9 +90,7 @@
     <ClCompile Include="Prefilter_Render_Pass_Handler.cpp" />
     <ClCompile Include="PreZ_Render_Pass_Handler.cpp" />
     <ClCompile Include="RenderEngineMain.cpp" />
-    <ClCompile Include="Material.cpp" />
     <ClCompile Include="Mesh.cpp" />
-    <ClCompile Include="MotionBlur_Shader.cpp" />
     <ClCompile Include="Particle.cpp" />
     <ClCompile Include="ParticleSystem.cpp" />
     <ClCompile Include="Particle_Shader.cpp" />
@@ -119,7 +115,6 @@
     <ClCompile Include="Ssao_Blur_Render_Pass_handler.cpp" />
     <ClCompile Include="Ssao_Render_Pass_Handler.cpp" />
     <ClCompile Include="Model_Shader.cpp" />
-    <ClCompile Include="Terrain_Shader.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="VertexBoneData.cpp" />
     <ClCompile Include="Window.cpp" />
@@ -137,7 +132,6 @@
     <ClInclude Include="Billboard_Mesh.h" />
     <ClInclude Include="Billboard_Shader.h" />
     <ClInclude Include="Bloom_Render_Pass_Handler.h" />
-    <ClInclude Include="Blur_Shader.h" />
     <ClInclude Include="Brdf_Render_Pass_Handler.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Directional_Shadow_Map_Render_Pass_Handler.h" />
@@ -156,12 +150,9 @@
     <ClInclude Include="Compute_Shader.h" />
     <ClInclude Include="Debug.h" />
     <ClInclude Include="DirectionalLight.h" />
-    <ClInclude Include="HDR_Shader.h" />
     <ClInclude Include="EngineInputManager.h" />
     <ClInclude Include="RenderEngineMain.h" />
-    <ClInclude Include="Material.h" />
     <ClInclude Include="Mesh.h" />
-    <ClInclude Include="MotionBlur_Shader.h" />
     <ClInclude Include="Particle.h" />
     <ClInclude Include="ParticleSystem.h" />
     <ClInclude Include="Particle_Shader.h" />
@@ -182,7 +173,6 @@
     <ClInclude Include="Ssao_Blur_Render_Pass_handler.h" />
     <ClInclude Include="Ssao_Render_Pass_Handler.h" />
     <ClInclude Include="Model_Shader.h" />
-    <ClInclude Include="Terrain_Shader.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="MathUtil.h" />
     <ClInclude Include="VertexBoneData.h" />

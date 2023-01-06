@@ -12,7 +12,6 @@
 #include "DirectionalLight.h"
 #include "PointLight.h"
 #include "SpotLight.h"
-#include "Material.h"
 #include "Particle.h"
 
 #include "Scene_Fbo_Handler_Manager.h"
@@ -300,22 +299,6 @@ struct RenderEngineMain::Impl
 	std::unique_ptr < Texture> plainTexture;
 	std::unique_ptr < Texture> grassTexture;
 
-	std::unique_ptr < Material> shinyMaterialGlow;
-	std::unique_ptr < Material> dullMaterialGlow;
-	std::unique_ptr < Material> shinyMaterialPara;
-	std::unique_ptr < Material> dullMaterialPara;
-	std::unique_ptr < Material> shinyMaterialRough;
-	std::unique_ptr < Material> dullMaterialRough;
-	std::unique_ptr < Material> shinyMaterialNorm;
-	std::unique_ptr < Material> dullMaterialNorm;
-	std::unique_ptr < Material> shinyMaterialMetal;
-	std::unique_ptr < Material> dullMaterialMetal;
-	std::unique_ptr < Material> shinyMaterial;
-	std::unique_ptr < Material> dullMaterial;
-
-	std::unique_ptr < Material> shinyTerrainMaterial;
-	std::unique_ptr < Material> dullTerrainMaterial;
-
 	std::shared_ptr <Render_Object> pyramid1;
 	std::shared_ptr <Render_Object> pyramid2;
 	std::shared_ptr <Render_Object> rectangle1;
@@ -522,27 +505,8 @@ struct RenderEngineMain::Impl
 		pressure3D = std::make_unique<Texture>();
 		pressure3D->CreateTexture3D(glm::vec3(simDim3D, simDim3D, simDim3D));*/
 
-		shinyMaterialGlow = std::make_unique<Material>(1, 6, 7, 11, 12, 13);
-		dullMaterialGlow = std::make_unique<Material>(1, 6, 7, 11, 12, 13);
-
-		shinyMaterialPara = std::make_unique<Material>(1, 6, 7, 11, 12);
-		dullMaterialPara = std::make_unique<Material>(1, 6, 7, 11, 12);
-
-		shinyMaterialRough = std::make_unique<Material>(1, 6, 7, 11);
-		dullMaterialRough = std::make_unique<Material>(1, 6, 7, 11);
-
-		shinyMaterialNorm = std::make_unique<Material>(1, 6, 7);
-		dullMaterialNorm = std::make_unique<Material>(1, 6, 7);
-
-		shinyMaterialMetal = std::make_unique<Material>(1, 6);
-		dullMaterialMetal = std::make_unique<Material>(1, 6);
-
-		shinyMaterial = std::make_unique<Material>(1, 1);
-		dullMaterial = std::make_unique<Material>(1, 1);
-
-		shinyTerrainMaterial = std::make_unique<Material>(12, 13, 15, 16, 17);
-		dullTerrainMaterial = std::make_unique<Material>(12, 13, 15, 16, 17);
-
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------
+		
 		//auto unriggedSceneMeshes = std::vector<std::shared_ptr<Render_Object>>();
 
 		//auto bulbModel = Static_Model();
