@@ -243,7 +243,6 @@ struct RenderEngineMain::Impl
 		return textureMap;
 	}
 
-	std::shared_ptr<std::vector< std::shared_ptr < Mesh>>> terrainList = std::make_shared<std::vector<std::shared_ptr<Mesh>>>();
 	std::vector< std::shared_ptr < Billboard_Mesh>> billboardList;
 	std::vector< std::shared_ptr < ParticleSystem>> particleList;
 
@@ -410,8 +409,11 @@ struct RenderEngineMain::Impl
 		lastFrameTime = static_cast<GLfloat>(glfwGetTime());
 		//CreateBillboard();
 		//CreateParticles();
-		//CreateTerrain();
-		//CreateObject();
+
+		sceneObjRO = std::make_shared<std::vector<std::vector<std::shared_ptr<Render_Object>>>>();
+
+		CreateTerrain();
+		CreateObject();
 		CreateShaders();
 
 		camera = std::make_shared<Camera>(glm::vec3(-terrainScaleFactor, 40.0f, -terrainScaleFactor + 40.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f, 50.0f, 0.2f);
@@ -856,12 +858,9 @@ struct RenderEngineMain::Impl
 
 		auto dirShadowShaders = std::vector<std::shared_ptr<Shader_Object>>{ dirShadowShader, animDirShadowShader, terrDirShadowShader };
 		dirShadowRPHandler = std::make_shared<Directional_Shadow_Map_Render_Pass_Handler>(mainLight->GetShadowMap(), dirShadowShaders);
-		sceneObjRO = std::make_shared<std::vector<std::vector<std::shared_ptr<Render_Object>>>>();
 
-		//ToDo;
-		//auto ommiShadowShaders = std::vector<std::shared_ptr<Shader_Object>>{ omniShadowShader, animOmniShadowShader };
-		//omniShadowRPHandler = std::make_shared<Directional_Shadow_Map_Render_Pass_Handler>(pointLights->GetShadowMap(), ommiShadowShaders);
-		//sceneObjRO = std::make_shared<std::vector<std::vector<std::shared_ptr<Render_Object>>>>();
+		auto ommiShadowShaders = std::vector<std::shared_ptr<Shader_Object>>{ omniShadowShader, animOmniShadowShader };
+		omniShadowRPHandler = std::make_shared<Omni_Directional_Shadow_Map_Render_Pass_Handler>(pointLights[0]->GetShadowMap(), ommiShadowShaders);
 
 		auto prezShaders = std::vector<std::shared_ptr<Shader_Object>>{ preZShader, animPreZShader, terrPreZShader };
 		preZRPHandler = std::make_shared<PreZ_Render_Pass_Handler>(depthMap, prezShaders);
@@ -878,7 +877,17 @@ struct RenderEngineMain::Impl
 		ssaoBlurRPHandler = std::make_shared<Ssao_Blur_Render_Pass_Handler>(ssaoBlurFbo, ssaoBlurShaders, inputs);
 
 		auto sceneShaders = std::vector<std::shared_ptr<Shader_Object>>{ unrigShader, rigShader, terrShader };
-		sceneRPHandler = std::make_shared<Scene_Render_Pass_Handler>(sceneFbo, sceneShaders);
+		inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
+		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(mainLight->GetShadowMap())));
+		for (auto i = 0; i < pointLightCount; ++i)	{ inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(pointLights[i]->GetShadowMap()))); }
+		for (auto i = 0; i < spotLightCount; ++i)	{ inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(spotLights[i]->GetShadowMap()))); }
+		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(irradianceMap)));
+		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(prefilterMap)));
+		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(brdfMap)));
+		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(ssaoBlurFbo)));
+		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(depthMap)));
+		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(mainLight->GetShadowMap())));
+		sceneRPHandler = std::make_shared<Scene_Render_Pass_Handler>(sceneFbo, sceneShaders, inputs);
 
 		auto bloomShaders = std::vector<std::shared_ptr<Shader_Object>>{ bloomShader };
 		inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
@@ -895,14 +904,6 @@ struct RenderEngineMain::Impl
 		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(bloomFbo)));
 		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(motionBlurFbo)));
 		exposureRPHandler = std::make_shared<Exposure_Render_Pass_Handler>(exposureFbo, exosureShaders, inputs);
-
-		//auto unriggedSceneMeshes = std::vector<std::shared_ptr<Render_Object>>();
-		////
-		////for(auto rod : *renderObjDatas)
-		////{
-		////	unriggedSceneMeshes.push_back(std::make_shared<Render_Object>(rod->Meshes, rod->TextureMap, rod->ModelMatrix, rod->PrevModelMatrix, rod->BoneMatrices));
-		////}
-		////
 
 		//sceneObjRO->push_back(unriggedSceneMeshes);
 		
@@ -1100,6 +1101,7 @@ struct RenderEngineMain::Impl
 			SSAOPass(camParam);
 			SSAOBlurPass(camParam);
 			RenderPass(camParam);
+			//skybox->DrawHDRSkybox();
 			Bloom();
 			MotionBlurPass(camParam);
 
@@ -1272,72 +1274,72 @@ struct RenderEngineMain::Impl
 		particleList.push_back(obj);
 	}
 
-	//void CreateTerrain()
-	//{
-	//	std::vector<GLuint> terrainIndices = {
-	//		0, 2, 1,
-	//		1, 2, 3
-	//	};
+	void CreateTerrain()
+	{
+		std::vector<GLuint> terrainIndices = {
+			0, 2, 1,
+			1, 2, 3
+		};
 
-	//	std::vector<std::vector<GLfloat>> terrainVertices = {
-	//		std::vector<GLfloat>{	-terrainScaleFactor1, 0.0f,-terrainScaleFactor1,		0.0f, 0.0f,								        0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f },
-	//		std::vector<GLfloat>{	terrainScaleFactor1, 0.0f,-terrainScaleFactor1,			terrainScaleFactor1, 0.0f,						0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f },
-	//		std::vector<GLfloat>{	-terrainScaleFactor1, 0.0f, terrainScaleFactor1,		0.0f, terrainScaleFactor1,						0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f },
-	//		std::vector<GLfloat>{	terrainScaleFactor1, 0.0f,terrainScaleFactor1,			terrainScaleFactor1, terrainScaleFactor1,	    0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f }
-	//	};
+		std::vector<std::vector<GLfloat>> terrainVertices = {
+			std::vector<GLfloat>{	-terrainScaleFactor1, 0.0f,-terrainScaleFactor1,		0.0f, 0.0f,								        0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f },
+			std::vector<GLfloat>{	terrainScaleFactor1, 0.0f,-terrainScaleFactor1,			terrainScaleFactor1, 0.0f,						0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f },
+			std::vector<GLfloat>{	-terrainScaleFactor1, 0.0f, terrainScaleFactor1,		0.0f, terrainScaleFactor1,						0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f },
+			std::vector<GLfloat>{	terrainScaleFactor1, 0.0f,terrainScaleFactor1,			terrainScaleFactor1, terrainScaleFactor1,	    0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f }
+		};
 
-	//	MathUtil::CalcAverageNormals(terrainIndices, terrainVertices, 5);
-	//	MathUtil::CalcAverageTangents(terrainIndices, terrainVertices, 8);
+		MathUtil::CalcAverageNormals(terrainIndices, terrainVertices, 5);
+		MathUtil::CalcAverageTangents(terrainIndices, terrainVertices, 8);
 
-	//	//Debug::DebugPrintReferenceTBN("ReferenceTBN", terrainVertices, 11, glm::vec3(0.0f, 1.0f, 0.0f));
-	//	//Debug::DebugPrintTBN("TerrainTBN", terrainVertices, 5, 8);
+		//Debug::DebugPrintReferenceTBN("ReferenceTBN", terrainVertices, 11, glm::vec3(0.0f, 1.0f, 0.0f));
+		//Debug::DebugPrintTBN("TerrainTBN", terrainVertices, 5, 8);
 
-	//	auto obj = std::make_shared<Mesh>(0, std::move(terrainVertices), std::move(terrainIndices), std::move(MeshGenParams{ true, true, true }));
-	//	terrainList->push_back(obj);
-	//}
+		//auto obj = std::make_shared<Mesh>(0, std::move(terrainVertices), std::move(terrainIndices), std::move(MeshGenParams{ true, true, true }));
+		//terrainList->push_back(obj);
+	}
 
-	//std::vector<Mesh> CreatePrism()
-	//{
-	//	std::vector<GLuint> indices = {
-	//				1,3,0,
-	//				2,3,1,
-	//				0,3,2,
-	//				2,1,0
-	//	};
+	std::vector<Mesh> CreatePrism()
+	{
+		std::vector<GLuint> indices = {
+					1,3,0,
+					2,3,1,
+					0,3,2,
+					2,1,0
+		};
 
-	//	std::vector<std::vector<GLfloat>> vertices = {
-	//		//x      y      z		u		v		nx    ny	nz      tx	  ty    tz
-	//		std::vector<GLfloat>{	-1.0f, -1.0f, -0.6f,	 0.0f, 0.0f,		0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f	},	//bottom left
-	//		std::vector<GLfloat>{	0.0f, -1.0f, 1.0f,		 1.0f, 0.0f,		0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f	},   // z axis point
-	//		std::vector<GLfloat>{	1.0f, -1.0f, -0.6f,		 0.0f, 1.0f,		0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f	},   //bottom right
-	//		std::vector<GLfloat>{	0.0f, 1.0f, 0.0f,		 1.0f, 1.0f,		0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f	}    //top
-	//	};
+		std::vector<std::vector<GLfloat>> vertices = {
+			//x      y      z		u		v		nx    ny	nz      tx	  ty    tz
+			std::vector<GLfloat>{	-1.0f, -1.0f, -0.6f,	 0.0f, 0.0f,		0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f	},	//bottom left
+			std::vector<GLfloat>{	0.0f, -1.0f, 1.0f,		 1.0f, 0.0f,		0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f	},   // z axis point
+			std::vector<GLfloat>{	1.0f, -1.0f, -0.6f,		 0.0f, 1.0f,		0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f	},   //bottom right
+			std::vector<GLfloat>{	0.0f, 1.0f, 0.0f,		 1.0f, 1.0f,		0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f	}    //top
+		};
 
-	//	MathUtil::CalcAverageNormals(indices, vertices, 5);
-	//	MathUtil::CalcAverageTangents(indices, vertices, 8);
-	//
-	//	return std::vector<Mesh>{Mesh(0, std::move(vertices), std::move(indices), std::move(MeshGenParams()))};
-	//}
+		MathUtil::CalcAverageNormals(indices, vertices, 5);
+		MathUtil::CalcAverageTangents(indices, vertices, 8);
+	
+		return std::vector<Mesh>{Mesh(0, std::move(vertices), std::move(indices), std::move(MeshGenParams()))};
+	}
 
-	//std::vector<Mesh> CreatePlane()
-	//{
-	//	std::vector<GLuint> indices = {
-	//		0, 2, 1,
-	//		1, 2, 3
-	//	};
+	std::vector<Mesh> CreatePlane()
+	{
+		std::vector<GLuint> indices = {
+			0, 2, 1,
+			1, 2, 3
+		};
 
-	//	std::vector<std::vector<GLfloat>> vertices = {
-	//		std::vector<GLfloat>{	-15.f, 0.0f, -15.0f,	0.0f, 0.0f,	    0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f	},
-	//		std::vector<GLfloat>{	15.0f, 0.0f, -15.0f,	1.0f, 0.0f,	    0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f	},
-	//		std::vector<GLfloat>{	-15.0f, 0.0f, 15.0f,	0.0f, 1.0f,	    0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f	},
-	//		std::vector<GLfloat>{	15.0f, 0.0f, 15.0f,		1.0f, 1.0f,	    0.0f, 0.0f, 0.0f,  0.0f, 0.0f, 0.0f		}
-	//	};
+		std::vector<std::vector<GLfloat>> vertices = {
+			std::vector<GLfloat>{	-15.f, 0.0f, -15.0f,	0.0f, 0.0f,	    0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f	},
+			std::vector<GLfloat>{	15.0f, 0.0f, -15.0f,	1.0f, 0.0f,	    0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f	},
+			std::vector<GLfloat>{	-15.0f, 0.0f, 15.0f,	0.0f, 1.0f,	    0.0f, 0.0f, 0.0f,	0.0f, 0.0f, 0.0f	},
+			std::vector<GLfloat>{	15.0f, 0.0f, 15.0f,		1.0f, 1.0f,	    0.0f, 0.0f, 0.0f,  0.0f, 0.0f, 0.0f		}
+		};
 
-	//	MathUtil::CalcAverageNormals(indices, vertices, 5);
-	//	MathUtil::CalcAverageTangents(indices, vertices, 8);
+		MathUtil::CalcAverageNormals(indices, vertices, 5);
+		MathUtil::CalcAverageTangents(indices, vertices, 8);
 
-	//	return std::vector<Mesh>{Mesh(0, std::move(vertices), std::move(indices), std::move(MeshGenParams()))};
-	//}
+		return std::vector<Mesh>{Mesh(0, std::move(vertices), std::move(indices), std::move(MeshGenParams()))};
+	}
 
 	void CreateObject() 
 	{	
