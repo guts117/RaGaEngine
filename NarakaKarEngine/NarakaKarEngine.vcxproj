@@ -69,7 +69,6 @@
     </ClCompile>
     <ClCompile Include="Bloom_Render_Pass_Handler.cpp" />
     <ClCompile Include="Exposure_Render_Pass_Handler.cpp" />
-    <ClCompile Include="Model_Importer.cpp" />
     <ClCompile Include="Billboard_Mesh.cpp" />
     <ClCompile Include="Billboard_Shader.cpp" />
     <ClCompile Include="Blur_Shader.cpp" />
