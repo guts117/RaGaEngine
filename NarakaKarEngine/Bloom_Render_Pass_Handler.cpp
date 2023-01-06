@@ -26,7 +26,9 @@ void Bloom_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared
 		shader->ResetTextureUnit(0);
 		shader->UseShaderObject();
 
-		if (auto val = CheckInputDataType<Fbo_Handler>(*m_inputs->at(0)))
+		std::shared_ptr<Fbo_Handler> val;
+
+		if (CheckInputDataType<std::shared_ptr<Fbo_Handler>>(val, *m_inputs->at(0)))
 		{
 			val->AttachFBOToTextureUnit(0, shader->SetTextureUnit("theTexture"), 0, 1);
 		}

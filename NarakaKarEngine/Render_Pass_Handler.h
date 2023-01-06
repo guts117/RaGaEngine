@@ -2,6 +2,7 @@
 #define RENDER_PASS_HANDLER
 
 #include "pch.h"
+#include <type_traits>
 
 //Handles rendering 
 
@@ -40,6 +41,12 @@ namespace NarakaKarEngine
 			std::shared_ptr<std::vector<std::any>> shaderInputs;
 		};
 
+		template<class T>
+		struct is_shared_ptr : std::false_type {};
+
+		template<class T>
+		struct is_shared_ptr<std::shared_ptr<T>> : std::true_type {};
+
 		class Render_Pass_Handler
 		{
 		public:
@@ -61,7 +68,20 @@ namespace NarakaKarEngine
 
 		protected:
 
-			template <typename T> std::shared_ptr<T> CheckInputDataType(const std::any& data);
+			template <typename T>
+			bool CheckInputDataType(T& dat, const std::any& data) noexcept
+			{
+				try
+				{
+					dat = std::any_cast<T>(data);
+					return true;
+				}
+				catch (const std::bad_any_cast& e)
+				{
+					std::cout << e.what() << std::endl;
+					return false;
+				}
+			}
 
 			std::shared_ptr<Fbo_Handler> m_fboHandler;
 			std::unique_ptr<std::vector<std::shared_ptr<Shader_Object>>> m_shaderVec;

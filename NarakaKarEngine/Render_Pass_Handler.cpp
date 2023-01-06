@@ -19,19 +19,4 @@ void Render_Pass_Handler::Init()
 {
 }
 
-template <typename T>
-std::shared_ptr<T> Render_Pass_Handler::CheckInputDataType(const std::any& data)
-{
-	try
-	{
-		auto dat = std::any_cast<T>(data);
-		return std::make_shared<T>(dat);
-	}
-	catch (const std::bad_any_cast& e)
-	{
-		std::cout << e.what() << std::endl;
-		return nullptr;
-	}
-}
-
 Render_Pass_Handler::~Render_Pass_Handler() = default;

@@ -40,13 +40,14 @@ void Scene_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared
 
 
 		auto inputOffset = 0;
+		std::shared_ptr<Fbo_Handler> val;
 
 		for (auto cascId = 0; cascId < NUM_CASCADES; ++cascId)
 		{
 			shader->SetVariable("DirectionalLightTransforms", lightParam[0].Projection[cascId] * lightParam[0].View[cascId], cascId);
 			shader->SetVariable("CascadeEndClipSpace", lightParam[0].Edge, cascId);
 
-			if (auto val = CheckInputDataType<Fbo_Handler>(*m_inputs->at(inputOffset)))
+			if (CheckInputDataType<std::shared_ptr<Fbo_Handler>>(val, *m_inputs->at(inputOffset)))
 			{
 				val->AttachFBOToTextureUnit(0, shader->SetTextureUnit("directionalShadowMaps", cascId, "shadowMap"), 0, 0);
 			}
@@ -56,7 +57,7 @@ void Scene_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared
 
 		for (auto omniLightIndex = 0; omniLightIndex < lightParam[1].Count + lightParam[2].Count; ++omniLightIndex)
 		{
-			if (auto val = CheckInputDataType<Fbo_Handler>(*m_inputs->at(inputOffset)))
+			if (CheckInputDataType<std::shared_ptr<Fbo_Handler>>(val, *m_inputs->at(inputOffset)))
 			{
 				val->AttachFBOToTextureUnit(0, shader->SetTextureUnit("omniShadowMaps", omniLightIndex, "shadowMap"), 0, 0);
 
@@ -82,7 +83,7 @@ void Scene_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared
 
 		for(auto inputIndex = inputOffset; inputIndex < m_inputs->size(); ++inputIndex)
 		{
-			if (auto val = CheckInputDataType<Fbo_Handler>(*m_inputs->at(inputOffset)))
+			if (CheckInputDataType<std::shared_ptr<Fbo_Handler>>(val, *m_inputs->at(inputOffset)))
 			{
 				val->AttachFBOToTextureUnit(0, shader->SetTextureUnit(std::move(inputTexBuffs[inputIndex - inputOffset])), 0, 0);
 			}

@@ -23,6 +23,8 @@ void Ssao_Blur_Render_Pass_Handler::Update(const std::vector<std::vector<std::sh
 	//clear color buffer
 	glClear(GL_COLOR_BUFFER_BIT);
 
+	std::shared_ptr<Fbo_Handler> val;
+
 	for (auto shaderIndex = 0; shaderIndex < m_shaderVec->size(); ++shaderIndex)
 	{
 		auto shader = m_shaderVec->at(shaderIndex);
@@ -30,14 +32,9 @@ void Ssao_Blur_Render_Pass_Handler::Update(const std::vector<std::vector<std::sh
 		shader->ResetTextureUnit(0);
 		shader->UseShaderObject();
 
-		try
+		if (CheckInputDataType<std::shared_ptr<Fbo_Handler>>(val, *m_inputs->at(0)))
 		{
-			auto input = std::any_cast<std::shared_ptr<Fbo_Handler>>(*m_inputs->at(0));
-			input->AttachFBOToTextureUnit(0, shader->SetTextureUnit("theTexture"), 0, 0);
-		}
-		catch (const std::bad_any_cast& e)
-		{
-			std::cout << e.what() << std::endl;
+			val->AttachFBOToTextureUnit(0, shader->SetTextureUnit("theTexture"), 0, 0);
 		}
 
 		for (auto roIndex = 0; roIndex < renderObj[shaderIndex].size(); ++roIndex)

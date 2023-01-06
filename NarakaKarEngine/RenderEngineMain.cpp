@@ -158,12 +158,12 @@ struct RenderEngineMain::Impl
 	std::shared_ptr <Fbo_Handler> irradianceMap;
 	std::shared_ptr <Fbo_Handler> prefilterMap;
 	std::shared_ptr <Fbo_Handler> brdfMap;
-	std::shared_ptr <Fbo_Handler> depth;
-	std::shared_ptr <Fbo_Handler> ssao;
-	std::shared_ptr <Fbo_Handler> ssaoBlur;
-	std::shared_ptr <Fbo_Handler> hdr;
-	std::shared_ptr <Fbo_Handler> motionBlur;
-	std::shared_ptr <Fbo_Handler> blur;
+	std::shared_ptr <Fbo_Handler> depthMap;
+	std::shared_ptr <Fbo_Handler> ssaoFbo;
+	std::shared_ptr <Fbo_Handler> ssaoBlurFbo;
+	std::shared_ptr <Fbo_Handler> sceneFbo;
+	std::shared_ptr <Fbo_Handler> motionBlurFbo;
+	std::shared_ptr <Fbo_Handler> bloomFbo;
 	std::shared_ptr <Fbo_Handler> exposureFbo;
 
 	std::unique_ptr < Shader_Object > billboardShader;
@@ -594,12 +594,12 @@ struct RenderEngineMain::Impl
 		irradianceMap = m_SceneFboHandlerMgr->FindFboHandler("Irradiance_Map_Pass");
 		prefilterMap = m_SceneFboHandlerMgr->FindFboHandler("Pre_Filter_Pass");
 		brdfMap = m_SceneFboHandlerMgr->FindFboHandler("Brdf_Pass");
-		depth = m_SceneFboHandlerMgr->FindFboHandler("Depth_Pass");
-		ssao = m_SceneFboHandlerMgr->FindFboHandler("Ssao_Pass");
-		ssaoBlur = m_SceneFboHandlerMgr->FindFboHandler("Ssao_Blur_Pass");
-		hdr = m_SceneFboHandlerMgr->FindFboHandler("Shading_Pass");
-		motionBlur = m_SceneFboHandlerMgr->FindFboHandler("Motion_Blur_Pass");
-		blur = m_SceneFboHandlerMgr->FindFboHandler("Bloom_Pass");
+		depthMap = m_SceneFboHandlerMgr->FindFboHandler("Depth_Pass");
+		ssaoFbo = m_SceneFboHandlerMgr->FindFboHandler("Ssao_Pass");
+		ssaoBlurFbo = m_SceneFboHandlerMgr->FindFboHandler("Ssao_Blur_Pass");
+		sceneFbo = m_SceneFboHandlerMgr->FindFboHandler("Shading_Pass");
+		motionBlurFbo = m_SceneFboHandlerMgr->FindFboHandler("Motion_Blur_Pass");
+		bloomFbo = m_SceneFboHandlerMgr->FindFboHandler("Bloom_Pass");
 		exposureFbo = m_SceneFboHandlerMgr->FindFboHandler("Final_Output_Pass");
 
 		quad = std::make_unique <std::vector<std::weak_ptr<Mesh>>>();
@@ -900,36 +900,36 @@ struct RenderEngineMain::Impl
 		//sceneObjRO = std::make_shared<std::vector<std::vector<std::shared_ptr<Render_Object>>>>();
 
 		auto prezShaders = std::vector<std::shared_ptr<Shader_Object>>{ preZShader, animPreZShader, terrPreZShader };
-		preZRPHandler = std::make_shared<PreZ_Render_Pass_Handler>(depth, prezShaders);
+		preZRPHandler = std::make_shared<PreZ_Render_Pass_Handler>(depthMap, prezShaders);
 
 		auto ssaoShaders = std::vector<std::shared_ptr<Shader_Object>>{ ssaoShader };
 		inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
-		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(depth)));
-		ssaoRPHandler = std::make_shared<Ssao_Render_Pass_Handler>(ssao, ssaoShaders, inputs);
+		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(depthMap)));
+		ssaoRPHandler = std::make_shared<Ssao_Render_Pass_Handler>(ssaoFbo, ssaoShaders, inputs);
 		InitSSAO();
 
 		auto ssaoBlurShaders = std::vector<std::shared_ptr<Shader_Object>>{ ssaoBlurShader };
 		inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
-		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(ssao)));
-		ssaoBlurRPHandler = std::make_shared<Ssao_Blur_Render_Pass_Handler>(ssaoBlur, ssaoBlurShaders, inputs);
+		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(ssaoFbo)));
+		ssaoBlurRPHandler = std::make_shared<Ssao_Blur_Render_Pass_Handler>(ssaoBlurFbo, ssaoBlurShaders, inputs);
 
 		auto sceneShaders = std::vector<std::shared_ptr<Shader_Object>>{ unrigShader, rigShader, terrShader };
-		sceneRPHandler = std::make_shared<Scene_Render_Pass_Handler>(hdr, sceneShaders);
+		sceneRPHandler = std::make_shared<Scene_Render_Pass_Handler>(sceneFbo, sceneShaders);
 
 		auto bloomShaders = std::vector<std::shared_ptr<Shader_Object>>{ bloomShader };
 		inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
-		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(hdr)));
-		bloomRPHandler = std::make_shared<Bloom_Render_Pass_Handler>(blur, bloomShaders, inputs);
+		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(sceneFbo)));
+		bloomRPHandler = std::make_shared<Bloom_Render_Pass_Handler>(bloomFbo, bloomShaders, inputs);
 
 		auto motionBlurShaders = std::vector<std::shared_ptr<Shader_Object>>{ motionBlurShader };
 		inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
-		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(hdr)));
-		motionBlurRPHandler = std::make_shared<Motion_Blur_Render_Pass_Handler>(motionBlur, motionBlurShaders, inputs);
+		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(sceneFbo)));
+		motionBlurRPHandler = std::make_shared<Motion_Blur_Render_Pass_Handler>(motionBlurFbo, motionBlurShaders, inputs);
 
 		auto exosureShaders = std::vector<std::shared_ptr<Shader_Object>>{ exposureShader };
 		inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
-		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(blur)));
-		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(motionBlur)));
+		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(bloomFbo)));
+		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(motionBlurFbo)));
 		exposureRPHandler = std::make_shared<Exposure_Render_Pass_Handler>(exposureFbo, exosureShaders, inputs);
 
 		//auto unriggedSceneMeshes = std::vector<std::shared_ptr<Render_Object>>();
@@ -1720,7 +1720,7 @@ struct RenderEngineMain::Impl
 	void CullLight()
 	{
 		visibleClusterCompShader->UseShader();
-		depth->AttachFBOToTextureUnit(0, GL_TEXTURE0, 0, 0);
+		depthMap->AttachFBOToTextureUnit(0, GL_TEXTURE0, 0, 0);
 		visibleClusterCompShader->Dispatch(ScreenWidth / 32, ScreenHeight / 30, 1);
 
 		//unsigned int count = 0;
