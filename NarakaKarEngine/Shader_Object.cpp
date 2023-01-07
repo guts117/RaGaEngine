@@ -492,7 +492,7 @@ struct Shader_Object::Impl
 		}
 		catch(const std::bad_any_cast& e)
 		{
-			std::cout << e.what() << std::endl;
+			//std::cout << e.what() << std::endl;
 			return nullptr;
 		}
 	}

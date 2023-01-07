@@ -50,7 +50,7 @@ struct Render_Object::Impl
 				if (params.prevViewProjection != nullptr && !m_PrevModelMatrix.expired())
 				{
 					auto prevModMat = m_PrevModelMatrix.lock();
-					shader.SetVariable("PrevPMV", *params.prevViewProjection * *(prevModMat));
+					shader.SetVariable("prevPVM", *params.prevViewProjection * *(prevModMat));
 					*prevModMat = *modelMatrix;
 				}
 			}
@@ -91,22 +91,22 @@ struct Render_Object::Impl
 								switch ((TexType)texType)
 								{
 								case Albedo:
-									texMap->UseTextureTemp(shader.SetTextureUnit("material.albedoMap"));
+									texMap->UseTextureTemp(shader.SetTextureUnit("material", 0, "albedoMap"));
 									break;
 								case Metallic:
-									texMap->UseTextureTemp(shader.SetTextureUnit("material.metallicMap"));
+									texMap->UseTextureTemp(shader.SetTextureUnit("material", 0, "metallicMap"));
 									break;
 								case Roughness:
-									texMap->UseTextureTemp(shader.SetTextureUnit("material.roughnessMap"));
+									texMap->UseTextureTemp(shader.SetTextureUnit("material", 0, "roughnessMap"));
 									break;
 								case Normal:
-									texMap->UseTextureTemp(shader.SetTextureUnit("material.normalMap"));
+									texMap->UseTextureTemp(shader.SetTextureUnit("material", 0, "normalMap"));
 									break;
 								case Parallax:
-									texMap->UseTextureTemp(shader.SetTextureUnit("material.parallaxMap"));
+									texMap->UseTextureTemp(shader.SetTextureUnit("material", 0, "parallaxMap"));
 									break;
 								case Glow:
-									texMap->UseTextureTemp(shader.SetTextureUnit("material.glowMap"));
+									texMap->UseTextureTemp(shader.SetTextureUnit("material", 0, "glowMap"));
 									break;
 								case Displacement:
 									texMap->UseTextureTemp(shader.SetTextureUnit("displacementMap"));

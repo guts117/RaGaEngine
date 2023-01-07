@@ -33,8 +33,8 @@ void Scene_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared
 		shader->SetVariable("Projection", camParam->Projection);
 		shader->SetVariable("View", camParam->View);
 		shader->SetVariable("SpotLightCount", 1);
-		shader->SetVariable("directionalLight.color", *lightParam[0].Color);
-		shader->SetVariable("directionalLight.direction", *lightParam[0].Direction);
+		shader->SetVariable("directionalLight", *lightParam[0].Color, 0, "color");
+		shader->SetVariable("directionalLight", *lightParam[0].Direction, 0, "direction");
 		shader->SetVariable("eyePosition", camParam->Position);
 		shader->SetVariable("height_scale", 0.02f);
 
