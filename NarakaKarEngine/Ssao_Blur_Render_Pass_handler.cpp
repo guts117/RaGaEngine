@@ -27,7 +27,7 @@ void Ssao_Blur_Render_Pass_Handler::Update(const std::vector<std::vector<std::sh
 
 	for (auto shaderIndex = 0; shaderIndex < m_shaderVec->size(); ++shaderIndex)
 	{
-		auto shader = m_shaderVec->at(shaderIndex);
+		auto& shader = m_shaderVec->at(shaderIndex);
 
 		shader->ResetTextureUnit(0);
 		shader->UseShaderObject();
@@ -39,7 +39,7 @@ void Ssao_Blur_Render_Pass_Handler::Update(const std::vector<std::vector<std::sh
 
 		for (auto roIndex = 0; roIndex < renderObj[shaderIndex].size(); ++roIndex)
 		{
-			renderObj[shaderIndex][roIndex]->RenderObject(*shader, std::move(RenderObjectParams{ true }));
+			renderObj[shaderIndex][roIndex]->RenderObject(*shader, std::move(RenderObjectParams{ }));
 		}
 		shader->ValidateShaderObject();
 	}

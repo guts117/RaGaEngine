@@ -145,7 +145,6 @@ struct Scene_Fbo_Handler_Manager::Impl
 
 //Ssao Pass
 		fboTexParams.clear();
-		fboTexParams = std::vector<FBOTexParams>();
 		fboTexParams.push_back(FBOTexParams{ GL_TEXTURE_MIN_FILTER,		GL_LINEAR });
 		fboTexParams.push_back(FBOTexParams{ GL_TEXTURE_MAG_FILTER,		GL_LINEAR });
 		fboTexParams.push_back(FBOTexParams{ GL_TEXTURE_WRAP_S,			GL_CLAMP_TO_EDGE });

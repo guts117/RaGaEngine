@@ -433,7 +433,7 @@ struct RenderEngineMain::Impl
 		CreateObject();
 		CreateShaders();
 
-		camera = std::make_shared<Camera>(glm::vec3(-terrainScaleFactor, 40.0f, -terrainScaleFactor + 40.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f, 50.0f, 0.2f);
+		camera = std::make_shared<Camera>(glm::vec3(-terrainScaleFactor, 0.0f, -terrainScaleFactor + 10.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f, 50.0f, 0.2f);
 
 		environmentTexture = std::make_shared<Texture>("Textures/HDR/GCanyon_C_YumaPoint_3k.hdr");
 		environmentTexture->LoadTextureHDR();
@@ -883,7 +883,7 @@ struct RenderEngineMain::Impl
 		auto ommiShadowShaders = std::vector<std::shared_ptr<Shader_Object>>{ omniShadowShader, animOmniShadowShader };
 		omniShadowRPHandler = std::make_shared<Omni_Directional_Shadow_Map_Render_Pass_Handler>(pointLights[0]->GetShadowMap(), ommiShadowShaders);
 
-		auto prezShaders = std::vector<std::shared_ptr<Shader_Object>>{ preZShader, animPreZShader, terrPreZShader };
+		auto prezShaders = std::vector<std::shared_ptr<Shader_Object>>{ preZShader, animPreZShader, terrPreZShader};
 		preZRPHandler = std::make_shared<PreZ_Render_Pass_Handler>(depthMap, prezShaders);
 
 		auto ssaoShaders = std::vector<std::shared_ptr<Shader_Object>>{ ssaoShader };
@@ -897,17 +897,15 @@ struct RenderEngineMain::Impl
 		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(ssaoFbo)));
 		ssaoBlurRPHandler = std::make_shared<Ssao_Blur_Render_Pass_Handler>(ssaoBlurFbo, ssaoBlurShaders, inputs);
 
-		auto sceneShaders = std::vector<std::shared_ptr<Shader_Object>>{ unrigShader, rigShader, terrShader };
+		auto sceneShaders = std::vector<std::shared_ptr<Shader_Object>>{ unrigShader, rigShader, terrShader};
 		inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
 		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(mainLight->GetShadowMap())));
-		for (auto i = 0; i < pointLightCount; ++i)	{ inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(pointLights[i]->GetShadowMap()))); }
-		for (auto i = 0; i < spotLightCount; ++i)	{ inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(spotLights[i]->GetShadowMap()))); }
+		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(pointLights[0]->GetShadowMap())));
 		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(irradianceMap)));
 		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(prefilterMap)));
 		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(brdfMap)));
 		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(ssaoBlurFbo)));
 		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(depthMap)));
-		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(mainLight->GetShadowMap())));
 		sceneRPHandler = std::make_shared<Scene_Render_Pass_Handler>(sceneFbo, sceneShaders, inputs);
 
 		auto bloomShaders = std::vector<std::shared_ptr<Shader_Object>>{ bloomShader };
@@ -1339,7 +1337,7 @@ struct RenderEngineMain::Impl
 		MathUtil::CalcAverageNormals(indices, vertices, 5);
 		MathUtil::CalcAverageTangents(indices, vertices, 8);
 	
-		return std::make_shared<Mesh>(0, std::move(vertices), std::move(indices), std::move(MeshGenParams()));
+		return std::make_shared<Mesh>(0, std::move(vertices), std::move(indices), std::move(MeshGenParams(true, true)));
 	}
 
 	std::shared_ptr<Mesh> CreatePlane()
@@ -1759,7 +1757,7 @@ struct RenderEngineMain::Impl
 	void SSAOPass(const CamParam& camParam)
 	{
 		auto ssaoTexData = std::map<TexType, std::vector<std::weak_ptr<Texture>>>();
-		ssaoTexData.emplace(Default, std::vector<std::weak_ptr<Texture>>{SSAONoiseTexture});
+		ssaoTexData.emplace(Noise, std::vector<std::weak_ptr<Texture>>{SSAONoiseTexture});
 		quadRO->at(0)[0]->SetTextures(std::move(ssaoTexData));
 		ssaoRPHandler->Update(*quadRO, &camParam);
 		quadRO->at(0)[0]->ResetTextures();
@@ -2281,8 +2279,8 @@ GLFWwindow* RenderEngineMain::GetMainWindow()
 
 void RenderEngineMain::AddViewers()
 {
-	engineUI->AddSceneViewers(Pimpl()->mainLight->GetShadowMap()->GetFBOBuffer(0, 0), "EditorScene", Editor, [this](bool isSelected) { Pimpl()->isEditorViewSelected = isSelected; });
-	engineUI->AddSceneViewers(Pimpl()->exposureFbo->GetFBOBuffer(0, 0), "InGameScene", InGame, [this](bool isSelected) { Pimpl()->mainWindow->SetCursorActive(!isSelected); Pimpl()->isGameViewSelected = isSelected; });
+	engineUI->AddSceneViewers(Pimpl()->depthMap->GetFBOBuffer(0, 0), "EditorScene", Editor, [this](bool isSelected) { Pimpl()->isEditorViewSelected = isSelected; });
+	engineUI->AddSceneViewers(Pimpl()->ssaoBlurFbo->GetFBOBuffer(0, 0), "InGameScene", InGame, [this](bool isSelected) { Pimpl()->mainWindow->SetCursorActive(!isSelected); Pimpl()->isGameViewSelected = isSelected; });
 }
 
 bool RenderEngineMain:: IsEnd()

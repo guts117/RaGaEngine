@@ -23,16 +23,16 @@ void Motion_Blur_Render_Pass_Handler::Update(const std::vector<std::vector<std::
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	std::shared_ptr<Fbo_Handler> val;
+
 	for (auto shaderIndex = 0; shaderIndex < m_shaderVec->size(); ++shaderIndex)
 	{
-		auto shader = m_shaderVec->at(shaderIndex);
+		auto& shader = m_shaderVec->at(shaderIndex);
 
 		shader->ResetTextureUnit(0);
 		shader->UseShaderObject();
 
 		shader->SetVariable("uVelocityScale", camParam->fps / 30.0f);
-
-		std::shared_ptr<Fbo_Handler> val;
 
 		if (CheckInputDataType<std::shared_ptr<Fbo_Handler>>(val, *m_inputs->at(0)))
 		{

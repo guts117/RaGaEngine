@@ -37,7 +37,7 @@ void Ssao_Render_Pass_Handler::Init()
 		auto shader = m_shaderVec->at(shaderIndex);
 
 		shader->UseShaderObject();
-		shader->SetVariable("Kernel", std::make_tuple(KERNEL_SIZE, &kernel[0]));
+		shader->SetVariable("Kernel", std::make_tuple(KERNEL_SIZE, kernel));
 		shader->ValidateShaderObject();
 	}
 }
@@ -50,21 +50,18 @@ void Ssao_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared_
 	//clear color buffer
 	glClear(GL_COLOR_BUFFER_BIT);
 
+	std::shared_ptr<Fbo_Handler> val;
+
 	for (auto shaderIndex = 0; shaderIndex < m_shaderVec->size(); ++shaderIndex)
 	{
-		auto shader = m_shaderVec->at(shaderIndex);
+		auto& shader = m_shaderVec->at(shaderIndex);
 
 		shader->ResetTextureUnit(0);
 		shader->UseShaderObject();
 
-		try
+		if (CheckInputDataType<std::shared_ptr<Fbo_Handler>>(val, *m_inputs->at(0)))
 		{
-			auto input = std::any_cast<std::shared_ptr<Fbo_Handler>>(*m_inputs->at(0));
-			input->AttachFBOToTextureUnit(0, shader->SetTextureUnit("theTexture"), 0, 0);
-		}
-		catch (const std::bad_any_cast& e)
-		{
-			std::cout << e.what() << std::endl;
+			val->AttachFBOToTextureUnit(0, shader->SetTextureUnit("theTexture"), 0, 0);
 		}
 
 		shader->SetVariable("SampleRad", 0.1f);
@@ -72,7 +69,7 @@ void Ssao_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared_
 
 		for (auto roIndex = 0; roIndex < renderObj[shaderIndex].size(); ++roIndex)
 		{
-			renderObj[shaderIndex][roIndex]->RenderObject(*shader, std::move(RenderObjectParams{ true, true}));
+			renderObj[shaderIndex][roIndex]->RenderObject(*shader, std::move(RenderObjectParams{ false, true}));
 		}
 		shader->ValidateShaderObject();
 	}

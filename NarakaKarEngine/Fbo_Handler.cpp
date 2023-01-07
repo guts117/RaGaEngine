@@ -49,9 +49,9 @@ struct Fbo_Handler::Impl
 	{
 		m_FboVec->at(fboIndex)->WriteToBuffer(texGenParamIndex, bufferIndex, faceId, mipLevel);
 	}
-	void AttachFBOToTextureUnit(const GLuint& fboIndex, const GLenum& textureUnit, const GLuint& texGenParamIndex, const GLuint& bufferIndex) const
+	void AttachFBOToTextureUnit(const GLuint& fboIndex, const GLuint& textureUnit, const GLuint& texGenParamIndex, const GLuint& bufferIndex) const
 	{
-		m_FboVec->at(fboIndex)->AttachColorBufferToTexture(textureUnit, texGenParamIndex, bufferIndex);
+		m_FboVec->at(fboIndex)->AttachColorBufferToTexture(GL_TEXTURE0 + textureUnit, texGenParamIndex, bufferIndex);
 	}
 
 	void CreateFBOMipMap(const GLuint& fboIndex, const GLuint& texGenParamIndex, const GLuint& bufferIndex) const
@@ -101,7 +101,7 @@ void Fbo_Handler::WriteToFBOBuffer(const GLuint& fboIndex, const GLuint& texGenP
 	Pimpl()->WriteToFBO(fboIndex, texGenParamIndex, bufferIndex, faceId, mipLevel);
 }
 
-void Fbo_Handler::AttachFBOToTextureUnit(const GLuint& fboIndex, const GLenum& textureUnit, const GLuint& texGenParamIndex, const GLuint& bufferIndex) const
+void Fbo_Handler::AttachFBOToTextureUnit(const GLuint& fboIndex, const GLuint& textureUnit, const GLuint& texGenParamIndex, const GLuint& bufferIndex) const
 {
 	Pimpl()->AttachFBOToTextureUnit(fboIndex, textureUnit, texGenParamIndex, bufferIndex);
 }

@@ -425,7 +425,7 @@ struct Shader_Object::Impl
 						{
 							char locBuff[100] = { '\0' };
 
-							snprintf(locBuff, sizeof(locBuff), (varName + "[% zd]").c_str(), i);
+							snprintf(locBuff, sizeof(locBuff), (varName + "[%zd]").c_str(), i);
 							vecArr.push_back(glGetUniformLocation(m_ShaderProgramID, locBuff));
 						}
 						m_ShaderInputs->push_back(ShaderInputVariable{ type, varName, SLDataTypeArr{vecArr} });
@@ -440,7 +440,7 @@ struct Shader_Object::Impl
 							{
 								char locBuff[100] = { '\0' };
 
-								snprintf(locBuff, sizeof(locBuff), (varName + "[% zd]." + structTMaps[type][j].memberName).c_str(), i);
+								snprintf(locBuff, sizeof(locBuff), (varName + "[%zd]." + structTMaps[type][j].memberName).c_str(), i);
 								vec.push_back(SLStructMember{ structTMaps[type][j].type, structTMaps[type][j].memberName, glGetUniformLocation(m_ShaderProgramID, locBuff) });
 							}
 							vecArr.push_back(SLStruct{ vec });
@@ -519,11 +519,11 @@ struct Shader_Object::Impl
 			{
 				glUniform3f(location, val->x, val->y, val->z);
 			}
-			else if(auto val = CheckInputDataType<std::tuple<GLuint, glm::vec3*>>(value))
+			else if(auto val = CheckInputDataType<std::tuple<GLint, glm::vec3*>>(value))
 			{
 				auto size = std::get<0>(*val);
-				auto dataPtr = (const GLfloat*)std::get<1>(*val);
-				glUniform3fv(location, size, dataPtr);
+				auto dataPtr = std::get<1>(*val);
+				glUniform3fv(location, size, (const GLfloat*)dataPtr);
 			}
 		}
 		else if (type == "vec4")

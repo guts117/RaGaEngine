@@ -482,8 +482,8 @@ void main()
 	finalColor 				+= CalcPointLights(viewDir, newNormal, F0, albedo, metallic, roughness, tileIndex);
 	finalColor 				+= CalcSpotLights(viewDir, newNormal, F0, albedo, metallic, roughness);
 	
-	 // ambient lighting (we now use IBL as the ambient term)
-	vec3 F = FresnelSchlickRoughness(max(dot(newNormal, viewDir), 0.0), F0, roughness);
+	// ambient lighting (we now use IBL as the ambient term)
+	vec3 F 					= FresnelSchlickRoughness(max(dot(newNormal, viewDir), 0.0), F0, roughness);
 	
     vec3 kS 				= F;
     vec3 kD 				= 1.0 - kS;
@@ -510,7 +510,7 @@ void main()
 		ambient 			= (kD * diffuse + specular) * aoFactor + glowColor;
 	}
 	
-	color 					= vec4(ambient, 1.0) + finalColor;
+	color 					= vec4(ambient, 1.0) + finalColor; 				
 	
 	if(showLightSlices)
 	{
@@ -528,7 +528,7 @@ void main()
 	{
         //discard;
 		color.a 			= 1.0f;
-	}	
+	}
 	
 	float brightness 		= dot(color.rgb, vec3(0.2126, 0.7152, 0.0722));
 	if(brightness > 1.0f && !showAO && !showDepth)

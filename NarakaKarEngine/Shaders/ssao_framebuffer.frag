@@ -85,8 +85,6 @@ void main()
     AO = 1.0 - AO/MAX_KERNEL_SIZE;
 
     FragColor = vec4(pow(AO,1.0));
-	
 	//FragColor = texture(noise, TexCoord*noiseScale);
-	
-	
+	//FragColor = texture(theTexture, TexCoord);
 }

@@ -20,13 +20,13 @@ void Bloom_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared
 	bool isHorizontalFbo = true;
 	int amount = 10;
 
+	std::shared_ptr<Fbo_Handler> val;
+
 	for (auto shaderIndex = 0; shaderIndex < m_shaderVec->size(); ++shaderIndex)
 	{
-		auto shader = m_shaderVec->at(shaderIndex);
+		auto& shader = m_shaderVec->at(shaderIndex);
 		shader->ResetTextureUnit(0);
 		shader->UseShaderObject();
-
-		std::shared_ptr<Fbo_Handler> val;
 
 		if (CheckInputDataType<std::shared_ptr<Fbo_Handler>>(val, *m_inputs->at(0)))
 		{

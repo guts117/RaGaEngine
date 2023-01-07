@@ -23,9 +23,12 @@ void Scene_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	std::shared_ptr<Fbo_Handler> val;
+	auto inputTexBuffs = std::vector<std::string>{ "irradianceMap" , "prefilterMap", "brdfLUT", "AOMap", "depthMap" };
+
 	for (auto shaderIndex = 0; shaderIndex < m_shaderVec->size(); ++shaderIndex)
 	{
-		auto shader = m_shaderVec->at(shaderIndex);
+		auto& shader = m_shaderVec->at(shaderIndex);
 
 		shader->ResetTextureUnit(0);
 		shader->UseShaderObject();
@@ -39,7 +42,6 @@ void Scene_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared
 		shader->SetVariable("height_scale", 0.02f);
 
 		auto inputOffset = 0;
-		std::shared_ptr<Fbo_Handler> val;
 
 		for (auto cascId = 0; cascId < NUM_CASCADES; ++cascId)
 		{
@@ -51,12 +53,13 @@ void Scene_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared
 				val->AttachFBOToTextureUnit(0, shader->SetTextureUnit("directionalShadowMaps", cascId, "shadowMap"), 0, 0);
 			}
 		}
-
 		++inputOffset;
 
-		for (auto omniLightIndex = 0; omniLightIndex < lightParam[1].Count + lightParam[2].Count; ++omniLightIndex)
+		auto hasOmniShadowFbo = CheckInputDataType<std::shared_ptr<Fbo_Handler>>(val, *m_inputs->at(inputOffset));
+
+		if (hasOmniShadowFbo) 
 		{
-			if (CheckInputDataType<std::shared_ptr<Fbo_Handler>>(val, *m_inputs->at(inputOffset)))
+			for (auto omniLightIndex = 0; omniLightIndex < lightParam[1].Count + lightParam[2].Count; ++omniLightIndex)
 			{
 				val->AttachFBOToTextureUnit(0, shader->SetTextureUnit("omniShadowMaps", omniLightIndex, "shadowMap"), 0, 0);
 
@@ -67,18 +70,15 @@ void Scene_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared
 				else
 				{
 					auto spotlightIndex = omniLightIndex - lightParam[1].Count;
-					shader->SetVariable("omniShadowMaps", lightParam[2].FarPlane, omniLightIndex, "farPlane");
-					shader->SetVariable("spotLights", lightParam[2].Position, spotlightIndex, "position");
-					shader->SetVariable("spotLights", lightParam[2].Color, spotlightIndex, "color");
-					shader->SetVariable("spotLights", lightParam[2].Direction, spotlightIndex, "direction");
-					shader->SetVariable("spotLights", lightParam[2].Edge, spotlightIndex, "edge");
+					shader->SetVariable("omniShadowMaps", lightParam[2].FarPlane[spotlightIndex], omniLightIndex, "farPlane");
+					shader->SetVariable("spotLights", lightParam[2].Position[spotlightIndex], spotlightIndex, "position");
+					shader->SetVariable("spotLights", lightParam[2].Color[spotlightIndex], spotlightIndex, "color");
+					shader->SetVariable("spotLights", lightParam[2].Direction[spotlightIndex], spotlightIndex, "direction");
+					shader->SetVariable("spotLights", lightParam[2].Edge[spotlightIndex], spotlightIndex, "edge");
 				}
 			}
-
-			++inputOffset;
 		}
-
-		auto inputTexBuffs = std::vector<std::string>{ "irradianceMap" , "prefilterMap", "brdfLUT", "AOMap", "depthMap" };
+		++inputOffset;
 
 		for(auto inputIndex = inputOffset; inputIndex < m_inputs->size(); ++inputIndex)
 		{
@@ -86,12 +86,11 @@ void Scene_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared
 			{
 				val->AttachFBOToTextureUnit(0, shader->SetTextureUnit(std::move(inputTexBuffs[inputIndex - inputOffset])), 0, 0);
 			}
-			++inputOffset;
 		}
 
 		for (auto roIndex = 0; roIndex < renderObj[shaderIndex].size(); ++roIndex)
 		{
-			auto ro = renderObj[shaderIndex][roIndex];
+			auto& ro = renderObj[shaderIndex][roIndex];
 			ro->RenderObject(*shader, std::move(RenderObjectParams{ true , true, &camParam->PrevProjView }));
 		}
 		shader->ValidateShaderObject();
