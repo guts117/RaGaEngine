@@ -600,7 +600,9 @@ struct RenderEngineMain::Impl
 			std::vector<GLfloat>{  1.0f,  1.0f, 0.0f,		 1.0f, 1.0f },
 		};
 
-		quad->push_back(std::move(std::make_shared<Mesh>(0, std::move(quadVertices), std::move(quadIndices), std::move(MeshGenParams()))));
+		auto qMesh = std::make_shared<Mesh>(0, std::move(quadVertices), std::move(quadIndices), std::move(MeshGenParams()));
+		quad->push_back(qMesh);
+		AddToMeshPool(std::move(qMesh));
 		quadRO = std::make_shared<std::vector<std::vector<std::shared_ptr<Render_Object>>>>();
 		auto qro = std::make_shared<Render_Object>(std::move(quad));
 		quadRO->push_back(std::vector<std::shared_ptr<Render_Object>>{qro});
@@ -640,7 +642,9 @@ struct RenderEngineMain::Impl
 
 		};
 
-		cwCube->push_back(std::move(std::make_shared<Mesh>(0, std::move(cwCubeVertices), std::move(cwCubeIndices), std::move(MeshGenParams()))));
+		auto cwMesh = std::make_shared<Mesh>(0, std::move(cwCubeVertices), std::move(cwCubeIndices), std::move(MeshGenParams()));
+		cwCube->push_back(cwMesh);
+		AddToMeshPool(std::move(cwMesh));
 		cwCubeRO = std::make_shared<std::vector<std::vector<std::shared_ptr<Render_Object>>>>();
 		auto cro = std::make_shared<Render_Object>(std::move(cwCube));
 		cwCubeRO->push_back(std::vector<std::shared_ptr<Render_Object>>{cro});
