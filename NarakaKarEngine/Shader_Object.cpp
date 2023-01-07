@@ -533,7 +533,7 @@ struct Shader_Object::Impl
 				glUniform4f(location, val->x, val->y, val->z, val->w);
 			}
 		}
-		else if (type == "int" || type.find("sample") != std::string::npos)
+		else if (type == "bool" || type == "int" || type.find("sample") != std::string::npos)
 		{
 			if (auto val = CheckInputDataType<GLint>(value))
 			{
