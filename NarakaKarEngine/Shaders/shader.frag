@@ -501,7 +501,7 @@ void main()
 
 	if(showAO)
 	{
-		ambient 			= vec3(1.0, 1.0, 1.0);
+		ambient 			= vec3(0.5, 0.5, 0.5);
 		finalColor			= vec4(ambient * aoFactor, 1.0);
 	}
 	else
