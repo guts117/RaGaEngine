@@ -50,7 +50,7 @@ void Scene_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared
 
 			if (CheckInputDataType<std::shared_ptr<Fbo_Handler>>(val, *m_inputs->at(inputOffset)))
 			{
-				val->AttachFBOToTextureUnit(0, shader->SetTextureUnit("directionalShadowMaps", cascId, "shadowMap"), 0, 0);
+				val->AttachFBOToTextureUnit(0, shader->SetTextureUnit("directionalShadowMaps", cascId, "shadowMap"), 0, cascId);
 			}
 		}
 		++inputOffset;

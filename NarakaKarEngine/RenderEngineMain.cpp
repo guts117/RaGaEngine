@@ -1326,6 +1326,8 @@ struct RenderEngineMain::Impl
 
 	void CreateObject() 
 	{	
+		std::vector<std::shared_ptr<Render_Object>> unrigStuff;
+
 		auto mesh0 = CreatePrism();
 		auto texMapDatas = std::vector<TexMapData>();
 		texMapDatas.push_back(TexMapData{ TexType::Albedo,		"Textures/rustediron2.png" });
@@ -1347,8 +1349,7 @@ struct RenderEngineMain::Impl
 
 		AddToModelMatrixPool(std::move(modelMatrix));
 		AddToPrevModelMatrixPool(std::move(prevModelMatrix));
-
-		sceneObjRO->push_back(std::vector<std::shared_ptr<Render_Object>>{mro});
+		unrigStuff.push_back(std::move(mro));
 
 
 		//auto rob = RenderObjectData{ std::make_shared<std::vector<Mesh>>(CreatePrism()), std::make_shared<std::map<TexType, std::vector<Texture>>>(), std::make_shared<glm::mat4>(1.0f), std::make_shared<glm::mat4>(1.0f) };
@@ -1360,15 +1361,29 @@ struct RenderEngineMain::Impl
 		//rob.CreateTextureMap(TexType::Glow, "Textures/Glow/small_metal_debris.jpg");
 		//renderObjDatas->push_back(std::make_shared<RenderObjectData>(rob));
 
+		mesh0 = CreatePlane();
+		texMapDatas = std::vector<TexMapData>();
+		texMapDatas.push_back(TexMapData{ TexType::Albedo,		"Textures/brick.jpg" });
+		texMapDatas.push_back(TexMapData{ TexType::Metallic,	"Textures/Metallic/brick.jpg" });
+		texMapDatas.push_back(TexMapData{ TexType::Roughness,	"Textures/Roughness/brick.jpg" });
+		texMapDatas.push_back(TexMapData{ TexType::Normal,		"Textures/Normal/brick.jpg" });
+		texMapDatas.push_back(TexMapData{ TexType::Parallax,	"Textures/Parallax/brick.jpg" });
+		texMapDatas.push_back(TexMapData{ TexType::Glow,		"Textures/Glow/brick.jpg" });
+		modelMatrix = std::make_shared<glm::mat4>(1.0f);
+		prevModelMatrix = std::make_shared<glm::mat4>(1.0f);
 
-		//rob = RenderObjectData{ std::make_shared<std::vector<Mesh>>(CreatePlane()), std::make_shared<std::map<TexType, std::vector<Texture>>>(), std::make_shared<glm::mat4>(1.0f), std::make_shared<glm::mat4>(1.0f) };
-		//rob.CreateTextureMap(TexType::Albedo, "Textures/brick.jpg");
-		//rob.CreateTextureMap(TexType::Metallic, "Textures/Metallic/brick.jpg");
-		//rob.CreateTextureMap(TexType::Roughness, "Textures/Roughness/brick.jpg");
-		//rob.CreateTextureMap(TexType::Normal, "Textures/Normal/brick.png");
-		//rob.CreateTextureMap(TexType::Parallax, "Textures/Parallax/brick.jpg");
-		//rob.CreateTextureMap(TexType::Glow, "Textures/Glow/brick.jpg");
-		//renderObjDatas->push_back(std::make_shared<RenderObjectData>(rob));
+		texMap = CreateTextureMap(std::move(texMapDatas));
+
+		mesh = std::make_unique<std::vector<std::weak_ptr<Mesh>>>();
+		mesh->push_back(mesh0);
+		AddToMeshPool(std::move(mesh0));
+
+		mro = std::make_shared<Render_Object>(std::move(mesh), std::move(texMap), modelMatrix, prevModelMatrix);
+
+		*modelMatrix = glm::translate(*modelMatrix, glm::vec3(0.0f, -4.0f, 0.0f));
+		AddToModelMatrixPool(std::move(modelMatrix));
+		AddToPrevModelMatrixPool(std::move(prevModelMatrix));
+		unrigStuff.push_back(std::move(mro));
 
 		//rob = RenderObjectData{ std::make_shared<std::vector<Mesh>>(CreatePlane()), std::make_shared<std::map<TexType, std::vector<Texture>>>(), std::make_shared<glm::mat4>(1.0f), std::make_shared<glm::mat4>(1.0f) };
 		//rob.CreateTextureMap(TexType::Albedo, "Textures/brick_floor.png");
@@ -1378,6 +1393,8 @@ struct RenderEngineMain::Impl
 		//rob.CreateTextureMap(TexType::Parallax, "Textures/Parallax/brick_floor.png");
 		//rob.CreateTextureMap(TexType::Glow, "Textures/Glow/brick_floor.png");
 		//renderObjDatas->push_back(std::make_shared<RenderObjectData>(rob));
+
+		sceneObjRO->push_back(unrigStuff);
 	}
 
 	void CreateShaders() {
@@ -2254,7 +2271,7 @@ GLFWwindow* RenderEngineMain::GetMainWindow()
 
 void RenderEngineMain::AddViewers()
 {
-	engineUI->AddSceneViewers(Pimpl()->ssaoBlurFbo->GetFBOBuffer(0, 0), "EditorScene", Editor, [this](bool isSelected) { Pimpl()->isEditorViewSelected = isSelected; });
+	engineUI->AddSceneViewers(Pimpl()->mainLight->GetShadowMap()->GetFBOBuffer(0, 0), "EditorScene", Editor, [this](bool isSelected) { Pimpl()->isEditorViewSelected = isSelected; });
 	engineUI->AddSceneViewers(Pimpl()->sceneFbo->GetFBOBuffer(0, 0), "InGameScene", InGame, [this](bool isSelected) { Pimpl()->mainWindow->SetCursorActive(!isSelected); Pimpl()->isGameViewSelected = isSelected; });
 }
 
