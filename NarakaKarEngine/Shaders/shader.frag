@@ -478,9 +478,9 @@ void main()
     uvec3 tiles    			= uvec3(uvec2(pixelPos.x / tileSizeInPixel.x, pixelPos.y / tileSizeInPixel.y), zTile);
     uint tileIndex 			= tiles.x + tileSizes.x * tiles.y + (tileSizes.x * tileSizes.y) * tiles.z;
 
-	vec4 finalColor 		=  CalcDirectionalLight(viewDir, newNormal, F0, albedo, metallic, roughness);
-	finalColor 				+= CalcPointLights(viewDir, newNormal, F0, albedo, metallic, roughness, tileIndex);
-	finalColor 				+= CalcSpotLights(viewDir, newNormal, F0, albedo, metallic, roughness);
+	vec4 finalColor 		=  vec4(0.0, 0.0, 0.0, 0.0);//CalcDirectionalLight(viewDir, newNormal, F0, albedo, metallic, roughness);
+	//finalColor 				+= CalcPointLights(viewDir, newNormal, F0, albedo, metallic, roughness, tileIndex);
+	//finalColor 				+= CalcSpotLights(viewDir, newNormal, F0, albedo, metallic, roughness);
 	
 	// ambient lighting (we now use IBL as the ambient term)
 	vec3 F 					= FresnelSchlickRoughness(max(dot(newNormal, viewDir), 0.0), F0, roughness);

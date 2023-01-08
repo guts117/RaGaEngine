@@ -897,7 +897,7 @@ struct RenderEngineMain::Impl
 		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(ssaoFbo)));
 		ssaoBlurRPHandler = std::make_shared<Ssao_Blur_Render_Pass_Handler>(ssaoBlurFbo, ssaoBlurShaders, inputs);
 
-		auto sceneShaders = std::vector<std::shared_ptr<Shader_Object>>{ unrigShader, rigShader, terrShader};
+		auto sceneShaders = std::vector<std::shared_ptr<Shader_Object>>{ unrigShader, rigShader, terrShader };
 		inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
 		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(mainLight->GetShadowMap())));
 		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(pointLights[0]->GetShadowMap())));
@@ -1337,7 +1337,7 @@ struct RenderEngineMain::Impl
 		MathUtil::CalcAverageNormals(indices, vertices, 5);
 		MathUtil::CalcAverageTangents(indices, vertices, 8);
 	
-		return std::make_shared<Mesh>(0, std::move(vertices), std::move(indices), std::move(MeshGenParams(true, true)));
+		return std::make_shared<Mesh>(0, std::move(vertices), std::move(indices), std::move(MeshGenParams{true, true}));
 	}
 
 	std::shared_ptr<Mesh> CreatePlane()
@@ -1357,7 +1357,7 @@ struct RenderEngineMain::Impl
 		MathUtil::CalcAverageNormals(indices, vertices, 5);
 		MathUtil::CalcAverageTangents(indices, vertices, 8);
 
-		return std::make_shared<Mesh>(0, std::move(vertices), std::move(indices), std::move(MeshGenParams()));
+		return std::make_shared<Mesh>(0, std::move(vertices), std::move(indices), std::move(MeshGenParams{ true, true }));
 	}
 
 	void CreateObject() 
@@ -2279,8 +2279,8 @@ GLFWwindow* RenderEngineMain::GetMainWindow()
 
 void RenderEngineMain::AddViewers()
 {
-	engineUI->AddSceneViewers(Pimpl()->depthMap->GetFBOBuffer(0, 0), "EditorScene", Editor, [this](bool isSelected) { Pimpl()->isEditorViewSelected = isSelected; });
-	engineUI->AddSceneViewers(Pimpl()->ssaoBlurFbo->GetFBOBuffer(0, 0), "InGameScene", InGame, [this](bool isSelected) { Pimpl()->mainWindow->SetCursorActive(!isSelected); Pimpl()->isGameViewSelected = isSelected; });
+	engineUI->AddSceneViewers(Pimpl()->ssaoBlurFbo->GetFBOBuffer(0, 0), "EditorScene", Editor, [this](bool isSelected) { Pimpl()->isEditorViewSelected = isSelected; });
+	engineUI->AddSceneViewers(Pimpl()->sceneFbo->GetFBOBuffer(0, 0), "InGameScene", InGame, [this](bool isSelected) { Pimpl()->mainWindow->SetCursorActive(!isSelected); Pimpl()->isGameViewSelected = isSelected; });
 }
 
 bool RenderEngineMain:: IsEnd()
