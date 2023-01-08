@@ -31,7 +31,7 @@ struct MathUtil
 
 		}
 
-		for (auto vertex : vertices) 
+		for (auto& vertex : vertices) 
 		{
 			glm::vec3 vec(vertex[normalOffset + 0], vertex[normalOffset + 1], vertex[normalOffset + 2]);
 			vec = glm::normalize(vec);
@@ -80,7 +80,7 @@ struct MathUtil
 			vertices[vertexId2][tangentId0] += Tangent.x; vertices[vertexId2][tangentId1] += Tangent.y; vertices[vertexId2][tangentId2] += Tangent.z;
 		}
 
-		for (auto vertex : vertices)
+		for (auto& vertex : vertices)
 		{
 			glm::vec3 vec(vertex[tangentOffset + 0], vertex[tangentOffset + 1], vertex[tangentOffset + 2]);
 			vec = glm::normalize(vec);

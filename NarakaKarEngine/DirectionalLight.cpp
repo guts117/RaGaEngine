@@ -27,12 +27,6 @@ DirectionalLight::DirectionalLight(GLuint shadowWidth, GLuint shadowHeight,
 	color = glm::vec3(red, green, blue);
 }
 
-void DirectionalLight::UseLight(GLuint ambientColorLocation,GLuint directionLocation) {
-
-	glUniform3f(ambientColorLocation, color.x, color.y, color.z);
-	glUniform3f(directionLocation, direction.x, direction.y, direction.z);
-}
-
 glm::mat4 DirectionalLight::CalculateLightTransform()
 {
 	glm::mat4 lTransform = lightProj * glm::lookAt(-direction, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -45,16 +39,6 @@ glm::mat4 DirectionalLight::CalculateCascadeLightTransform()
 	glm::vec3 right = glm::normalize(glm::cross(LitDir, glm::vec3(0.0f, 1.0f, 0.0f)));
 	up = glm::normalize(glm::cross(right, LitDir));
 	return glm::lookAt(-direction, glm::vec3(0.0f), up);
-}
-
-glm::vec3 DirectionalLight::GetLightUp()
-{
-	return up;
-}
-
-glm::vec3 DirectionalLight::GetLightDirection()
-{
-	return -direction;
 }
 
 float DirectionalLight::GetCascadeEnd(unsigned int i)

@@ -335,8 +335,6 @@ struct RenderEngineMain::Impl
 
 	GLfloat aircraftAngle = 0.0f;
 
-	glm::mat4 vView[NUM_CASCADES] = { glm::mat4() };
-
 	glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
 	glm::mat4 captureViews[6] =
 	{
@@ -429,7 +427,7 @@ struct RenderEngineMain::Impl
 		prevModelMatrixPool->reserve(100);
 		sceneObjRO->reserve(100);
 
-		CreateTerrain();
+		//CreateTerrain();
 		CreateObject();
 		CreateShaders();
 
@@ -851,7 +849,6 @@ struct RenderEngineMain::Impl
 		//skyboxTexture.LoadCubeMapSRGB(skyboxFaces);
 
 		auto camParam = CamParam{ camera->getCameraPosition(), camera->GetProjectionMatrix(), camera->CalculateViewMatrix(), camera->GetPreviousProjectionMatrix() };
-		CalcDirLightShadowCascades();
 		InitSSBOs();
 		CreateClusters();
 
@@ -877,13 +874,13 @@ struct RenderEngineMain::Impl
 		brdfRPHandler = std::make_shared<Brdf_Render_Pass_Handler>(brdfMap, brdfShaders);
 		brdfRPHandler->Update(*quadRO);
 
-		auto dirShadowShaders = std::vector<std::shared_ptr<Shader_Object>>{ dirShadowShader, animDirShadowShader, terrDirShadowShader };
+		auto dirShadowShaders = std::vector<std::shared_ptr<Shader_Object>>{ dirShadowShader/*, animDirShadowShader, terrDirShadowShader*/ };
 		dirShadowRPHandler = std::make_shared<Directional_Shadow_Map_Render_Pass_Handler>(mainLight->GetShadowMap(), dirShadowShaders);
 
-		auto ommiShadowShaders = std::vector<std::shared_ptr<Shader_Object>>{ omniShadowShader, animOmniShadowShader };
+		auto ommiShadowShaders = std::vector<std::shared_ptr<Shader_Object>>{ omniShadowShader/*, animOmniShadowShader*/ };
 		omniShadowRPHandler = std::make_shared<Omni_Directional_Shadow_Map_Render_Pass_Handler>(pointLights[0]->GetShadowMap(), ommiShadowShaders);
 
-		auto prezShaders = std::vector<std::shared_ptr<Shader_Object>>{ preZShader, animPreZShader, terrPreZShader};
+		auto prezShaders = std::vector<std::shared_ptr<Shader_Object>>{ preZShader/*, animPreZShader, terrPreZShader*/};
 		preZRPHandler = std::make_shared<PreZ_Render_Pass_Handler>(depthMap, prezShaders);
 
 		auto ssaoShaders = std::vector<std::shared_ptr<Shader_Object>>{ ssaoShader };
@@ -897,7 +894,7 @@ struct RenderEngineMain::Impl
 		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(ssaoFbo)));
 		ssaoBlurRPHandler = std::make_shared<Ssao_Blur_Render_Pass_Handler>(ssaoBlurFbo, ssaoBlurShaders, inputs);
 
-		auto sceneShaders = std::vector<std::shared_ptr<Shader_Object>>{ unrigShader, rigShader, terrShader };
+		auto sceneShaders = std::vector<std::shared_ptr<Shader_Object>>{ unrigShader/*, rigShader, terrShader*/};
 		inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
 		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(mainLight->GetShadowMap())));
 		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(pointLights[0]->GetShadowMap())));
@@ -961,37 +958,6 @@ struct RenderEngineMain::Impl
 		}
 		SSAONoiseTexture->LoadNativeTexture(ssaoNoiseData);
 	}
-
-	void CalcDirLightShadowCascades() 
-	{
-		//ToDo;
-		/*terrainShader->UseShader();
-		for (size_t i = 0; i < NUM_CASCADES; ++i)
-		{
-			glm::vec4 vView(0.0f, 0.0f, mainLight->GetCascadeEnd(i + 1), 1.0f);
-			glm::vec4 vClip = camera->GetProjectionMatrix() * vView;
-			printf("%F \n", vClip.z);
-			terrainShader->SetCascadeEndClipSpace(i, -vClip.z);
-		}
-
-		shaderList[0]->UseShader();
-		for (size_t i = 0; i < NUM_CASCADES; ++i)
-		{
-			glm::vec4 vView(0.0f, 0.0f, mainLight->GetCascadeEnd(i + 1), 1.0f);
-			glm::vec4 vClip = camera->GetProjectionMatrix() * vView;
-			printf("%F \n", vClip.z);
-			shaderList[0]->SetCascadeEndClipSpace(i, -vClip.z);
-		}
-
-		animShaderList[0]->UseShader();
-		for (size_t i = 0; i < NUM_CASCADES; ++i)
-		{
-			glm::vec4 vView(0.0f, 0.0f, mainLight->GetCascadeEnd(i + 1), 1.0f);
-			glm::vec4 vClip = camera->GetProjectionMatrix() * vView;
-			printf("%F \n", vClip.z);
-			animShaderList[0]->SetCascadeEndClipSpace(i, -vClip.z);
-		}*/
-	}
 	
 	void UpdateAtFrameBufferResize()
 	{
@@ -1007,8 +973,6 @@ struct RenderEngineMain::Impl
 			glNamedBufferSubData(screenToViewSSBO, 80, sizeof(data), &data);
 
 			m_SceneFboHandlerMgr->ResizeScreenFboHandlers(ScreenWidth, ScreenHeight);
-
-			CalcDirLightShadowCascades();
 			CreateClusters();
 		}
 	}
@@ -1320,10 +1284,10 @@ struct RenderEngineMain::Impl
 	std::shared_ptr<Mesh> CreatePrism()
 	{
 		std::vector<GLuint> indices = {
-					1,3,0,
-					2,3,1,
-					0,3,2,
-					2,1,0
+			1,3,0,
+			2,3,1,
+			0,3,2,
+			2,1,0
 		};
 
 		std::vector<std::vector<GLfloat>> vertices = {
@@ -1336,7 +1300,7 @@ struct RenderEngineMain::Impl
 
 		MathUtil::CalcAverageNormals(indices, vertices, 5);
 		MathUtil::CalcAverageTangents(indices, vertices, 8);
-	
+
 		return std::make_shared<Mesh>(0, std::move(vertices), std::move(indices), std::move(MeshGenParams{true, true}));
 	}
 
@@ -1685,17 +1649,16 @@ struct RenderEngineMain::Impl
 		auto testLitView = light->CalculateCascadeLightTransform();
 		light->CalcOrthProjs(camera->CalculateViewMatrix(), &testLitView, 60.0f);
 
-		auto direction = light->GetLightDirection();
-
 		glm::mat4 proj[NUM_CASCADES];
+		glm::mat4 vView[NUM_CASCADES];
 
 		for (auto i = 0; i < NUM_CASCADES; ++i)
 		{
-			vView[i] = glm::lookAt(mainLight->GetModlCent(i), light->GetModlCent(i) + glm::normalize(direction) * 0.2f, light->GetLightUp());
+			vView[i] = glm::lookAt(light->GetModlCent(i), light->GetModlCent(i) + glm::normalize(-light->direction) * 0.2f, light->up);
 			proj[i] = light->GetProjMat(vView[i], i);
 		}
 
-		auto lightParam = LightParam{ nullptr, proj, vView, &direction };
+		auto lightParam = LightParam{ nullptr, proj, vView };
 		dirShadowRPHandler->Update(*sceneObjRO, &camParam, &lightParam);
 	}
 
@@ -1768,60 +1731,72 @@ struct RenderEngineMain::Impl
 		ssaoBlurRPHandler->Update(*quadRO, &camParam);
 	}
 
-	void RenderPass(const CamParam& camParam, DirectionalLight* dirlight, PointLight* pointLights, SpotLight* spotLights)
+	struct LightData
 	{
-		auto direction = dirlight->GetLightDirection();
-		auto dirColor = dirlight->color;
-		glm::mat4 proj[NUM_CASCADES];
-
-		for (auto i = 0; i < NUM_CASCADES; ++i)
-		{
-			proj[i] = dirlight->GetProjMat(vView[i], i);
-		}
-
-		auto lightParams = std::vector<LightParam>();
-		auto lightParam = LightParam{ nullptr, proj, vView, &direction, nullptr, nullptr, 1, &dirColor };
-		lightParams.push_back(lightParam);
-
 		std::vector<glm::vec3> positions;
+		std::vector<glm::mat4> vView;
 		std::vector<glm::vec3> directions;
 		std::vector<glm::mat4> projections;
 		std::vector<GLfloat> farplanes;
 		std::vector<GLfloat> edges;
 		std::vector<glm::vec3> colors;
+	};
+
+	void RenderPass(const CamParam& camParam, DirectionalLight* dirlight, PointLight* pointLights, SpotLight* spotLights)
+	{
+		std::vector<LightData> lightDataList;
+		std::vector<LightParam> lightParamList;
+
+		lightDataList.push_back(LightData());
+		auto& lightData0 = lightDataList[0];
+		lightData0.directions.push_back(dirlight->direction);
+		lightData0.colors.push_back(dirlight->color);
+
+		for (auto i = 0; i < NUM_CASCADES; ++i)
+		{
+			lightData0.vView.push_back(glm::lookAt(dirlight->GetModlCent(i), dirlight->GetModlCent(i) + glm::normalize(-lightData0.directions[0]) * 0.2f, dirlight->up));
+			lightData0.projections.push_back(dirlight->GetProjMat(lightData0.vView[i], i));
+
+			glm::vec4 vViewTemp(0.0f, 0.0f, dirlight->GetCascadeEnd(i + 1), 1.0f);
+			auto vClip = camParam.Projection * vViewTemp;
+			//printf("%F \n", vClip.z);
+			lightData0.edges.push_back(-vClip.z);
+		}
+
+		auto lightParam = LightParam{ nullptr, &lightData0.projections[0], &lightData0.vView[0], &lightData0.directions[0], nullptr, &lightData0.edges[0], 1, &lightData0.colors[0]};
+		lightParamList.push_back(lightParam);
+
+		lightDataList.push_back(LightData());
+		auto& lightData1 = lightDataList[1];
 
 		for (auto i = 0; i < pointLightCount; ++i)
 		{
-			positions.push_back(pointLights[i].position);
-			projections.push_back(pointLights[i].lightProj);
-			farplanes.push_back(pointLights[i].farPlane);
-			colors.push_back(pointLights[i].color);
+			lightData1.positions.push_back(pointLights[i].position);
+			lightData1.projections.push_back(pointLights[i].lightProj);
+			lightData1.farplanes.push_back(pointLights[i].farPlane);
+			lightData1.colors.push_back(pointLights[i].color);
 		}
 
-		lightParam = LightParam(&positions[0], &projections[0], nullptr, nullptr, &farplanes[0], nullptr, pointLightCount, &colors[0]);
-		lightParams.push_back(lightParam);
-
-		positions.clear();
-		directions.clear();
-		projections.clear();
-		farplanes.clear();
-		edges.clear();
-		colors.clear();
+		lightParam = LightParam(&lightData1.positions[0], &lightData1.projections[0], nullptr, nullptr, &lightData1.farplanes[0], nullptr, pointLightCount, &lightData1.colors[0]);
+		lightParamList.push_back(lightParam);
+		
+		lightDataList.push_back(LightData());
+		auto& lightData2 = lightDataList[2];
 
 		for (auto i = 0; i < spotLightCount; ++i)
 		{
-			positions.push_back(spotLights[i].position);
-			directions.push_back(spotLights[i].direction);
-			projections.push_back(spotLights[i].lightProj);
-			farplanes.push_back(spotLights[i].farPlane);
-			edges.push_back(spotLights[i].procEdge);
-			colors.push_back(spotLights[i].color);
+			lightData2.positions.push_back(spotLights[i].position);
+			lightData2.directions.push_back(spotLights[i].direction);
+			lightData2.projections.push_back(spotLights[i].lightProj);
+			lightData2.farplanes.push_back(spotLights[i].farPlane);
+			lightData2.edges.push_back(spotLights[i].procEdge);
+			lightData2.colors.push_back(spotLights[i].color);
 		}
 
-		lightParam = LightParam(&positions[0], &projections[0], nullptr, &directions[0], &farplanes[0], &edges[0], spotLightCount, &colors[0]);
-		lightParams.push_back(lightParam);
+		lightParam = LightParam(&lightData2.positions[0], &lightData2.projections[0], nullptr, &lightData2.directions[0], &lightData2.farplanes[0], &lightData2.edges[0], spotLightCount, &lightData2.colors[0]);
+		lightParamList.push_back(lightParam);
 
-		sceneRPHandler->Update(*sceneObjRO, &camParam, &lightParams[0]);
+		sceneRPHandler->Update(*sceneObjRO, &camParam, &lightParamList[0]);
 	}
 
 	void Bloom()

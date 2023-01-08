@@ -46,7 +46,7 @@ void Scene_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared
 		for (auto cascId = 0; cascId < NUM_CASCADES; ++cascId)
 		{
 			shader->SetVariable("DirectionalLightTransforms", lightParam[0].Projection[cascId] * lightParam[0].View[cascId], cascId);
-			//shader->SetVariable("CascadeEndClipSpace", lightParam[0].Edge[cascId], cascId);
+			shader->SetVariable("CascadeEndClipSpace", lightParam[0].Edge[cascId], cascId);
 
 			if (CheckInputDataType<std::shared_ptr<Fbo_Handler>>(val, *m_inputs->at(inputOffset)))
 			{

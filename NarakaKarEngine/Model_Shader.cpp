@@ -107,11 +107,6 @@ void Model_Shader::CompileProgram()
 	}
 }
 
-void Model_Shader::SetDirectionalLight(DirectionalLight* dLight) {
-
-	dLight->UseLight(uniformDirectionalLight.uniformColor, uniformDirectionalLight.uniformDirection);
-}
-
 void Model_Shader::SetPointLight(std::shared_ptr<PointLight>* pLight, unsigned int lightCount, unsigned int textureUnit, unsigned int offset) {
 
 	if (lightCount > MAX_POINT_LIGHTS_WITH_SHADOW) lightCount = MAX_POINT_LIGHTS_WITH_SHADOW;
