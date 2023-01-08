@@ -21,8 +21,6 @@ namespace NarakaKarEngine
 				GLfloat xDir, GLfloat yDir, GLfloat zDir, 
 				std::shared_ptr<Scene_Fbo_Handler_Manager> sceneFboHndlrMgr);
 
-			void UseLight(GLuint ambientColorLocation, GLuint directionLocation);
-
 			glm::mat4 CalculateLightTransform();
 			glm::mat4 CalculateCascadeLightTransform();
 			std::shared_ptr<Fbo_Handler> GetShadowMap() { return shadowMap; }
