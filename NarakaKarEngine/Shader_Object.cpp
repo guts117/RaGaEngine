@@ -607,7 +607,7 @@ struct Shader_Object::Impl
 		}
 		else
 		{
-			printf("Error Parsing Shader: ToDo: Shader Data Type not supported yet. '%s'\n", type);
+			printf("Error Parsing Shader: ToDo: Shader Data Type not supported yet. '%s'\n", type.c_str());
 		}
 	}
 
@@ -637,7 +637,7 @@ struct Shader_Object::Impl
 				}
 				else
 				{
-					printf("Error Parsing Shader: Can't find member '%s'.'%s'\n", varName, memName);
+					printf("Error Parsing Shader: Can't find member '%s'.'%s'\n", varName.c_str(), memName.c_str());
 				}
 			}
 			else if (auto data = CheckInputDataType<SLStructTypeArr>(it->VarData))
@@ -652,7 +652,7 @@ struct Shader_Object::Impl
 				}
 				else
 				{
-					printf("Error Parsing Shader: Can't find member '%s'['%d'].'%s'\n", varName, index, memName);
+					printf("Error Parsing Shader: Can't find member '%s'['%d'].'%s'\n", varName.c_str(), index, memName.c_str());
 				}
 			}
 			else		
@@ -689,14 +689,14 @@ const GLuint& Shader_Object::GetShaderObjectProgramID() const
 	return Pimpl()->m_ShaderProgramID;
 }
 
-const GLuint& Shader_Object::SetTextureUnit(std::string&& textureName)
+const GLuint Shader_Object::SetTextureUnit(std::string&& textureName)
 {
 	GLint& texUnit = Pimpl()->m_TextureUnit;
 	SetVariable(std::move(textureName), texUnit);
 	return texUnit++;
 }
 
-const GLuint& Shader_Object::SetTextureUnit(std::string&& varName, const GLuint& index, std::string&& texName)
+const GLuint Shader_Object::SetTextureUnit(std::string&& varName, const GLuint& index, std::string&& texName)
 {
 	GLint& texUnit = Pimpl()->m_TextureUnit;
 	SetVariable(std::move(varName), texUnit, index, std::move(texName));
