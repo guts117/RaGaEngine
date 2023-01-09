@@ -1,7 +1,7 @@
 #version 460												
 
 const int NUM_CASCADES 				= 3;
-const int MAX_POINT_LIGHTS_SHADOW  	= 3;
+const int MAX_OMNI_LIGHTS_SHADOW  	= 3;
 const int MAX_SPOT_LIGHTS 			= 3;
 const float MAX_REFLECTION_LOD 		= 4.0;
 const float PI 						= 3.14159265359;
@@ -113,7 +113,7 @@ uniform float CascadeEndClipSpace[NUM_CASCADES];
 uniform DirectionalShadowMaps directionalShadowMaps[NUM_CASCADES];
 uniform sampler2D AOMap;
 uniform sampler2D depthMap;
-uniform OmniShadowMap omniShadowMaps[MAX_POINT_LIGHTS_SHADOW + MAX_SPOT_LIGHTS];
+uniform OmniShadowMap omniShadowMaps[MAX_OMNI_LIGHTS_SHADOW];
 
 uniform Material material;
 
@@ -372,9 +372,10 @@ vec4 CalcPointLights(vec3 viewDir, vec3 normal, vec3 F0, vec3 albedo, float meta
     uint lightIndexOffset 	= lightGrid[tileIndex].offset;
 
     //Reading from the global light list and calculating the radiance contribution of each light.
-    for(uint i = 0; i < lightCount; ++i){
+    for(uint i = 0; i < lightCount; ++i)
+	{
         uint lightIndex		= globalLightIndexList[lightIndexOffset + i];
-        totalColor 			+= CalcPointLight(pointLight[lightIndex], viewDir, normal, F0, albedo, metallic, roughness, lightIndex);
+		totalColor 			+= CalcPointLight(pointLight[lightIndex], viewDir, normal, F0, albedo, metallic, roughness, lightIndex);
     }
 
 	return totalColor;
@@ -475,7 +476,8 @@ void main()
     uvec3 tiles    			= uvec3(uvec2(pixelPos.x / tileSizeInPixel.x, pixelPos.y / tileSizeInPixel.y), zTile);
     uint tileIndex 			= tiles.x + tileSizes.x * tiles.y + (tileSizes.x * tileSizes.y) * tiles.z;
 
-	vec4 finalColor 		= CalcDirectionalLight(viewDir, newNormal, F0, albedo, metallic, roughness);
+	vec4 finalColor 		= vec4(0.0, 0.0, 0.0, 0.0);
+	finalColor 				+= CalcDirectionalLight(viewDir, newNormal, F0, albedo, metallic, roughness);
 	finalColor 				+= CalcPointLights(viewDir, newNormal, F0, albedo, metallic, roughness, tileIndex);
 	finalColor 				+= CalcSpotLights(viewDir, newNormal, F0, albedo, metallic, roughness);
 	

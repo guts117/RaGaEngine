@@ -165,6 +165,8 @@ struct RenderEngineMain::Impl
 	std::shared_ptr <Fbo_Handler> bloomFbo;
 	std::shared_ptr <Fbo_Handler> exposureFbo;
 
+	std::shared_ptr <Fbo_Handler> omniShadowMaps;
+
 	std::unique_ptr < Shader_Object > billboardShader;
 	std::unique_ptr < Particle_Shader> particleShader = std::make_unique<Particle_Shader>();
 
@@ -582,6 +584,7 @@ struct RenderEngineMain::Impl
 		motionBlurFbo = m_SceneFboHandlerMgr->FindFboHandler("Motion_Blur_Pass");
 		bloomFbo = m_SceneFboHandlerMgr->FindFboHandler("Bloom_Pass");
 		exposureFbo = m_SceneFboHandlerMgr->FindFboHandler("Final_Output_Pass");
+		omniShadowMaps = m_SceneFboHandlerMgr->FindFboHandler("Omni_Shadow_Map_Pass");
 
 		quad = std::make_unique <std::vector<std::weak_ptr<Mesh>>>();
 
@@ -782,7 +785,7 @@ struct RenderEngineMain::Impl
 		pointLights[0] = std::make_unique < PointLight>(512, 512,
 			0.1f, 100.0f,
 			0.0f, 0.0f, 3.0f,
-			12.0f - terrainScaleFactor, 40.0f, 10.0f - terrainScaleFactor,
+			12.0f - terrainScaleFactor, 5.0f, 10.0f - terrainScaleFactor,
 			m_SceneFboHandlerMgr);
 
 		pointLightCount++;
@@ -790,7 +793,7 @@ struct RenderEngineMain::Impl
 		pointLights[1] = std::make_unique < PointLight>(512, 512,
 			0.1f, 100.0f,
 			3.0f, 0.0f, 0.0f,
-			-12.0f - terrainScaleFactor, 40.0f, 10.0f - terrainScaleFactor,
+			-12.0f - terrainScaleFactor, 5.0f, 10.0f - terrainScaleFactor,
 			m_SceneFboHandlerMgr);
 
 		pointLightCount++;
@@ -878,7 +881,7 @@ struct RenderEngineMain::Impl
 		dirShadowRPHandler = std::make_shared<Directional_Shadow_Map_Render_Pass_Handler>(mainLight->GetShadowMap(), dirShadowShaders);
 
 		auto ommiShadowShaders = std::vector<std::shared_ptr<Shader_Object>>{ omniShadowShader/*, animOmniShadowShader*/ };
-		omniShadowRPHandler = std::make_shared<Omni_Directional_Shadow_Map_Render_Pass_Handler>(pointLights[0]->GetShadowMap(), ommiShadowShaders);
+		omniShadowRPHandler = std::make_shared<Omni_Directional_Shadow_Map_Render_Pass_Handler>(omniShadowMaps, ommiShadowShaders);
 
 		auto prezShaders = std::vector<std::shared_ptr<Shader_Object>>{ preZShader/*, animPreZShader, terrPreZShader*/};
 		preZRPHandler = std::make_shared<PreZ_Render_Pass_Handler>(depthMap, prezShaders);
@@ -897,7 +900,7 @@ struct RenderEngineMain::Impl
 		auto sceneShaders = std::vector<std::shared_ptr<Shader_Object>>{ unrigShader/*, rigShader, terrShader*/};
 		inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
 		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(mainLight->GetShadowMap())));
-		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(pointLights[0]->GetShadowMap())));
+		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(omniShadowMaps)));
 		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(irradianceMap)));
 		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(prefilterMap)));
 		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(brdfMap)));
@@ -1083,17 +1086,17 @@ struct RenderEngineMain::Impl
 			CullLight();
 			SSAOPass(camParam);
 			SSAOBlurPass(camParam);
-			RenderPass(camParam, mainLight.get(), pointLights[0].get(), spotLights[0].get());
+			RenderPass(camParam, mainLight.get(), pointLights, spotLights);
 			//skybox->DrawHDRSkybox();
-			Bloom();
-			MotionBlurPass(camParam);
+			//Bloom();
+			//MotionBlurPass(camParam);
 
 			auto lowerLight = camParam.Position;
 			lowerLight.y -= 0.1f;
 			spotLights[0]->SetFlash(lowerLight, camera->getCameraDirection());
 		}
 
-		RenderToDefaultFB();
+		//RenderToDefaultFB();
 
 		camera->UpdatePreviousMatrices();
 		glUseProgram(0);
@@ -1363,11 +1366,11 @@ struct RenderEngineMain::Impl
 
 		mesh0 = CreatePlane();
 		texMapDatas = std::vector<TexMapData>();
-		texMapDatas.push_back(TexMapData{ TexType::Albedo,		"Textures/brick.jpg" });
+		texMapDatas.push_back(TexMapData{ TexType::Albedo,		"Textures/plain.jpg" });
 		texMapDatas.push_back(TexMapData{ TexType::Metallic,	"Textures/Metallic/brick.jpg" });
 		texMapDatas.push_back(TexMapData{ TexType::Roughness,	"Textures/Roughness/brick.jpg" });
-		texMapDatas.push_back(TexMapData{ TexType::Normal,		"Textures/Normal/brick.jpg" });
-		texMapDatas.push_back(TexMapData{ TexType::Parallax,	"Textures/Parallax/brick.jpg" });
+		texMapDatas.push_back(TexMapData{ TexType::Normal,		"Textures/plain.jpg" });
+		texMapDatas.push_back(TexMapData{ TexType::Parallax,	"Textures/plain.jpg" });
 		texMapDatas.push_back(TexMapData{ TexType::Glow,		"Textures/Glow/brick.jpg" });
 		modelMatrix = std::make_shared<glm::mat4>(1.0f);
 		prevModelMatrix = std::make_shared<glm::mat4>(1.0f);
@@ -1699,7 +1702,7 @@ struct RenderEngineMain::Impl
 	void CullLight()
 	{
 		visibleClusterCompShader->UseShader();
-		depthMap->AttachFBOToTextureUnit(0, GL_TEXTURE0, 0, 0);
+		depthMap->AttachFBOToTextureUnit(0, 0, 0, 0);
 		visibleClusterCompShader->Dispatch(ScreenWidth / 32, ScreenHeight / 30, 1);
 
 		//unsigned int count = 0;
@@ -1759,56 +1762,53 @@ struct RenderEngineMain::Impl
 		std::vector<glm::vec3> colors;
 	};
 
-	void RenderPass(const CamParam& camParam, DirectionalLight* dirlight, PointLight* pointLights, SpotLight* spotLights)
+	void RenderPass(const CamParam& camParam, DirectionalLight* dirlight, std::shared_ptr<PointLight>* pointLights, std::shared_ptr<SpotLight>* spotLights)
 	{
-		std::vector<LightData> lightDataList;
+		std::vector<LightData> lightDataList(pointLightCount + spotLightCount, LightData());
 		std::vector<LightParam> lightParamList;
 
-		auto lightData = LightData();
-		lightData.directions.push_back(dirlight->direction);
-		lightData.colors.push_back(dirlight->color);
+		auto lightData = &lightDataList[0];
+		lightData->directions.push_back(dirlight->direction);
+		lightData->colors.push_back(dirlight->color);
 
 		for (auto i = 0; i < NUM_CASCADES; ++i)
 		{
-			lightData.vView.push_back(glm::lookAt(dirlight->GetModlCent(i), dirlight->GetModlCent(i) + glm::normalize(-lightData.directions[0]) * 0.2f, dirlight->up));
-			lightData.projections.push_back(dirlight->GetProjMat(lightData.vView[i], i));
+			lightData->vView.push_back(glm::lookAt(dirlight->GetModlCent(i), dirlight->GetModlCent(i) + glm::normalize(-lightData->directions[0]) * 0.2f, dirlight->up));
+			lightData->projections.push_back(dirlight->GetProjMat(lightData->vView[i], i));
 
 			glm::vec4 vViewTemp(0.0f, 0.0f, dirlight->GetCascadeEnd(i + 1), 1.0f);
 			auto vClip = camParam.Projection * vViewTemp;
 			//printf("%F \n", vClip.z);
-			lightData.edges.push_back(-vClip.z);
+			lightData->edges.push_back(-vClip.z);
 		}
 
-		auto lightParam = LightParam{ nullptr, &lightData.projections[0], &lightData.vView[0], &lightData.directions[0], nullptr, &lightData.edges[0], 1, &lightData.colors[0]};
+		auto lightParam = LightParam{ nullptr, &lightData->projections[0], &lightData->vView[0], &lightData->directions[0], nullptr, &lightData->edges[0], 1, &lightData->colors[0]};
 		lightParamList.push_back(std::move(lightParam));
-		lightDataList.push_back(std::move(lightData));
 
-		lightData = LightData();
+		lightData = &lightDataList[1];
 
 		for (auto i = 0; i < pointLightCount; ++i)
 		{
-			lightData.farplanes.push_back(pointLights[i].farPlane);
+			lightData->farplanes.push_back(pointLights[i]->farPlane);
 		}
 
-		lightParam = LightParam(nullptr, nullptr, nullptr, nullptr, &lightData.farplanes[0], nullptr, pointLightCount, nullptr);
+		lightParam = LightParam(nullptr, nullptr, nullptr, nullptr, &lightData->farplanes[0], nullptr, pointLightCount, nullptr);
 		lightParamList.push_back(std::move(lightParam));
-		lightDataList.push_back(std::move(lightData));
 
-		lightData = LightData();
+		lightData = &lightDataList[2];
 
 		for (auto i = 0; i < spotLightCount; ++i)
 		{
-			lightData.positions.push_back(spotLights[i].position);
-			lightData.directions.push_back(spotLights[i].direction);
-			lightData.projections.push_back(spotLights[i].lightProj);
-			lightData.farplanes.push_back(spotLights[i].farPlane);
-			lightData.edges.push_back(spotLights[i].procEdge);
-			lightData.colors.push_back(spotLights[i].color);
+			lightData->positions.push_back(spotLights[i]->position);
+			lightData->directions.push_back(spotLights[i]->direction);
+			lightData->projections.push_back(spotLights[i]->lightProj);
+			lightData->farplanes.push_back(spotLights[i]->farPlane);
+			lightData->edges.push_back(spotLights[i]->procEdge);
+			lightData->colors.push_back(spotLights[i]->color);
 		}
 
-		lightParam = LightParam(&lightData.positions[0], &lightData.projections[0], nullptr, &lightData.directions[0], &lightData.farplanes[0], &lightData.edges[0], spotLightCount, &lightData.colors[0]);
+		lightParam = LightParam(&lightData->positions[0], &lightData->projections[0], nullptr, &lightData->directions[0], &lightData->farplanes[0], &lightData->edges[0], spotLightCount, &lightData->colors[0]);
 		lightParamList.push_back(std::move(lightParam));
-		lightDataList.push_back(std::move(lightData));
 
 		sceneRPHandler->Update(*sceneObjRO, &camParam, &lightParamList[0]);
 	}

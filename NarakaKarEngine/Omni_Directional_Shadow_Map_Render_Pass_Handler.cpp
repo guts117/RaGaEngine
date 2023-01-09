@@ -17,8 +17,8 @@ Omni_Directional_Shadow_Map_Render_Pass_Handler::Omni_Directional_Shadow_Map_Ren
 
 void SetLightTransform(const Shader_Object* shader, const int& lightIndex, const LightParam* lightParam)
 {
-	auto position = lightParam->Position[lightIndex];
-	auto projection = lightParam->Projection[lightIndex];
+	auto& position = lightParam->Position[lightIndex];
+	auto& projection = lightParam->Projection[lightIndex];
 
 	std::vector<glm::mat4> lightMatrices = 
 	{
@@ -72,9 +72,8 @@ void Omni_Directional_Shadow_Map_Render_Pass_Handler::Update(const std::vector<s
 				}
 			}
 		}
-
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 Omni_Directional_Shadow_Map_Render_Pass_Handler::~Omni_Directional_Shadow_Map_Render_Pass_Handler() = default;
