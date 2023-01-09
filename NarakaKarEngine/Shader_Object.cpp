@@ -371,8 +371,8 @@ struct Shader_Object::Impl
 
 			for (auto var = 0; var < defUniforms.size(); ++var)
 			{
-				auto type = defUniforms[var].type;
-				auto fullVarName = defUniforms[var].name;
+				auto& type = defUniforms[var].type;
+				auto& fullVarName = defUniforms[var].name;
 
 				if (fullVarName.ends_with("]"))
 				{
