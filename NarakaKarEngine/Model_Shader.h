@@ -13,8 +13,6 @@ namespace NarakaKarEngine
 		public:
 			Model_Shader() = default;
 
-			void SetPointLight(std::shared_ptr<PointLight>* pLight, unsigned int lightCount, unsigned int textureUnit, unsigned int offset);
-			void SetSpotLight(std::shared_ptr<SpotLight>* sLight, unsigned int lightCount, unsigned int textureUnit, unsigned int offset);
 			void SetDirectionalShadowMaps(DirectionalLight* light, unsigned int i, GLuint textureUnit);
 			void SetSkybox(GLuint txtureUnit);
 			void SetIrradianceMap(GLuint textureUnit);

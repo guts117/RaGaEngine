@@ -20,10 +20,6 @@ namespace NarakaKarEngine
 				GLfloat xDir, GLfloat yDir, GLfloat zDir,
 				GLfloat edg, std::shared_ptr<Scene_Fbo_Handler_Manager> sceneFboHndlrMgr);
 
-			void UseLight(GLuint ambientColorLocation,
-				GLuint positionLocation, GLuint directionLocation,
-				GLuint edgeLocation);
-
 			void SetFlash(glm::vec3 pos, glm::vec3 dir);
 
 			void Toggle() { isOn = !isOn; }

@@ -35,7 +35,7 @@ void SetLightTransform(const Shader_Object* shader, const int& lightIndex, const
 
 	for (auto i = 0; i < lightMatrices.size(); ++i) 
 	{
-		shader->SetVariable("lightMatrices", lightMatrices[i]);
+		shader->SetVariable("lightMatrices", lightMatrices[i], i);
 	}
 }
 
@@ -43,14 +43,13 @@ void Omni_Directional_Shadow_Map_Render_Pass_Handler::Update(const std::vector<s
 {
 	for (auto lightIndex = 0; lightIndex < lightParam->Count; ++lightIndex)
 	{
-		m_fboHandler->BindFBO(lightIndex);
-
 		glViewport(0, 0, m_fboHandler->GetFBOWidth(lightIndex), m_fboHandler->GetFBOHeight(lightIndex));
+		m_fboHandler->BindFBO(lightIndex);
 		glClear(GL_DEPTH_BUFFER_BIT);
 
 		for (auto shaderIndex = 0; shaderIndex < m_shaderVec->size(); ++shaderIndex)
 		{
-			auto shader = m_shaderVec->at(shaderIndex);
+			auto& shader = m_shaderVec->at(shaderIndex);
 
 			shader->ResetTextureUnit(0);
 			shader->UseShaderObject();
@@ -61,7 +60,7 @@ void Omni_Directional_Shadow_Map_Render_Pass_Handler::Update(const std::vector<s
 
 			for (auto roIndex = 0; roIndex < renderObj[shaderIndex].size(); ++roIndex)
 			{
-				auto ro = renderObj[shaderIndex][roIndex];
+				auto& ro = renderObj[shaderIndex][roIndex];
 				if (ro->IsTesselated())
 				{
 					shader->SetVariable("eyePosition", camParam->Position);

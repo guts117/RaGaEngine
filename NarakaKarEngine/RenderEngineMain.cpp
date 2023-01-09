@@ -1075,9 +1075,9 @@ struct RenderEngineMain::Impl
 
 			UpdateObjectTransforms();
 			auto camParam = CamParam{ camera->getCameraPosition(), camera->GetProjectionMatrix(), camera->CalculateViewMatrix(), camera->GetPreviousProjectionMatrix(), framesPerSec };
+			
 			DirectionalShadowMapPass(mainLight.get(), camParam);
-
-			OmniShadowMapPass(*omniDirLights);
+			OmniShadowMapPass(*omniDirLights, camParam);
 
 			PreZPass(camParam);
 			CullLight();
@@ -1679,7 +1679,7 @@ struct RenderEngineMain::Impl
 		dirShadowRPHandler->Update(*sceneObjRO, &camParam, &lightParam);
 	}
 
-	void OmniShadowMapPass(const std::vector<std::shared_ptr<PointLight>>& lights) 
+	void OmniShadowMapPass(const std::vector<std::shared_ptr<PointLight>>& lights, const CamParam& camParam) 
 	{
 		std::vector<glm::vec3> positions;
 		std::vector<glm::mat4> projections;
@@ -1693,7 +1693,7 @@ struct RenderEngineMain::Impl
 		}
 
 		auto lightParam = LightParam(&positions[0], &projections[0], nullptr, nullptr, &farplanes[0], nullptr, lights.size());
-		omniShadowRPHandler->Update(*sceneObjRO, nullptr, &lightParam);
+		omniShadowRPHandler->Update(*sceneObjRO, &camParam, &lightParam);
 	}
 
 	void CullLight()
@@ -1764,54 +1764,51 @@ struct RenderEngineMain::Impl
 		std::vector<LightData> lightDataList;
 		std::vector<LightParam> lightParamList;
 
-		lightDataList.push_back(LightData());
-		auto& lightData0 = lightDataList[0];
-		lightData0.directions.push_back(dirlight->direction);
-		lightData0.colors.push_back(dirlight->color);
+		auto lightData = LightData();
+		lightData.directions.push_back(dirlight->direction);
+		lightData.colors.push_back(dirlight->color);
 
 		for (auto i = 0; i < NUM_CASCADES; ++i)
 		{
-			lightData0.vView.push_back(glm::lookAt(dirlight->GetModlCent(i), dirlight->GetModlCent(i) + glm::normalize(-lightData0.directions[0]) * 0.2f, dirlight->up));
-			lightData0.projections.push_back(dirlight->GetProjMat(lightData0.vView[i], i));
+			lightData.vView.push_back(glm::lookAt(dirlight->GetModlCent(i), dirlight->GetModlCent(i) + glm::normalize(-lightData.directions[0]) * 0.2f, dirlight->up));
+			lightData.projections.push_back(dirlight->GetProjMat(lightData.vView[i], i));
 
 			glm::vec4 vViewTemp(0.0f, 0.0f, dirlight->GetCascadeEnd(i + 1), 1.0f);
 			auto vClip = camParam.Projection * vViewTemp;
 			//printf("%F \n", vClip.z);
-			lightData0.edges.push_back(-vClip.z);
+			lightData.edges.push_back(-vClip.z);
 		}
 
-		auto lightParam = LightParam{ nullptr, &lightData0.projections[0], &lightData0.vView[0], &lightData0.directions[0], nullptr, &lightData0.edges[0], 1, &lightData0.colors[0]};
-		lightParamList.push_back(lightParam);
+		auto lightParam = LightParam{ nullptr, &lightData.projections[0], &lightData.vView[0], &lightData.directions[0], nullptr, &lightData.edges[0], 1, &lightData.colors[0]};
+		lightParamList.push_back(std::move(lightParam));
+		lightDataList.push_back(std::move(lightData));
 
-		lightDataList.push_back(LightData());
-		auto& lightData1 = lightDataList[1];
+		lightData = LightData();
 
 		for (auto i = 0; i < pointLightCount; ++i)
 		{
-			lightData1.positions.push_back(pointLights[i].position);
-			lightData1.projections.push_back(pointLights[i].lightProj);
-			lightData1.farplanes.push_back(pointLights[i].farPlane);
-			lightData1.colors.push_back(pointLights[i].color);
+			lightData.farplanes.push_back(pointLights[i].farPlane);
 		}
 
-		lightParam = LightParam(&lightData1.positions[0], &lightData1.projections[0], nullptr, nullptr, &lightData1.farplanes[0], nullptr, pointLightCount, &lightData1.colors[0]);
-		lightParamList.push_back(lightParam);
-		
-		lightDataList.push_back(LightData());
-		auto& lightData2 = lightDataList[2];
+		lightParam = LightParam(nullptr, nullptr, nullptr, nullptr, &lightData.farplanes[0], nullptr, pointLightCount, nullptr);
+		lightParamList.push_back(std::move(lightParam));
+		lightDataList.push_back(std::move(lightData));
+
+		lightData = LightData();
 
 		for (auto i = 0; i < spotLightCount; ++i)
 		{
-			lightData2.positions.push_back(spotLights[i].position);
-			lightData2.directions.push_back(spotLights[i].direction);
-			lightData2.projections.push_back(spotLights[i].lightProj);
-			lightData2.farplanes.push_back(spotLights[i].farPlane);
-			lightData2.edges.push_back(spotLights[i].procEdge);
-			lightData2.colors.push_back(spotLights[i].color);
+			lightData.positions.push_back(spotLights[i].position);
+			lightData.directions.push_back(spotLights[i].direction);
+			lightData.projections.push_back(spotLights[i].lightProj);
+			lightData.farplanes.push_back(spotLights[i].farPlane);
+			lightData.edges.push_back(spotLights[i].procEdge);
+			lightData.colors.push_back(spotLights[i].color);
 		}
 
-		lightParam = LightParam(&lightData2.positions[0], &lightData2.projections[0], nullptr, &lightData2.directions[0], &lightData2.farplanes[0], &lightData2.edges[0], spotLightCount, &lightData2.colors[0]);
-		lightParamList.push_back(lightParam);
+		lightParam = LightParam(&lightData.positions[0], &lightData.projections[0], nullptr, &lightData.directions[0], &lightData.farplanes[0], &lightData.edges[0], spotLightCount, &lightData.colors[0]);
+		lightParamList.push_back(std::move(lightParam));
+		lightDataList.push_back(std::move(lightData));
 
 		sceneRPHandler->Update(*sceneObjRO, &camParam, &lightParamList[0]);
 	}
@@ -2271,7 +2268,7 @@ GLFWwindow* RenderEngineMain::GetMainWindow()
 
 void RenderEngineMain::AddViewers()
 {
-	engineUI->AddSceneViewers(Pimpl()->mainLight->GetShadowMap()->GetFBOBuffer(0, 0), "EditorScene", Editor, [this](bool isSelected) { Pimpl()->isEditorViewSelected = isSelected; });
+	engineUI->AddSceneViewers(Pimpl()->ssaoBlurFbo->GetFBOBuffer(0, 0), "EditorScene", Editor, [this](bool isSelected) { Pimpl()->isEditorViewSelected = isSelected; });
 	engineUI->AddSceneViewers(Pimpl()->sceneFbo->GetFBOBuffer(0, 0), "InGameScene", InGame, [this](bool isSelected) { Pimpl()->mainWindow->SetCursorActive(!isSelected); Pimpl()->isGameViewSelected = isSelected; });
 }
 

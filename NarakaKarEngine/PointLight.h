@@ -20,9 +20,6 @@ namespace NarakaKarEngine
 				GLfloat xPos, GLfloat yPos, GLfloat zPos,
 				std::shared_ptr<Scene_Fbo_Handler_Manager> sceneFboHndlrMgr);
 
-			void UseLight(GLuint ambientColorLocation,
-				GLuint positionLocation);
-
 			glm::vec3 position;
 			GLfloat farPlane{ 0.0f };
 			glm::vec3 color = glm::vec3(1.0f, 1.0f, 1.0f);;

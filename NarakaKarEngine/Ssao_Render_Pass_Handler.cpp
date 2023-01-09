@@ -50,8 +50,6 @@ void Ssao_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared_
 	//clear color buffer
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	std::shared_ptr<Fbo_Handler> val;
-
 	for (auto shaderIndex = 0; shaderIndex < m_shaderVec->size(); ++shaderIndex)
 	{
 		auto& shader = m_shaderVec->at(shaderIndex);
@@ -59,9 +57,9 @@ void Ssao_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared_
 		shader->ResetTextureUnit(0);
 		shader->UseShaderObject();
 
-		if (CheckInputDataType<std::shared_ptr<Fbo_Handler>>(val, *m_inputs->at(0)))
+		if (auto val = CheckInputDataType<std::shared_ptr<Fbo_Handler>>(*m_inputs->at(0)))
 		{
-			val->AttachFBOToTextureUnit(0, shader->SetTextureUnit("theTexture"), 0, 0);
+			val->get()->AttachFBOToTextureUnit(0, shader->SetTextureUnit("theTexture"), 0, 0);
 		}
 
 		shader->SetVariable("SampleRad", 0.1f);

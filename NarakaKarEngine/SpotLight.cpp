@@ -26,22 +26,6 @@ SpotLight::SpotLight(GLuint shadowWidth, GLuint shadowHeight,
 	isOn = true;
 }
 
-void SpotLight::UseLight(GLuint ambientColorLocation, 
-					    GLuint positionLocation, GLuint directionLocation, 
-						GLuint edgeLocation){
-
-	if (isOn) {
-		glUniform3f(ambientColorLocation, color.x, color.y, color.z);
-	}
-	else {
-		glUniform3f(ambientColorLocation, 0.0f, 0.0f, 0.0f);
-	}
-	glUniform3f(positionLocation, position.x, position.y, position.z);
-
-	glUniform3f(directionLocation, direction.x, direction.y, direction.z);
-	glUniform1f(edgeLocation, procEdge);
-}
-
 void SpotLight::SetFlash(glm::vec3 pos, glm::vec3 dir)
 {
 	position = pos;

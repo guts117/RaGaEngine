@@ -31,7 +31,7 @@ namespace NarakaKarEngine
 			const glm::vec3* Direction = nullptr;
 			const GLfloat* FarPlane = nullptr;
 			const GLfloat* Edge = nullptr;  //CascadeEnd
-			int Count = 0;
+			GLuint Count = 0;
 			glm::vec3* Color = nullptr;
 		};
 
@@ -69,18 +69,9 @@ namespace NarakaKarEngine
 		protected:
 
 			template <typename T>
-			bool CheckInputDataType(T& dat, const std::any& data) noexcept
+			const T* CheckInputDataType(const std::any& data) noexcept
 			{
-				try
-				{
-					dat = std::any_cast<T>(data);
-					return true;
-				}
-				catch (const std::bad_any_cast& e)
-				{
-					std::cout << e.what() << std::endl;
-					return false;
-				}
+				return std::any_cast<T>(&data);
 			}
 
 			std::shared_ptr<Fbo_Handler> m_fboHandler;

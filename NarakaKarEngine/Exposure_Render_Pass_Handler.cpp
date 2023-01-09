@@ -23,8 +23,6 @@ void Exposure_Render_Pass_Handler::Update(const std::vector<std::vector<std::sha
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	std::shared_ptr<Fbo_Handler> val;
-
 	for (auto shaderIndex = 0; shaderIndex < m_shaderVec->size(); ++shaderIndex)
 	{
 		auto& shader = m_shaderVec->at(shaderIndex);
@@ -35,14 +33,14 @@ void Exposure_Render_Pass_Handler::Update(const std::vector<std::vector<std::sha
 		shader->SetVariable("hdr", 1);
 		shader->SetVariable("exposure", 1.0f);
 
-		if (CheckInputDataType<std::shared_ptr<Fbo_Handler>>(val, *m_inputs->at(0)))
+		if (auto val = CheckInputDataType<std::shared_ptr<Fbo_Handler>>(*m_inputs->at(0)))
 		{
-			val->AttachFBOToTextureUnit(1, shader->SetTextureUnit("blurTexture"), 0, 0);
+			val->get()->AttachFBOToTextureUnit(1, shader->SetTextureUnit("blurTexture"), 0, 0);
 		}
 
-		if (CheckInputDataType<std::shared_ptr<Fbo_Handler>>(val, *m_inputs->at(1)))
+		if (auto val = CheckInputDataType<std::shared_ptr<Fbo_Handler>>(*m_inputs->at(1)))
 		{
-			val->AttachFBOToTextureUnit(0, shader->SetTextureUnit("theTexture"), 0, 0);
+			val->get()->AttachFBOToTextureUnit(0, shader->SetTextureUnit("theTexture"), 0, 0);
 		}
 
 		for (auto roIndex = 0; roIndex < renderObj[shaderIndex].size(); ++roIndex)

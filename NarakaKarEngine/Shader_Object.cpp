@@ -483,18 +483,9 @@ struct Shader_Object::Impl
 	}
 
 	template <typename T>
-	std::shared_ptr<T> CheckInputDataType(const std::any& data) const
+	const T* CheckInputDataType(const std::any& data) const
 	{
-		try
-		{
-			auto dat = std::any_cast<T>(data);
-			return std::make_shared<T>(dat);
-		}
-		catch(const std::bad_any_cast& e)
-		{
-			//std::cout << e.what() << std::endl;
-			return nullptr;
-		}
+		return std::any_cast<T>(&data);
 	}
 
 	void SetShaderData(const std::string& type, const GLint& location, const std::any& value) const
@@ -521,8 +512,8 @@ struct Shader_Object::Impl
 			}
 			else if(auto val = CheckInputDataType<std::tuple<GLint, glm::vec3*>>(value))
 			{
-				auto size = std::get<0>(*val);
-				auto dataPtr = std::get<1>(*val);
+				auto& size = std::get<0>(*val);
+				auto& dataPtr = std::get<1>(*val);
 				glUniform3fv(location, size, (const GLfloat*)dataPtr);
 			}
 		}
@@ -638,7 +629,7 @@ struct Shader_Object::Impl
 			{
 				auto begin = data->StructMemArray.begin();
 				auto end = data->StructMemArray.end();
-				auto dat = std::find_if(begin, end, [&](SLStructMember& m) {return m.VarName == memName; });
+				auto dat = std::find_if(begin, end, [&](const SLStructMember& m) {return m.VarName == memName; });
 
 				if (dat != end) 
 				{
@@ -653,7 +644,7 @@ struct Shader_Object::Impl
 			{	
 				auto begin = data->StructArray[index].StructMemArray.begin();
 				auto end = data->StructArray[index].StructMemArray.end();
-				auto dat = std::find_if(begin, end, [&](SLStructMember& m) {return m.VarName == memName; });
+				auto dat = std::find_if(begin, end, [&](const SLStructMember& m) {return m.VarName == memName; });
 
 				if (dat != end)
 				{

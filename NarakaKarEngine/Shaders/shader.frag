@@ -100,8 +100,8 @@ struct Material
 	sampler2D albedoMap;
 };
 
-uint PointLightCount;
-uniform int SpotLightCount;
+uniform uint PointLightCount;
+uniform uint SpotLightCount;
 
 uniform DirectionalLight directionalLight;
 uniform SpotLight spotLights[MAX_SPOT_LIGHTS];
@@ -366,16 +366,13 @@ float LinearDepth(float depthSample){
 
 vec4 CalcPointLights(vec3 viewDir, vec3 normal, vec3 F0, vec3 albedo, float metallic, float roughness, uint tileIndex)
 {
-	//ToDo:
-	PointLightCount 		= 2;
-
 	vec4 totalColor 		= vec4(0, 0, 0, 1);		//set alpha to 1 when using blending
 	
     uint lightCount       	= lightGrid[tileIndex].count;
     uint lightIndexOffset 	= lightGrid[tileIndex].offset;
 
     //Reading from the global light list and calculating the radiance contribution of each light.
-    for(int i = 0; i < lightCount; i++){
+    for(uint i = 0; i < lightCount; ++i){
         uint lightIndex		= globalLightIndexList[lightIndexOffset + i];
         totalColor 			+= CalcPointLight(pointLight[lightIndex], viewDir, normal, F0, albedo, metallic, roughness, lightIndex);
     }
@@ -386,7 +383,7 @@ vec4 CalcPointLights(vec3 viewDir, vec3 normal, vec3 F0, vec3 albedo, float meta
 vec4 CalcSpotLights(vec3 viewDir, vec3 normal, vec3 F0, vec3 albedo, float metallic, float roughness)
 {
 	vec4 totalColor 		= vec4(0, 0, 0, 1); //set alpha to 1 when using blending
-	for(int i = 0; i < SpotLightCount; i++)
+	for(uint i = 0; i < SpotLightCount; ++i)
 	{
 		totalColor 			+= CalcSpotLight(spotLights[i], viewDir, normal, F0, albedo, metallic, roughness, i + PointLightCount);
 	}
@@ -479,8 +476,8 @@ void main()
     uint tileIndex 			= tiles.x + tileSizes.x * tiles.y + (tileSizes.x * tileSizes.y) * tiles.z;
 
 	vec4 finalColor 		= CalcDirectionalLight(viewDir, newNormal, F0, albedo, metallic, roughness);
-	//finalColor 				+= CalcPointLights(viewDir, newNormal, F0, albedo, metallic, roughness, tileIndex);
-	//finalColor 				+= CalcSpotLights(viewDir, newNormal, F0, albedo, metallic, roughness);
+	finalColor 				+= CalcPointLights(viewDir, newNormal, F0, albedo, metallic, roughness, tileIndex);
+	finalColor 				+= CalcSpotLights(viewDir, newNormal, F0, albedo, metallic, roughness);
 	
 	// ambient lighting (we now use IBL as the ambient term)
 	vec3 F 					= FresnelSchlickRoughness(max(dot(newNormal, viewDir), 0.0), F0, roughness);

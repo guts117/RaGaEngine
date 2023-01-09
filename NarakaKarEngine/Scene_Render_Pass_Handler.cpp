@@ -23,7 +23,6 @@ void Scene_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	std::shared_ptr<Fbo_Handler> val;
 	auto inputTexBuffs = std::vector<std::string>{ "irradianceMap" , "prefilterMap", "brdfLUT", "AOMap", "depthMap" };
 
 	for (auto shaderIndex = 0; shaderIndex < m_shaderVec->size(); ++shaderIndex)
@@ -35,33 +34,35 @@ void Scene_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared
 
 		shader->SetVariable("Projection", camParam->Projection);
 		shader->SetVariable("View", camParam->View);
-		shader->SetVariable("SpotLightCount", 1);
-		shader->SetVariable("directionalLight", *lightParam[0].Color, 0, "color");
-		shader->SetVariable("directionalLight", *lightParam[0].Direction, 0, "direction");
 		shader->SetVariable("eyePosition", camParam->Position);
 		shader->SetVariable("height_scale", 0.02f);
 
 		auto inputOffset = 0;
 
-		for (auto cascId = 0; cascId < NUM_CASCADES; ++cascId)
+		if (auto val = CheckInputDataType<std::shared_ptr<Fbo_Handler>>(*m_inputs->at(inputOffset)))
 		{
-			shader->SetVariable("DirectionalLightTransforms", lightParam[0].Projection[cascId] * lightParam[0].View[cascId], cascId);
-			shader->SetVariable("CascadeEndClipSpace", lightParam[0].Edge[cascId], cascId);
+			shader->SetVariable("directionalLight", *lightParam[0].Color, 0, "color");
+			shader->SetVariable("directionalLight", *lightParam[0].Direction, 0, "direction");
 
-			if (CheckInputDataType<std::shared_ptr<Fbo_Handler>>(val, *m_inputs->at(inputOffset)))
+			for (auto cascId = 0; cascId < NUM_CASCADES; ++cascId)
 			{
-				val->AttachFBOToTextureUnit(0, shader->SetTextureUnit("directionalShadowMaps", cascId, "shadowMap"), 0, cascId);
+				val->get()->AttachFBOToTextureUnit(0, shader->SetTextureUnit("directionalShadowMaps", cascId, "shadowMap"), 0, cascId);
+				shader->SetVariable("DirectionalLightTransforms", lightParam[0].Projection[cascId] * lightParam[0].View[cascId], cascId);
+				shader->SetVariable("CascadeEndClipSpace", lightParam[0].Edge[cascId], cascId);
 			}
 		}
 		++inputOffset;
 
-		auto hasOmniShadowFbo = CheckInputDataType<std::shared_ptr<Fbo_Handler>>(val, *m_inputs->at(inputOffset));
-
-		if (hasOmniShadowFbo) 
+		if (auto val = CheckInputDataType<std::shared_ptr<Fbo_Handler>>(*m_inputs->at(inputOffset)))
 		{
-			for (auto omniLightIndex = 0; omniLightIndex < lightParam[1].Count + lightParam[2].Count; ++omniLightIndex)
+			shader->SetVariable("PointLightCount", lightParam[1].Count);
+			shader->SetVariable("SpotLightCount", lightParam[2].Count);
+
+			auto pointLightsCnt = lightParam[1].Count + lightParam[2].Count;
+
+			for (auto omniLightIndex = 0; omniLightIndex < pointLightsCnt; ++omniLightIndex)
 			{
-				val->AttachFBOToTextureUnit(0, shader->SetTextureUnit("omniShadowMaps", omniLightIndex, "shadowMap"), 0, 0);
+				val->get()->AttachFBOToTextureUnit(omniLightIndex, shader->SetTextureUnit("omniShadowMaps", omniLightIndex, "shadowMap"), 0, 0);
 
 				if (omniLightIndex < lightParam[1].Count)
 				{
@@ -82,17 +83,18 @@ void Scene_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared
 
 		for(auto inputIndex = inputOffset; inputIndex < m_inputs->size(); ++inputIndex)
 		{
-			if (CheckInputDataType<std::shared_ptr<Fbo_Handler>>(val, *m_inputs->at(inputIndex)))
+			if (auto val = CheckInputDataType<std::shared_ptr<Fbo_Handler>>(*m_inputs->at(inputIndex)))
 			{
-				val->AttachFBOToTextureUnit(0, shader->SetTextureUnit(std::move(inputTexBuffs[inputIndex - inputOffset])), 0, 0);
+				val->get()->AttachFBOToTextureUnit(0, shader->SetTextureUnit(std::move(inputTexBuffs[inputIndex - inputOffset])), 0, 0);
 			}
 		}
+
+		shader->ValidateShaderObject();
 
 		for (auto roIndex = 0; roIndex < renderObj[shaderIndex].size(); ++roIndex)
 		{
 			renderObj[shaderIndex][roIndex]->RenderObject(*shader, std::move(RenderObjectParams{ true , true, &camParam->PrevProjView }));
 		}
-		shader->ValidateShaderObject();
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
