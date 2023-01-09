@@ -181,7 +181,7 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <ProjectGuid>{1A288EFF-88B0-4E52-BF4B-C676FA9850F8}</ProjectGuid>
-    <RootNamespace>OpenGLCourseProject</RootNamespace>
+    <RootNamespace>NarakaKarEngine</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
