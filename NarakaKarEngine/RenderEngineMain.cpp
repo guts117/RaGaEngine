@@ -1088,7 +1088,7 @@ struct RenderEngineMain::Impl
 			SSAOBlurPass(camParam);
 			RenderPass(camParam, mainLight.get(), pointLights, spotLights);
 			//skybox->DrawHDRSkybox();
-			//Bloom();
+			Bloom();
 			//MotionBlurPass(camParam);
 
 			auto lowerLight = camParam.Position;
@@ -2268,7 +2268,7 @@ GLFWwindow* RenderEngineMain::GetMainWindow()
 
 void RenderEngineMain::AddViewers()
 {
-	engineUI->AddSceneViewers(Pimpl()->ssaoBlurFbo->GetFBOBuffer(0, 0), "EditorScene", Editor, [this](bool isSelected) { Pimpl()->isEditorViewSelected = isSelected; });
+	engineUI->AddSceneViewers(Pimpl()->bloomFbo->GetFBOBuffer(1, 0), "EditorScene", Editor, [this](bool isSelected) { Pimpl()->isEditorViewSelected = isSelected; });
 	engineUI->AddSceneViewers(Pimpl()->sceneFbo->GetFBOBuffer(0, 0), "InGameScene", InGame, [this](bool isSelected) { Pimpl()->mainWindow->SetCursorActive(!isSelected); Pimpl()->isGameViewSelected = isSelected; });
 }
 

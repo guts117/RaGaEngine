@@ -530,6 +530,10 @@ struct Shader_Object::Impl
 			{
 				glUniform1i(location, *val);
 			}
+			else if(auto val = CheckInputDataType<bool>(value))
+			{
+				glUniform1i(location, *val);
+			}
 		}
 		else if (type == "ivec2")
 		{
@@ -555,6 +559,10 @@ struct Shader_Object::Impl
 		else if (type == "uint" || type == "bool")
 		{
 			if (auto val = CheckInputDataType<GLuint>(value))
+			{
+				glUniform1ui(location, *val);
+			}
+			else if (auto val = CheckInputDataType<bool>(value))
 			{
 				glUniform1ui(location, *val);
 			}

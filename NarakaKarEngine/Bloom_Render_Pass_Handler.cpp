@@ -17,11 +17,12 @@ Bloom_Render_Pass_Handler::Bloom_Render_Pass_Handler(std::shared_ptr<Fbo_Handler
 
 void Bloom_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared_ptr<Render_Object>>>& renderObj, const CamParam* camParam, const LightParam* lightParam)
 {
-	bool isHorizontalFbo = true;
 	int amount = 10;
 
 	for (auto shaderIndex = 0; shaderIndex < m_shaderVec->size(); ++shaderIndex)
 	{
+		auto isHorizontalFbo = true;
+
 		auto& shader = m_shaderVec->at(shaderIndex);
 		shader->ResetTextureUnit(0);
 		shader->UseShaderObject();
@@ -31,16 +32,18 @@ void Bloom_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared
 			val->get()->AttachFBOToTextureUnit(0, shader->SetTextureUnit("theTexture"), 0, 1);
 		}
 
-		for (int i = 0; i < amount; i++)
+		for (int i = 0; i < amount; ++i)
 		{
 			m_fboHandler->BindFBO(isHorizontalFbo);
+			shader->ResetTextureUnit(0);
 			shader->SetVariable("horizontal", isHorizontalFbo);
-			shader->ValidateShaderObject();
 
-			if (i > 0)
+			if (i > 0)	
 			{
-				m_fboHandler->AttachFBOToTextureUnit(!isHorizontalFbo, GL_TEXTURE0, 0, 0);
+				m_fboHandler->AttachFBOToTextureUnit(!isHorizontalFbo, shader->SetTextureUnit("theTexture"), 0, 0);
 			}
+
+			shader->ValidateShaderObject();
 
 			for (auto roIndex = 0; roIndex < renderObj[shaderIndex].size(); ++roIndex)
 			{
