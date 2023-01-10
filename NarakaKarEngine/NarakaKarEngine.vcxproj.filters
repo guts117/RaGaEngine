@@ -141,56 +141,56 @@
     <ClCompile Include="Shader_Object.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Render_Pass_Handler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Scene_Handler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Render_Object.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PreZ_Render_Pass_Handler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Scene_Shader_Object_Manager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Prefilter_Render_Pass_Handler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Environment_Map_Render_Pass_Handler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Irradiance_Convolution_Render_Pass_Handler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Directional_Shadow_Map_Render_Pass_Handler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Model_Importer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Ssao_Render_Pass_Handler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Ssao_Blur_Render_Pass_handler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Omni_Directional_Shadow_Map_Render_Pass_Handler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Scene_Render_Pass_Handler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Bloom_Render_Pass_Handler.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
-    <ClCompile Include="Motion_Blur_Render_Pass_Handler.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Directional_Shadow_Map_Render_Pass_Handler.cpp">
+      <Filter>Source Files\RenderEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="Environment_Map_Render_Pass_Handler.cpp">
+      <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
     <ClCompile Include="Exposure_Render_Pass_Handler.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\RenderEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="Irradiance_Convolution_Render_Pass_Handler.cpp">
+      <Filter>Source Files\RenderEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="Motion_Blur_Render_Pass_Handler.cpp">
+      <Filter>Source Files\RenderEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="Omni_Directional_Shadow_Map_Render_Pass_Handler.cpp">
+      <Filter>Source Files\RenderEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="Prefilter_Render_Pass_Handler.cpp">
+      <Filter>Source Files\RenderEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="PreZ_Render_Pass_Handler.cpp">
+      <Filter>Source Files\RenderEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="Render_Pass_Handler.cpp">
+      <Filter>Source Files\RenderEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene_Render_Pass_Handler.cpp">
+      <Filter>Source Files\RenderEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="Ssao_Blur_Render_Pass_handler.cpp">
+      <Filter>Source Files\RenderEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="Ssao_Render_Pass_Handler.cpp">
+      <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -317,53 +317,53 @@
     <ClInclude Include="exprtk.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Render_Pass_Handler.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Scene_Handler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Render_Object.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PreZ_Render_Pass_Handler.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Scene_Shader_Object_Manager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Prefilter_Render_Pass_Handler.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Environment_Map_Render_Pass_Handler.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Irradiance_Convolution_Render_Pass_Handler.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Bloom_Render_Pass_Handler.h">
+      <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="Directional_Shadow_Map_Render_Pass_Handler.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
-    <ClInclude Include="Ssao_Render_Pass_Handler.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Ssao_Blur_Render_Pass_handler.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Omni_Directional_Shadow_Map_Render_Pass_Handler.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene_Render_Pass_Handler.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Bloom_Render_Pass_Handler.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Motion_Blur_Render_Pass_Handler.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Environment_Map_Render_Pass_Handler.h">
+      <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="Exposure_Render_Pass_Handler.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\RenderEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="Irradiance_Convolution_Render_Pass_Handler.h">
+      <Filter>Header Files\RenderEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="Motion_Blur_Render_Pass_Handler.h">
+      <Filter>Header Files\RenderEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="Omni_Directional_Shadow_Map_Render_Pass_Handler.h">
+      <Filter>Header Files\RenderEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="Prefilter_Render_Pass_Handler.h">
+      <Filter>Header Files\RenderEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="PreZ_Render_Pass_Handler.h">
+      <Filter>Header Files\RenderEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="Render_Pass_Handler.h">
+      <Filter>Header Files\RenderEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene_Render_Pass_Handler.h">
+      <Filter>Header Files\RenderEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="Ssao_Blur_Render_Pass_handler.h">
+      <Filter>Header Files\RenderEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="Ssao_Render_Pass_Handler.h">
+      <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
