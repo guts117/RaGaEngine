@@ -851,7 +851,6 @@ struct RenderEngineMain::Impl
 
 		//skyboxTexture.LoadCubeMapSRGB(skyboxFaces);
 
-		auto camParam = CamParam{ camera->getCameraPosition(), camera->GetProjectionMatrix(), camera->CalculateViewMatrix(), camera->GetPreviousProjectionMatrix() };
 		InitSSBOs();
 		CreateClusters();
 
@@ -1077,7 +1076,7 @@ struct RenderEngineMain::Impl
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 			UpdateObjectTransforms();
-			auto camParam = CamParam{ camera->getCameraPosition(), camera->GetProjectionMatrix(), camera->CalculateViewMatrix(), camera->GetPreviousProjectionMatrix(), framesPerSec };
+			auto camParam = CamParam{ camera->getCameraPosition(), camera->GetProjectionMatrix(), camera->CalculateViewMatrix(), camera->GetPreviousProjectionViewMatrix(), framesPerSec };
 			
 			DirectionalShadowMapPass(mainLight.get(), camParam);
 			OmniShadowMapPass(*omniDirLights, camParam);
@@ -1089,7 +1088,7 @@ struct RenderEngineMain::Impl
 			RenderPass(camParam, mainLight.get(), pointLights, spotLights);
 			//skybox->DrawHDRSkybox();
 			Bloom();
-			//MotionBlurPass(camParam);
+			MotionBlurPass(camParam);
 
 			auto lowerLight = camParam.Position;
 			lowerLight.y -= 0.1f;
@@ -1099,6 +1098,7 @@ struct RenderEngineMain::Impl
 		//RenderToDefaultFB();
 
 		camera->UpdatePreviousMatrices();
+
 		glUseProgram(0);
 	}
 
@@ -2268,7 +2268,7 @@ GLFWwindow* RenderEngineMain::GetMainWindow()
 
 void RenderEngineMain::AddViewers()
 {
-	engineUI->AddSceneViewers(Pimpl()->bloomFbo->GetFBOBuffer(1, 0), "EditorScene", Editor, [this](bool isSelected) { Pimpl()->isEditorViewSelected = isSelected; });
+	engineUI->AddSceneViewers(Pimpl()->motionBlurFbo->GetFBOBuffer(0, 0), "EditorScene", Editor, [this](bool isSelected) { Pimpl()->isEditorViewSelected = isSelected; });
 	engineUI->AddSceneViewers(Pimpl()->sceneFbo->GetFBOBuffer(0, 0), "InGameScene", InGame, [this](bool isSelected) { Pimpl()->mainWindow->SetCursorActive(!isSelected); Pimpl()->isGameViewSelected = isSelected; });
 }
 
