@@ -25,6 +25,8 @@ void Motion_Blur_Render_Pass_Handler::Update(const std::vector<std::vector<std::
 
 	for (auto shaderIndex = 0; shaderIndex < m_shaderVec->size(); ++shaderIndex)
 	{
+		if (shaderIndex >= renderObj.size()) { return; }
+
 		auto& shader = m_shaderVec->at(shaderIndex);
 
 		shader->ResetTextureUnit(0);

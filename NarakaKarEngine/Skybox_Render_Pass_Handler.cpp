@@ -23,6 +23,8 @@ void Skybox_Render_Pass_Handler::Update(const std::vector<std::vector<std::share
 
 	for (auto shaderIndex = 0; shaderIndex < m_shaderVec->size(); ++shaderIndex)
 	{
+		if (shaderIndex >= renderObj.size()) { return; }
+
 		auto& shader = m_shaderVec->at(shaderIndex);
 		auto viewMatrix = glm::mat4(glm::mat3(camParam->View));
 		auto prevPV = camParam->PrevProj * glm::mat4(glm::mat3(camParam->PrevView));
