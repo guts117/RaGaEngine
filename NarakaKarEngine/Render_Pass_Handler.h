@@ -19,6 +19,8 @@ namespace NarakaKarEngine
 			const glm::vec3& Position;
 			const glm::mat4& Projection;
 			const glm::mat4& View;
+			const glm::mat4& PrevProj;
+			const glm::mat4& PrevView;
 			const glm::mat4& PrevProjView;
 			const float fps;
 		};

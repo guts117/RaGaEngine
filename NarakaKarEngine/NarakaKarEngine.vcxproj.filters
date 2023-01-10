@@ -186,6 +186,9 @@
     <ClCompile Include="Scene_Render_Pass_Handler.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
+    <ClCompile Include="Skybox_Render_Pass_Handler.cpp">
+      <Filter>Source Files\RenderEngine</Filter>
+    </ClCompile>
     <ClCompile Include="Ssao_Blur_Render_Pass_handler.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
@@ -357,6 +360,9 @@
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="Scene_Render_Pass_Handler.h">
+      <Filter>Header Files\RenderEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="Skybox_Render_Pass_Handler.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="Ssao_Blur_Render_Pass_handler.h">

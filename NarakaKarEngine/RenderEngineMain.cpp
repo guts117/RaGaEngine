@@ -46,6 +46,7 @@
 #include "Bloom_Render_Pass_Handler.h"
 #include "Motion_Blur_Render_Pass_Handler.h"
 #include "Exposure_Render_Pass_Handler.h"
+#include "Skybox_Render_Pass_Handler.h"
 
 #include <glm/gtx/euler_angles.hpp>
 
@@ -152,6 +153,7 @@ struct RenderEngineMain::Impl
 	std::shared_ptr <Shader_Object> bloomShader;
 	std::shared_ptr <Shader_Object> motionBlurShader;
 	std::shared_ptr <Shader_Object> exposureShader;
+	std::shared_ptr <Shader_Object> skyboxShader;
 
 	std::shared_ptr <Fbo_Handler> environmentMap;
 	std::shared_ptr <Fbo_Handler> irradianceMap;
@@ -270,10 +272,7 @@ struct RenderEngineMain::Impl
 	unsigned int pointLightCount = 0;
 	unsigned int spotLightCount = 0;
 
-	std::unique_ptr < Skybox> skybox;
-
 	std::shared_ptr < Texture> environmentTexture;
-	std::unique_ptr < Texture> skyboxTexture;
 
 	std::shared_ptr < Texture> terrainTextureDisp;
 	std::shared_ptr < Texture> terrainTextureBlend;
@@ -334,6 +333,7 @@ struct RenderEngineMain::Impl
 	std::shared_ptr<Bloom_Render_Pass_Handler> bloomRPHandler;
 	std::shared_ptr<Motion_Blur_Render_Pass_Handler> motionBlurRPHandler;
 	std::shared_ptr<Exposure_Render_Pass_Handler> exposureRPHandler;
+	std::shared_ptr<Skybox_Render_Pass_Handler> skyboxRPHandler;
 
 	GLfloat aircraftAngle = 0.0f;
 
@@ -435,7 +435,7 @@ struct RenderEngineMain::Impl
 
 		camera = std::make_shared<Camera>(glm::vec3(-terrainScaleFactor, 0.0f, -terrainScaleFactor + 10.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f, 50.0f, 0.2f);
 
-		environmentTexture = std::make_shared<Texture>("Textures/HDR/GCanyon_C_YumaPoint_3k.hdr");
+		environmentTexture = std::make_shared<Texture>("Textures/HDR/syferfontein_0d_clear_puresky_4k.hdr");
 		environmentTexture->LoadTextureHDR();
 
 		plainTexture = std::make_unique <Texture>("Textures/plain.png", true);
@@ -847,10 +847,6 @@ struct RenderEngineMain::Impl
 		addSplatSpot(glm::vec2(x, y), glm::vec3(80.0f, 7.0f, 0.0f), 1.0f, velocitiesTexture.get(), velTexId[0]);
 		addSplatSpot(glm::vec2(x, y), glm::vec3(50.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0), 2.5f, density.get(), denTexId[0]);*/
 
-		skybox = std::make_unique<Skybox>();
-
-		//skyboxTexture.LoadCubeMapSRGB(skyboxFaces);
-
 		InitSSBOs();
 		CreateClusters();
 
@@ -922,6 +918,11 @@ struct RenderEngineMain::Impl
 		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(bloomFbo)));
 		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(motionBlurFbo)));
 		exposureRPHandler = std::make_shared<Exposure_Render_Pass_Handler>(exposureFbo, exosureShaders, inputs);
+
+		auto skyboxShaders = std::vector<std::shared_ptr<Shader_Object>>{ skyboxShader };
+		inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
+		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(environmentMap)));
+		skyboxRPHandler = std::make_shared<Skybox_Render_Pass_Handler>(sceneFbo, skyboxShaders, inputs);
 
 		//sceneObjRO->push_back(unriggedSceneMeshes);
 		
@@ -1076,7 +1077,9 @@ struct RenderEngineMain::Impl
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 			UpdateObjectTransforms();
-			auto camParam = CamParam{ camera->getCameraPosition(), camera->GetProjectionMatrix(), camera->CalculateViewMatrix(), camera->GetPreviousProjectionViewMatrix(), framesPerSec };
+			auto camParam = CamParam{ camera->getCameraPosition(), camera->GetProjectionMatrix(), camera->CalculateViewMatrix()
+									, camera->GetPreviousProjectionMatrix(), camera->GetPreviousViewMatrix(), camera->GetPreviousProjectionViewMatrix()
+									, framesPerSec};
 			
 			DirectionalShadowMapPass(mainLight.get(), camParam);
 			OmniShadowMapPass(*omniDirLights, camParam);
@@ -1086,7 +1089,6 @@ struct RenderEngineMain::Impl
 			SSAOPass(camParam);
 			SSAOBlurPass(camParam);
 			RenderPass(camParam, mainLight.get(), pointLights, spotLights);
-			//skybox->DrawHDRSkybox();
 			Bloom();
 			MotionBlurPass(camParam);
 			exposureRPHandler->Update(*quadRO);
@@ -1449,6 +1451,7 @@ struct RenderEngineMain::Impl
 		bloomShader					= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/blur_framebuffer.frag"});
 		motionBlurShader			= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/motionBlur_framebuffer.frag"});
 		exposureShader				= std::make_unique<Shader_Object>(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/hdr_framebuffer.frag"});
+		skyboxShader				= std::make_unique<Shader_Object>(std::vector<std::string>{"Shaders/skybox.vert", "Shaders/skybox.frag"});
 		
 		billboardShader				= std::make_unique<Shader_Object>(std::vector<std::string>{"Shaders/billboard.vert", "Shaders/billboard.frag"});
 
@@ -1812,6 +1815,8 @@ struct RenderEngineMain::Impl
 		lightParamList.push_back(std::move(lightParam));
 
 		sceneRPHandler->Update(*sceneObjRO, &camParam, &lightParamList[0]);
+		//ToDo: skybox being here might cause blending issues
+		skyboxRPHandler->Update(*cwCubeRO, &camParam);		
 	}
 
 	void Bloom()
