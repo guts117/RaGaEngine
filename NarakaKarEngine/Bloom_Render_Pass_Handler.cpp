@@ -19,6 +19,10 @@ void Bloom_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared
 {
 	int amount = 10;
 
+	glViewport(0, 0, m_fboHandler->GetFBOWidth(), m_fboHandler->GetFBOHeight());
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 	for (auto shaderIndex = 0; shaderIndex < m_shaderVec->size(); ++shaderIndex)
 	{
 		if (shaderIndex >= renderObj.size()) { return; }
