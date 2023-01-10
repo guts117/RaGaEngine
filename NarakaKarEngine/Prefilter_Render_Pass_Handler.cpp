@@ -33,7 +33,7 @@ void Prefilter_Render_Pass_Handler::Update(const std::vector<std::vector<std::sh
 
 	for (auto shaderIndex = 0; shaderIndex < m_shaderVec->size(); ++shaderIndex)
 	{
-		auto shader = m_shaderVec->at(shaderIndex);
+		auto& shader = m_shaderVec->at(shaderIndex);
 		shader->UseShaderObject();
 		shader->SetVariable("skybox", 0);
 		shader->SetVariable("Projection", captureProjection);
@@ -55,14 +55,9 @@ void Prefilter_Render_Pass_Handler::Update(const std::vector<std::vector<std::sh
 				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 				shader->ValidateShaderObject();
 
-				try
+				if (auto val = CheckInputDataType<std::shared_ptr<Fbo_Handler>>(*m_inputs->at(0))) 
 				{
-					auto input = std::any_cast<std::shared_ptr<Fbo_Handler>>(*m_inputs->at(0));
-					input->AttachFBOToTextureUnit(0, shader->SetTextureUnit("skybox"), 0, 0);;
-				}
-				catch (const std::bad_any_cast& e)
-				{
-					std::cout << e.what() << std::endl;
+					val->get()->AttachFBOToTextureUnit(0, shader->SetTextureUnit("skybox"), 0, 0);
 				}
 
 				for (auto roIndex = 0; roIndex < renderObj[shaderIndex].size(); ++roIndex)

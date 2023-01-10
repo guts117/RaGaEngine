@@ -25,14 +25,15 @@ void Brdf_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared_
 
 	for (auto shaderIndex = 0; shaderIndex < m_shaderVec->size(); ++shaderIndex)
 	{
-		m_shaderVec->at(shaderIndex)->ResetTextureUnit(0);
-		m_shaderVec->at(shaderIndex)->UseShaderObject();
+		auto& shader = m_shaderVec->at(shaderIndex);
+		shader->ResetTextureUnit(0);
+		shader->UseShaderObject();
 
 		for (auto roIndex = 0; roIndex < renderObj[shaderIndex].size(); ++roIndex)
 		{
-			renderObj[shaderIndex][roIndex]->RenderObject(*m_shaderVec->at(shaderIndex), std::move(RenderObjectParams{}));
+			renderObj[shaderIndex][roIndex]->RenderObject(*shader, std::move(RenderObjectParams{}));
 		}
-		m_shaderVec->at(shaderIndex)->ValidateShaderObject();
+		shader->ValidateShaderObject();
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);

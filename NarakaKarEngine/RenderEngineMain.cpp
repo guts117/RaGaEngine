@@ -1089,6 +1089,7 @@ struct RenderEngineMain::Impl
 			//skybox->DrawHDRSkybox();
 			Bloom();
 			MotionBlurPass(camParam);
+			exposureRPHandler->Update(*quadRO);
 
 			auto lowerLight = camParam.Position;
 			lowerLight.y -= 0.1f;
@@ -2210,7 +2211,7 @@ struct RenderEngineMain::Impl
 		//}
 		//else
 		//{
-			exposureRPHandler->Update(*quadRO);
+			
 		//}
 	}
 
@@ -2268,8 +2269,8 @@ GLFWwindow* RenderEngineMain::GetMainWindow()
 
 void RenderEngineMain::AddViewers()
 {
-	engineUI->AddSceneViewers(Pimpl()->motionBlurFbo->GetFBOBuffer(0, 0), "EditorScene", Editor, [this](bool isSelected) { Pimpl()->isEditorViewSelected = isSelected; });
-	engineUI->AddSceneViewers(Pimpl()->sceneFbo->GetFBOBuffer(0, 0), "InGameScene", InGame, [this](bool isSelected) { Pimpl()->mainWindow->SetCursorActive(!isSelected); Pimpl()->isGameViewSelected = isSelected; });
+	engineUI->AddSceneViewers(Pimpl()->sceneFbo->GetFBOBuffer(0, 0), "EditorScene", Editor, [this](bool isSelected) { Pimpl()->isEditorViewSelected = isSelected; });
+	engineUI->AddSceneViewers(Pimpl()->exposureFbo->GetFBOBuffer(0, 0), "InGameScene", InGame, [this](bool isSelected) { Pimpl()->mainWindow->SetCursorActive(!isSelected); Pimpl()->isGameViewSelected = isSelected; });
 }
 
 bool RenderEngineMain:: IsEnd()
