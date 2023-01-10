@@ -110,12 +110,10 @@
     <ClCompile Include="Scene_Shader_Object_Manager.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="Shader_Object.cpp" />
-    <ClCompile Include="Skybox.cpp" />
     <ClCompile Include="Skybox_Render_Pass_Handler.cpp" />
     <ClCompile Include="SpotLight.cpp" />
     <ClCompile Include="Ssao_Blur_Render_Pass_handler.cpp" />
     <ClCompile Include="Ssao_Render_Pass_Handler.cpp" />
-    <ClCompile Include="Model_Shader.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="VertexBoneData.cpp" />
     <ClCompile Include="Window.cpp" />
@@ -168,13 +166,11 @@
     <ClInclude Include="Scene_Shader_Object_Manager.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Shader_Object.h" />
-    <ClInclude Include="Skybox.h" />
     <ClInclude Include="Skybox_Render_Pass_Handler.h" />
     <ClInclude Include="spimpl.h" />
     <ClInclude Include="SpotLight.h" />
     <ClInclude Include="Ssao_Blur_Render_Pass_handler.h" />
     <ClInclude Include="Ssao_Render_Pass_Handler.h" />
-    <ClInclude Include="Model_Shader.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="MathUtil.h" />
     <ClInclude Include="VertexBoneData.h" />
