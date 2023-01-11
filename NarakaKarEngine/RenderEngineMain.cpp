@@ -87,7 +87,6 @@ struct RenderEngineMain::Impl
 	bool drawFluidSim = false;
 	bool drawSmokeSim = false;
 
-	float terrainScaleFactor = 0.0f;
 	float terrainScaleFactor1 = 1000.0f;
 
 	const float toRadians = static_cast<float>(M_PI) / 180.0f;
@@ -428,11 +427,12 @@ struct RenderEngineMain::Impl
 		prevModelMatrixPool->reserve(100);
 		sceneObjRO->reserve(100);
 
+		//ToDo: Expand This on a dedicated issue #61
 		//CreateTerrain();
 		CreateObject();
 		CreateShaders();
 
-		camera = std::make_shared<Camera>(glm::vec3(-terrainScaleFactor, 0.0f, -terrainScaleFactor + 10.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f, 50.0f, 0.2f);
+		camera = std::make_shared<Camera>(glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f, 50.0f, 0.2f);
 
 		environmentTexture = std::make_shared<Texture>("Textures/HDR/syferfontein_0d_clear_puresky_4k.hdr");
 		environmentTexture->LoadTextureHDR();
@@ -460,21 +460,21 @@ struct RenderEngineMain::Impl
 		//	"Textures/Roughness/brick_floor.png", "Textures/Normal/brick_floor.png",
 		//	"Textures/Parallax/brick_floor.png", "Textures/Glow/brick_floor.png");
 
-
-		terrainTextureDisp = std::make_shared <Texture>("Textures/Displacement/terrain.jpg");
-		terrainTextureDisp->LoadTextureNoAlpha();
-		terrainTextureBlend = std::make_shared <Texture>("Textures/Blend/terrain.jpg");
-		terrainTextureBlend->LoadTextureNoAlpha();
-		terrainTexture = std::make_shared <Texture>("Textures/terrain.jpg", true);
-		terrainTexture->LoadTextureArray(glm::vec2(1024, 1024), NUM_TERRAIN_LAYERS);
-		terrainTextureMetal = std::make_shared <Texture>("Textures/Metallic/terrain.jpg");
-		terrainTextureMetal->LoadTextureArray(glm::vec2(256, 256), NUM_TERRAIN_LAYERS);
-		terrainTextureRough = std::make_shared <Texture>("Textures/Roughness/terrain.jpg");
-		terrainTextureRough->LoadTextureArray(glm::vec2(256, 256), NUM_TERRAIN_LAYERS);
-		terrainTextureNorm = std::make_shared <Texture>("Textures/Normal/terrain.jpg");
-		terrainTextureNorm->LoadTextureArray(glm::vec2(256, 256), NUM_TERRAIN_LAYERS);
-		terrainTexturePara = std::make_shared <Texture>("Textures/Parallax/terrain.jpg");
-		terrainTexturePara->LoadTextureArray(glm::vec2(256, 256), NUM_TERRAIN_LAYERS);
+		//ToDo: Expand This on a dedicated issue #61
+		//terrainTextureDisp = std::make_shared <Texture>("Textures/Displacement/terrain.jpg");
+		//terrainTextureDisp->LoadTextureNoAlpha();
+		//terrainTextureBlend = std::make_shared <Texture>("Textures/Blend/terrain.jpg");
+		//terrainTextureBlend->LoadTextureNoAlpha();
+		//terrainTexture = std::make_shared <Texture>("Textures/terrain.jpg", true);
+		//terrainTexture->LoadTextureArray(glm::vec2(1024, 1024), NUM_TERRAIN_LAYERS);
+		//terrainTextureMetal = std::make_shared <Texture>("Textures/Metallic/terrain.jpg");
+		//terrainTextureMetal->LoadTextureArray(glm::vec2(256, 256), NUM_TERRAIN_LAYERS);
+		//terrainTextureRough = std::make_shared <Texture>("Textures/Roughness/terrain.jpg");
+		//terrainTextureRough->LoadTextureArray(glm::vec2(256, 256), NUM_TERRAIN_LAYERS);
+		//terrainTextureNorm = std::make_shared <Texture>("Textures/Normal/terrain.jpg");
+		//terrainTextureNorm->LoadTextureArray(glm::vec2(256, 256), NUM_TERRAIN_LAYERS);
+		//terrainTexturePara = std::make_shared <Texture>("Textures/Parallax/terrain.jpg");
+		//terrainTexturePara->LoadTextureArray(glm::vec2(256, 256), NUM_TERRAIN_LAYERS);
 
 		//ToDo: #20 simulation manager class
 		/*velocitiesTexture = std::make_unique <Texture>();
@@ -541,7 +541,7 @@ struct RenderEngineMain::Impl
 		//sphereModel.LoadModel("Models/sphere.obj");
 		//sphere = std::make_shared<Render_Object>(std::move(sphereModel.MeshList), sphereModel.TextureMap);
 		//unriggedSceneMeshes.push_back(sphere);
-		////physicsEngine->AddSphere(1.0f, -terrainScaleFactor, 80.0f, 5.5f - terrainScaleFactor, 1.0f, sphere->());
+		////physicsEngine->AddSphere(1.0f, 0.0f, 80.0f, 5.5f, 1.0f, sphere->());
 		////ToDo: use heightmap to add terrain collider
 		//physicsEngine->AddStaticPlane(0.0f, 27.0f, 0.0f, 0.0f, glm::vec3(0.0f, 0.9f, 0.1f), nullptr);
 
@@ -784,7 +784,7 @@ struct RenderEngineMain::Impl
 		pointLights[0] = std::make_unique < PointLight>(512, 512,
 			0.1f, 100.0f,
 			0.0f, 0.0f, 3.0f,
-			12.0f - terrainScaleFactor, 5.0f, 10.0f - terrainScaleFactor,
+			12.0f, 5.0f, 10.0f,
 			m_SceneFboHandlerMgr);
 
 		pointLightCount++;
@@ -792,7 +792,7 @@ struct RenderEngineMain::Impl
 		pointLights[1] = std::make_unique < PointLight>(512, 512,
 			0.1f, 100.0f,
 			3.0f, 0.0f, 0.0f,
-			-12.0f - terrainScaleFactor, 5.0f, 10.0f - terrainScaleFactor,
+			-12.0f, 5.0f, 10.0f,
 			m_SceneFboHandlerMgr);
 
 		pointLightCount++;
@@ -931,6 +931,7 @@ struct RenderEngineMain::Impl
 
 		//sceneObjRO->push_back(riggedSceneMeshes);
 
+		//ToDo: Expand This on a dedicated issue #61
 		//auto terrainSceneMeshes = std::vector<std::shared_ptr<Render_Object>>();
 
 		//textureMap = std::make_shared<std::map<TexType, std::vector<std::shared_ptr<Texture>>>>();
@@ -1262,6 +1263,7 @@ struct RenderEngineMain::Impl
 		particleList.push_back(obj);
 	}
 
+	//ToDo: Expand This on a dedicated issue #61
 	void CreateTerrain()
 	{
 		std::vector<GLuint> terrainIndices = {
@@ -1463,7 +1465,7 @@ struct RenderEngineMain::Impl
 
 	void RenderBillboardScene()
 	{
-		billboardShader->SetVariable("BillboardPos", glm::vec3(6.0f - terrainScaleFactor, 29.0f, -terrainScaleFactor));
+		billboardShader->SetVariable("BillboardPos", glm::vec3(6.0f, 29.0f, 0.0f));
 		billboardShader->SetVariable("BillboardSize", glm::vec2(2.0f, 2.0f/*0.125f*/));
 		billboardShader->SetVariable("prevPV", camera->GetPreviousProjectionViewMatrix());
 
@@ -1473,7 +1475,7 @@ struct RenderEngineMain::Impl
 
 	void RenderParticlesScene(GLfloat deltaTime)
 	{
-		particleList[0]->GenerateParticlesCPU(deltaTime, glm::vec3(10.0f - terrainScaleFactor, 33.0f, -terrainScaleFactor));
+		particleList[0]->GenerateParticlesCPU(deltaTime, glm::vec3(10.0f, 33.0f, 0.0f));
 		particleList[0]->SimulateParticlesCPU(camera->getCameraPosition(), deltaTime);
 		particleList[0]->UpdateParticlesMeshCPU();
 		plainTexture->UseTexture(0);
@@ -1489,7 +1491,7 @@ struct RenderEngineMain::Impl
 		//glm::mat4 prevPVM = glm::mat4();
 		////model = glm::translate(model, glm::vec3(0.0f,-10.0f, 0.0f));
 		////model = glm::rotate(model, curAngle * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));  //if you put the rotate at the last place(i.e on the top) it will have a bouncy effect
-		////model = glm::scale(model,glm::vec3(terrainScaleFactor, 1.0f, terrainScaleFactor));
+		////model = glm::scale(model,glm::vec3(0.0f, 1.0f, 0.0f));
 		//glUniformMatrix4fv(uniformModel2, 1, GL_FALSE, glm::value_ptr(model));
 		////prevPVM = camera->GetPreviousProjectionViewMatrix() * terrainList[0]->PrevMesh;
 		////glUniformMatrix4fv(uniformPrevPVM2, 1, GL_FALSE, glm::value_ptr(prevPVM));
@@ -1572,38 +1574,38 @@ struct RenderEngineMain::Impl
 		//{
 		//	Transform(obj->render_object, *obj->transform);
 		//}
-		//pyramid1->Translate(-terrainScaleFactor, 34.0f, -2.5f - terrainScaleFactor);
+		//pyramid1->Translate(0.0f, 34.0f, -2.5f);
 		////pyramid1->Rotate(curAngle, 0.0f, 1.0f, 0.0f);
 		////pyramid1->Scale(0.4f, 0.4f, 1.0f);
 
-		//pyramid2->Translate(-terrainScaleFactor, 30.0f, -2.5f - terrainScaleFactor);
+		//pyramid2->Translate(0.0f, 30.0f, -2.5f);
 		////pyramid2->Rotate(curAngle, 0.0f, 1.0f, 0.0f);
 		////pyramid2->Scale(0.4f, 0.4f, 1.0f);
 
-		//rectangle1->Translate(-15.0f - terrainScaleFactor, 43.0f, -terrainScaleFactor);
+		//rectangle1->Translate(-15.0f, 43.0f, 0.0f);
 		//rectangle1->Rotate(90, 1.0f, 0.0f, 0.0f);
 		//rectangle1->Rotate(-90, 0.0f, 0.0f, 1.0f);
 
-		//rectangle2->Translate(-terrainScaleFactor, 43.0f, -15.0f - terrainScaleFactor);
+		//rectangle2->Translate(0.0f, 43.0f, -15.0f);
 		//rectangle2->Rotate(-90, 1.0f, 0.0f, 0.0f);
 		//rectangle2->Rotate(180.0f, 0.0f, 0.0f, 1.0f);
 
-		//cube->Translate(curScale - terrainScaleFactor, 32.0f, 4.5f - terrainScaleFactor);
+		//cube->Translate(curScale, 32.0f, 4.5f);
 		////cube->Rotate(curAngle, 0.0f, 1.0f, 0.0f);
 		//cube->Rotate(90.0f, 1.0f, 0.0f, 0.0f);
 		//cube->Scale(0.1f, 0.1f, 0.1f);
 
-		////sphere->Translate(-terrainScaleFactor, 35.0f, 5.5f - terrainScaleFactor);
+		////sphere->Translate(0.0f, 35.0f, 5.5f);
 		////sphere->Rotate(curAngle, 0.0f, 1.0f, 0.0f);
 		//sphere->Scale(1.0f, 1.0f, 1.0f);
 
-		//sniper->Translate(-terrainScaleFactor, 36.0f, 11.0f - terrainScaleFactor);
+		//sniper->Translate(0.0f, 36.0f, 11.0f);
 		////sniper->Rotate(curAngle, 0.0f, 1.0f, 0.0f);
 		//sniper->Rotate(90.0f, 1.0f, 0.0f, 0.0f);
 		//sniper->Rotate(180.0f, 1.0f, 0.0f, 0.0f);
 		//sniper->Scale(0.5f, 0.5f, 0.5f);
 
-		//gun->Translate(5.0f - terrainScaleFactor, 33.0f, 10.0f - terrainScaleFactor);
+		//gun->Translate(5.0f, 33.0f, 10.0f);
 		////gun->Rotate(curAngle, 0.0f, 1.0f, 0.0f);
 		//gun->Rotate(180.0f, 0.0f, 1.0f, 0.0f);
 		//gun->Rotate(-90.0f, 1.0f, 0.0f, 0.0f);
@@ -1615,11 +1617,11 @@ struct RenderEngineMain::Impl
 		//bulbRed->Translate(pointLights[1]->GetPosition().x, pointLights[1]->GetPosition().y, pointLights[1]->GetPosition().z);
 		//bulbRed->Scale(10.0f, 10.f, 10.0f);
 
-		//anymodel->Translate(-terrainScaleFactor, 37.0f, 1.0f - terrainScaleFactor);
+		//anymodel->Translate(0.0f, 37.0f, 1.0f);
 		//anymodel->Scale(1.0f, 1.0f, 1.0f);
 
 		//model = glm::mat4();
-		//model = glm::translate(model, glm::vec3(-6.0f - terrainScaleFactor, 28.2f, -5.0f - terrainScaleFactor));
+		//model = glm::translate(model, glm::vec3(-6.0f, 28.2f, -5.0f));
 		//model = glm::rotate(model, -90 * toRadians, glm::vec3(1.0f, 0.0f, 0.0f));  //if you put the rotate at the last place(i.e on the top) it will have a bouncy effect
 		//model = glm::scale(model, glm::vec3(0.1, 0.1f, 0.1f));
 		//glUniformMatrix4fv(uniformModel1, 1, GL_FALSE, glm::value_ptr(model));
@@ -1642,7 +1644,7 @@ struct RenderEngineMain::Impl
 		//anim->prevModel = model;
 
 		//model = glm::mat4();
-		//model = glm::translate(model, glm::vec3(6.0f - terrainScaleFactor, 28.2f, -5.0f - terrainScaleFactor));
+		//model = glm::translate(model, glm::vec3(6.0f, 28.2f, -5.0f));
 		//model = glm::rotate(model, -90 * toRadians, glm::vec3(1.0f, 0.0f, 0.0f));  //if you put the rotate at the last place(i.e on the top) it will have a bouncy effect
 		//model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
 		//glUniformMatrix4fv(uniformModel1, 1, GL_FALSE, glm::value_ptr(model));

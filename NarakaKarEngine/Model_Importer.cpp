@@ -8,6 +8,8 @@ using namespace NarakaKarEngine;
 using namespace RenderEngine;
 
 
+//ToDo:
+//Expand This on a dedicated issue #60
 struct Model_Importer::Impl
 {
 	aiMatrix4x4 m_GlobalInverseTransform;
