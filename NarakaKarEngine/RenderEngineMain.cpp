@@ -871,13 +871,13 @@ struct RenderEngineMain::Impl
 		brdfRPHandler = std::make_shared<Brdf_Render_Pass_Handler>(brdfMap, brdfShaders);
 		brdfRPHandler->Update(*quadRO);
 
-		auto dirShadowShaders = std::vector<std::shared_ptr<Shader_Object>>{ dirShadowShader/*, animDirShadowShader, terrDirShadowShader*/ };
+		auto dirShadowShaders = std::vector<std::shared_ptr<Shader_Object>>{ dirShadowShader, animDirShadowShader, terrDirShadowShader };
 		dirShadowRPHandler = std::make_shared<Directional_Shadow_Map_Render_Pass_Handler>(mainLight->GetShadowMap(), dirShadowShaders);
 
-		auto ommiShadowShaders = std::vector<std::shared_ptr<Shader_Object>>{ omniShadowShader/*, animOmniShadowShader*/ };
+		auto ommiShadowShaders = std::vector<std::shared_ptr<Shader_Object>>{ omniShadowShader, animOmniShadowShader };
 		omniShadowRPHandler = std::make_shared<Omni_Directional_Shadow_Map_Render_Pass_Handler>(omniShadowMaps, ommiShadowShaders);
 
-		auto prezShaders = std::vector<std::shared_ptr<Shader_Object>>{ preZShader/*, animPreZShader, terrPreZShader*/};
+		auto prezShaders = std::vector<std::shared_ptr<Shader_Object>>{ preZShader, animPreZShader, terrPreZShader};
 		preZRPHandler = std::make_shared<PreZ_Render_Pass_Handler>(depthMap, prezShaders);
 
 		auto ssaoShaders = std::vector<std::shared_ptr<Shader_Object>>{ ssaoShader };
@@ -891,7 +891,7 @@ struct RenderEngineMain::Impl
 		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(ssaoFbo)));
 		ssaoBlurRPHandler = std::make_shared<Ssao_Blur_Render_Pass_Handler>(ssaoBlurFbo, ssaoBlurShaders, inputs);
 
-		auto sceneShaders = std::vector<std::shared_ptr<Shader_Object>>{ unrigShader/*, rigShader, terrShader*/};
+		auto sceneShaders = std::vector<std::shared_ptr<Shader_Object>>{ unrigShader, rigShader, terrShader};
 		inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
 		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(mainLight->GetShadowMap())));
 		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(omniShadowMaps)));

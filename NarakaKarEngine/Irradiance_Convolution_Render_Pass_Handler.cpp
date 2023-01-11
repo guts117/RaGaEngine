@@ -33,7 +33,7 @@ void Irradiance_Convolution_Render_Pass_Handler::Update(const std::vector<std::v
 
 	for (auto shaderIndex = 0; shaderIndex < m_shaderVec->size(); ++shaderIndex)
 	{
-		if (shaderIndex >= renderObj.size()) { return; }
+		if (shaderIndex >= renderObj.size()) { break; }
 
 		auto& shader = m_shaderVec->at(shaderIndex);
 
