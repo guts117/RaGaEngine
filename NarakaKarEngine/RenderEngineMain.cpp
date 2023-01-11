@@ -1,9 +1,6 @@
 #include "pch.h"
 #include "RenderEngineMain.h"
 
-#include "Particle_Shader.h"
-#include "Compute_Shader.h"
-
 #include "Mesh.h"
 #include "Camera.h"
 #include "Texture.h"
@@ -91,19 +88,9 @@ struct RenderEngineMain::Impl
 
 	const float toRadians = static_cast<float>(M_PI) / 180.0f;
 
-	GLuint uniformModel1 = 0, uniformProjection1 = 0, uniformView1 = 0, uniformPrevPVM1 = 0, uniformEyePosition1 = 0, uniformHeightScale1 = 0,
-		uniformAlbedoMap1 = 0, uniformMetallicMap1 = 0, uniformNormalMap1 = 0, uniformRoughnessMap1 = 0, uniformParallaxMap1 = 0, uniformGlowMap1 = 0,
-		uniformOmniLightPos1 = 0, uniformFarPlane1 = 0;
-
-	GLuint uniformBones[MAX_BONES] = { 0 };
-
-	GLuint uniformModel2 = 0, uniformProjection2 = 0, uniformView2 = 0, uniformPrevPVM2 = 0, uniformEyePosition2 = 0, uniformHeightScale2 = 0, uniformDispFactor = 0,
-		uniformAlbedoMap2 = 0, uniformMetallicMap2 = 0, uniformRoughnessMap2 = 0, uniformNormalMap2 = 0, uniformParallaxMap2 = 0,
-		uniformOmniLightPos2 = 0, uniformFarPlane2 = 0;
-
-	std::unique_ptr<Compute_Shader> buildAABBGridCompShader = std::make_unique<Compute_Shader>();
-	std::unique_ptr<Compute_Shader> visibleClusterCompShader = std::make_unique<Compute_Shader>();
-	std::unique_ptr<Compute_Shader> cullLightsCompShader = std::make_unique <Compute_Shader>();
+	std::shared_ptr <Shader_Object> buildAABBGridCompShader;
+	std::shared_ptr <Shader_Object> visibleClusterCompShader;
+	std::shared_ptr <Shader_Object> cullLightsCompShader;
 
 	//ToDo: #20 simulation manager class
 	/*std::unique_ptr<Compute_Shader> fluidFinalShader = std::make_unique <Compute_Shader>();
@@ -153,6 +140,7 @@ struct RenderEngineMain::Impl
 	std::shared_ptr <Shader_Object> exposureShader;
 	std::shared_ptr <Shader_Object> skyboxShader;
 	std::shared_ptr <Shader_Object> billboardShader;
+	std::shared_ptr <Shader_Object> particleShader;
 
 	std::shared_ptr <Fbo_Handler> environmentMap;
 	std::shared_ptr <Fbo_Handler> irradianceMap;
@@ -167,8 +155,6 @@ struct RenderEngineMain::Impl
 	std::shared_ptr <Fbo_Handler> exposureFbo;
 
 	std::shared_ptr <Fbo_Handler> omniShadowMaps;
-
-	std::unique_ptr < Particle_Shader> particleShader = std::make_unique<Particle_Shader>();
 
 	//ToDo: To whomever it may concern. Probably me -_-
 	//ToDo: After a decently extensive research and thought on my part I want the following to be done
@@ -264,16 +250,6 @@ struct RenderEngineMain::Impl
 	unsigned int pointLightCount = 0;
 	unsigned int spotLightCount = 0;
 
-	std::shared_ptr < Texture> environmentTexture;
-
-	std::shared_ptr < Texture> terrainTextureDisp;
-	std::shared_ptr < Texture> terrainTextureBlend;
-	std::shared_ptr < Texture> terrainTexture;
-	std::shared_ptr < Texture> terrainTextureMetal;
-	std::shared_ptr < Texture> terrainTextureRough;
-	std::shared_ptr < Texture> terrainTextureNorm;
-	std::shared_ptr < Texture> terrainTexturePara;
-	
 	//ToDo: #20 simulation manager class
 	//std::unique_ptr<Texture> velocitiesTexture;
 	//std::unique_ptr<Texture> density;
@@ -294,8 +270,8 @@ struct RenderEngineMain::Impl
 	//std::unique_ptr<Texture> div3D;
 	//std::unique_ptr<Texture> pressure3D;
  
-	std::shared_ptr < Texture> SSAONoiseTexture = std::make_shared<Texture>();
-
+	std::shared_ptr < Texture> environmentTexture;
+	std::shared_ptr < Texture> SSAONoiseTexture;
 	std::unique_ptr < Texture> plainTexture;
 
 	std::shared_ptr <Render_Object> pyramid1;
@@ -435,23 +411,6 @@ struct RenderEngineMain::Impl
 
 		plainTexture = std::make_unique <Texture>("Textures/plain.png", true);
 		plainTexture->LoadTexture2D();
-
-		//pyramid1 = std::make_unique<Static_Object>();
-		//pyramid1->SetUpNativeModelData(meshList[0], "Textures/rustediron2.png", "Textures/Metallic/rustediron2.png",
-		//	"Textures/Roughness/rustediron2.png", "Textures/Normal/rustediron2.png",
-		//	"Textures/Parallax/rustediron2.png", "Textures/Glow/rock.jpg");
-		//pyramid2 = std::make_unique<Static_Object>();
-		//pyramid2->SetUpNativeModelData(meshList[1], "Textures/small_metal_debris.jpg", "Textures/Metallic/small_metal_debris.jpg",
-		//	"Textures/Roughness/small_metal_debris.jpg", "Textures/Normal/small_metal_debris.jpg",
-		//	"Textures/Parallax/small_metal_debris.jpg", "Textures/Glow/small_metal_debris.jpg");
-		//rectangle1 = std::make_unique<Static_Object>();
-		//rectangle1->SetUpNativeModelData(meshList[2], "Textures/brick.jpg", "Textures/Metallic/brick.jpg",
-		//	"Textures/Roughness/brick.jpg", "Textures/Normal/brick.jpg",
-		//	"Textures/Parallax/brick.jpg", "Textures/Glow/brick.jpg");
-		//rectangle2 = std::make_unique<Static_Object>();
-		//rectangle2->SetUpNativeModelData(meshList[3], "Textures/brick_floor.png", "Textures/Metallic/brick_floor.png",
-		//	"Textures/Roughness/brick_floor.png", "Textures/Normal/brick_floor.png",
-		//	"Textures/Parallax/brick_floor.png", "Textures/Glow/brick_floor.png");
 
 		//ToDo: Expand This on a dedicated issue #61
 		//terrainTextureDisp = std::make_shared <Texture>("Textures/Displacement/terrain.jpg");
@@ -955,6 +914,7 @@ struct RenderEngineMain::Impl
 				0.0f);
 			ssaoNoiseData[i] = noise;
 		}
+		SSAONoiseTexture = std::make_shared<Texture>();
 		SSAONoiseTexture->LoadNativeTexture(ssaoNoiseData);
 	}
 	
@@ -1083,7 +1043,7 @@ struct RenderEngineMain::Impl
 			OmniShadowMapPass(*omniDirLights, camParam);
 
 			PreZPass(camParam);
-			CullLight();
+			CullLight(camParam);
 			SSAOPass(camParam);
 			SSAOBlurPass(camParam);
 			RenderPass(camParam, mainLight.get(), pointLights, spotLights);
@@ -1215,8 +1175,8 @@ struct RenderEngineMain::Impl
 	void CreateClusters() 
 	{
 		//Building the grid of AABB enclosing the view frustum clusters
-		buildAABBGridCompShader->UseShader();
-		buildAABBGridCompShader->Dispatch(1, 1, gridSizeZ);
+		buildAABBGridCompShader->UseShaderObject();
+		buildAABBGridCompShader->DispatchShaderObject(glm::uvec3(1, 1, gridSizeZ));
 	}
 
 	std::shared_ptr<Mesh> CreateBillboard() 
@@ -1332,12 +1292,12 @@ struct RenderEngineMain::Impl
 
 		auto mesh0 = CreatePrism();
 		auto texMapDatas = std::vector<TexMapData>();
-		texMapDatas.push_back(TexMapData{ TexType::Albedo,		"Textures/rustediron2.png" });
-		texMapDatas.push_back(TexMapData{ TexType::Metallic,	"Textures/Metallic/rustediron2.png" });
-		texMapDatas.push_back(TexMapData{TexType::Roughness,	"Textures/Roughness/rustediron2.png"});
-		texMapDatas.push_back(TexMapData{ TexType::Normal,		"Textures/Normal/rustediron2.png" });
-		texMapDatas.push_back(TexMapData{ TexType::Parallax,	"Textures/Parallax/rustediron2.png" });
-		texMapDatas.push_back(TexMapData{ TexType::Glow,		"Textures/Glow/rock.jpg" });
+		texMapDatas.push_back(TexMapData{ TexType::Albedo,		"Textures/rustediron2.png" });						//Textures/small_metal_debris.jpg
+		texMapDatas.push_back(TexMapData{ TexType::Metallic,	"Textures/Metallic/rustediron2.png" });				//Textures/Metallic/small_metal_debris.jpg
+		texMapDatas.push_back(TexMapData{TexType::Roughness,	"Textures/Roughness/rustediron2.png"});				//Textures/Roughness/small_metal_debris.jpg
+		texMapDatas.push_back(TexMapData{ TexType::Normal,		"Textures/Normal/rustediron2.png" });				//Textures/Normal/small_metal_debris.jpg
+		texMapDatas.push_back(TexMapData{ TexType::Parallax,	"Textures/Parallax/rustediron2.png" });				//Textures/Parallax/small_metal_debris.jpg
+		texMapDatas.push_back(TexMapData{ TexType::Glow,		"Textures/Glow/rock.jpg" });						//Textures/Glow/small_metal_debris.jpg
 		auto modelMatrix = std::make_shared<glm::mat4>(1.0f);
 		auto prevModelMatrix = std::make_shared<glm::mat4>(1.0f);
 
@@ -1353,24 +1313,14 @@ struct RenderEngineMain::Impl
 		AddToPrevModelMatrixPool(std::move(prevModelMatrix));
 		unrigStuff.push_back(std::move(mro));
 
-
-		//auto rob = RenderObjectData{ std::make_shared<std::vector<Mesh>>(CreatePrism()), std::make_shared<std::map<TexType, std::vector<Texture>>>(), std::make_shared<glm::mat4>(1.0f), std::make_shared<glm::mat4>(1.0f) };
-		//rob.CreateTextureMap(TexType::Albedo, "Textures/small_metal_debris.jpg");
-		//rob.CreateTextureMap(TexType::Metallic, "Textures/Metallic/small_metal_debris.jpg");
-		//rob.CreateTextureMap(TexType::Roughness, "Textures/Roughness/small_metal_debris.jpg");
-		//rob.CreateTextureMap(TexType::Normal, "Textures/Normal/small_metal_debris.png");
-		//rob.CreateTextureMap(TexType::Parallax, "Textures/Parallax/small_metal_debris.jpg");
-		//rob.CreateTextureMap(TexType::Glow, "Textures/Glow/small_metal_debris.jpg");
-		//renderObjDatas->push_back(std::make_shared<RenderObjectData>(rob));
-
 		mesh0 = CreatePlane();
 		texMapDatas = std::vector<TexMapData>();
-		texMapDatas.push_back(TexMapData{ TexType::Albedo,		"Textures/plain.jpg" });
-		texMapDatas.push_back(TexMapData{ TexType::Metallic,	"Textures/Metallic/brick.jpg" });
-		texMapDatas.push_back(TexMapData{ TexType::Roughness,	"Textures/Roughness/brick.jpg" });
-		texMapDatas.push_back(TexMapData{ TexType::Normal,		"Textures/plain.jpg" });
-		texMapDatas.push_back(TexMapData{ TexType::Parallax,	"Textures/plain.jpg" });
-		texMapDatas.push_back(TexMapData{ TexType::Glow,		"Textures/Glow/brick.jpg" });
+		texMapDatas.push_back(TexMapData{ TexType::Albedo,		"Textures/brick_floor.png" });						//Textures/brick.jpg
+		texMapDatas.push_back(TexMapData{ TexType::Metallic,	"Textures/Metallic/brick_floor.png" });				//Textures/Metallic/brick.jpg
+		texMapDatas.push_back(TexMapData{ TexType::Roughness,	"Textures/Roughness/brick_floor.png" });			//Textures/Roughness/brick.jpg
+		texMapDatas.push_back(TexMapData{ TexType::Normal,		"Textures/Normal/brick_floor.png" });				//Textures/Normal/brick.jpg
+		texMapDatas.push_back(TexMapData{ TexType::Parallax,	"Textures/Parallax/brick_floor.png" });				//Textures/Parallax/brick.jpg
+		texMapDatas.push_back(TexMapData{ TexType::Glow,		"Textures/Glow/brick_floor.png" });					//Textures/Glow/brick.jpg
 		modelMatrix = std::make_shared<glm::mat4>(1.0f);
 		prevModelMatrix = std::make_shared<glm::mat4>(1.0f);
 
@@ -1386,15 +1336,6 @@ struct RenderEngineMain::Impl
 		AddToModelMatrixPool(std::move(modelMatrix));
 		AddToPrevModelMatrixPool(std::move(prevModelMatrix));
 		unrigStuff.push_back(std::move(mro));
-
-		//rob = RenderObjectData{ std::make_shared<std::vector<Mesh>>(CreatePlane()), std::make_shared<std::map<TexType, std::vector<Texture>>>(), std::make_shared<glm::mat4>(1.0f), std::make_shared<glm::mat4>(1.0f) };
-		//rob.CreateTextureMap(TexType::Albedo, "Textures/brick_floor.png");
-		//rob.CreateTextureMap(TexType::Metallic, "Textures/Metallic/brick_floor.png");
-		//rob.CreateTextureMap(TexType::Roughness, "Textures/Roughness/brick_floor.png");
-		//rob.CreateTextureMap(TexType::Normal, "Textures/Normal/brick_floor.png");
-		//rob.CreateTextureMap(TexType::Parallax, "Textures/Parallax/brick_floor.png");
-		//rob.CreateTextureMap(TexType::Glow, "Textures/Glow/brick_floor.png");
-		//renderObjDatas->push_back(std::make_shared<RenderObjectData>(rob));
 
 		sceneObjRO->push_back(unrigStuff);
 
@@ -1425,9 +1366,9 @@ struct RenderEngineMain::Impl
 
 	void CreateShaders() {
 
-		buildAABBGridCompShader->CreateFromFiles("Shaders/clusterShader.comp");
-		visibleClusterCompShader->CreateFromFiles("Shaders/clusterVisibleShader.comp");
-		cullLightsCompShader->CreateFromFiles("Shaders/clusterCullLightShader.comp");
+		buildAABBGridCompShader		= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/clusterShader.comp"});
+		visibleClusterCompShader	= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/clusterVisibleShader.comp"});
+		cullLightsCompShader		= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/clusterCullLightShader.comp"});
 		
 		//ToDo: #20 simulation manager class
 		//addSmokeSpotCompShader->CreateFromFiles("Shaders/2DFluid/addSmokeSpot.comp");
@@ -1474,8 +1415,7 @@ struct RenderEngineMain::Impl
 		skyboxShader				= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/skybox.vert", "Shaders/skybox.frag"});
 		
 		billboardShader				= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/billboard.vert", "Shaders/billboard.frag"});
-
-		particleShader->CreateFromFiles("Shaders/particles.vert", "Shaders/particles.frag");
+		particleShader				= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/particles.vert", "Shaders/particles.frag"});
 
 		//ToDo: #20 simulation manager class
 		//fluidFragShader->CreateFromFiles("Shaders/framebuffer.vert", "Shaders/2DFluid/fluid.frag");
@@ -1713,11 +1653,11 @@ struct RenderEngineMain::Impl
 		omniShadowRPHandler->Update(*sceneObjRO, &camParam, &lightParam);
 	}
 
-	void CullLight()
+	void CullLight(const CamParam& camParam)
 	{
-		visibleClusterCompShader->UseShader();
+		visibleClusterCompShader->UseShaderObject();
 		depthMap->AttachFBOToTextureUnit(0, 0, 0, 0);
-		visibleClusterCompShader->Dispatch(ScreenWidth / 32, ScreenHeight / 30, 1);
+		visibleClusterCompShader->DispatchShaderObject(glm::uvec3(ScreenWidth / 32, ScreenHeight / 30, 1));
 
 		//unsigned int count = 0;
 		//unsigned int isvisible[32 * 32 * 10];
@@ -1729,9 +1669,9 @@ struct RenderEngineMain::Impl
 		//}
 
 		//4-Light assignment
-		cullLightsCompShader->UseShader();
-		glUniformMatrix4fv(cullLightsCompShader->GetViewLocation(), 1, GL_FALSE, glm::value_ptr(camera->CalculateViewMatrix()));
-		cullLightsCompShader->Dispatch(1, 1, gridSizeZ);
+		cullLightsCompShader->UseShaderObject();
+		cullLightsCompShader->SetVariable("View", camParam.View);
+		cullLightsCompShader->DispatchShaderObject(glm::uvec3(1, 1, gridSizeZ));
 
 		//unsigned int count1 = 0;
 		//unsigned int grid[32 * 32 * 10 * 2];

@@ -72,7 +72,6 @@
     <ClCompile Include="Exposure_Render_Pass_Handler.cpp" />
     <ClCompile Include="Brdf_Render_Pass_Handler.cpp" />
     <ClCompile Include="Camera.cpp" />
-    <ClCompile Include="Compute_Shader.cpp" />
     <ClCompile Include="Debug.cpp" />
     <ClCompile Include="DirectionalLight.cpp" />
     <ClCompile Include="Directional_Shadow_Map_Render_Pass_Handler.cpp" />
@@ -92,7 +91,6 @@
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="Particle.cpp" />
     <ClCompile Include="ParticleSystem.cpp" />
-    <ClCompile Include="Particle_Shader.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
@@ -107,7 +105,6 @@
     <ClCompile Include="Render_Pass_Handler.cpp" />
     <ClCompile Include="Scene_Render_Pass_Handler.cpp" />
     <ClCompile Include="Scene_Shader_Object_Manager.cpp" />
-    <ClCompile Include="Shader.cpp" />
     <ClCompile Include="Shader_Object.cpp" />
     <ClCompile Include="Skybox_Render_Pass_Handler.cpp" />
     <ClCompile Include="SpotLight.cpp" />
@@ -144,7 +141,6 @@
     <ClInclude Include="Prefilter_Render_Pass_Handler.h" />
     <ClInclude Include="PreZ_Render_Pass_Handler.h" />
     <ClInclude Include="RenderingCommonValues.h" />
-    <ClInclude Include="Compute_Shader.h" />
     <ClInclude Include="Debug.h" />
     <ClInclude Include="DirectionalLight.h" />
     <ClInclude Include="EngineInputManager.h" />
@@ -152,7 +148,6 @@
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Particle.h" />
     <ClInclude Include="ParticleSystem.h" />
-    <ClInclude Include="Particle_Shader.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="PointLight.h" />
     <ClInclude Include="Render_Object.h" />
@@ -162,7 +157,6 @@
     <ClInclude Include="Render_Pass_Handler.h" />
     <ClInclude Include="Scene_Render_Pass_Handler.h" />
     <ClInclude Include="Scene_Shader_Object_Manager.h" />
-    <ClInclude Include="Shader.h" />
     <ClInclude Include="Shader_Object.h" />
     <ClInclude Include="Skybox_Render_Pass_Handler.h" />
     <ClInclude Include="spimpl.h" />
