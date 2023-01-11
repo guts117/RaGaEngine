@@ -30,12 +30,6 @@
     <ClCompile Include="Model_Importer.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
-    <ClCompile Include="Billboard_Mesh.cpp">
-      <Filter>Source Files\RenderEngine</Filter>
-    </ClCompile>
-    <ClCompile Include="Billboard_Shader.cpp">
-      <Filter>Source Files\RenderEngine</Filter>
-    </ClCompile>
     <ClCompile Include="Brdf_Render_Pass_Handler.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
@@ -189,14 +183,11 @@
     <ClCompile Include="Ssao_Render_Pass_Handler.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
+    <ClCompile Include="Billboard_Render_Pass_Handler.cpp">
+      <Filter>Source Files\RenderEngine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Billboard_Mesh.h">
-      <Filter>Header Files\RenderEngine</Filter>
-    </ClInclude>
-    <ClInclude Include="Billboard_Shader.h">
-      <Filter>Header Files\RenderEngine</Filter>
-    </ClInclude>
     <ClInclude Include="Brdf_Render_Pass_Handler.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
@@ -357,6 +348,9 @@
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="Ssao_Render_Pass_Handler.h">
+      <Filter>Header Files\RenderEngine</Filter>
+    </ClInclude>
+    <ClInclude Include="Billboard_Render_Pass_Handler.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
   </ItemGroup>

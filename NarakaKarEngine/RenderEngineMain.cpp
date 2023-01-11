@@ -1,12 +1,10 @@
 #include "pch.h"
 #include "RenderEngineMain.h"
 
-#include "Billboard_Shader.h"
 #include "Particle_Shader.h"
 #include "Compute_Shader.h"
 
 #include "Mesh.h"
-#include "Billboard_Mesh.h"
 #include "Camera.h"
 #include "Texture.h"
 #include "DirectionalLight.h"
@@ -46,8 +44,10 @@
 #include "Motion_Blur_Render_Pass_Handler.h"
 #include "Exposure_Render_Pass_Handler.h"
 #include "Skybox_Render_Pass_Handler.h"
+#include "Billboard_Render_Pass_Handler.h"
 
 #include <glm/gtx/euler_angles.hpp>
+#include <regex>
 
 using namespace NarakaKarEngine;
 using namespace RenderEngine;
@@ -152,6 +152,7 @@ struct RenderEngineMain::Impl
 	std::shared_ptr <Shader_Object> motionBlurShader;
 	std::shared_ptr <Shader_Object> exposureShader;
 	std::shared_ptr <Shader_Object> skyboxShader;
+	std::shared_ptr <Shader_Object> billboardShader;
 
 	std::shared_ptr <Fbo_Handler> environmentMap;
 	std::shared_ptr <Fbo_Handler> irradianceMap;
@@ -167,7 +168,6 @@ struct RenderEngineMain::Impl
 
 	std::shared_ptr <Fbo_Handler> omniShadowMaps;
 
-	std::unique_ptr < Shader_Object > billboardShader;
 	std::unique_ptr < Particle_Shader> particleShader = std::make_unique<Particle_Shader>();
 
 	//ToDo: To whomever it may concern. Probably me -_-
@@ -201,6 +201,7 @@ struct RenderEngineMain::Impl
 	std::shared_ptr<std::vector<std::vector<std::shared_ptr<Render_Object>>>> quadRO;
 	std::shared_ptr<std::vector<std::vector<std::shared_ptr<Render_Object>>>> cwCubeRO;
 	std::shared_ptr<std::vector<std::vector<std::shared_ptr<Render_Object>>>> sceneObjRO;
+	std::shared_ptr<std::vector<std::vector<std::shared_ptr<Render_Object>>>> billboardRO;
 
 	//ToDo: vector of all virtual objects should be in a different class
 	static std::shared_ptr<std::vector<std::shared_ptr<Transform>>> transformPool;
@@ -222,38 +223,31 @@ struct RenderEngineMain::Impl
 	std::unique_ptr<std::map<TexType, std::vector<std::weak_ptr<Texture>>>> CreateTextureMap(std::vector<TexMapData>&& texMapData)
 	{
 		auto textureMap = std::make_unique<std::map<TexType, std::vector<std::weak_ptr<Texture>>>>();
-		
+
 		for(auto i = 0; i< texMapData.size(); ++i)
 		{
 			TexMapData& dat = texMapData[i];
-			auto texture = std::make_shared<Texture>(dat.path, dat.type == TexType::Albedo);
+			auto texture = std::make_shared<Texture>(dat.path, dat.type == TexType::Albedo || TexType::Default);
 			auto wTexPtr = std::weak_ptr<Texture>(texture);
 			texturePool->push_back(texture);
-			//ToDo check for alpha channel/ currently incorrect use of find
-			if (dat.path.find(".png" || ".gif" || ".tiff" || ".tga" || ".jp2" || ".jpx") != std::string::npos)
+			if(texture->LoadTexture2D())
 			{
-				texture->LoadTextureWithAlpha();
-			}
-			else
-			{
-				texture->LoadTextureNoAlpha();
-			}
-			if (textureMap->contains(dat.type))
-			{
-				textureMap->at(dat.type).push_back(texture);
-			}
-			else
-			{
-				auto vec = std::vector<std::weak_ptr<Texture>>();
-				vec.push_back(wTexPtr);
-				textureMap->emplace(dat.type, vec);
+				if (textureMap->contains(dat.type))
+				{
+					textureMap->at(dat.type).push_back(texture);
+				}
+				else
+				{
+					auto vec = std::vector<std::weak_ptr<Texture>>();
+					vec.push_back(wTexPtr);
+					textureMap->emplace(dat.type, vec);
+				}
 			}
 		}
 
 		return textureMap;
 	}
 
-	std::vector< std::shared_ptr < Billboard_Mesh>> billboardList;
 	std::vector< std::shared_ptr < ParticleSystem>> particleList;
 
 	std::unique_ptr<std::vector<std::weak_ptr<Mesh>>> quad;
@@ -303,7 +297,6 @@ struct RenderEngineMain::Impl
 	std::shared_ptr < Texture> SSAONoiseTexture = std::make_shared<Texture>();
 
 	std::unique_ptr < Texture> plainTexture;
-	std::unique_ptr < Texture> grassTexture;
 
 	std::shared_ptr <Render_Object> pyramid1;
 	std::shared_ptr <Render_Object> pyramid2;
@@ -332,6 +325,7 @@ struct RenderEngineMain::Impl
 	std::shared_ptr<Motion_Blur_Render_Pass_Handler> motionBlurRPHandler;
 	std::shared_ptr<Exposure_Render_Pass_Handler> exposureRPHandler;
 	std::shared_ptr<Skybox_Render_Pass_Handler> skyboxRPHandler;
+	std::shared_ptr<Billboard_Render_Pass_Handler> billBoardRPHandler;
 
 	GLfloat aircraftAngle = 0.0f;
 
@@ -412,7 +406,7 @@ struct RenderEngineMain::Impl
 		glEnable(GL_TEXTURE_3D);
 		mainWindow->Initialise();
 		lastFrameTime = static_cast<GLfloat>(glfwGetTime());
-		//CreateBillboard();
+		CreateBillboard();
 		//CreateParticles();
 
 		texturePool = std::make_shared<std::vector<std::shared_ptr<Texture>>>();
@@ -420,12 +414,14 @@ struct RenderEngineMain::Impl
 		modelMatrixPool = std::make_shared<std::vector<std::shared_ptr<glm::mat4>>>();
 		prevModelMatrixPool = std::make_shared<std::vector<std::shared_ptr<glm::mat4>>>();
 		sceneObjRO = std::make_shared<std::vector<std::vector<std::shared_ptr<Render_Object>>>>();
+		billboardRO = std::make_shared<std::vector<std::vector<std::shared_ptr<Render_Object>>>>();
 
 		texturePool->reserve(100);
 		meshPool->reserve(100);
 		modelMatrixPool->reserve(100);
 		prevModelMatrixPool->reserve(100);
 		sceneObjRO->reserve(100);
+		billboardRO->reserve(100);
 
 		//ToDo: Expand This on a dedicated issue #61
 		//CreateTerrain();
@@ -438,10 +434,7 @@ struct RenderEngineMain::Impl
 		environmentTexture->LoadTextureHDR();
 
 		plainTexture = std::make_unique <Texture>("Textures/plain.png", true);
-		plainTexture->LoadTextureWithAlpha();
-
-		grassTexture = std::make_unique <Texture>("Textures/grass.png", true);
-		grassTexture->LoadTextureWithAlpha();
+		plainTexture->LoadTexture2D();
 
 		//pyramid1 = std::make_unique<Static_Object>();
 		//pyramid1->SetUpNativeModelData(meshList[0], "Textures/rustediron2.png", "Textures/Metallic/rustediron2.png",
@@ -923,6 +916,9 @@ struct RenderEngineMain::Impl
 		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(environmentMap)));
 		skyboxRPHandler = std::make_shared<Skybox_Render_Pass_Handler>(sceneFbo, skyboxShaders, inputs);
 
+		auto billboardShaders = std::vector<std::shared_ptr<Shader_Object>>{ billboardShader };
+		billBoardRPHandler = std::make_shared<Billboard_Render_Pass_Handler>(sceneFbo, billboardShaders);
+		
 		//sceneObjRO->push_back(unriggedSceneMeshes);
 		
 		//auto riggedSceneMeshes = std::vector <std::shared_ptr<Render_Object>>();
@@ -1079,7 +1075,9 @@ struct RenderEngineMain::Impl
 			UpdateObjectTransforms();
 			auto camParam = CamParam{ camera->getCameraPosition(), camera->GetProjectionMatrix(), camera->CalculateViewMatrix()
 									, camera->GetPreviousProjectionMatrix(), camera->GetPreviousViewMatrix(), camera->GetPreviousProjectionViewMatrix()
-									, framesPerSec};
+									, framesPerSec
+									, camera->getCameraUp()
+									, camera->getCameraRight()};
 			
 			DirectionalShadowMapPass(mainLight.get(), camParam);
 			OmniShadowMapPass(*omniDirLights, camParam);
@@ -1221,32 +1219,29 @@ struct RenderEngineMain::Impl
 		buildAABBGridCompShader->Dispatch(1, 1, gridSizeZ);
 	}
 
-	void CreateBillboard() {
-
-		unsigned int billboardIndices[] = {
+	std::shared_ptr<Mesh> CreateBillboard() 
+	{
+		//Show the front face to the camera
+		std::vector<GLuint> billboardIndices = {
 			0, 1, 2,
-			2, 1, 3
+			1, 3, 2
 		};
 
-		GLfloat billboardVertices[] =
+		std::vector<std::vector<GLfloat>> billboardVertices = 
 		{
-			-0.5f, -0.5f, 0.0f,
-			0.5f, -0.5f, 0.0f,
-			-0.5f, 0.5f, 0.0f,
-			0.5f, 0.5f, 0.0f,
+			std::vector<GLfloat>{	-0.5f, -0.5f, 0.0f		},
+			std::vector<GLfloat>{	0.5f, -0.5f, 0.0f,		},
+			std::vector<GLfloat>{	-0.5f, 0.5f, 0.0f,		},
+			std::vector<GLfloat>{	0.5f, 0.5f, 0.0f,		}
 		};
-
-		std::shared_ptr<Billboard_Mesh> obj = std::make_shared <Billboard_Mesh>();
-		obj->CreateMesh(billboardVertices, billboardIndices, 12, 6);
-		billboardList.push_back(obj);
-
+		return std::make_shared<Mesh>(0, std::move(billboardVertices), std::move(billboardIndices), std::move(MeshGenParams{ }));
 	}
 
 	void CreateParticles()
 	{
 		unsigned int particlesIndices[] = {
-			0, 1, 2,
-			1, 3, 2
+			0, 2, 1,
+			1, 2, 3
 		};
 
 		GLfloat particlesVertices[] =
@@ -1402,6 +1397,30 @@ struct RenderEngineMain::Impl
 		//renderObjDatas->push_back(std::make_shared<RenderObjectData>(rob));
 
 		sceneObjRO->push_back(unrigStuff);
+
+		std::vector<std::shared_ptr<Render_Object>> billboardStuff;
+
+		mesh0 = CreateBillboard();
+		texMapDatas = std::vector<TexMapData>();
+		texMapDatas.push_back(TexMapData{ TexType::Default,		"Textures/grass.png" });
+		modelMatrix = std::make_shared<glm::mat4>(1.0f);
+		prevModelMatrix = std::make_shared<glm::mat4>(1.0f);
+
+		texMap = CreateTextureMap(std::move(texMapDatas));
+
+		mesh = std::make_unique<std::vector<std::weak_ptr<Mesh>>>();
+		mesh->push_back(mesh0);
+		AddToMeshPool(std::move(mesh0));
+
+		mro = std::make_shared<Render_Object>(std::move(mesh), std::move(texMap), modelMatrix, prevModelMatrix);
+
+		*modelMatrix = glm::translate(*modelMatrix, glm::vec3(0.0f, -3.5f, 0.0f));
+		*modelMatrix = glm::scale(*modelMatrix, glm::vec3(2.0f, 2.0f, 0.0f));
+		AddToModelMatrixPool(std::move(modelMatrix));
+		AddToPrevModelMatrixPool(std::move(prevModelMatrix));
+		billboardStuff.push_back(std::move(mro));
+
+		billboardRO->push_back(billboardStuff);
 	}
 
 	void CreateShaders() {
@@ -1451,26 +1470,16 @@ struct RenderEngineMain::Impl
 		terrShader					= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain.tesse", "Shaders/terrain.frag"});
 		bloomShader					= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/blur_framebuffer.frag"});
 		motionBlurShader			= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/motionBlur_framebuffer.frag"});
-		exposureShader				= std::make_unique<Shader_Object>(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/hdr_framebuffer.frag"});
-		skyboxShader				= std::make_unique<Shader_Object>(std::vector<std::string>{"Shaders/skybox.vert", "Shaders/skybox.frag"});
+		exposureShader				= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/hdr_framebuffer.frag"});
+		skyboxShader				= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/skybox.vert", "Shaders/skybox.frag"});
 		
-		billboardShader				= std::make_unique<Shader_Object>(std::vector<std::string>{"Shaders/billboard.vert", "Shaders/billboard.frag"});
+		billboardShader				= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/billboard.vert", "Shaders/billboard.frag"});
 
 		particleShader->CreateFromFiles("Shaders/particles.vert", "Shaders/particles.frag");
 
 		//ToDo: #20 simulation manager class
 		//fluidFragShader->CreateFromFiles("Shaders/framebuffer.vert", "Shaders/2DFluid/fluid.frag");
 		//fluidFragShader3D->CreateFromFiles("Shaders/3DFluid/fluid.vert", "Shaders/3DFluid/fluid.frag");
-	}
-
-	void RenderBillboardScene()
-	{
-		billboardShader->SetVariable("BillboardPos", glm::vec3(6.0f, 29.0f, 0.0f));
-		billboardShader->SetVariable("BillboardSize", glm::vec2(2.0f, 2.0f/*0.125f*/));
-		billboardShader->SetVariable("prevPV", camera->GetPreviousProjectionViewMatrix());
-
-		grassTexture->UseTexture(0);
-		billboardList[0]->RenderMesh();
 	}
 
 	void RenderParticlesScene(GLfloat deltaTime)
@@ -1814,10 +1823,10 @@ struct RenderEngineMain::Impl
 
 		lightParam = LightParam(&lightData->positions[0], &lightData->projections[0], nullptr, &lightData->directions[0], &lightData->farplanes[0], &lightData->edges[0], spotLightCount, &lightData->colors[0]);
 		lightParamList.push_back(std::move(lightParam));
-
 		sceneRPHandler->Update(*sceneObjRO, &camParam, &lightParamList[0]);
-		//ToDo: skybox being here might cause blending issues
+		//Note: **Important** skybox being after transparent mesh causes blending issues
 		skyboxRPHandler->Update(*cwCubeRO, &camParam);		
+		billBoardRPHandler->Update(*billboardRO, &camParam);
 	}
 
 	void Bloom()

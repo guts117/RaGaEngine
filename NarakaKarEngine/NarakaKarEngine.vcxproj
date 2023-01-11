@@ -67,10 +67,9 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Billboard_Render_Pass_Handler.cpp" />
     <ClCompile Include="Bloom_Render_Pass_Handler.cpp" />
     <ClCompile Include="Exposure_Render_Pass_Handler.cpp" />
-    <ClCompile Include="Billboard_Mesh.cpp" />
-    <ClCompile Include="Billboard_Shader.cpp" />
     <ClCompile Include="Brdf_Render_Pass_Handler.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Compute_Shader.cpp" />
@@ -128,8 +127,7 @@
     <ClInclude Include="..\deps\Common\include\imgui\imstb_rectpack.h" />
     <ClInclude Include="..\deps\Common\include\imgui\imstb_textedit.h" />
     <ClInclude Include="..\deps\Common\include\imgui\imstb_truetype.h" />
-    <ClInclude Include="Billboard_Mesh.h" />
-    <ClInclude Include="Billboard_Shader.h" />
+    <ClInclude Include="Billboard_Render_Pass_Handler.h" />
     <ClInclude Include="Bloom_Render_Pass_Handler.h" />
     <ClInclude Include="Brdf_Render_Pass_Handler.h" />
     <ClInclude Include="Camera.h" />

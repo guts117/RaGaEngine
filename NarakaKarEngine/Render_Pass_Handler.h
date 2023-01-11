@@ -23,6 +23,8 @@ namespace NarakaKarEngine
 			const glm::mat4& PrevView;
 			const glm::mat4& PrevProjView;
 			const float fps;
+			const glm::vec3& Up;
+			const glm::vec3& Right;
 		};
 
 		struct LightParam
