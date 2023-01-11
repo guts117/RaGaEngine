@@ -69,18 +69,6 @@ struct RenderEngineMain::Impl
 
 	std::unique_ptr<Window> mainWindow = std::make_unique<Window>();
 
-	bool direction = true;
-	float triOffset = 0.0f;
-	float triMaxOffset = 0.6f;
-	float triIncrement = 0.005f;
-
-	float curAngle = 0.0f;
-
-	bool tooSmall = true;
-	float curScale = 0.0f;
-	float scaleIncrement = 0.0f;
-	float scaleMax = 5.0f;
-	float scaleMin = -1.0f;
 	bool drawFluidSim = false;
 	bool drawSmokeSim = false;
 
@@ -155,6 +143,7 @@ struct RenderEngineMain::Impl
 	std::shared_ptr <Fbo_Handler> exposureFbo;
 
 	std::shared_ptr <Fbo_Handler> omniShadowMaps;
+	std::shared_ptr <Fbo_Handler> cameraBlitFbo;
 
 	//ToDo: To whomever it may concern. Probably me -_-
 	//ToDo: After a decently extensive research and thought on my part I want the following to be done
@@ -240,7 +229,7 @@ struct RenderEngineMain::Impl
 	std::unique_ptr<std::vector<std::weak_ptr<Mesh>>> cwCube;
 	std::shared_ptr < Mesh> ccw_cube;
 
-	std::shared_ptr < Camera> camera;
+	std::vector<std::shared_ptr<Camera>> cameras;
 
 	std::shared_ptr < DirectionalLight> mainLight;
 	std::shared_ptr < PointLight> pointLights[MAX_POINT_LIGHTS_WITH_SHADOW];
@@ -404,7 +393,10 @@ struct RenderEngineMain::Impl
 		CreateObject();
 		CreateShaders();
 
-		camera = std::make_shared<Camera>(glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f, 50.0f, 0.2f);
+		auto gameCamera = std::make_shared<Camera>(glm::vec3(0.0f, 0.0f, -10.0f), glm::vec3(0.0f, 1.0f, 0.0f), 90.0f, 0.0f, 50.0f, 0.2f);
+		cameras.push_back(gameCamera);
+		auto editorCamera = std::make_shared<Camera>(glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f, 50.0f, 0.2f, true);
+		cameras.push_back(editorCamera);
 
 		environmentTexture = std::make_shared<Texture>("Textures/HDR/syferfontein_0d_clear_puresky_4k.hdr");
 		environmentTexture->LoadTextureHDR();
@@ -536,6 +528,8 @@ struct RenderEngineMain::Impl
 		bloomFbo = m_SceneFboHandlerMgr->FindFboHandler("Bloom_Pass");
 		exposureFbo = m_SceneFboHandlerMgr->FindFboHandler("Final_Output_Pass");
 		omniShadowMaps = m_SceneFboHandlerMgr->FindFboHandler("Omni_Shadow_Map_Pass");
+
+		cameraBlitFbo = m_SceneFboHandlerMgr->AddGameCameraFboHandlers(0);
 
 		quad = std::make_unique <std::vector<std::weak_ptr<Mesh>>>();
 
@@ -924,7 +918,7 @@ struct RenderEngineMain::Impl
 		{
 			isUpdateFrameBuffersSize = false;
 
-			auto invProj = glm::inverse(camera->GetProjectionMatrix());
+			auto invProj = glm::inverse(cameras[0]->GetProjectionMatrix());
 			glNamedBufferSubData(screenToViewSSBO, 0, sizeof(invProj), &invProj);
 			sizeX = (unsigned int)std::ceilf(ScreenWidth / (float)gridSizeX);
 			sizeY = (unsigned int)std::ceilf(ScreenHeight / (float)gridSizeY);
@@ -953,9 +947,13 @@ struct RenderEngineMain::Impl
 			lastFrameTime += 1.0;
 		}
 
-		if (isGameViewSelected) 
+		if (isEditorViewSelected) 
 		{
-			camera->keyControl(mainWindow->getKeys(), deltaTime);
+			cameras[1]->keyControl(mainWindow->getKeys(), deltaTime);
+		}
+		else if(isGameViewSelected)
+		{
+			cameras[0]->keyControl(mainWindow->getKeys(), deltaTime);
 		}
 
 		//ToDo: #20 simulation manager class
@@ -994,35 +992,13 @@ struct RenderEngineMain::Impl
 
 		if (!drawFluidSim && !drawSmokeSim)
 		{
-			if (isGameViewSelected)
+			if (isEditorViewSelected)
 			{
-				camera->mouseControl(mainWindow->getXChange(), mainWindow->getYChange());
+				cameras[1]->mouseControl(mainWindow->getXChange(), mainWindow->getYChange());
 			}
-
-			if (direction) {
-				triOffset += triIncrement;
-			}
-			else {
-				triOffset -= triIncrement;
-			}
-
-			if (abs(triOffset) >= triMaxOffset) {
-				direction = !direction;
-			}
-			curAngle += 0.5f;
-			if (curAngle >= 360) {
-				curAngle -= 360;
-			}
-
-			if (tooSmall) {
-
-				curScale += scaleIncrement;
-			}
-			else {
-				curScale -= scaleIncrement;
-			}
-			if (curScale >= scaleMax || curScale <= scaleMin) {
-				tooSmall = !tooSmall;
+			else if (isGameViewSelected)
+			{
+				cameras[0]->mouseControl(mainWindow->getXChange(), mainWindow->getYChange());
 			}
 
 			if (mainWindow->getKeys()[GLFW_KEY_L]) {
@@ -1030,35 +1006,39 @@ struct RenderEngineMain::Impl
 				mainWindow->getKeys()[GLFW_KEY_L] = false;
 			}
 
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 			UpdateObjectTransforms();
-			auto camParam = CamParam{ camera->getCameraPosition(), camera->GetProjectionMatrix(), camera->CalculateViewMatrix()
-									, camera->GetPreviousProjectionMatrix(), camera->GetPreviousViewMatrix(), camera->GetPreviousProjectionViewMatrix()
-									, framesPerSec
-									, camera->getCameraUp()
-									, camera->getCameraRight()};
 			
-			DirectionalShadowMapPass(mainLight.get(), camParam);
-			OmniShadowMapPass(*omniDirLights, camParam);
+			for(auto& camera: cameras)
+			{
+				auto camParam = CamParam{ camera->getCameraPosition(), camera->GetProjectionMatrix(), camera->CalculateViewMatrix()
+						, camera->GetPreviousProjectionMatrix(), camera->GetPreviousViewMatrix(), camera->GetPreviousProjectionViewMatrix()
+						, framesPerSec
+						, camera->getCameraUp()
+						, camera->getCameraRight() };
 
-			PreZPass(camParam);
-			CullLight(camParam);
-			SSAOPass(camParam);
-			SSAOBlurPass(camParam);
-			RenderPass(camParam, mainLight.get(), pointLights, spotLights);
-			Bloom();
-			MotionBlurPass(camParam);
-			exposureRPHandler->Update(*quadRO);
+				DirectionalShadowMapPass(mainLight.get(), camParam);
+				OmniShadowMapPass(*omniDirLights, camParam);
 
-			auto lowerLight = camParam.Position;
-			lowerLight.y -= 0.1f;
-			spotLights[0]->SetFlash(lowerLight, camera->getCameraDirection());
+				PreZPass(camParam);
+				CullLight(camParam);
+				SSAOPass(camParam);
+				SSAOBlurPass(camParam);
+				RenderPass(camParam, mainLight.get(), pointLights, spotLights);
+				Bloom();
+				MotionBlurPass(camParam);
+				exposureRPHandler->Update(*quadRO);
+
+				if(!camera->isEditor)
+				{
+					exposureFbo->Blit(0, *cameraBlitFbo, 0);
+					auto lowerLight = camParam.Position;
+					lowerLight.y -= 0.1f;
+					spotLights[0]->SetFlash(lowerLight, camera->getCameraDirection());
+				}
+
+				camera->UpdatePreviousMatrices();
+			}
 		}
-
-		//RenderToDefaultFB();
-
-		camera->UpdatePreviousMatrices();
 
 		glUseProgram(0);
 	}
@@ -1092,7 +1072,7 @@ struct RenderEngineMain::Impl
 
 			ScreenToView screen2View;
 			//Setting up contents of buffer
-			screen2View.inverseProjectionMat = glm::inverse(camera->GetProjectionMatrix());
+			screen2View.inverseProjectionMat = glm::inverse(cameras[0]->GetProjectionMatrix());
 
 			screen2View.tileSizes[0] = gridSizeX;
 			screen2View.tileSizes[1] = gridSizeY;
@@ -1422,14 +1402,15 @@ struct RenderEngineMain::Impl
 		//fluidFragShader3D->CreateFromFiles("Shaders/3DFluid/fluid.vert", "Shaders/3DFluid/fluid.frag");
 	}
 
-	void RenderParticlesScene(GLfloat deltaTime)
-	{
-		particleList[0]->GenerateParticlesCPU(deltaTime, glm::vec3(10.0f, 33.0f, 0.0f));
-		particleList[0]->SimulateParticlesCPU(camera->getCameraPosition(), deltaTime);
-		particleList[0]->UpdateParticlesMeshCPU();
-		plainTexture->UseTexture(0);
-		particleList[0]->RenderInstancedMesh();
-	}
+	//ToDo: Fix and refactor in #33
+	//void RenderParticlesScene(GLfloat deltaTime)
+	//{
+	//	particleList[0]->GenerateParticlesCPU(deltaTime, glm::vec3(10.0f, 33.0f, 0.0f));
+	//	particleList[0]->SimulateParticlesCPU(camera->getCameraPosition(), deltaTime);
+	//	particleList[0]->UpdateParticlesMeshCPU();
+	//	plainTexture->UseTexture(0);
+	//	particleList[0]->RenderInstancedMesh();
+	//}
 
 	void RenderTerrain(bool shadow, bool depth)
 	{
@@ -1621,7 +1602,7 @@ struct RenderEngineMain::Impl
 	void DirectionalShadowMapPass(DirectionalLight* light, const CamParam& camParam) {
 
 		auto testLitView = light->CalculateCascadeLightTransform();
-		light->CalcOrthProjs(camera->CalculateViewMatrix(), &testLitView, 60.0f);
+		light->CalcOrthProjs(camParam.View, &testLitView, 60.0f);
 
 		glm::mat4 proj[NUM_CASCADES];
 		glm::mat4 vView[NUM_CASCADES];
@@ -2224,8 +2205,8 @@ GLFWwindow* RenderEngineMain::GetMainWindow()
 
 void RenderEngineMain::AddViewers()
 {
-	engineUI->AddSceneViewers(Pimpl()->sceneFbo->GetFBOBuffer(0, 0), "EditorScene", Editor, [this](bool isSelected) { Pimpl()->isEditorViewSelected = isSelected; });
-	engineUI->AddSceneViewers(Pimpl()->exposureFbo->GetFBOBuffer(0, 0), "InGameScene", InGame, [this](bool isSelected) { Pimpl()->mainWindow->SetCursorActive(!isSelected); Pimpl()->isGameViewSelected = isSelected; });
+	engineUI->AddSceneViewers(Pimpl()->exposureFbo->GetFBOBuffer(0, 0), "EditorView", Editor, [this](bool isSelected) { Pimpl()->isEditorViewSelected = isSelected; });
+	engineUI->AddSceneViewers(Pimpl()->cameraBlitFbo->GetFBOBuffer(0, 0), "GameView", InGame, [this](bool isSelected) { Pimpl()->mainWindow->SetCursorActive(!isSelected); Pimpl()->isGameViewSelected = isSelected; });
 }
 
 bool RenderEngineMain:: IsEnd()

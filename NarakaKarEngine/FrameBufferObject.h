@@ -65,9 +65,12 @@ namespace NarakaKarEngine
 			void AttachColorBufferToTexture(const GLenum& textureUnit, const GLuint& texGenParamIndex, const GLuint& bufferIndex) const;
 			void CreateMipMap(const GLuint& texParamIndex, const GLuint& bufferIndex) const;
 			void ResizeBuffers(int width, int height);
+			void Blit(const GLuint& to_fboID);
+
 			const GLuint& GetWidth() const;
 			const GLuint& GetHeight() const;
 			const GLuint& GetBuffer(const GLuint& bufferIndex) const;
+			const GLuint GetFboId() const;
 
 			~FrameBufferObject();
 

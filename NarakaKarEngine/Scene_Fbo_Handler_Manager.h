@@ -25,6 +25,7 @@ namespace NarakaKarEngine
 
 			std::shared_ptr<Fbo_Handler> FindFboHandler(const std::string& handlerName) const;
 			void ResizeScreenFboHandlers(const GLuint& width, const GLuint& height);
+			std::shared_ptr<Fbo_Handler>  AddGameCameraFboHandlers(const int& cameraId);
 			~Scene_Fbo_Handler_Manager();
 
 		private:

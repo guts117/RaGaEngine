@@ -50,7 +50,7 @@ struct Scene_Fbo_Handler_Manager::Impl
 		fboTexGenParams = FBOTexGenParams{ 1, GL_TEXTURE_CUBE_MAP, 0, GL_RGB16F, 0, GL_RGB, GL_FLOAT, NULL, fboTexParams };
 		FBORenderBufferParam fboRBParams{ GL_DEPTH_COMPONENT24 , GL_DEPTH_ATTACHMENT };
 		fboParams = std::make_shared<FBOParams>(FBOParams{ true, static_cast<GLuint>(ScreenWidth), static_cast<GLuint>(ScreenWidth), GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, std::vector<FBOTexGenParams>{fboTexGenParams}, std::vector<FBORenderBufferParam>{ fboRBParams } });
-		fbo = std::make_unique<FrameBufferObject>(fboParams);
+		fbo = std::make_shared<FrameBufferObject>(fboParams);
 		fboVec = std::make_unique<std::vector<std::shared_ptr<FrameBufferObject>>>();
 		fboVec->push_back(fbo);
 		fboHandlr = std::make_shared<Fbo_Handler>(std::move(fboVec), "Environment_Map_Pass", false, 0, 0, nullptr, nullptr);
@@ -67,7 +67,7 @@ struct Scene_Fbo_Handler_Manager::Impl
 		fboTexGenParams = FBOTexGenParams{ 1, GL_TEXTURE_CUBE_MAP, 0, GL_RGB16F, 0, GL_RGB, GL_FLOAT, NULL, fboTexParams };
 		fboRBParams = FBORenderBufferParam{ GL_DEPTH_COMPONENT24 , GL_DEPTH_ATTACHMENT };
 		fboParams = std::make_shared<FBOParams>(FBOParams{ true, 32, 32, GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, std::vector<FBOTexGenParams>{fboTexGenParams}, std::vector<FBORenderBufferParam>{ fboRBParams } });
-		fbo = std::make_unique<FrameBufferObject>(fboParams);
+		fbo = std::make_shared<FrameBufferObject>(fboParams);
 		fboVec = std::make_unique<std::vector<std::shared_ptr<FrameBufferObject>>>();
 		fboVec->push_back(fbo);
 		fboHandlr = std::make_shared<Fbo_Handler>(std::move(fboVec), "Irradiance_Map_Pass", false, 0, 0, nullptr, nullptr);
@@ -84,7 +84,7 @@ struct Scene_Fbo_Handler_Manager::Impl
 		fboTexGenParams = FBOTexGenParams{ 1, GL_TEXTURE_CUBE_MAP, 0, GL_RGB16F, 0, GL_RGB, GL_FLOAT, NULL, fboTexParams };
 		fboRBParams = FBORenderBufferParam{ GL_DEPTH_COMPONENT24 , GL_DEPTH_ATTACHMENT };
 		fboParams = std::make_shared<FBOParams>(FBOParams{ true, 128, 128, GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, std::vector<FBOTexGenParams>{fboTexGenParams}, std::vector<FBORenderBufferParam>{fboRBParams} });
-		fbo = std::make_unique<FrameBufferObject>(fboParams);
+		fbo = std::make_shared<FrameBufferObject>(fboParams);
 		fbo->CreateMipMap(0, 0);
 		fboVec = std::make_unique<std::vector<std::shared_ptr<FrameBufferObject>>>();
 		fboVec->push_back(fbo);
@@ -101,7 +101,7 @@ struct Scene_Fbo_Handler_Manager::Impl
 
 		fboTexGenParams = FBOTexGenParams{ 1, GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL, fboTexParams };
 		fboParams = std::make_shared<FBOParams>(FBOParams{ false, static_cast<GLuint>(ScreenWidth), static_cast<GLuint>(ScreenHeight), GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, std::vector<FBOTexGenParams>{fboTexGenParams} });
-		fbo = std::make_unique<FrameBufferObject>(fboParams);
+		fbo = std::make_shared<FrameBufferObject>(fboParams);
 		fboVec = std::make_unique<std::vector<std::shared_ptr<FrameBufferObject>>>();
 		fboVec->push_back(fbo);
 		fboHandlr = std::make_shared<Fbo_Handler>(std::move(fboVec), "Depth_Pass", true, 0, 0, nullptr, nullptr);
@@ -119,7 +119,7 @@ struct Scene_Fbo_Handler_Manager::Impl
 
 		fboTexGenParams = FBOTexGenParams{ NUM_CASCADES, GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL, fboTexParams };
 		fboParams = std::make_shared<FBOParams>(FBOParams{ false, 1024, 1024, GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, std::vector<FBOTexGenParams>{fboTexGenParams} });
-		fbo = std::make_unique<FrameBufferObject>(fboParams);
+		fbo = std::make_shared<FrameBufferObject>(fboParams);
 		fboVec = std::make_unique<std::vector<std::shared_ptr<FrameBufferObject>>>();
 		fboVec->push_back(fbo);
 		fboHandlr = std::make_shared<Fbo_Handler>(std::move(fboVec), "Shadow_Map_Pass", false, 0, 0, nullptr, nullptr);
@@ -152,7 +152,7 @@ struct Scene_Fbo_Handler_Manager::Impl
 
 		fboTexGenParams = FBOTexGenParams{ 1, GL_TEXTURE_2D, 0, GL_R32F, 0, GL_RED, GL_FLOAT, NULL, fboTexParams };
 		fboParams = std::make_shared<FBOParams>(FBOParams{ false, static_cast<GLuint>(ScreenWidth), static_cast<GLuint>(ScreenHeight), GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, std::vector<FBOTexGenParams>{fboTexGenParams} });
-		fbo = std::make_unique<FrameBufferObject>(fboParams);
+		fbo = std::make_shared<FrameBufferObject>(fboParams);
 		fboVec = std::make_unique<std::vector<std::shared_ptr<FrameBufferObject>>>();
 		fboVec->push_back(fbo);
 		fboHandlr = std::make_shared<Fbo_Handler>(std::move(fboVec), "Ssao_Pass", true, 0, 0, nullptr, nullptr);
@@ -167,7 +167,7 @@ struct Scene_Fbo_Handler_Manager::Impl
 
 		fboTexGenParams = FBOTexGenParams{ 1, GL_TEXTURE_2D, 0, GL_R32F, 0, GL_RED, GL_FLOAT, NULL, fboTexParams };
 		fboParams = std::make_shared<FBOParams>(FBOParams{ false, static_cast<GLuint>(ScreenWidth), static_cast<GLuint>(ScreenHeight), GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, std::vector<FBOTexGenParams>{fboTexGenParams} });
-		fbo = std::make_unique<FrameBufferObject>(fboParams);
+		fbo = std::make_shared<FrameBufferObject>(fboParams);
 		fboVec = std::make_unique<std::vector<std::shared_ptr<FrameBufferObject>>>();
 		fboVec->push_back(fbo);
 		fboHandlr = std::make_shared<Fbo_Handler>(std::move(fboVec), "Ssao_Blur_Pass", true, 0, 0, nullptr, nullptr);
@@ -188,7 +188,7 @@ struct Scene_Fbo_Handler_Manager::Impl
 		FBOTexGenParams motionfboTexGenParams{ 1, GL_TEXTURE_2D, 0, GL_RG16F, 0, GL_RG, GL_FLOAT, NULL, motionFboTexParams };
 		fboRBParams = FBORenderBufferParam{ GL_DEPTH_COMPONENT , GL_DEPTH_ATTACHMENT };
 		fboParams = std::make_shared<FBOParams>(FBOParams{ false, static_cast<GLuint>(ScreenWidth), static_cast<GLuint>(ScreenHeight), GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, std::vector<FBOTexGenParams>{colorFboTexGenParams, motionfboTexGenParams }, std::vector<FBORenderBufferParam>{ fboRBParams } });
-		fbo = std::make_unique<FrameBufferObject>(fboParams);
+		fbo = std::make_shared<FrameBufferObject>(fboParams);
 		fboVec = std::make_unique<std::vector<std::shared_ptr<FrameBufferObject>>>();
 		fboVec->push_back(fbo);
 		fboHandlr = std::make_shared<Fbo_Handler>(std::move(fboVec), "Shading_Pass", true, 0, 0, nullptr, nullptr);
@@ -220,7 +220,7 @@ struct Scene_Fbo_Handler_Manager::Impl
 
 		fboTexGenParams = FBOTexGenParams{ 1, GL_TEXTURE_2D, 0, GL_RGBA16F, 0, GL_RGBA, GL_FLOAT, NULL, fboTexParams };
 		fboParams = std::make_shared<FBOParams>(FBOParams{ false, static_cast<GLuint>(ScreenWidth), static_cast<GLuint>(ScreenHeight), GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, std::vector<FBOTexGenParams>{fboTexGenParams} });
-		fbo = std::make_unique<FrameBufferObject>(fboParams);
+		fbo = std::make_shared<FrameBufferObject>(fboParams);
 		fboVec = std::make_unique<std::vector<std::shared_ptr<FrameBufferObject>>>();
 		fboVec->push_back(fbo);
 		fboHandlr = std::make_shared<Fbo_Handler>(std::move(fboVec), "Motion_Blur_Pass", true, 0, 0, nullptr, nullptr);
@@ -236,12 +236,36 @@ struct Scene_Fbo_Handler_Manager::Impl
 
 		fboTexGenParams = FBOTexGenParams{ 1, GL_TEXTURE_2D, 0, GL_RGBA16F, 0, GL_RGBA, GL_FLOAT, NULL, fboTexParams };
 		fboParams = std::make_shared<FBOParams>(FBOParams{ false, static_cast<GLuint>(ScreenWidth), static_cast<GLuint>(ScreenHeight), GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, std::vector<FBOTexGenParams>{fboTexGenParams} });
-		fbo = std::make_unique<FrameBufferObject>(fboParams);
+		fbo = std::make_shared<FrameBufferObject>(fboParams);
 		fboVec = std::make_unique<std::vector<std::shared_ptr<FrameBufferObject>>>();
 		fboVec->push_back(fbo);
 		fboHandlr = std::make_shared<Fbo_Handler>(std::move(fboVec), "Final_Output_Pass", true, 0, 0, nullptr, nullptr);
 		m_FboHandlerVec->push_back(fboHandlr);
 
+
+		fboTexParams.clear();
+		fboTexParams.push_back(FBOTexParams{ GL_TEXTURE_MIN_FILTER,		GL_LINEAR });
+		fboTexParams.push_back(FBOTexParams{ GL_TEXTURE_MAG_FILTER,		GL_LINEAR });
+		fboTexParams.push_back(FBOTexParams{ GL_TEXTURE_WRAP_S,			GL_CLAMP_TO_EDGE });
+		fboTexParams.push_back(FBOTexParams{ GL_TEXTURE_WRAP_T,			GL_CLAMP_TO_EDGE });
+	}
+
+	std::shared_ptr<Fbo_Handler> AddGameCameraFboHandlers(const int& cameraId)
+	{
+		auto fboTexParams = std::vector<FBOTexParams>();
+		fboTexParams.push_back(FBOTexParams{ GL_TEXTURE_MIN_FILTER,		GL_LINEAR });
+		fboTexParams.push_back(FBOTexParams{ GL_TEXTURE_MAG_FILTER,		GL_LINEAR });
+		fboTexParams.push_back(FBOTexParams{ GL_TEXTURE_WRAP_S,			GL_CLAMP_TO_EDGE });
+		fboTexParams.push_back(FBOTexParams{ GL_TEXTURE_WRAP_T,			GL_CLAMP_TO_EDGE });
+
+		FBOTexGenParams fboTexGenParams{ 1, GL_TEXTURE_2D, 0, GL_RGBA16F, 0, GL_RGBA, GL_FLOAT, NULL, fboTexParams };
+		auto fboParams = std::make_shared<FBOParams>(FBOParams{ false, static_cast<GLuint>(ScreenWidth), static_cast<GLuint>(ScreenHeight), GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, std::vector<FBOTexGenParams>{fboTexGenParams} });
+		auto fbo = std::make_shared<FrameBufferObject>(fboParams);
+		auto fboVec = std::make_unique<std::vector<std::shared_ptr<FrameBufferObject>>>();
+		fboVec->push_back(fbo);
+		auto fboHandlr = std::make_shared<Fbo_Handler>(std::move(fboVec), "CameraPass" + cameraId, true, 0, 0, nullptr, nullptr);
+		m_FboHandlerVec->push_back(fboHandlr);
+		return fboHandlr;
 	}
 
 	Impl(Impl&& rhs) noexcept = default;
@@ -274,6 +298,11 @@ void Scene_Fbo_Handler_Manager::ResizeScreenFboHandlers(const GLuint& width, con
 			Pimpl()->m_FboHandlerVec->at(i)->ResizeFBO(width, height);
 		}
 	}
+}
+
+std::shared_ptr<Fbo_Handler> Scene_Fbo_Handler_Manager::AddGameCameraFboHandlers(const int& cameraId)
+{
+	return Pimpl()->AddGameCameraFboHandlers(cameraId);
 }
 
 Scene_Fbo_Handler_Manager::~Scene_Fbo_Handler_Manager() = default;

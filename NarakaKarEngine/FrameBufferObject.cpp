@@ -236,6 +236,11 @@ void FrameBufferObject::ResizeBuffers(int width, int height)
 	Pimpl()->ResizeBuffers(width, height);
 }
 
+void FrameBufferObject::Blit(const GLuint& to_fboID) 
+{
+	glBlitNamedFramebuffer(Pimpl()->m_FboId, to_fboID, 0, 0, Pimpl()->GetWidth(), Pimpl()->GetHeight(), 0, 0, Pimpl()->GetWidth(), Pimpl()->GetHeight(), GL_COLOR_BUFFER_BIT, GL_LINEAR);
+}
+
 const GLuint& FrameBufferObject::GetWidth() const
 {
 	return Pimpl()->GetWidth();
@@ -249,6 +254,11 @@ const GLuint& FrameBufferObject::GetHeight() const
 const GLuint& FrameBufferObject::GetBuffer(const GLuint& bufferIndex) const
 {
 	return Pimpl()->m_ReadWriteBuffers[bufferIndex];
+}
+
+const GLuint FrameBufferObject::GetFboId() const 
+{
+	return Pimpl()->m_FboId;
 }
 
 FrameBufferObject::~FrameBufferObject() = default;

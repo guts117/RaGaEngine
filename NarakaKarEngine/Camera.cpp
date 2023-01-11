@@ -8,7 +8,7 @@ using namespace RenderEngine;
 extern int ScreenWidth;
 extern int ScreenHeight;
 
-Camera::Camera(glm::vec3 startPosition, glm::vec3 startUp, GLfloat startYaw, GLfloat startPitch, GLfloat startMoveSpeed, GLfloat startTurnSpeed)
+Camera::Camera(glm::vec3 startPosition, glm::vec3 startUp, GLfloat startYaw, GLfloat startPitch, GLfloat startMoveSpeed, GLfloat startTurnSpeed, const bool& isEditor)
 	:
 	position{ startPosition },
 	front{ glm::vec3(0.0f, 0.0f, -1.0f) },
@@ -16,8 +16,8 @@ Camera::Camera(glm::vec3 startPosition, glm::vec3 startUp, GLfloat startYaw, GLf
 	yaw{ startYaw },
 	pitch{ startPitch },
 	moveSpeed{ startMoveSpeed },
-	turnSpeed{startTurnSpeed}
-
+	turnSpeed{startTurnSpeed},
+	isEditor{isEditor}
 {
 	update();
 }
@@ -43,7 +43,8 @@ void Camera::keyControl(bool* Keys, GLfloat deltaTime) {
 	}
 }
 
-void Camera::mouseControl(GLfloat xChange, GLfloat yChange) {
+void Camera::mouseControl(GLfloat xChange, GLfloat yChange) 
+{
 	xChange *= turnSpeed;
 	yChange *= turnSpeed;
 

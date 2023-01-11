@@ -116,6 +116,11 @@ void Fbo_Handler::ResizeFBO(const GLuint& width, const GLuint& height)
 	Pimpl()->ResizeFBO(width, height);
 }
 
+void Fbo_Handler::Blit(const GLuint& fboIndex, const Fbo_Handler& toFboHandlr, const GLuint& toFboIndex) const
+{
+	Pimpl()->m_FboVec->at(fboIndex)->Blit(toFboHandlr.GetFBOId(toFboIndex));
+}
+
 const GLuint& Fbo_Handler::GetFBOWidth(const GLuint& fboIndex) const
 {
 	return Pimpl()->m_FboVec->at(fboIndex)->GetWidth();
@@ -129,6 +134,11 @@ const GLuint& Fbo_Handler::GetFBOHeight(const GLuint& fboIndex) const
 const GLuint& Fbo_Handler::GetFBOBuffer(const GLuint& fboIndex, const GLuint& bufferIndex) const
 {
 	return Pimpl()->m_FboVec->at(fboIndex)->GetBuffer(bufferIndex);
+}
+
+const GLuint& NarakaKarEngine::RenderEngine::Fbo_Handler::GetFBOId(const GLuint& fboIndex) const
+{
+	return Pimpl()->m_FboVec->at(fboIndex)->GetFboId();
 }
 
 Fbo_Handler::~Fbo_Handler() = default;

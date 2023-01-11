@@ -11,7 +11,7 @@ namespace NarakaKarEngine
 		{
 		public:
 			Camera() = default;
-			Camera(glm::vec3 startPosition, glm::vec3 startUp, GLfloat startYaw, GLfloat startPitch, GLfloat startMoveSpeed, GLfloat startTurnSpeed);
+			Camera(glm::vec3 startPosition, glm::vec3 startUp, GLfloat startYaw, GLfloat startPitch, GLfloat startMoveSpeed, GLfloat startTurnSpeed, const bool& isEditor = false);
 
 			void keyControl(bool* Keys, GLfloat deltaTime);
 			void mouseControl(GLfloat xChange, GLfloat yChange);
@@ -32,6 +32,8 @@ namespace NarakaKarEngine
 			void UpdatePreviousMatrices();
 
 			GLfloat GetYaw();
+
+			bool isEditor;
 
 			~Camera() = default;
 		private:
