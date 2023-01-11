@@ -35,8 +35,7 @@ namespace NarakaKarEngine
 			Texture(const Texture& rhs) noexcept = delete;
 			Texture& operator=(const Texture& rhs) noexcept = delete;
 
-			bool LoadTextureWithAlpha();
-			bool LoadTextureNoAlpha();
+			bool LoadTexture2D();
 			bool LoadTextureArray(const glm::vec2& resolution, const int numOfLayers);
 			bool LoadCubeMap();
 			bool LoadTextureHDR();
