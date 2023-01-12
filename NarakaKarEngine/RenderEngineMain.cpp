@@ -292,7 +292,7 @@ struct RenderEngineMain::Impl
 	std::shared_ptr<Skybox_Render_Pass_Handler> skyboxRPHandler;
 	std::shared_ptr<Billboard_Render_Pass_Handler> billBoardRPHandler;
 
-	GLfloat aircraftAngle = 0.0f;
+	int isFocusedCount;
 
 	glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
 	glm::mat4 captureViews[6] =
@@ -2200,11 +2200,13 @@ RenderEngineMain::RenderEngineMain() : m_pImpl{ std::make_unique<Impl>() } { Pim
 void RenderEngineMain::Update()
 {	
 	Pimpl()->Update();
+	Pimpl()->isFocusedCount = 0;
 }
 
 void RenderEngineMain::EndUpdate() 
 {
 	Pimpl()->EndUpdate();
+	Pimpl()->mainWindow->SetCursorActive(Pimpl()->isFocusedCount == 0);
 }
 
 GLFWwindow* RenderEngineMain::GetMainWindow()
@@ -2219,8 +2221,8 @@ bool RenderEngineMain::IsCursorHidden()
 
 void RenderEngineMain::AddViewers()
 {
-	engineUI->AddSceneViewers(Pimpl()->exposureFbo->GetFBOBuffer(0, 0), "EditorView", Editor, [this](bool isSelected) { Pimpl()->isEditorViewSelected = isSelected; });
-	engineUI->AddSceneViewers(Pimpl()->cameraBlitFbo->GetFBOBuffer(0, 0), "GameView", InGame, [this](bool isSelected) { Pimpl()->mainWindow->SetCursorActive(!isSelected); Pimpl()->isGameViewSelected = isSelected; });
+	engineUI->AddSceneViewers(Pimpl()->exposureFbo->GetFBOBuffer(0, 0), "EditorView", Editor, [this](bool isSelected, bool isHideCursor) {  Pimpl()->isFocusedCount += isHideCursor ? 1.0 : 0.0f; Pimpl()->isEditorViewSelected = isSelected; });
+	engineUI->AddSceneViewers(Pimpl()->cameraBlitFbo->GetFBOBuffer(0, 0), "GameView", InGame, [this](bool isSelected, bool isHideCursor) {  Pimpl()->isFocusedCount += isHideCursor ? 1.0 : 0.0f; Pimpl()->isGameViewSelected = isSelected; });
 }
 
 bool RenderEngineMain:: IsEnd()

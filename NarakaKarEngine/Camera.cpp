@@ -38,12 +38,12 @@ void Camera::keyControl(bool* Keys, GLfloat deltaTime) {
 		if (Keys[GLFW_KEY_D]) {
 			position += right * moveSpeed * deltaTime;
 		}
-		//if (Keys[GLFW_KEY_LEFT_CONTROL]) {
-		//	position -= up * moveSpeed * deltaTime;
-		//}
-		//if (Keys[GLFW_KEY_SPACE]) {
-		//	position += up * moveSpeed * deltaTime;
-		//}
+		if (Keys[GLFW_KEY_LEFT_CONTROL]) {
+			position -= up * moveSpeed * deltaTime;
+		}
+		if (Keys[GLFW_KEY_SPACE]) {
+			position += up * moveSpeed * deltaTime;
+		}
 	}
 }
 
