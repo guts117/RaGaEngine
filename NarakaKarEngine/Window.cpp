@@ -132,6 +132,7 @@ void  Window::createCallbacks() {
 	glfwSetKeyCallback(mainWindow, EngineInputManager::handleKeys);
 	glfwSetCursorPosCallback(mainWindow, EngineInputManager::handleMouse);
 	glfwSetMouseButtonCallback(mainWindow, EngineInputManager::handleMouseClick);
+	glfwSetScrollCallback(mainWindow, EngineInputManager::handleMouseScrolls);
 }
 
 GLfloat  Window::getXChange() {

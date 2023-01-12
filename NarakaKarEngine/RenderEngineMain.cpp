@@ -994,11 +994,19 @@ struct RenderEngineMain::Impl
 		{
 			if (isEditorViewSelected)
 			{
-				cameras[1]->mouseControl(mainWindow->getXChange(), mainWindow->getYChange());
+				auto xChange = 0.0f;
+				auto yChange = 0.0f;
+
+				if (mainWindow->isMiddleMousePress) 
+				{
+					xChange = mainWindow->getXChange();
+					yChange = mainWindow->getYChange();
+				}
+				cameras[1]->mouseControl(xChange, yChange, mainWindow->scrollVal, deltaTime);
 			}
 			else if (isGameViewSelected)
 			{
-				cameras[0]->mouseControl(mainWindow->getXChange(), mainWindow->getYChange());
+				cameras[0]->mouseControl(mainWindow->getXChange(), mainWindow->getYChange(), 0, 0);
 			}
 
 			if (mainWindow->getKeys()[GLFW_KEY_L]) {
@@ -1028,7 +1036,7 @@ struct RenderEngineMain::Impl
 				MotionBlurPass(camParam);
 				exposureRPHandler->Update(*quadRO);
 
-				if(!camera->isEditor)
+				if (!camera->isEditor)
 				{
 					exposureFbo->Blit(0, *cameraBlitFbo, 0);
 					auto lowerLight = camParam.Position;
@@ -1046,6 +1054,7 @@ struct RenderEngineMain::Impl
 	void EndUpdate() 
 	{
 		mainWindow->swapBuffers();
+		mainWindow->scrollVal = 0.0f;
 	}
 
 	void InitSSBOs() 
@@ -2201,6 +2210,11 @@ void RenderEngineMain::EndUpdate()
 GLFWwindow* RenderEngineMain::GetMainWindow()
 {	
 	return Pimpl()->mainWindow->GetWindow();
+}
+
+bool RenderEngineMain::IsCursorHidden()
+{
+	return Pimpl()->mainWindow->IsCursorHidden();
 }
 
 void RenderEngineMain::AddViewers()

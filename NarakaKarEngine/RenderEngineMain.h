@@ -39,6 +39,7 @@ namespace NarakaKarEngine
 			void Update();
 			void EndUpdate();
 
+			bool IsCursorHidden();
 			GLFWwindow* GetMainWindow();
 			void AddViewers();
 			//ToDo:

@@ -2,6 +2,7 @@
 #include "RenderEngineMain.h"
 #include "EngineUIMain.h"
 #include "PhysicsEngineMain.h"
+#include "Window.h"
 
 using namespace NarakaKarEngine;
 using namespace RenderEngine;
@@ -23,7 +24,7 @@ int main()
 		glfwPollEvents();
 		physicsEngine->Update(0.016f);
 		renderEngine->Update();
-		engineUI->Update();
+		engineUI->Update(renderEngine->IsCursorHidden());
 		engineUI->EndUpdate();
 		renderEngine->EndUpdate();
 	} while (!renderEngine->IsEnd());

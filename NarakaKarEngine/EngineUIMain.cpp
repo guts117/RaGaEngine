@@ -20,11 +20,15 @@ EngineUIMain::EngineUIMain(GLFWwindow* window, const bool installCallbacks, cons
 	ImGui_ImplOpenGL3_Init(version.c_str());
 }
 
-void EngineUIMain::Update()
+void EngineUIMain::Update(const bool& isMouseHidden)
 {
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
+
+	auto isFocusedCnt = 0;
+	auto isHoveredCnt = 0;
+	auto isNoMouse = (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_NoMouse) != 0;
 
 	for (int i = 0; i < m_sceneList->size(); ++i)
 	{
@@ -33,25 +37,59 @@ void EngineUIMain::Update()
 		ImGui::Image((ImTextureID)m_sceneList->at(i)->GetTextureId(), ImGui::GetWindowSize(), ImVec2(0, 1), ImVec2(1, 0));
 		m_sceneList->at(i)->InvokeSelectCallback([&]() -> bool
 			{
+				auto isHovered = false;		
 				auto isFocused = ImGui::IsWindowFocused();
-				if (m_sceneList->at(i)->GetViewerType() == InGame) 
+				auto isDragging = ImGui::IsMouseDragging(0);
+
+				if (isFocused)
 				{
-					if (isFocused)
+					++isFocusedCnt;
+
+					if (!isNoMouse)
 					{
-						ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouse;
+						ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouse | ImGuiConfigFlags_NoMouseCursorChange;
+					}
+				}
+
+				if(m_sceneList->at(i)->GetViewerType() == InGame)
+				{
+					return isFocused && !isDragging;
+				}
+				else
+				{
+					if (!isNoMouse)
+					{
+						isHovered = ImGui::IsWindowHovered();
 					}
 					else
 					{
-						if ((ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_NoMouse) != 0)
-						{
-							ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
-						}
+						auto pos = ImGui::GetWindowPos();
+						auto maxx = pos.x + ImGui::GetWindowWidth();
+						auto maxy = pos.y + ImGui::GetWindowHeight();
+						isHovered = ImGui::IsMouseHoveringRect(pos, ImVec2(maxx, maxy));
 					}
+
+					if (isHovered) { ++isHoveredCnt; }
+
+					return isFocused && isHovered && !isDragging;
 				}
-				return isFocused;
 			}());
+
 		ImGui::End();
 	}
+
+	if (isFocusedCnt == 0 && isNoMouse)
+	{
+		ImGui::GetIO().ConfigFlags &= ~(ImGuiConfigFlags_NoMouse | ImGuiConfigFlags_NoMouseCursorChange);
+	}
+
+	if(isHoveredCnt == 0 && !isMouseHidden)
+	{
+		ImGui::SetWindowFocus(nullptr);
+	}
+
+	//std::cout << isMouseHidden << std::endl;
+	//std::cout << isNoMouse << std::endl;
 
 	ImGui::Begin("Hierarchy");
 	ImGui::Text("Put Scene Hierarchy Here!!!!");

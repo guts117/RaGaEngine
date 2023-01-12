@@ -14,7 +14,7 @@ namespace NarakaKarEngine
 			Camera(glm::vec3 startPosition, glm::vec3 startUp, GLfloat startYaw, GLfloat startPitch, GLfloat startMoveSpeed, GLfloat startTurnSpeed, const bool& isEditor = false);
 
 			void keyControl(bool* Keys, GLfloat deltaTime);
-			void mouseControl(GLfloat xChange, GLfloat yChange);
+			void mouseControl(GLfloat xChange, GLfloat yChange, float scrollSpeed, GLfloat deltaTime);
 
 			glm::vec3 getCameraPosition();
 			glm::vec3 getCameraDirection();
