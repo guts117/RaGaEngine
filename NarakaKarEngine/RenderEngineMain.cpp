@@ -860,40 +860,6 @@ struct RenderEngineMain::Impl
 			cameras[0]->keyControl(mainWindow->getKeys(), deltaTime);
 		}
 
-		//ToDo: #20 simulation manager class
-		//if (mainWindow->getKeys()[GLFW_KEY_X]) 
-		//{
-		//	drawFluidSim = !drawFluidSim;
-		//	mainWindow->SetCursorActive(drawFluidSim);
-		//	if (drawFluidSim) 
-		//	{
-		//		mainWindow->ResizeWindow(simWidth, simHeight);
-		//		drawSmokeSim = false;
-		//	}
-		//	mainWindow->getKeys()[GLFW_KEY_X] = false;
-		//}
-
-		//if (mainWindow->getKeys()[GLFW_KEY_Z])
-		//{
-		//	drawSmokeSim = !drawSmokeSim;
-		//	if (drawSmokeSim)
-		//	{
-		//		mainWindow->SetCursorActive(false);
-		//		mainWindow->ResizeWindow(simWidth, simHeight);
-		//		drawFluidSim = false;
-		//	}
-		//	mainWindow->getKeys()[GLFW_KEY_Z] = false;
-		//}
-		//if (mainWindow->isLeftMouseRelease) 
-		//{
-		//	addSplat = false;
-		//}
-
-		//if (mainWindow->isLeftMousePress) 
-		//{
-		//	addSplat = true;
-		//}
-
 		if (!drawFluidSim && !drawSmokeSim)
 		{
 			if (isEditorViewSelected)
@@ -1915,23 +1881,6 @@ struct RenderEngineMain::Impl
 
 	//	ccw_cube->RenderCCWCube();
 	//}
-
-	void RenderToDefaultFB()
-	{
-		//ToDo: Clear after fluid demo #20 simulation manager class
-		//if (drawFluidSim) 
-		//{
-			//Render2DFluidSim();
-		//}
-		//else if(drawSmokeSim)
-		//{
-			//Render2DSmoke();
-		//}
-		//else
-		//{
-			
-		//}
-	}
 
 	~Impl()
 	{
