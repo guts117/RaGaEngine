@@ -25,6 +25,9 @@
     <Filter Include="Source Files\EngineUI">
       <UniqueIdentifier>{18df95ff-cb35-4ac3-93a2-f87af042b7b6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\EngineUI\imgui">
+      <UniqueIdentifier>{3de1f82d-3d2c-400b-9f22-62bc7ee9fea2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Model_Importer.cpp">
@@ -77,30 +80,6 @@
     </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\Common\include\imgui\imgui.cpp">
-      <Filter>Source Files\EngineUI</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\Common\include\imgui\imgui_demo.cpp">
-      <Filter>Source Files\EngineUI</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\Common\include\imgui\imgui_draw.cpp">
-      <Filter>Source Files\EngineUI</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\Common\include\imgui\imgui_impl_glfw.cpp">
-      <Filter>Source Files\EngineUI</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\Common\include\imgui\imgui_impl_opengl3.cpp">
-      <Filter>Source Files\EngineUI</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\Common\include\imgui\imgui_impl_win32.cpp">
-      <Filter>Source Files\EngineUI</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\Common\include\imgui\imgui_tables.cpp">
-      <Filter>Source Files\EngineUI</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\Common\include\imgui\imgui_widgets.cpp">
-      <Filter>Source Files\EngineUI</Filter>
     </ClCompile>
     <ClCompile Include="EngineUIMain.cpp">
       <Filter>Source Files\EngineUI</Filter>
@@ -176,6 +155,30 @@
     </ClCompile>
     <ClCompile Include="Billboard_Render_Pass_Handler.cpp">
       <Filter>Source Files\RenderEngine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\deps\Common\include\imgui\imgui.cpp">
+      <Filter>Source Files\EngineUI\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\deps\Common\include\imgui\imgui_demo.cpp">
+      <Filter>Source Files\EngineUI\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\deps\Common\include\imgui\imgui_draw.cpp">
+      <Filter>Source Files\EngineUI\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\deps\Common\include\imgui\imgui_impl_glfw.cpp">
+      <Filter>Source Files\EngineUI\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\deps\Common\include\imgui\imgui_impl_opengl3.cpp">
+      <Filter>Source Files\EngineUI\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\deps\Common\include\imgui\imgui_impl_win32.cpp">
+      <Filter>Source Files\EngineUI\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\deps\Common\include\imgui\imgui_tables.cpp">
+      <Filter>Source Files\EngineUI\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\deps\Common\include\imgui\imgui_widgets.cpp">
+      <Filter>Source Files\EngineUI\imgui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
