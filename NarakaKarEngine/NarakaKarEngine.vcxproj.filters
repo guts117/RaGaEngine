@@ -227,9 +227,6 @@
     <ClInclude Include="pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="spimpl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="MathUtil.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -249,9 +246,6 @@
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="Shader_Object.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="exprtk.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Scene_Handler.h">

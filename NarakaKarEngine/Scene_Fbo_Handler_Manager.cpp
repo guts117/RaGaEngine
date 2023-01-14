@@ -3,6 +3,7 @@
 #include "FrameBufferObject.h"
 #include "Fbo_Handler.h"
 #include "RenderingCommonValues.h"
+#include <cereal/access.hpp>
 
 using namespace NarakaKarEngine;
 using namespace RenderEngine;
