@@ -233,33 +233,6 @@
     <ClInclude Include="MathUtil.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\deps\Common\include\imgui\imstb_truetype.h">
-      <Filter>Header Files\EngineUI</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\Common\include\imgui\imconfig.h">
-      <Filter>Header Files\EngineUI</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\Common\include\imgui\imgui.h">
-      <Filter>Header Files\EngineUI</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\Common\include\imgui\imgui_impl_glfw.h">
-      <Filter>Header Files\EngineUI</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\Common\include\imgui\imgui_impl_opengl3.h">
-      <Filter>Header Files\EngineUI</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\Common\include\imgui\imgui_impl_opengl3_loader.h">
-      <Filter>Header Files\EngineUI</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\Common\include\imgui\imgui_impl_win32.h">
-      <Filter>Header Files\EngineUI</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\Common\include\imgui\imstb_rectpack.h">
-      <Filter>Header Files\EngineUI</Filter>
-    </ClInclude>
-    <ClInclude Include="..\deps\Common\include\imgui\imstb_textedit.h">
-      <Filter>Header Files\EngineUI</Filter>
-    </ClInclude>
     <ClInclude Include="EngineUIMain.h">
       <Filter>Header Files\EngineUI</Filter>
     </ClInclude>

@@ -115,15 +115,6 @@
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\deps\Common\include\imgui\imconfig.h" />
-    <ClInclude Include="..\deps\Common\include\imgui\imgui.h" />
-    <ClInclude Include="..\deps\Common\include\imgui\imgui_impl_glfw.h" />
-    <ClInclude Include="..\deps\Common\include\imgui\imgui_impl_opengl3.h" />
-    <ClInclude Include="..\deps\Common\include\imgui\imgui_impl_opengl3_loader.h" />
-    <ClInclude Include="..\deps\Common\include\imgui\imgui_impl_win32.h" />
-    <ClInclude Include="..\deps\Common\include\imgui\imstb_rectpack.h" />
-    <ClInclude Include="..\deps\Common\include\imgui\imstb_textedit.h" />
-    <ClInclude Include="..\deps\Common\include\imgui\imstb_truetype.h" />
     <ClInclude Include="Billboard_Render_Pass_Handler.h" />
     <ClInclude Include="Bloom_Render_Pass_Handler.h" />
     <ClInclude Include="Brdf_Render_Pass_Handler.h" />
@@ -219,23 +210,23 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(SolutionDir)deps/Common/include/imgui/;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(SolutionDir)deps/Common/include/imgui/;$(SolutionDir)deps/Common/include/cereal/;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)deps/$(Platform)/lib/;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(SolutionDir)deps/Common/include/imgui/;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(SolutionDir)deps/Common/include/imgui/;$(SolutionDir)deps/Common/include/cereal/;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)deps/$(Platform)/lib/;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(SolutionDir)deps/Common/include/imgui/;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(SolutionDir)deps/Common/include/imgui/;$(SolutionDir)deps/Common/include/cereal/;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)deps/$(Platform)/lib/;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(SolutionDir)deps/Common/include/imgui/;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(SolutionDir)deps/Common/include/imgui/;$(SolutionDir)deps/Common/include/cereal/;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)deps/$(Platform)/lib/;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
