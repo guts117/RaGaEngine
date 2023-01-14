@@ -145,6 +145,7 @@ struct RenderEngineMain::Impl
 	std::shared_ptr <Fbo_Handler> omniShadowMaps;
 	std::shared_ptr <Fbo_Handler> cameraBlitFbo;
 
+	//ToDo: #62
 	//ToDo: To whomever it may concern. Probably me -_-
 	//ToDo: After a decently extensive research and thought on my part I want the following to be done
 	//ToDo: Add Memory Pooling.
@@ -404,22 +405,6 @@ struct RenderEngineMain::Impl
 		plainTexture = std::make_unique <Texture>("Textures/plain.png", true);
 		plainTexture->LoadTexture2D();
 
-		//ToDo: Expand This on a dedicated issue #61
-		//terrainTextureDisp = std::make_shared <Texture>("Textures/Displacement/terrain.jpg");
-		//terrainTextureDisp->LoadTextureNoAlpha();
-		//terrainTextureBlend = std::make_shared <Texture>("Textures/Blend/terrain.jpg");
-		//terrainTextureBlend->LoadTextureNoAlpha();
-		//terrainTexture = std::make_shared <Texture>("Textures/terrain.jpg", true);
-		//terrainTexture->LoadTextureArray(glm::vec2(1024, 1024), NUM_TERRAIN_LAYERS);
-		//terrainTextureMetal = std::make_shared <Texture>("Textures/Metallic/terrain.jpg");
-		//terrainTextureMetal->LoadTextureArray(glm::vec2(256, 256), NUM_TERRAIN_LAYERS);
-		//terrainTextureRough = std::make_shared <Texture>("Textures/Roughness/terrain.jpg");
-		//terrainTextureRough->LoadTextureArray(glm::vec2(256, 256), NUM_TERRAIN_LAYERS);
-		//terrainTextureNorm = std::make_shared <Texture>("Textures/Normal/terrain.jpg");
-		//terrainTextureNorm->LoadTextureArray(glm::vec2(256, 256), NUM_TERRAIN_LAYERS);
-		//terrainTexturePara = std::make_shared <Texture>("Textures/Parallax/terrain.jpg");
-		//terrainTexturePara->LoadTextureArray(glm::vec2(256, 256), NUM_TERRAIN_LAYERS);
-
 		//ToDo: #20 simulation manager class
 		/*velocitiesTexture = std::make_unique <Texture>();
 		velocitiesTexture->CreateTextureArray(glm::uvec2(simWidth, simHeight) , 4);
@@ -468,51 +453,6 @@ struct RenderEngineMain::Impl
 		pressure3D->CreateTexture3D(glm::vec3(simDim3D, simDim3D, simDim3D));*/
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------
-		
-		//auto unriggedSceneMeshes = std::vector<std::shared_ptr<Render_Object>>();
-
-		//auto bulbModel = Static_Model();
-		//bulbModel.LoadModel("Models/Free_Antique_Bulb.obj");
-		//bulbWhite = std::make_shared<Render_Object>(std::move(bulbModel.MeshList), bulbModel.TextureMap);
-		//unriggedSceneMeshes.push_back(bulbWhite);
-		//
-		//auto bulbRedModel = Static_Model();
-		//bulbRedModel.LoadModel("Models/Free_Antique_Bulb.obj");
-		//bulbRed = std::make_shared<Render_Object>(std::move(bulbRedModel.MeshList), bulbRedModel.TextureMap);
-		//unriggedSceneMeshes.push_back(bulbRed);
-
-		//auto sphereModel = Static_Model();
-		//sphereModel.LoadModel("Models/sphere.obj");
-		//sphere = std::make_shared<Render_Object>(std::move(sphereModel.MeshList), sphereModel.TextureMap);
-		//unriggedSceneMeshes.push_back(sphere);
-		////physicsEngine->AddSphere(1.0f, 0.0f, 80.0f, 5.5f, 1.0f, sphere->());
-		////ToDo: use heightmap to add terrain collider
-		//physicsEngine->AddStaticPlane(0.0f, 27.0f, 0.0f, 0.0f, glm::vec3(0.0f, 0.9f, 0.1f), nullptr);
-
-		//auto cubeModel = Static_Model();
-		//cubeModel.LoadModel("Models/cube.obj");
-		//cube = std::make_shared<Render_Object>(std::move(cubeModel.MeshList), cubeModel.TextureMap);
-		//unriggedSceneMeshes.push_back(cube);
-
-		//auto sniperModel = Static_Model();
-		//sniperModel.LoadModel("Models/Sniper_rifle_KSR-29.fbx");
-		//sniper = std::make_shared<Render_Object>(std::move(sniperModel.MeshList), sniperModel.TextureMap);
-		//unriggedSceneMeshes.push_back(sniper);
-
-		//auto gunModel = Static_Model();
-		//gunModel.LoadModel("Models/Cerberus_LP.fbx");
-		//gun = std::make_shared<Render_Object>(std::move(gunModel.MeshList), gunModel.TextureMap);
-		//unriggedSceneMeshes.push_back(gun);
-
-		//auto anyModel = Static_Model();
-		//anyModel.LoadModel("Models/Intergalactic_Spaceship-(Wavefront).obj");
-		//anymodel = std::make_shared<Render_Object>(std::move(anyModel.MeshList), anyModel.TextureMap);
-		//unriggedSceneMeshes.push_back(anymodel);
-
-		//sceneObjRO->push_back(unriggedSceneMeshes);
-
-		//anim->LoadModel("Models/boblampclean.md5mesh");
-		//anim2->LoadModel("Models/model.dae");
 
 		m_SceneFboHandlerMgr = std::make_shared<Scene_Fbo_Handler_Manager>("InGame");
 
@@ -756,20 +696,6 @@ struct RenderEngineMain::Impl
 		for (auto i = 0; i < pointLightCount; ++i){ omniDirLights->push_back(pointLights[i]); }
 		for (auto i = 0; i < spotLightCount; ++i) { omniDirLights->push_back(spotLights[i]); }
 
-		//std::vector<std::string> skyboxFaces;
-		//skyboxFaces.push_back("Textures/Skybox/cupertin-lake_rt.tga");
-		//skyboxFaces.push_back("Textures/Skybox/cupertin-lake_lf.tga");
-		//skyboxFaces.push_back("Textures/Skybox/cupertin-lake_up.tga");
-		//skyboxFaces.push_back("Textures/Skybox/cupertin-lake_dn.tga");
-		//skyboxFaces.push_back("Textures/Skybox/cupertin-lake_bk.tga");
-		//skyboxFaces.push_back("Textures/Skybox/cupertin-lake_ft.tga");
-		//skyboxFaces.push_back("Textures/Skybox/barren_rt.jpg");
-		//skyboxFaces.push_back("Textures/Skybox/barren_lf.jpg");
-		//skyboxFaces.push_back("Textures/Skybox/barren_up.jpg");
-		//skyboxFaces.push_back("Textures/Skybox/barren_dn.jpg");
-		//skyboxFaces.push_back("Textures/Skybox/barren_bk.jpg");
-		//skyboxFaces.push_back("Textures/Skybox/barren_ft.jpg");
-
 		//ToDo: #20 simulation manager class
 		//clearTexCompShader3D->UseShader();
 		//density3D.get()->at(0)->UseTextureReadWrite(0, true, true);
@@ -871,28 +797,6 @@ struct RenderEngineMain::Impl
 
 		auto billboardShaders = std::vector<std::shared_ptr<Shader_Object>>{ billboardShader };
 		billBoardRPHandler = std::make_shared<Billboard_Render_Pass_Handler>(sceneFbo, billboardShaders);
-		
-		//sceneObjRO->push_back(unriggedSceneMeshes);
-		
-		//auto riggedSceneMeshes = std::vector <std::shared_ptr<Render_Object>>();
-		//riggedSceneMeshes.push_back(std::make_shared<Render_Object>(std::make_shared<std::vector<std::shared_ptr<Mesh>>>(anim->MeshList)));
-		//riggedSceneMeshes.push_back(std::make_shared<Render_Object>(std::make_shared<std::vector<std::shared_ptr<Mesh>>>(anim2->MeshList)));
-
-		//sceneObjRO->push_back(riggedSceneMeshes);
-
-		//ToDo: Expand This on a dedicated issue #61
-		//auto terrainSceneMeshes = std::vector<std::shared_ptr<Render_Object>>();
-
-		//textureMap = std::make_shared<std::map<TexType, std::vector<std::shared_ptr<Texture>>>>();
-		//textureMap->emplace(TexType::Albedo, std::vector<std::shared_ptr<Texture>>{terrainTexture});
-		//textureMap->emplace(TexType::Metallic, std::vector<std::shared_ptr<Texture>>{terrainTextureMetal});
-		//textureMap->emplace(TexType::Roughness, std::vector<std::shared_ptr<Texture>>{terrainTextureRough});
-		//textureMap->emplace(TexType::Normal, std::vector<std::shared_ptr<Texture>>{terrainTextureNorm});
-		//textureMap->emplace(TexType::Parallax, std::vector<std::shared_ptr<Texture>>{terrainTexturePara});
-		//textureMap->emplace(TexType::Displacement, std::vector<std::shared_ptr<Texture>>{terrainTextureDisp});
-		//terrainSceneMeshes.push_back(std::make_shared<Render_Object>(std::make_shared<std::vector<std::shared_ptr<Mesh>>>(std::vector<std::shared_ptr<Mesh>>{terrainList->at(0)}), textureMap, std::make_shared<glm::mat4>(1.0f), std::make_shared<glm::mat4>(1.0f)));
-
-		//sceneObjRO->push_back(terrainSceneMeshes);
 	}
 
 	void InitSSAO() 
@@ -1421,44 +1325,6 @@ struct RenderEngineMain::Impl
 	//	particleList[0]->RenderInstancedMesh();
 	//}
 
-	void RenderTerrain(bool shadow, bool depth)
-	{
-		return;
-		//glUniform1f(uniformDispFactor, (0.2f * terrainScaleFactor1));
-
-		//glm::mat4 model;
-		//glm::mat4 prevPVM = glm::mat4();
-		////model = glm::translate(model, glm::vec3(0.0f,-10.0f, 0.0f));
-		////model = glm::rotate(model, curAngle * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));  //if you put the rotate at the last place(i.e on the top) it will have a bouncy effect
-		////model = glm::scale(model,glm::vec3(0.0f, 1.0f, 0.0f));
-		//glUniformMatrix4fv(uniformModel2, 1, GL_FALSE, glm::value_ptr(model));
-		////prevPVM = camera->GetPreviousProjectionViewMatrix() * terrainList[0]->PrevMesh;
-		////glUniformMatrix4fv(uniformPrevPVM2, 1, GL_FALSE, glm::value_ptr(prevPVM));
-		//terrainTextureDisp->UseTexture(0);
-		//if (shadow)
-		//{
-		//	terrainDirectionalShadowShader->SetDisplacementMap(1);
-		//}
-		//else if (depth)
-		//{
-		//	terrain_preZPassShader->SetDisplacementMap(1);
-		//}
-		//else
-		//{
-		//	terrainShader->SetDisplacementMap(1);
-		//}
-		//terrainShader->SetBlendMap(11);
-		//terrainTexture->UseTextureArray(11);
-		//terrainTextureMetal->UseTextureArray(12);
-		//terrainTextureNorm->UseTextureArray(14);
-		//terrainTextureRough->UseTextureArray(15);
-		//terrainTexturePara->UseTextureArray(16);
-		//dullTerrainMaterial->UseMaterial(uniformAlbedoMap2, uniformMetallicMap2, uniformNormalMap2, uniformRoughnessMap2, uniformParallaxMap2);
-
-		//terrainList->at(0)->RenderMesh();
-		////terrainList[0]->PrevMesh = model;
-	}
-
 	//Will be in Transform class or VObject class
 	void Translate(const std::weak_ptr<Render_Object>& renderObj, glm::vec3 position)
 	{
@@ -1513,99 +1379,6 @@ struct RenderEngineMain::Impl
 		//{
 		//	Transform(obj->render_object, *obj->transform);
 		//}
-		//pyramid1->Translate(0.0f, 34.0f, -2.5f);
-		////pyramid1->Rotate(curAngle, 0.0f, 1.0f, 0.0f);
-		////pyramid1->Scale(0.4f, 0.4f, 1.0f);
-
-		//pyramid2->Translate(0.0f, 30.0f, -2.5f);
-		////pyramid2->Rotate(curAngle, 0.0f, 1.0f, 0.0f);
-		////pyramid2->Scale(0.4f, 0.4f, 1.0f);
-
-		//rectangle1->Translate(-15.0f, 43.0f, 0.0f);
-		//rectangle1->Rotate(90, 1.0f, 0.0f, 0.0f);
-		//rectangle1->Rotate(-90, 0.0f, 0.0f, 1.0f);
-
-		//rectangle2->Translate(0.0f, 43.0f, -15.0f);
-		//rectangle2->Rotate(-90, 1.0f, 0.0f, 0.0f);
-		//rectangle2->Rotate(180.0f, 0.0f, 0.0f, 1.0f);
-
-		//cube->Translate(curScale, 32.0f, 4.5f);
-		////cube->Rotate(curAngle, 0.0f, 1.0f, 0.0f);
-		//cube->Rotate(90.0f, 1.0f, 0.0f, 0.0f);
-		//cube->Scale(0.1f, 0.1f, 0.1f);
-
-		////sphere->Translate(0.0f, 35.0f, 5.5f);
-		////sphere->Rotate(curAngle, 0.0f, 1.0f, 0.0f);
-		//sphere->Scale(1.0f, 1.0f, 1.0f);
-
-		//sniper->Translate(0.0f, 36.0f, 11.0f);
-		////sniper->Rotate(curAngle, 0.0f, 1.0f, 0.0f);
-		//sniper->Rotate(90.0f, 1.0f, 0.0f, 0.0f);
-		//sniper->Rotate(180.0f, 1.0f, 0.0f, 0.0f);
-		//sniper->Scale(0.5f, 0.5f, 0.5f);
-
-		//gun->Translate(5.0f, 33.0f, 10.0f);
-		////gun->Rotate(curAngle, 0.0f, 1.0f, 0.0f);
-		//gun->Rotate(180.0f, 0.0f, 1.0f, 0.0f);
-		//gun->Rotate(-90.0f, 1.0f, 0.0f, 0.0f);
-		//gun->Scale(0.02f, 0.02f, 0.02f);
-
-		//bulbWhite->Translate(pointLights[0]->GetPosition().x, pointLights[0]->GetPosition().y, pointLights[0]->GetPosition().z);
-		//bulbWhite->Scale(10.0f, 10.f, 10.0f);
-
-		//bulbRed->Translate(pointLights[1]->GetPosition().x, pointLights[1]->GetPosition().y, pointLights[1]->GetPosition().z);
-		//bulbRed->Scale(10.0f, 10.f, 10.0f);
-
-		//anymodel->Translate(0.0f, 37.0f, 1.0f);
-		//anymodel->Scale(1.0f, 1.0f, 1.0f);
-
-		//model = glm::mat4();
-		//model = glm::translate(model, glm::vec3(-6.0f, 28.2f, -5.0f));
-		//model = glm::rotate(model, -90 * toRadians, glm::vec3(1.0f, 0.0f, 0.0f));  //if you put the rotate at the last place(i.e on the top) it will have a bouncy effect
-		//model = glm::scale(model, glm::vec3(0.1, 0.1f, 0.1f));
-		//glUniformMatrix4fv(uniformModel1, 1, GL_FALSE, glm::value_ptr(model));
-		//prevPVM = camera->GetPreviousProjectionViewMatrix() * anim->prevModel;
-		//glUniformMatrix4fv(uniformPrevPVM1, 1, GL_FALSE, glm::value_ptr(prevPVM));
-		//shinyMaterialGlow->UseMaterial(uniformAlbedoMap1, uniformMetallicMap1, uniformNormalMap1, uniformRoughnessMap1, uniformParallaxMap1, uniformGlowMap1);
-
-		//if (shadow)
-		//{
-		//	anim->UpdateBoneData(animDirectionalShadowShader->GetShaderID());
-		//}
-		//else if (depth)
-		//{
-		//	anim->UpdateBoneData(anim_preZPassShader->GetShaderID());
-		//}
-		//else {
-		//	anim->UpdateBoneData(animShaderList[0]->GetShaderID());
-		//}
-		//anim->RenderModel();
-		//anim->prevModel = model;
-
-		//model = glm::mat4();
-		//model = glm::translate(model, glm::vec3(6.0f, 28.2f, -5.0f));
-		//model = glm::rotate(model, -90 * toRadians, glm::vec3(1.0f, 0.0f, 0.0f));  //if you put the rotate at the last place(i.e on the top) it will have a bouncy effect
-		//model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));
-		//glUniformMatrix4fv(uniformModel1, 1, GL_FALSE, glm::value_ptr(model));
-		//prevPVM = camera->GetPreviousProjectionViewMatrix() * anim2->prevModel;
-		//glUniformMatrix4fv(uniformPrevPVM1, 1, GL_FALSE, glm::value_ptr(prevPVM));
-		//shinyMaterialGlow->UseMaterial(uniformAlbedoMap1, uniformMetallicMap1, uniformNormalMap1, uniformRoughnessMap1, uniformParallaxMap1, uniformGlowMap1);
-
-		//if (shadow)
-		//{
-		//	anim2->UpdateBoneData(animDirectionalShadowShader->GetShaderID());
-		//}
-		//else if (depth)
-		//{
-		//	anim2->UpdateBoneData(anim_preZPassShader->GetShaderID());
-		//}
-		//else
-		//{
-		//	anim2->UpdateBoneData(animShaderList[0]->GetShaderID());
-		//}
-
-		//anim2->RenderModel();
-		//anim2->prevModel = model;
 	}
 
 	void DirectionalShadowMapPass(DirectionalLight* light, const CamParam& camParam) {
