@@ -8,7 +8,7 @@ out vec4 PrevClipSpacePos;
 
 uniform mat4 Projection;
 uniform mat4 View;
-uniform mat4 prevPVM;
+uniform mat4 prevPV;
 
 void main()
 {
@@ -18,5 +18,5 @@ void main()
 	gl_Position = ClipSpacePosition.xyww;
 	
 	ClipSpacePos = ClipSpacePosition;
-	PrevClipSpacePos = prevPVM * vec4(pos, 1.0);
+	PrevClipSpacePos = prevPV * vec4(pos, 1.0);
 }

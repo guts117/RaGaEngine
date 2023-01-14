@@ -46,36 +46,7 @@ struct Texture::Impl
 	Impl(const Impl& rhs) noexcept = delete;
 	Impl& operator=(const Impl& rhs) = delete;
 
-	bool LoadTextureWithAlpha() {
-		stbi_set_flip_vertically_on_load(false);
-		auto texData = stbi_load(m_fileLocation.c_str(), &m_width, &m_height, &m_bitDepth, 0);
-
-		if (!texData) {
-			printf("Failed to find: %s\n", m_fileLocation.c_str());
-			return false;
-		}
-
-		auto intFormat = m_isSRGB ? GL_SRGB_ALPHA : GL_RGBA;
-
-		glGenTextures(1, &m_textureID);
-		glBindTexture(GL_TEXTURE_2D, m_textureID);
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-		glTexImage2D(GL_TEXTURE_2D, 0, intFormat, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, texData);
-		glGenerateMipmap(GL_TEXTURE_2D);
-
-		glBindTexture(GL_TEXTURE_2D, 0);
-
-		stbi_image_free(texData);
-
-		return true;
-	}
-
-	bool LoadTextureNoAlpha()
+	bool LoadTexture2D()
 	{
 		stbi_set_flip_vertically_on_load(false);
 		auto texData = stbi_load(m_fileLocation.c_str(), &m_width, &m_height, &m_bitDepth, 0);
@@ -85,17 +56,29 @@ struct Texture::Impl
 			return false;
 		}
 
-		auto intFormat = m_isSRGB ? GL_SRGB : GL_RGB;
+		auto intFormat = 0;
+		auto format = 0;
 
 		glGenTextures(1, &m_textureID);
 		glBindTexture(GL_TEXTURE_2D, m_textureID);
+
+		if (m_bitDepth == 4)	
+		{
+			intFormat = m_isSRGB ? GL_SRGB_ALPHA : GL_RGBA; 
+			format = GL_RGBA;
+		}
+		else					
+		{
+			intFormat = m_isSRGB ? GL_SRGB : GL_RGB; 
+			format = GL_RGB;
+		}
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-		glTexImage2D(GL_TEXTURE_2D, 0, intFormat, m_width, m_height, 0, GL_RGB, GL_UNSIGNED_BYTE, texData);
+		glTexImage2D(GL_TEXTURE_2D, 0, intFormat, m_width, m_height, 0, format, GL_UNSIGNED_BYTE, texData);
 		glGenerateMipmap(GL_TEXTURE_2D);
 
 		glBindTexture(GL_TEXTURE_2D, 0);
@@ -289,6 +272,11 @@ struct Texture::Impl
 		return true;
 	}
 
+	void UseTextureTemp(GLuint i) {
+		glActiveTexture(GL_TEXTURE0 + i);
+		glBindTexture(GL_TEXTURE_2D, m_textureID);
+	}
+
 	void UseTexture(GLuint i) {
 		glActiveTexture(GL_TEXTURE1 + i);
 		glBindTexture(GL_TEXTURE_2D, m_textureID);
@@ -335,12 +323,8 @@ Texture::Texture() :  m_pImpl{ new Impl() } {}
 
 Texture::Texture(std::string fileLoc, bool isSRGB) : m_pImpl{ new Impl(fileLoc, isSRGB) } {}
 
-bool Texture::LoadTextureWithAlpha() {
-	return Pimpl()->LoadTextureWithAlpha();
-}
-
-bool Texture::LoadTextureNoAlpha() {
-	return Pimpl()->LoadTextureNoAlpha();
+bool Texture::LoadTexture2D() {
+	return Pimpl()->LoadTexture2D();
 }
 
 bool Texture::LoadTextureArray(const glm::vec2& resolution, const int numOfLayers) {
@@ -371,6 +355,10 @@ bool Texture::CreateTexture3D(const glm::vec3& resolution, bool createMipMaps)
 bool Texture::CreateTexture(const glm::vec2& resolution)
 {
 	return Pimpl()->CreateTexture(resolution);
+}
+
+void Texture::UseTextureTemp(GLuint i) {
+	Pimpl()->UseTextureTemp(i);
 }
 
 void Texture::UseTexture(GLuint i) {

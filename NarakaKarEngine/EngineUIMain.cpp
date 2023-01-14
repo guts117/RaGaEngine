@@ -20,37 +20,80 @@ EngineUIMain::EngineUIMain(GLFWwindow* window, const bool installCallbacks, cons
 	ImGui_ImplOpenGL3_Init(version.c_str());
 }
 
-void EngineUIMain::Update()
+void EngineUIMain::Update(const bool& isMouseHidden)
 {
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
+
+	auto isFocusedCnt = 0;
+	auto isHoveredCnt = 0;
+	auto isNoMouse = (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_NoMouse) != 0;
 
 	for (int i = 0; i < m_sceneList->size(); ++i)
 	{
 		ImGui::Begin(m_sceneList->at(i)->GetViewerName().c_str(), nullptr, ImGuiWindowFlags_NoFocusOnAppearing);
 		ImGui::SetWindowSize(ImVec2(ScreenWidth / 2, ScreenHeight / 2));
 		ImGui::Image((ImTextureID)m_sceneList->at(i)->GetTextureId(), ImGui::GetWindowSize(), ImVec2(0, 1), ImVec2(1, 0));
-		m_sceneList->at(i)->InvokeSelectCallback([&]() -> bool
+		
+		auto isSelected = false;
+		auto isHideMouse = false;
+
+		{
+			auto isHovered = false;
+			auto isFocused = ImGui::IsWindowFocused();
+			auto isDragging = ImGui::IsMouseDragging(ImGuiMouseButton_Left);
+
+			if (isFocused)
 			{
-				auto isFocused = ImGui::IsWindowFocused();
-				if (m_sceneList->at(i)->GetViewerType() == InGame) 
+				++isFocusedCnt;
+
+				if (!isNoMouse)
 				{
-					if (isFocused)
-					{
-						ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouse;
-					}
-					else
-					{
-						if ((ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_NoMouse) != 0)
-						{
-							ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
-						}
-					}
+					ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NoMouse | ImGuiConfigFlags_NoMouseCursorChange;
 				}
-				return isFocused;
-			}());
+			}
+
+			if (m_sceneList->at(i)->GetViewerType() == InGame)
+			{
+				isSelected = isFocused && !isDragging;
+				isHideMouse = isSelected;;
+			}
+			else if (m_sceneList->at(i)->GetViewerType() == Editor)
+			{
+				isHideMouse = isFocused && ImGui::IsMouseDown(ImGuiMouseButton_Middle);
+
+				if (!isNoMouse)
+				{
+					isHovered = ImGui::IsWindowHovered();
+				}
+				else
+				{
+					auto pos = ImGui::GetWindowPos();
+					auto maxx = pos.x + ImGui::GetWindowWidth();
+					auto maxy = pos.y + ImGui::GetWindowHeight();
+					isHovered = ImGui::IsMouseHoveringRect(pos, ImVec2(maxx, maxy));
+				}
+
+				if (isHovered) { ++isHoveredCnt; }
+
+				isSelected = isFocused && isHovered && !isDragging;
+			}
+		}
+
+		m_sceneList->at(i)->InvokeSelectCallback(isSelected, isHideMouse);
+
 		ImGui::End();
+	}
+
+	if (isFocusedCnt == 0 && isNoMouse)
+	{
+		ImGui::GetIO().ConfigFlags &= ~(ImGuiConfigFlags_NoMouse | ImGuiConfigFlags_NoMouseCursorChange);
+	}
+
+	if(isHoveredCnt == 0 && !isMouseHidden)
+	{
+		ImGui::SetWindowFocus(nullptr);
 	}
 
 	ImGui::Begin("Hierarchy");
@@ -65,7 +108,7 @@ void EngineUIMain::EndUpdate()
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-void EngineUIMain::AddSceneViewers(GLuint sceneTex, std::string sceneName, SceneViewerType viewerType, std::function<void(bool)> selectCallback)
+void EngineUIMain::AddSceneViewers(GLuint sceneTex, std::string sceneName, SceneViewerType viewerType, std::function<void(bool, bool)> selectCallback)
 {
 	auto scene = std::make_shared<SceneViewer>(sceneTex, sceneName, viewerType, selectCallback);
 	m_sceneList->push_back(scene);

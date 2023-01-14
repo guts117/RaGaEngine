@@ -49,9 +49,9 @@ struct Fbo_Handler::Impl
 	{
 		m_FboVec->at(fboIndex)->WriteToBuffer(texGenParamIndex, bufferIndex, faceId, mipLevel);
 	}
-	void AttachFBOToTextureUnit(const GLuint& fboIndex, const GLenum& textureUnit, const GLuint& texGenParamIndex, const GLuint& bufferIndex) const
+	void AttachFBOToTextureUnit(const GLuint& fboIndex, const GLuint& textureUnit, const GLuint& texGenParamIndex, const GLuint& bufferIndex) const
 	{
-		m_FboVec->at(fboIndex)->AttachColorBufferToTexture(textureUnit, texGenParamIndex, bufferIndex);
+		m_FboVec->at(fboIndex)->AttachColorBufferToTexture(GL_TEXTURE0 + textureUnit, texGenParamIndex, bufferIndex);
 	}
 
 	void CreateFBOMipMap(const GLuint& fboIndex, const GLuint& texGenParamIndex, const GLuint& bufferIndex) const
@@ -101,7 +101,7 @@ void Fbo_Handler::WriteToFBOBuffer(const GLuint& fboIndex, const GLuint& texGenP
 	Pimpl()->WriteToFBO(fboIndex, texGenParamIndex, bufferIndex, faceId, mipLevel);
 }
 
-void Fbo_Handler::AttachFBOToTextureUnit(const GLuint& fboIndex, const GLenum& textureUnit, const GLuint& texGenParamIndex, const GLuint& bufferIndex) const
+void Fbo_Handler::AttachFBOToTextureUnit(const GLuint& fboIndex, const GLuint& textureUnit, const GLuint& texGenParamIndex, const GLuint& bufferIndex) const
 {
 	Pimpl()->AttachFBOToTextureUnit(fboIndex, textureUnit, texGenParamIndex, bufferIndex);
 }
@@ -114,6 +114,11 @@ void Fbo_Handler::CreateFBOMipMap(const GLuint& fboIndex, const GLuint& texGenPa
 void Fbo_Handler::ResizeFBO(const GLuint& width, const GLuint& height)
 {
 	Pimpl()->ResizeFBO(width, height);
+}
+
+void Fbo_Handler::Blit(const GLuint& fboIndex, const Fbo_Handler& toFboHandlr, const GLuint& toFboIndex) const
+{
+	Pimpl()->m_FboVec->at(fboIndex)->Blit(toFboHandlr.GetFBOId(toFboIndex));
 }
 
 const GLuint& Fbo_Handler::GetFBOWidth(const GLuint& fboIndex) const
@@ -129,6 +134,11 @@ const GLuint& Fbo_Handler::GetFBOHeight(const GLuint& fboIndex) const
 const GLuint& Fbo_Handler::GetFBOBuffer(const GLuint& fboIndex, const GLuint& bufferIndex) const
 {
 	return Pimpl()->m_FboVec->at(fboIndex)->GetBuffer(bufferIndex);
+}
+
+const GLuint& NarakaKarEngine::RenderEngine::Fbo_Handler::GetFBOId(const GLuint& fboIndex) const
+{
+	return Pimpl()->m_FboVec->at(fboIndex)->GetFboId();
 }
 
 Fbo_Handler::~Fbo_Handler() = default;

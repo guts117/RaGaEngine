@@ -51,6 +51,23 @@ void EngineInputManager::handleMouseClick(GLFWwindow* window, int button, int ac
 			theWindow->isLeftMousePress = false;
 		}
 	}
+
+	if (button == GLFW_MOUSE_BUTTON_MIDDLE) {
+		if (action == GLFW_PRESS) {
+			theWindow->isMiddleMousePress = true;
+			theWindow->isLeftMouseRelease = false;
+		}
+		else if (action == GLFW_RELEASE) {
+			theWindow->isLeftMouseRelease = true;
+			theWindow->isMiddleMousePress = false;
+		}
+	}
+}
+
+void EngineInputManager::handleMouseScrolls(GLFWwindow* window, double xOffset, double yOffset)
+{
+	Window* theWindow = static_cast<Window*>(glfwGetWindowUserPointer(window)); // grabbing that user pointer and casting it to Window*
+	theWindow->scrollVal = yOffset;
 }
 
 EngineInputManager::~EngineInputManager()

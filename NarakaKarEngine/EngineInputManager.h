@@ -22,6 +22,7 @@ namespace NarakaKarEngine
 			static void handleKeys(GLFWwindow* window, int key, int code, int action, int mode);
 			static void handleMouse(GLFWwindow* window, double xPos, double yPos);
 			static void handleMouseClick(GLFWwindow* window, int button, int action, int mode);
+			static void handleMouseScrolls(GLFWwindow* window, double xOffset, double yOffset);
 		};
 	}
 }

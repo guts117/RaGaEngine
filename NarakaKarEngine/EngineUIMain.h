@@ -22,10 +22,10 @@ namespace NarakaKarEngine
 			EngineUIMain(const EngineUIMain& rhs) noexcept = delete;
 			EngineUIMain& operator=(const EngineUIMain& rhs) noexcept = delete;
 
-			void Update();
+			void Update(const bool& isMouseHidden);
 			void EndUpdate();
 
-			void AddSceneViewers(GLuint sceneTex, std::string sceneName, SceneViewerType viewerType, std::function<void(bool)> selectCallback);
+			void AddSceneViewers(GLuint sceneTex, std::string sceneName, SceneViewerType viewerType, std::function<void(bool, bool)> selectCallback);
 
 			~EngineUIMain();
 		private: 

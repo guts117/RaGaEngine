@@ -8,6 +8,29 @@ namespace NarakaKarEngine
 {
 	namespace RenderEngine
 	{
+		class Render_Object;
+		class Texture;
+		enum TexType;
+
+		struct Transform
+		{
+			glm::vec3 Position;
+			glm::quat Rotation;
+			glm::vec3 Scale;
+		};
+
+		struct VObject
+		{
+			std::unique_ptr<Transform> transform;
+			std::weak_ptr<Render_Object> render_object;
+		};
+
+		struct TexMapData
+		{
+			TexType&& type;
+			std::string&& path;
+		};
+
 		class RenderEngineMain
 		{
 		public:
@@ -16,8 +39,11 @@ namespace NarakaKarEngine
 			void Update();
 			void EndUpdate();
 
+			bool IsCursorHidden();
 			GLFWwindow* GetMainWindow();
 			void AddViewers();
+			//ToDo:
+			//static std::unique_ptr<std::map<TexType, std::vector<std::weak_ptr<Texture>>>> CreateTextureMap(std::vector<TexMapData>&& texMapData);
 
 			bool IsEnd();
 

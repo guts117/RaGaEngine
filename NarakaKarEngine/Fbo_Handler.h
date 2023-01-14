@@ -35,10 +35,12 @@ namespace NarakaKarEngine
 			void AttachFBOToTextureUnit(const GLuint& fboIndex, const GLenum& textureUnit, const GLuint& texGenParamIndex, const GLuint& bufferIndex) const;
 			void CreateFBOMipMap(const GLuint& fboIndex, const GLuint& texGenParamIndex, const GLuint& bufferIndex) const;
 			void ResizeFBO(const GLuint& width, const GLuint& height);
+			void Blit(const GLuint& fboIndex, const Fbo_Handler& to_FboHandlr, const GLuint& toFboIndex) const;
 
 			const GLuint& GetFBOWidth(const GLuint& fboIndex = 0) const;
 			const GLuint& GetFBOHeight(const GLuint& fboIndex = 0) const;
 			const GLuint& GetFBOBuffer(const GLuint& fboIndex, const GLuint& bufferIndex) const;
+			const GLuint& GetFBOId(const GLuint& fboIndex) const;
 
 			~Fbo_Handler();
 

@@ -5,51 +5,59 @@
 
 struct MathUtil
 {
-	static void CalcAverageNormals(unsigned int* indices, unsigned int indicesCount,
-		GLfloat* vertices, unsigned int verticesCount,
-		unsigned int vLength, unsigned int normalOffset)
+	static void CalcAverageNormals(std::vector<GLuint> indices, std::vector<std::vector<GLfloat>>& vertices, unsigned int normalOffset)
 	{
-		for (size_t i = 0; i < indicesCount; i += 3) {
-			unsigned int in0 = indices[i] * vLength;
-			unsigned int in1 = indices[i + 1] * vLength;
-			unsigned int in2 = indices[i + 2] * vLength;
-			glm::vec3 v1(vertices[in1] - vertices[in0], vertices[in1 + 1] - vertices[in0 + 1], vertices[in1 + 2] - vertices[in0 + 2]);
-			glm::vec3 v2(vertices[in2] - vertices[in0], vertices[in2 + 1] - vertices[in0 + 1], vertices[in2 + 2] - vertices[in0 + 2]);
+		auto vLength = vertices[0].size();
+		auto verticesCount = vLength * vertices.size();
+		auto indicesCount = indices.size();
+
+		for (size_t i = 0; i < indicesCount; i += 3) 
+		{
+			auto vertexId0 = indices[i];
+			auto vertexId1 = indices[i + 1];
+			auto vertexId2 = indices[i + 2];
+			glm::vec3 v1(vertices[vertexId1][0] - vertices[vertexId0][0], vertices[vertexId1][1] - vertices[vertexId0][1], vertices[vertexId1][2] - vertices[vertexId0][2]);
+			glm::vec3 v2(vertices[vertexId2][0] - vertices[vertexId0][0], vertices[vertexId2][1] - vertices[vertexId0][1], vertices[vertexId2][2] - vertices[vertexId0][2]);
 			glm::vec3 normal = glm::cross(v1, v2);
 			normal = glm::normalize(normal);
 
-			in0 += normalOffset; in1 += normalOffset; in2 += normalOffset;
+			auto normalId0 = normalOffset; 
+			auto normalId1 = normalOffset + 1; 
+			auto normalId2 = normalOffset + 2;
 
-			vertices[in0] += normal.x; vertices[in0 + 1] += normal.y; vertices[in0 + 2] += normal.z;
-			vertices[in1] += normal.x; vertices[in1 + 1] += normal.y; vertices[in1 + 2] += normal.z;
-			vertices[in2] += normal.x; vertices[in2 + 1] += normal.y; vertices[in2 + 2] += normal.z;
+			vertices[vertexId0][normalId0] += normal.x; vertices[vertexId0][normalId1] += normal.y; vertices[vertexId0][normalId2] += normal.z;
+			vertices[vertexId1][normalId0] += normal.x; vertices[vertexId1][normalId1] += normal.y; vertices[vertexId1][normalId2] += normal.z;
+			vertices[vertexId2][normalId0] += normal.x; vertices[vertexId2][normalId1] += normal.y; vertices[vertexId2][normalId2] += normal.z;
 
 		}
 
-		for (size_t i = 0; i < verticesCount / vLength; i++) {
-			unsigned int nOffset = i * vLength + normalOffset;
-			glm::vec3 vec(vertices[nOffset], vertices[nOffset + 1], vertices[nOffset + 2]);
+		for (auto& vertex : vertices) 
+		{
+			glm::vec3 vec(vertex[normalOffset + 0], vertex[normalOffset + 1], vertex[normalOffset + 2]);
 			vec = glm::normalize(vec);
-			vertices[nOffset] = vec.x; vertices[nOffset + 1] = vec.y; vertices[nOffset + 2] = vec.z;
+			vertex[normalOffset + 0] = vec.x; vertex[normalOffset + 1] = vec.y; vertex[normalOffset + 2] = vec.z;
 		}
 	}
 
-	static void CalcAverageTangents(unsigned int* indices, unsigned int indicesCount,
-		GLfloat* vertices, unsigned int verticesCount,
-		unsigned int vLength, unsigned int tangentOffset)
+	static void CalcAverageTangents(std::vector<GLuint> indices, std::vector<std::vector<GLfloat>>& vertices, unsigned int tangentOffset)
 	{
-		for (size_t i = 0; i < indicesCount; i += 3) {
-			unsigned int in0 = indices[i] * vLength;
-			unsigned int in1 = indices[i + 1] * vLength;
-			unsigned int in2 = indices[i + 2] * vLength;
+		auto vLength = vertices[0].size();
+		auto verticesCount = vLength * vertices.size();
+		auto indicesCount = indices.size();
 
-			glm::vec3 Edge1(vertices[in1] - vertices[in0], vertices[in1 + 1] - vertices[in0 + 1], vertices[in1 + 2] - vertices[in0 + 2]);
-			glm::vec3 Edge2(vertices[in2] - vertices[in0], vertices[in2 + 1] - vertices[in0 + 1], vertices[in2 + 2] - vertices[in0 + 2]);
+		for (size_t i = 0; i < indicesCount; i += 3) 
+		{
+			auto vertexId0 = indices[i];
+			auto vertexId1 = indices[i + 1];
+			auto vertexId2 = indices[i + 2] ;
 
-			float DeltaU1 = vertices[in1 + 3] - vertices[in0 + 3];                //for the uv coordinates add 3
-			float DeltaV1 = vertices[in1 + 3 + 1] - vertices[in0 + 3 + 1];
-			float DeltaU2 = vertices[in2 + 3] - vertices[in0 + 3];
-			float DeltaV2 = vertices[in2 + 3 + 1] - vertices[in0 + 3 + 1];
+			glm::vec3 Edge1(vertices[vertexId1][0] - vertices[vertexId0][0], vertices[vertexId1][1] - vertices[vertexId0][1], vertices[vertexId1][2] - vertices[vertexId0][2]);
+			glm::vec3 Edge2(vertices[vertexId2][0] - vertices[vertexId0][0], vertices[vertexId2][1] - vertices[vertexId0][1], vertices[vertexId2][2] - vertices[vertexId0][2]);
+
+			float DeltaU1 = vertices[vertexId1][3] - vertices[vertexId0][3];                //for the uv coordinates add 3
+			float DeltaV1 = vertices[vertexId1][3 + 1] - vertices[vertexId0][3 + 1];
+			float DeltaU2 = vertices[vertexId2][3] - vertices[vertexId0][3];
+			float DeltaV2 = vertices[vertexId2][3 + 1] - vertices[vertexId0][3 + 1];
 
 			float f = 1.0f / (DeltaU1 * DeltaV2 - DeltaU2 * DeltaV1);
 
@@ -63,17 +71,20 @@ struct MathUtil
 			Bitangent.y = f * (-DeltaU2 * Edge1.y - DeltaU1 * Edge2.y);
 			Bitangent.z = f * (-DeltaU2 * Edge1.z - DeltaU1 * Edge2.z);*/
 
-			in0 += tangentOffset; in1 += tangentOffset; in2 += tangentOffset;
-			vertices[in0] += Tangent.x; vertices[in0 + 1] += Tangent.y; vertices[in0 + 2] += Tangent.z;
-			vertices[in1] += Tangent.x; vertices[in1 + 1] += Tangent.y; vertices[in1 + 2] += Tangent.z;
-			vertices[in2] += Tangent.x; vertices[in2 + 1] += Tangent.y; vertices[in2 + 2] += Tangent.z;
+			auto tangentId0 = tangentOffset;
+			auto tangentId1 = tangentOffset + 1;
+			auto tangentId2 = tangentOffset + 2;
+
+			vertices[vertexId0][tangentId0] += Tangent.x; vertices[vertexId0][tangentId1] += Tangent.y; vertices[vertexId0][tangentId2] += Tangent.z;
+			vertices[vertexId1][tangentId0] += Tangent.x; vertices[vertexId1][tangentId1] += Tangent.y; vertices[vertexId1][tangentId2] += Tangent.z;
+			vertices[vertexId2][tangentId0] += Tangent.x; vertices[vertexId2][tangentId1] += Tangent.y; vertices[vertexId2][tangentId2] += Tangent.z;
 		}
 
-		for (size_t i = 0; i < verticesCount / vLength; i++) {
-			unsigned int nOffset = i * vLength + tangentOffset;
-			glm::vec3 vec(vertices[nOffset], vertices[nOffset + 1], vertices[nOffset + 2]);
+		for (auto& vertex : vertices)
+		{
+			glm::vec3 vec(vertex[tangentOffset + 0], vertex[tangentOffset + 1], vertex[tangentOffset + 2]);
 			vec = glm::normalize(vec);
-			vertices[nOffset] = vec.x; vertices[nOffset + 1] = vec.y; vertices[nOffset + 2] = vec.z;
+			vertex[tangentOffset + 0] = vec.x; vertex[tangentOffset + 1] = vec.y; vertex[tangentOffset + 2] = vec.z;
 		}
 	}
 

@@ -8,6 +8,21 @@ namespace NarakaKarEngine
 {
 	namespace RenderEngine
 	{
+		enum TexType
+		{
+			Default,
+			Albedo,
+			Metallic,
+			Roughness,
+			Normal,
+			Parallax,
+			Glow,
+			Displacement,
+			Blend,
+			Noise,
+			Max
+		};
+
 		class Texture
 		{
 		public:
@@ -20,8 +35,7 @@ namespace NarakaKarEngine
 			Texture(const Texture& rhs) noexcept = delete;
 			Texture& operator=(const Texture& rhs) noexcept = delete;
 
-			bool LoadTextureWithAlpha();
-			bool LoadTextureNoAlpha();
+			bool LoadTexture2D();
 			bool LoadTextureArray(const glm::vec2& resolution, const int numOfLayers);
 			bool LoadCubeMap();
 			bool LoadTextureHDR();
@@ -32,6 +46,8 @@ namespace NarakaKarEngine
 			bool CreateTexture3D(const glm::vec3& resolution, bool createMipMaps = false);
 
 			bool CreateTexture(const glm::vec2& resolution);
+
+			void UseTextureTemp(GLuint i);
 
 			void UseTexture(GLuint i);
 			void UseTextureArray(GLuint i);
