@@ -13,9 +13,9 @@ std::unique_ptr<EngineUIMain> engineUI;
 
 int main()
 {
-	glm::ivec2 screenDims = glm::ivec2(engineUI->GetScreenDimensions());
 	physicsEngine = std::make_unique<PhysicsEngineMain>();
 	engineUI = std::make_unique<EngineUIMain>(true, "#version 460");
+	glm::ivec2 screenDims = glm::ivec2(engineUI->GetScreenDimensions());
 	std::unique_ptr<RenderEngineMain> renderEngine = std::make_unique<RenderEngineMain>(screenDims);
 	//auto& sceneViewers = renderEngine->AddViewers();
 	//engineUI->AddSceneViewers();

@@ -265,7 +265,7 @@ struct Shader_Object::Impl
 
 							if (word.find(".") == std::string::npos && (val = std::stoi(word)) > 0)
 							{
-								varName.erase(remove(varName.begin(), varName.end(), '='), word.end());
+								varName.erase(remove(varName.begin(), varName.end(), '='), varName.end());
 								word.erase(remove(word.begin(), word.end(), ';'), word.end());
 								defConsts.emplace(varName, val);
 							}
