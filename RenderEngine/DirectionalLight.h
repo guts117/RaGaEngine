@@ -25,7 +25,7 @@ namespace NarakaKarEngine
 			glm::mat4 CalculateCascadeLightTransform();
 			std::shared_ptr<Fbo_Handler> GetShadowMap() { return shadowMap; }
 			float GetCascadeEnd(unsigned int i);
-			void CalcOrthProjs(const glm::mat4& Cam, const glm::mat4* vView, const float& angle);
+			void CalcOrthProjs(const glm::mat4& Cam, const glm::mat4* vView, const float& angle, const glm::ivec2& screenDims);
 			glm::mat4 GetProjMat(glm::mat4& view, unsigned int index);
 			float GetRatio(glm::mat4& view, int index);
 			glm::vec3 GetModlCent(unsigned int index);

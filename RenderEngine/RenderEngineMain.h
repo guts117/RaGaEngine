@@ -45,18 +45,14 @@ namespace NarakaKarEngine
 		class RENDER_ENGINE_API RenderEngineMain
 		{
 		public:
-			explicit RenderEngineMain();
+			explicit RenderEngineMain(const glm::ivec2& screenDims);
 
-			void Update();
+			void Update(const glm::ivec2& screenDims, const bool& isUpdateBuffers);
 			void EndUpdate();
 
-			bool IsCursorHidden();
-			GLFWwindow* GetMainWindow();
-			void AddViewers(EngineUI::EngineUIMain* engineUI);
+			//void AddViewers(EngineUI::EngineUIMain* engineUI);
 			//ToDo:
 			//static std::unique_ptr<std::map<TexType, std::vector<std::weak_ptr<Texture>>>> CreateTextureMap(std::vector<TexMapData>&& texMapData);
-
-			bool IsEnd();
 
 			~RenderEngineMain();
 

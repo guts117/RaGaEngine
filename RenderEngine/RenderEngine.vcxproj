@@ -19,54 +19,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\deps\Common\include\imgui\imgui.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="..\deps\Common\include\imgui\imgui_demo.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="..\deps\Common\include\imgui\imgui_draw.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="..\deps\Common\include\imgui\imgui_impl_glfw.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="..\deps\Common\include\imgui\imgui_impl_opengl3.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="..\deps\Common\include\imgui\imgui_impl_win32.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="..\deps\Common\include\imgui\imgui_tables.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="..\deps\Common\include\imgui\imgui_widgets.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
-    </ClCompile>
     <ClCompile Include="Billboard_Render_Pass_Handler.cpp" />
     <ClCompile Include="Bloom_Render_Pass_Handler.cpp" />
     <ClCompile Include="Exposure_Render_Pass_Handler.cpp" />
@@ -75,11 +27,9 @@
     <ClCompile Include="Debug.cpp" />
     <ClCompile Include="DirectionalLight.cpp" />
     <ClCompile Include="Directional_Shadow_Map_Render_Pass_Handler.cpp" />
-    <ClCompile Include="EngineUIMain.cpp" />
     <ClCompile Include="Environment_Map_Render_Pass_Handler.cpp" />
     <ClCompile Include="Fbo_Handler.cpp" />
     <ClCompile Include="FrameBufferObject.cpp" />
-    <ClCompile Include="EngineInputManager.cpp" />
     <ClCompile Include="Irradiance_Convolution_Render_Pass_Handler.cpp" />
     <ClCompile Include="Model_Importer.cpp" />
     <ClCompile Include="Motion_Blur_Render_Pass_Handler.cpp" />
@@ -98,7 +48,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="SceneViewer.cpp" />
     <ClCompile Include="Scene_Fbo_Handler_Manager.cpp" />
     <ClCompile Include="Scene_Handler.cpp" />
     <ClCompile Include="Render_Pass_Handler.cpp" />
@@ -111,7 +60,6 @@
     <ClCompile Include="Ssao_Render_Pass_Handler.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="VertexBoneData.cpp" />
-    <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Billboard_Render_Pass_Handler.h" />
@@ -119,7 +67,6 @@
     <ClInclude Include="Brdf_Render_Pass_Handler.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Directional_Shadow_Map_Render_Pass_Handler.h" />
-    <ClInclude Include="EngineUIMain.h" />
     <ClInclude Include="Environment_Map_Render_Pass_Handler.h" />
     <ClInclude Include="Exposure_Render_Pass_Handler.h" />
     <ClInclude Include="Fbo_Handler.h" />
@@ -133,7 +80,6 @@
     <ClInclude Include="RenderingCommonValues.h" />
     <ClInclude Include="Debug.h" />
     <ClInclude Include="DirectionalLight.h" />
-    <ClInclude Include="EngineInputManager.h" />
     <ClInclude Include="RenderEngineMain.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Particle.h" />
@@ -141,7 +87,6 @@
     <ClInclude Include="PointLight.h" />
     <ClInclude Include="Render_Object.h" />
     <ClInclude Include="render_pch.h" />
-    <ClInclude Include="SceneViewer.h" />
     <ClInclude Include="Scene_Fbo_Handler_Manager.h" />
     <ClInclude Include="Scene_Handler.h" />
     <ClInclude Include="Render_Pass_Handler.h" />
@@ -155,7 +100,6 @@
     <ClInclude Include="Texture.h" />
     <ClInclude Include="MathUtil.h" />
     <ClInclude Include="VertexBoneData.h" />
-    <ClInclude Include="Window.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -209,23 +153,23 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(SolutionDir)deps/Common/include/imgui/;$(SolutionDir)deps/Common/include/cereal/;$(IncludePath);$(SolutionDir)deps/Common/include/exprtk;$(SolutionDir)deps/Common/include/spimpl;$(SolutionDir)deps/Common/include/stb_image</IncludePath>
+    <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(SolutionDir)deps/Common/include/cereal/;$(IncludePath);$(SolutionDir)deps/Common/include/exprtk;$(SolutionDir)deps/Common/include/spimpl;$(SolutionDir)deps/Common/include/stb_image</IncludePath>
     <LibraryPath>$(SolutionDir)deps/$(Platform)/lib/;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(SolutionDir)deps/Common/include/imgui/;$(SolutionDir)deps/Common/include/cereal/;$(IncludePath);$(SolutionDir)deps/Common/include/exprtk;$(SolutionDir)deps/Common/include/spimpl;$(SolutionDir)deps/Common/include/stb_image</IncludePath>
+    <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(SolutionDir)deps/Common/include/cereal/;$(IncludePath);$(SolutionDir)deps/Common/include/exprtk;$(SolutionDir)deps/Common/include/spimpl;$(SolutionDir)deps/Common/include/stb_image</IncludePath>
     <LibraryPath>$(SolutionDir)deps/$(Platform)/lib/;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(SolutionDir)deps/Common/include/imgui/;$(SolutionDir)deps/Common/include/cereal/;$(IncludePath);$(SolutionDir)deps/Common/include/exprtk;$(SolutionDir)deps/Common/include/spimpl;$(SolutionDir)deps/Common/include/stb_image</IncludePath>
+    <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(SolutionDir)deps/Common/include/cereal/;$(IncludePath);$(SolutionDir)deps/Common/include/exprtk;$(SolutionDir)deps/Common/include/spimpl;$(SolutionDir)deps/Common/include/stb_image</IncludePath>
     <LibraryPath>$(SolutionDir)deps/$(Platform)/lib/;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(SolutionDir)deps/Common/include/imgui/;$(SolutionDir)deps/Common/include/cereal/;$(IncludePath);$(SolutionDir)deps/Common/include/exprtk;$(SolutionDir)deps/Common/include/spimpl;$(SolutionDir)deps/Common/include/stb_image</IncludePath>
+    <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(SolutionDir)deps/Common/include/cereal/;$(IncludePath);$(SolutionDir)deps/Common/include/exprtk;$(SolutionDir)deps/Common/include/spimpl;$(SolutionDir)deps/Common/include/stb_image</IncludePath>
     <LibraryPath>$(SolutionDir)deps/$(Platform)/lib/;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -245,7 +189,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>assimp-vc141-mtd.lib;opengl32.lib;glew32.lib;glew32s.lib;glfw3.lib;glfw3_mt.lib;glfw3dll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>assimp-vc141-mtd.lib;opengl32.lib;glew32.lib;glew32s.lib;glfw3.lib;glfw3_mt.lib;glfw3dll.lib;%(AdditionalDependencies);</AdditionalDependencies>
       <TargetMachine>MachineX86</TargetMachine>
       <AdditionalLibraryDirectories>$(SolutionDir)$(IntDir)</AdditionalLibraryDirectories>
     </Link>
@@ -267,7 +211,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>assimp-vc143-mtd.lib;opengl32.lib;glew32.lib;glew32s.lib;glfw3.lib;glfw3_mt.lib;glfw3dll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>assimp-vc143-mtd.lib;opengl32.lib;glew32.lib;glew32s.lib;glfw3.lib;glfw3_mt.lib;glfw3dll.lib;%(AdditionalDependencies);</AdditionalDependencies>
       <TargetMachine>MachineX64</TargetMachine>
       <AdditionalLibraryDirectories>$(SolutionDir)$(IntDir)</AdditionalLibraryDirectories>
     </Link>
@@ -294,7 +238,7 @@
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>assimp-vc141-mtd.lib;opengl32.lib;glew32.lib;glew32s.lib;glfw3.lib;glfw3_mt.lib;glfw3dll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>assimp-vc141-mtd.lib;opengl32.lib;glew32.lib;glew32s.lib;glfw3.lib;glfw3_mt.lib;glfw3dll.lib;%(AdditionalDependencies);</AdditionalDependencies>
       <TargetMachine>MachineX86</TargetMachine>
       <AdditionalLibraryDirectories>$(SolutionDir)$(IntDir)</AdditionalLibraryDirectories>
     </Link>
@@ -320,7 +264,7 @@
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>assimp-vc143-mtd.lib;opengl32.lib;glew32.lib;glew32s.lib;glfw3.lib;glfw3_mt.lib;glfw3dll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>assimp-vc143-mtd.lib;opengl32.lib;glew32.lib;glew32s.lib;glfw3.lib;glfw3_mt.lib;glfw3dll.lib;%(AdditionalDependencies);</AdditionalDependencies>
       <TargetMachine>MachineX64</TargetMachine>
       <AdditionalLibraryDirectories>$(SolutionDir)$(IntDir)</AdditionalLibraryDirectories>
     </Link>

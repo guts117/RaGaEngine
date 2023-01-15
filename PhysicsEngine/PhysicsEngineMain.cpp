@@ -2,6 +2,9 @@
 #include "PhysicsEngineMain.h"
 #include <bullet/btBulletDynamicsCommon.h>
 
+using namespace NarakaKarEngine;
+using namespace PhysicsEngine;
+
 struct PhysicsEngineMain::Impl 
 {
 public:
@@ -89,7 +92,7 @@ private:
 	std::vector<std::tuple<glm::mat4*, btRigidBody*>>* bodies;
 };
 
-PhysicsEngineMain::PhysicsEngineMain() : m_pImpl{ new Impl() } {};
+PhysicsEngineMain::PhysicsEngineMain() : m_pImpl{ std::make_unique<Impl>()} {};
 
 void PhysicsEngineMain::Update(float deltaTime)
 {
@@ -106,7 +109,4 @@ void PhysicsEngineMain::AddSphere(float rad, float x, float y, float z, float ma
 	Pimpl()->AddSphere(rad, x, y, z, mass, model);
 }
 
-PhysicsEngineMain::~PhysicsEngineMain()
-{
-	delete m_pImpl;
-}
+PhysicsEngineMain::~PhysicsEngineMain() = default;

@@ -28,12 +28,4 @@ const float camNearZ		= 0.1f;
 const float camFarZ			= 1000.0f;
 const static int KERNEL_SIZE = 64;
 
-enum SceneViewerType
-{
-	Empty,
-	Editor,
-	InGame,
-	//Add other sceneviewers for debug purposes too 
-};
-
 #endif
