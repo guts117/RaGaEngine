@@ -5,9 +5,6 @@
 using namespace NarakaKarEngine;
 using namespace RenderEngine;
 
-extern int ScreenWidth;
-extern int ScreenHeight;
-
 Camera::Camera(glm::vec3 startPosition, glm::vec3 startUp, GLfloat startYaw, GLfloat startPitch, GLfloat startMoveSpeed, GLfloat startTurnSpeed, const bool& isEditor)
 	:
 	position{ startPosition },
@@ -78,10 +75,8 @@ glm::mat4 Camera::CalculateShadowViewMatrix()
 	return glm::lookAt(position, position + frontYaw, upYaw);
 }
 
-void Camera::UpdatePreviousMatrices()
+void Camera::UpdatePreviousMatrices(const glm::mat4& viewMatrix, const glm::mat4& projMatrix)
 {
-	auto viewMatrix = CalculateViewMatrix();
-	auto projMatrix = GetProjectionMatrix();
 	m_prevProjView = projMatrix * viewMatrix;
 	m_prevProj = projMatrix;
 	m_prevView = viewMatrix;
@@ -117,9 +112,9 @@ glm::vec3 Camera::getCameraFront()
 	return glm::normalize(front);
 }
 
-glm::mat4 Camera::GetProjectionMatrix()
+glm::mat4 Camera::GetProjectionMatrix(const glm::ivec2& screenDims)
 {
-	return glm::perspective(glm::radians(60.0f), (GLfloat)ScreenWidth / (GLfloat)ScreenHeight, camNearZ, camFarZ);
+	return glm::perspective(glm::radians(60.0f), (GLfloat)screenDims.x / (GLfloat)screenDims.y, camNearZ, camFarZ);
 }
 
 glm::mat4 Camera::GetPreviousProjectionMatrix()

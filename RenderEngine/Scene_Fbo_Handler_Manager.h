@@ -15,7 +15,7 @@ namespace NarakaKarEngine
 		{
 		public:
 			Scene_Fbo_Handler_Manager() = delete;
-			explicit Scene_Fbo_Handler_Manager(const std::string& sceneName);
+			explicit Scene_Fbo_Handler_Manager(const std::string& sceneName, const glm::ivec2& screenDims);
 
 			Scene_Fbo_Handler_Manager(Scene_Fbo_Handler_Manager&& rhs) noexcept = default;
 			Scene_Fbo_Handler_Manager& operator=(Scene_Fbo_Handler_Manager&& rhs) noexcept = default;
@@ -25,7 +25,7 @@ namespace NarakaKarEngine
 
 			std::shared_ptr<Fbo_Handler> FindFboHandler(const std::string& handlerName) const;
 			void ResizeScreenFboHandlers(const GLuint& width, const GLuint& height);
-			std::shared_ptr<Fbo_Handler>  AddGameCameraFboHandlers(const int& cameraId);
+			std::shared_ptr<Fbo_Handler>  AddGameCameraFboHandlers(const int& cameraId, const glm::ivec2& screenDims);
 			~Scene_Fbo_Handler_Manager();
 
 		private:

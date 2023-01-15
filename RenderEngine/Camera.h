@@ -22,14 +22,14 @@ namespace NarakaKarEngine
 			glm::vec3 getCameraRight();
 			glm::vec3 getCameraFront();
 
-			glm::mat4 GetProjectionMatrix();
+			glm::mat4 GetProjectionMatrix(const glm::ivec2& screenDims);
 			glm::mat4 GetPreviousProjectionMatrix();
 			glm::mat4 GetPreviousViewMatrix();
 			glm::mat4 GetPreviousProjectionViewMatrix();
 
 			glm::mat4 CalculateViewMatrix();
 			glm::mat4 CalculateShadowViewMatrix();
-			void UpdatePreviousMatrices();
+			void UpdatePreviousMatrices(const glm::mat4& viewMatrix, const glm::mat4& projMatrix);
 
 			GLfloat GetYaw();
 

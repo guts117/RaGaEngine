@@ -11,7 +11,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NarakaKarEngine", "NarakaKa
 	ProjectSection(ProjectDependencies) = postProject
 		{12FD20BD-E9B0-425C-8300-F55ECF114314} = {12FD20BD-E9B0-425C-8300-F55ECF114314}
 		{1A288EFF-88B0-4E52-BF4B-C676FA9850F8} = {1A288EFF-88B0-4E52-BF4B-C676FA9850F8}
+		{72A8CB76-09DD-416B-B80D-AD5A38392A53} = {72A8CB76-09DD-416B-B80D-AD5A38392A53}
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EngineUI", "EngineUI\EngineUI.vcxproj", "{72A8CB76-09DD-416B-B80D-AD5A38392A53}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +48,14 @@ Global
 		{AE2898F0-4D3A-4A72-85E0-45BEAE1E1C52}.Release|x64.Build.0 = Release|x64
 		{AE2898F0-4D3A-4A72-85E0-45BEAE1E1C52}.Release|x86.ActiveCfg = Release|Win32
 		{AE2898F0-4D3A-4A72-85E0-45BEAE1E1C52}.Release|x86.Build.0 = Release|Win32
+		{72A8CB76-09DD-416B-B80D-AD5A38392A53}.Debug|x64.ActiveCfg = Debug|x64
+		{72A8CB76-09DD-416B-B80D-AD5A38392A53}.Debug|x64.Build.0 = Debug|x64
+		{72A8CB76-09DD-416B-B80D-AD5A38392A53}.Debug|x86.ActiveCfg = Debug|Win32
+		{72A8CB76-09DD-416B-B80D-AD5A38392A53}.Debug|x86.Build.0 = Debug|Win32
+		{72A8CB76-09DD-416B-B80D-AD5A38392A53}.Release|x64.ActiveCfg = Release|x64
+		{72A8CB76-09DD-416B-B80D-AD5A38392A53}.Release|x64.Build.0 = Release|x64
+		{72A8CB76-09DD-416B-B80D-AD5A38392A53}.Release|x86.ActiveCfg = Release|Win32
+		{72A8CB76-09DD-416B-B80D-AD5A38392A53}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

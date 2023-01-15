@@ -5,9 +5,6 @@
 using namespace NarakaKarEngine;
 using namespace RenderEngine;
 
-extern int ScreenWidth;
-extern int ScreenHeight;
-
 DirectionalLight::DirectionalLight()
 {
 	direction = glm::vec3(0.0f, -1.0f, 0.0f);
@@ -46,9 +43,9 @@ float DirectionalLight::GetCascadeEnd(unsigned int i)
 	return cascadeEnd[i];
 }
 
-void DirectionalLight::CalcOrthProjs(const glm::mat4& Cam, const glm::mat4* vView, const float& angle)
+void DirectionalLight::CalcOrthProjs(const glm::mat4& Cam, const glm::mat4* vView, const float& angle, const glm::ivec2& screenDims)
 {
-	float ar = float(ScreenHeight)/float(ScreenWidth);
+	float ar = float(screenDims.y)/float(screenDims.x);
 	glm::mat4 CamInv = glm::inverse(Cam);
 
 	float tanHalfHFOV = glm::tan(glm::radians(angle / 2.0f)) /ar;

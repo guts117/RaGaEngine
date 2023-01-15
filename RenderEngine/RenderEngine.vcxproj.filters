@@ -19,15 +19,6 @@
     <Filter Include="Source Files\RenderEngine">
       <UniqueIdentifier>{144eacf0-55c8-44d8-92fc-f7595702e319}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\EngineUI">
-      <UniqueIdentifier>{36c6c5de-d0c6-4e1e-a80b-594e9aaa811b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\EngineUI">
-      <UniqueIdentifier>{18df95ff-cb35-4ac3-93a2-f87af042b7b6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\EngineUI\imgui">
-      <UniqueIdentifier>{3de1f82d-3d2c-400b-9f22-62bc7ee9fea2}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Model_Importer.cpp">
@@ -43,9 +34,6 @@
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
     <ClCompile Include="DirectionalLight.cpp">
-      <Filter>Source Files\RenderEngine</Filter>
-    </ClCompile>
-    <ClCompile Include="EngineInputManager.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
     <ClCompile Include="Mesh.cpp">
@@ -71,15 +59,6 @@
     </ClCompile>
     <ClCompile Include="VertexBoneData.cpp">
       <Filter>Source Files\RenderEngine</Filter>
-    </ClCompile>
-    <ClCompile Include="Window.cpp">
-      <Filter>Source Files\RenderEngine</Filter>
-    </ClCompile>
-    <ClCompile Include="EngineUIMain.cpp">
-      <Filter>Source Files\EngineUI</Filter>
-    </ClCompile>
-    <ClCompile Include="SceneViewer.cpp">
-      <Filter>Source Files\EngineUI</Filter>
     </ClCompile>
     <ClCompile Include="FrameBufferObject.cpp">
       <Filter>Source Files\RenderEngine</Filter>
@@ -150,30 +129,6 @@
     <ClCompile Include="Billboard_Render_Pass_Handler.cpp">
       <Filter>Source Files\RenderEngine</Filter>
     </ClCompile>
-    <ClCompile Include="..\deps\Common\include\imgui\imgui.cpp">
-      <Filter>Source Files\EngineUI\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\Common\include\imgui\imgui_demo.cpp">
-      <Filter>Source Files\EngineUI\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\Common\include\imgui\imgui_draw.cpp">
-      <Filter>Source Files\EngineUI\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\Common\include\imgui\imgui_impl_glfw.cpp">
-      <Filter>Source Files\EngineUI\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\Common\include\imgui\imgui_impl_opengl3.cpp">
-      <Filter>Source Files\EngineUI\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\Common\include\imgui\imgui_impl_win32.cpp">
-      <Filter>Source Files\EngineUI\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\Common\include\imgui\imgui_tables.cpp">
-      <Filter>Source Files\EngineUI\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\deps\Common\include\imgui\imgui_widgets.cpp">
-      <Filter>Source Files\EngineUI\imgui</Filter>
-    </ClCompile>
     <ClCompile Include="render_pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -192,9 +147,6 @@
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="DirectionalLight.h">
-      <Filter>Header Files\RenderEngine</Filter>
-    </ClInclude>
-    <ClInclude Include="EngineInputManager.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="Mesh.h">
@@ -221,17 +173,8 @@
     <ClInclude Include="VertexBoneData.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
-    <ClInclude Include="Window.h">
-      <Filter>Header Files\RenderEngine</Filter>
-    </ClInclude>
     <ClInclude Include="MathUtil.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="EngineUIMain.h">
-      <Filter>Header Files\EngineUI</Filter>
-    </ClInclude>
-    <ClInclude Include="SceneViewer.h">
-      <Filter>Header Files\EngineUI</Filter>
     </ClInclude>
     <ClInclude Include="FrameBufferObject.h">
       <Filter>Header Files\RenderEngine</Filter>

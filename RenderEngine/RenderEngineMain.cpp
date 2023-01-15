@@ -20,9 +20,7 @@
 
 #include "RenderingCommonValues.h"
 #include "MathUtil.h"
-#include "Window.h"
 
-#include "EngineUIMain.h"
 #include "Shader_Object.h"
 
 #include "Render_Object.h"
@@ -49,10 +47,6 @@ using namespace NarakaKarEngine;
 using namespace RenderEngine;
 using namespace EngineUI;
 
-extern int ScreenWidth;
-extern int ScreenHeight;
-extern bool isUpdateFrameBuffersSize;
-
 struct RenderEngineMain::Impl
 {
 	Impl() = default;
@@ -62,9 +56,6 @@ struct RenderEngineMain::Impl
 
 	Impl(const Impl& rhs) = delete;
 	Impl& operator=(const Impl& rhs) = delete;
-
-
-	std::unique_ptr<Window> mainWindow = std::make_unique<Window>();
 
 	bool drawFluidSim = false;
 	bool drawSmokeSim = false;
@@ -364,10 +355,9 @@ struct RenderEngineMain::Impl
 	bool isGameViewSelected;
 	bool isEditorViewSelected;
 
-	void Init()
+	void Init(const glm::ivec2& screenDims)
 	{
 		glEnable(GL_TEXTURE_3D);
-		mainWindow->Initialise();
 		lastFrameTime = static_cast<GLfloat>(glfwGetTime());
 		CreateBillboard();
 		//CreateParticles();
@@ -451,7 +441,7 @@ struct RenderEngineMain::Impl
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-		m_SceneFboHandlerMgr = std::make_shared<Scene_Fbo_Handler_Manager>("InGame");
+		m_SceneFboHandlerMgr = std::make_shared<Scene_Fbo_Handler_Manager>("InGame", screenDims);
 
 		environmentMap = m_SceneFboHandlerMgr->FindFboHandler("Environment_Map_Pass");
 		irradianceMap = m_SceneFboHandlerMgr->FindFboHandler("Irradiance_Map_Pass");
@@ -466,7 +456,7 @@ struct RenderEngineMain::Impl
 		exposureFbo = m_SceneFboHandlerMgr->FindFboHandler("Final_Output_Pass");
 		omniShadowMaps = m_SceneFboHandlerMgr->FindFboHandler("Omni_Shadow_Map_Pass");
 
-		cameraBlitFbo = m_SceneFboHandlerMgr->AddGameCameraFboHandlers(0);
+		cameraBlitFbo = m_SceneFboHandlerMgr->AddGameCameraFboHandlers(0, screenDims);
 
 		quad = std::make_unique <std::vector<std::weak_ptr<Mesh>>>();
 
@@ -715,7 +705,7 @@ struct RenderEngineMain::Impl
 		addSplatSpot(glm::vec2(x, y), glm::vec3(80.0f, 7.0f, 0.0f), 1.0f, velocitiesTexture.get(), velTexId[0]);
 		addSplatSpot(glm::vec2(x, y), glm::vec3(50.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0), 2.5f, density.get(), denTexId[0]);*/
 
-		InitSSBOs();
+		InitSSBOs(screenDims);
 		CreateClusters();
 
 		auto envMapShaders = std::vector<std::shared_ptr<Shader_Object>>{ environmentMapShader };
@@ -813,27 +803,25 @@ struct RenderEngineMain::Impl
 		SSAONoiseTexture->LoadNativeTexture(ssaoNoiseData);
 	}
 	
-	void UpdateAtFrameBufferResize()
+	void UpdateAtFrameBufferResize(const glm::ivec2& screenDims)
 	{
-		if (isUpdateFrameBuffersSize)
-		{
-			isUpdateFrameBuffersSize = false;
+		auto invProj = glm::inverse(cameras[0]->GetProjectionMatrix(screenDims));
+		glNamedBufferSubData(screenToViewSSBO, 0, sizeof(invProj), &invProj);
+		sizeX = (unsigned int)std::ceilf(screenDims.x / (float)gridSizeX);
+		sizeY = (unsigned int)std::ceilf(screenDims.y / (float)gridSizeY);
+		int data[4] = { sizeX, sizeY, screenDims.x, screenDims.y };
+		glNamedBufferSubData(screenToViewSSBO, 80, sizeof(data), &data);
 
-			auto invProj = glm::inverse(cameras[0]->GetProjectionMatrix());
-			glNamedBufferSubData(screenToViewSSBO, 0, sizeof(invProj), &invProj);
-			sizeX = (unsigned int)std::ceilf(ScreenWidth / (float)gridSizeX);
-			sizeY = (unsigned int)std::ceilf(ScreenHeight / (float)gridSizeY);
-			int data[4] = { sizeX, sizeY, ScreenWidth, ScreenHeight };
-			glNamedBufferSubData(screenToViewSSBO, 80, sizeof(data), &data);
-
-			m_SceneFboHandlerMgr->ResizeScreenFboHandlers(ScreenWidth, ScreenHeight);
-			CreateClusters();
-		}
+		m_SceneFboHandlerMgr->ResizeScreenFboHandlers(screenDims.x, screenDims.y);
+		CreateClusters();
 	}
 
-	void Update()
+	void Update(const glm::ivec2& screenDims, const bool& isUpdateBuffers)
 	{
-		UpdateAtFrameBufferResize();
+		if(isUpdateBuffers)
+		{
+			UpdateAtFrameBufferResize(screenDims);
+		}
 
 		// Measure speed
 		GLfloat now = static_cast<GLfloat>(glfwGetTime());
@@ -848,18 +836,19 @@ struct RenderEngineMain::Impl
 			lastFrameTime += 1.0;
 		}
 
-		if (isEditorViewSelected) 
+		//ToDo:
+		/*if (isEditorViewSelected) 
 		{
 			cameras[1]->keyControl(mainWindow->getKeys(), deltaTime);
 		}
 		else if(isGameViewSelected)
 		{
 			cameras[0]->keyControl(mainWindow->getKeys(), deltaTime);
-		}
+		}*/
 
 		if (!drawFluidSim && !drawSmokeSim)
 		{
-			if (isEditorViewSelected)
+			/*if (isEditorViewSelected)
 			{
 				auto xChange = 0.0f;
 				auto yChange = 0.0f;
@@ -879,23 +868,23 @@ struct RenderEngineMain::Impl
 			if (mainWindow->getKeys()[GLFW_KEY_L]) {
 				spotLights[0]->Toggle();
 				mainWindow->getKeys()[GLFW_KEY_L] = false;
-			}
+			}*/
 
 			UpdateObjectTransforms();
 			
 			for(auto& camera: cameras)
 			{
-				auto camParam = CamParam{ camera->getCameraPosition(), camera->GetProjectionMatrix(), camera->CalculateViewMatrix()
+				auto camParam = CamParam{ camera->getCameraPosition(), camera->GetProjectionMatrix(screenDims), camera->CalculateViewMatrix()
 						, camera->GetPreviousProjectionMatrix(), camera->GetPreviousViewMatrix(), camera->GetPreviousProjectionViewMatrix()
 						, framesPerSec
 						, camera->getCameraUp()
 						, camera->getCameraRight() };
 
-				DirectionalShadowMapPass(mainLight.get(), camParam);
+				DirectionalShadowMapPass(mainLight.get(), camParam, screenDims);
 				OmniShadowMapPass(*omniDirLights, camParam);
 
 				PreZPass(camParam);
-				CullLight(camParam);
+				CullLight(camParam, screenDims);
 				SSAOPass(camParam);
 				SSAOBlurPass(camParam);
 				RenderPass(camParam, mainLight.get(), pointLights, spotLights);
@@ -911,7 +900,7 @@ struct RenderEngineMain::Impl
 					spotLights[0]->SetFlash(lowerLight, camera->getCameraDirection());
 				}
 
-				camera->UpdatePreviousMatrices();
+				camera->UpdatePreviousMatrices(camParam.View, camParam.Projection);
 			}
 		}
 
@@ -920,15 +909,13 @@ struct RenderEngineMain::Impl
 
 	void EndUpdate() 
 	{
-		mainWindow->swapBuffers();
-		mainWindow->scrollVal = 0.0f;
 	}
 
-	void InitSSBOs() 
+	void InitSSBOs(const glm::ivec2& screenDims)
 	{
 		//Setting up tile size on both X and Y 
-		sizeX = (unsigned int)std::ceilf(ScreenWidth / (float)gridSizeX);
-		sizeY = (unsigned int)std::ceilf(ScreenHeight / (float)gridSizeY);
+		sizeX = (unsigned int)std::ceilf(screenDims.x / (float)gridSizeX);
+		sizeY = (unsigned int)std::ceilf(screenDims.y / (float)gridSizeY);
 
 		//Buffer containing all the clusters
 		{
@@ -948,7 +935,7 @@ struct RenderEngineMain::Impl
 
 			ScreenToView screen2View;
 			//Setting up contents of buffer
-			screen2View.inverseProjectionMat = glm::inverse(cameras[0]->GetProjectionMatrix());
+			screen2View.inverseProjectionMat = glm::inverse(cameras[0]->GetProjectionMatrix(screenDims));
 
 			screen2View.tileSizes[0] = gridSizeX;
 			screen2View.tileSizes[1] = gridSizeY;
@@ -956,8 +943,8 @@ struct RenderEngineMain::Impl
 			screen2View.tileSizes[3] = maxLightsPerTile;
 			screen2View.tileSizeInPixel[0] = sizeX;
 			screen2View.tileSizeInPixel[1] = sizeY;
-			screen2View.screenWidth = ScreenWidth;
-			screen2View.screenHeight = ScreenHeight;
+			screen2View.screenWidth = screenDims.x;
+			screen2View.screenHeight = screenDims.y;
 			//Basically reduced a log function into a simple multiplication an addition by pre-calculating these
 			float factor = gridSizeZ / glm::log(camFarZ / camNearZ);
 			screen2View.sliceScalingFactor = factor;
@@ -1344,10 +1331,10 @@ struct RenderEngineMain::Impl
 		//}
 	}
 
-	void DirectionalShadowMapPass(DirectionalLight* light, const CamParam& camParam) {
+	void DirectionalShadowMapPass(DirectionalLight* light, const CamParam& camParam, const glm::ivec2& screenDims) {
 
 		auto testLitView = light->CalculateCascadeLightTransform();
-		light->CalcOrthProjs(camParam.View, &testLitView, 60.0f);
+		light->CalcOrthProjs(camParam.View, &testLitView, 60.0f, screenDims);
 
 		glm::mat4 proj[NUM_CASCADES];
 		glm::mat4 vView[NUM_CASCADES];
@@ -1379,11 +1366,11 @@ struct RenderEngineMain::Impl
 		omniShadowRPHandler->Update(*sceneObjRO, &camParam, &lightParam);
 	}
 
-	void CullLight(const CamParam& camParam)
+	void CullLight(const CamParam& camParam, const glm::ivec2& screenDims)
 	{
 		visibleClusterCompShader->UseShaderObject();
 		depthMap->AttachFBOToTextureUnit(0, 0, 0, 0);
-		visibleClusterCompShader->DispatchShaderObject(glm::uvec3(ScreenWidth / 32, ScreenHeight / 30, 1));
+		visibleClusterCompShader->DispatchShaderObject(glm::uvec3(screenDims.x / 32, screenDims.y / 30, 1));
 
 		//unsigned int count = 0;
 		//unsigned int isvisible[32 * 32 * 10];
@@ -1914,39 +1901,22 @@ struct RenderEngineMain::Impl
 	}
 };
 
-RenderEngineMain::RenderEngineMain() : m_pImpl{ std::make_unique<Impl>() } { Pimpl()->Init(); };
+RenderEngineMain::RenderEngineMain(const glm::ivec2& screenDims) : m_pImpl{ std::make_unique<Impl>() } { Pimpl()->Init(screenDims); };
 
-void RenderEngineMain::Update()
+void RenderEngineMain::Update(const glm::ivec2& screenDims, const bool& isUpdateBuffers)
 {	
-	Pimpl()->Update();
-	Pimpl()->isFocusedCount = 0;
+	Pimpl()->Update(screenDims, isUpdateBuffers);
 }
 
 void RenderEngineMain::EndUpdate() 
 {
 	Pimpl()->EndUpdate();
-	Pimpl()->mainWindow->SetCursorActive(Pimpl()->isFocusedCount == 0);
 }
 
-GLFWwindow* RenderEngineMain::GetMainWindow()
-{	
-	return Pimpl()->mainWindow->GetWindow();
-}
-
-bool RenderEngineMain::IsCursorHidden()
-{
-	return Pimpl()->mainWindow->IsCursorHidden();
-}
-
-void RenderEngineMain::AddViewers(EngineUIMain* engineUI)
-{
-	engineUI->AddSceneViewers(Pimpl()->exposureFbo->GetFBOBuffer(0, 0), "EditorView", Editor, [this](bool isSelected, bool isHideCursor) {  Pimpl()->isFocusedCount += isHideCursor ? 1.0 : 0.0f; Pimpl()->isEditorViewSelected = isSelected; });
-	engineUI->AddSceneViewers(Pimpl()->cameraBlitFbo->GetFBOBuffer(0, 0), "GameView", InGame, [this](bool isSelected, bool isHideCursor) {  Pimpl()->isFocusedCount += isHideCursor ? 1.0 : 0.0f; Pimpl()->isGameViewSelected = isSelected; });
-}
-
-bool RenderEngineMain:: IsEnd()
-{
-	return Pimpl()->mainWindow->getShouldClose();
-}
+//std::vector<std::function<void(bool)>> RenderEngineMain::AddViewers(EngineUIMain* engineUI)
+//{
+//	engineUI->AddSceneViewers(Pimpl()->exposureFbo->GetFBOBuffer(0, 0), "EditorView", Editor, [this](bool isSelected) { Pimpl()->isEditorViewSelected = isSelected; });
+//	engineUI->AddSceneViewers(Pimpl()->cameraBlitFbo->GetFBOBuffer(0, 0), "GameView", InGame, [this](bool isSelected) { Pimpl()->isGameViewSelected = isSelected; });
+//}
 
 RenderEngineMain::~RenderEngineMain() = default;
