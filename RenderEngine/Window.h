@@ -1,0 +1,59 @@
+#ifndef WINDOW
+#define WINDOW
+
+#include "render_pch.h"
+
+namespace NarakaKarEngine
+{
+	namespace RenderEngine
+	{
+		class EngineInputManager;
+
+		class Window
+		{
+			friend class EngineInputManager;
+		public:
+			explicit Window();
+
+			int Initialise();
+
+			inline bool getShouldClose() { return glfwWindowShouldClose(mainWindow); }
+			inline bool* getKeys() { return keys; }
+			GLfloat getXChange();
+			GLfloat getYChange();
+
+			glm::vec2 GetCursorPos();
+
+			inline void swapBuffers() { glfwSwapBuffers(mainWindow); }
+			inline void SetCursorActive(bool isActive) { if (isMouseActive != isActive) { isMouseActive = isActive; glfwSetInputMode(mainWindow, GLFW_CURSOR, isActive ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_HIDDEN); } }
+			inline bool IsCursorHidden() { return glfwGetInputMode(mainWindow, GLFW_CURSOR) == GLFW_CURSOR_HIDDEN; }
+			inline void ResizeWindow(GLuint x, GLuint y) { glfwSetWindowSize(mainWindow, x, y); }
+
+			bool isLeftMousePress;
+			bool isLeftMouseRelease;
+			bool isMiddleMousePress;
+			bool isMiddleMouseRelease;
+
+			double scrollVal;
+
+			inline GLFWwindow* GetWindow() { return mainWindow; }
+
+			~Window();
+
+		private:
+			GLFWwindow* mainWindow = nullptr;
+
+			void createCallbacks();
+
+			bool keys[1024] = { false };
+
+			GLfloat lastX;
+			GLfloat lastY;
+			GLfloat xChange;
+			GLfloat yChange;
+		    bool isMouseActive;
+			bool mouseFirstMoved = true;
+		};
+	}
+}
+#endif

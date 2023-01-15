@@ -16,7 +16,7 @@ int main()
 	physicsEngine = std::make_unique<PhysicsEngineMain>();
 	std::unique_ptr<RenderEngineMain> renderEngine = std::make_unique<RenderEngineMain>();
 	engineUI = std::make_unique<EngineUIMain>(renderEngine->GetMainWindow(), true, "#version 460");
-	renderEngine->AddViewers();
+	renderEngine->AddViewers(engineUI.get());
 
 	do 
 	{
