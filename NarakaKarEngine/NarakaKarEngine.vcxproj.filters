@@ -305,5 +305,8 @@
     <ClInclude Include="Billboard_Render_Pass_Handler.h">
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
+    <ClInclude Include="Model_Importer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

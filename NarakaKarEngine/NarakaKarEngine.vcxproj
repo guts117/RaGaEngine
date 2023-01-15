@@ -126,6 +126,7 @@
     <ClInclude Include="Fbo_Handler.h" />
     <ClInclude Include="FrameBufferObject.h" />
     <ClInclude Include="Irradiance_Convolution_Render_Pass_Handler.h" />
+    <ClInclude Include="Model_Importer.h" />
     <ClInclude Include="Motion_Blur_Render_Pass_Handler.h" />
     <ClInclude Include="Omni_Directional_Shadow_Map_Render_Pass_Handler.h" />
     <ClInclude Include="Prefilter_Render_Pass_Handler.h" />
