@@ -352,9 +352,6 @@ struct RenderEngineMain::Impl
 	float simDt3D = 0.0f;
 	int simDim3D = 128;
 
-	bool isGameViewSelected;
-	bool isEditorViewSelected;
-
 	void Init(const glm::ivec2& screenDims)
 	{
 		glEnable(GL_TEXTURE_3D);
@@ -836,40 +833,8 @@ struct RenderEngineMain::Impl
 			lastFrameTime += 1.0;
 		}
 
-		//ToDo:
-		/*if (isEditorViewSelected) 
-		{
-			cameras[1]->keyControl(mainWindow->getKeys(), deltaTime);
-		}
-		else if(isGameViewSelected)
-		{
-			cameras[0]->keyControl(mainWindow->getKeys(), deltaTime);
-		}*/
-
 		if (!drawFluidSim && !drawSmokeSim)
 		{
-			/*if (isEditorViewSelected)
-			{
-				auto xChange = 0.0f;
-				auto yChange = 0.0f;
-
-				if (mainWindow->isMiddleMousePress) 
-				{
-					xChange = mainWindow->getXChange();
-					yChange = mainWindow->getYChange();
-				}
-				cameras[1]->mouseControl(xChange, yChange, mainWindow->scrollVal, deltaTime);
-			}
-			else if (isGameViewSelected)
-			{
-				cameras[0]->mouseControl(mainWindow->getXChange(), mainWindow->getYChange(), 0, 0);
-			}
-
-			if (mainWindow->getKeys()[GLFW_KEY_L]) {
-				spotLights[0]->Toggle();
-				mainWindow->getKeys()[GLFW_KEY_L] = false;
-			}*/
-
 			UpdateObjectTransforms();
 			
 			for(auto& camera: cameras)
@@ -1913,10 +1878,10 @@ void RenderEngineMain::EndUpdate()
 	Pimpl()->EndUpdate();
 }
 
-//std::vector<std::function<void(bool)>> RenderEngineMain::AddViewers(EngineUIMain* engineUI)
-//{
-//	engineUI->AddSceneViewers(Pimpl()->exposureFbo->GetFBOBuffer(0, 0), "EditorView", Editor, [this](bool isSelected) { Pimpl()->isEditorViewSelected = isSelected; });
-//	engineUI->AddSceneViewers(Pimpl()->cameraBlitFbo->GetFBOBuffer(0, 0), "GameView", InGame, [this](bool isSelected) { Pimpl()->isGameViewSelected = isSelected; });
-//}
+const GLuint& RenderEngineMain::GetFboBuffer(const std::string& fboHandlerName, const GLuint& fboIndex, const GLuint& bufferIndex) const
+{
+	auto fboHndlr = Pimpl()->m_SceneFboHandlerMgr->FindFboHandler(fboHandlerName);
+	return fboHndlr != nullptr ? fboHndlr->GetFBOBuffer(fboIndex, bufferIndex) : 0;
+}
 
 RenderEngineMain::~RenderEngineMain() = default;

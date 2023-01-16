@@ -46,7 +46,7 @@ namespace NarakaKarEngine
 
 			~EngineUIMain();
 		private:
-			struct Impl;
+			struct ENGINE_UI_API Impl;
 
 			const Impl* Pimpl() const { return m_pImpl.get(); }
 			Impl* Pimpl() { return m_pImpl.get(); }

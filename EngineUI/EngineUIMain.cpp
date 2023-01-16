@@ -128,9 +128,10 @@ struct EngineUIMain::Impl
 		mainWindow->SetCursorActive(isFocusedCount == 0);
 	}
 
-	void AddSceneViewers(GLuint sceneTex, std::string sceneName, SceneViewerType viewerType, std::function<void(bool, bool)> selectCallback)
+	void AddSceneViewers(GLuint sceneTex, std::string sceneName, SceneViewerType viewerType, std::function<void(bool)> selectCallback)
 	{
-		auto scene = std::make_shared<SceneViewer>(sceneTex, sceneName, viewerType, selectCallback);
+		std::function<void(bool, bool)> f = [=](bool isSelected, bool isHideCursor) { selectCallback(isSelected);  isFocusedCount += isHideCursor ? 1.0 : 0.0f; };
+		auto scene = std::make_shared<SceneViewer>(sceneTex, sceneName, viewerType, f);
 		m_sceneList->push_back(scene);
 	}
 
@@ -166,8 +167,7 @@ void EngineUIMain::EndUpdate()
 
 void EngineUIMain::AddSceneViewers(GLuint sceneTex, std::string sceneName, SceneViewerType viewerType, std::function<void(bool)> selectCallback)
 {
-	auto hideCursorCallback = [this](bool isHideCursor) {  Pimpl()->isFocusedCount += isHideCursor ? 1.0 : 0.0f; };
-	Pimpl()->AddSceneViewers(sceneTex, sceneName, viewerType, [&](bool isSelected, bool isHideCursor) { selectCallback(isSelected); hideCursorCallback(isHideCursor); });
+	Pimpl()->AddSceneViewers(sceneTex, sceneName, viewerType, selectCallback);
 }
 
 GLFWwindow* EngineUIMain::GetMainWindow()
