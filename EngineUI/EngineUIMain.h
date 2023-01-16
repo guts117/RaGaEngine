@@ -33,6 +33,7 @@ namespace NarakaKarEngine
 			EngineUIMain(const EngineUIMain& rhs) noexcept = delete;
 			EngineUIMain& operator=(const EngineUIMain& rhs) noexcept = delete;
 
+			void CreateInputCallbacks(const GLFWkeyfun& keyCallback, const GLFWcursorposfun& cursorPosCallback, const GLFWmousebuttonfun& mouseBtnCallback, const GLFWscrollfun& mouseScrollCallback);
 			void Update(const glm::ivec2& screenDims);
 			void EndUpdate();
 

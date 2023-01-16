@@ -10,11 +10,7 @@ int ScreenWidth;
 int ScreenHeight;
 bool IsUpdateFrameBuffersSize;
 
-Window::Window() {
-	for (size_t i = 0; i < 1024; i++) {
-		keys[i] = 0;
-	}
-}
+Window::Window() = default;
 
 static int Mini(int x, int y)
 {
@@ -62,7 +58,8 @@ GLFWmonitor* Get_current_monitor(GLFWwindow* window)
 	return bestmonitor;
 }
 
-int Window::Initialise() {
+int Window::Initialise() 
+{
 	//initialize GLFW
 	if (!glfwInit()) {
 		printf("GLFW initialization failed!");
@@ -129,32 +126,12 @@ int Window::Initialise() {
 	return 0;
 }
 
-void Window::CreateInputCallbacks(const GLFWkeyfun& keyCallback, const GLFWcursorposfun& cursorPosCallback
-							, const GLFWmousebuttonfun& mouseBtnCallback, const GLFWscrollfun& mouseScrollCallback)
+void Window::CreateInputCallbacks(const GLFWkeyfun& keyCallback, const GLFWcursorposfun& cursorPosCallback, const GLFWmousebuttonfun& mouseBtnCallback, const GLFWscrollfun& mouseScrollCallback)
 {
 	glfwSetKeyCallback(mainWindow, keyCallback);
 	glfwSetCursorPosCallback(mainWindow, cursorPosCallback);
 	glfwSetMouseButtonCallback(mainWindow, mouseBtnCallback);
 	glfwSetScrollCallback(mainWindow, mouseScrollCallback);
-}
-
-GLfloat  Window::getXChange() {
-	GLfloat theChange = xChange;
-	xChange = 0.0f;
-	return theChange;
-}
-
-GLfloat  Window::getYChange() {
-	GLfloat theChange = yChange;
-	yChange = 0.0f;
-	return theChange;
-}
-
-glm::vec2 Window::GetCursorPos()
-{
-	double x, y;
-	glfwGetCursorPos(mainWindow, &x, &y);
-	return glm::vec2(x, y);
 }
 
 Window::~Window() {
