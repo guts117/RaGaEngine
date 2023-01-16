@@ -7,8 +7,23 @@ namespace NarakaKarEngine
 {
 	namespace EngineUI
 	{
+		class SceneViewer;
 		class EngineUIMain;
 	}
+
+	namespace RenderEngine
+	{
+		class RenderEngineMain;
+	}
+
+	struct RendererToViewer
+	{
+		std::string sceneFboName;
+		std::string viewerName;
+		int viewerType;				//SceneViewerType
+		int fboIndex;
+		int bufferIndex;
+	};
 
 	namespace NarakaEditor
 	{
@@ -16,7 +31,7 @@ namespace NarakaKarEngine
 		{
 		public:
 			explicit EngineEditor() = delete;
-			explicit EngineEditor(const bool installCallbacks, const std::string version);
+			explicit EngineEditor(std::vector<RendererToViewer>&& render2Views);
 
 			EngineEditor(EngineEditor&& rhs) noexcept = delete;
 			EngineEditor& operator=(EngineEditor&& rhs) noexcept = delete;
@@ -24,10 +39,10 @@ namespace NarakaKarEngine
 			EngineEditor(const EngineEditor& rhs) noexcept = delete;
 			EngineEditor& operator=(const EngineEditor& rhs) noexcept = delete;
 
-			void Update(const glm::ivec2& screenDims);
+			void Update();
 			void EndUpdate();
 
-			void AddViewers(EngineUI::EngineUIMain* engineUI);
+			void AddSceneViewers(EngineUI::EngineUIMain* engineUI, const RenderEngine::RenderEngineMain* renderEngineMain);
 
 			~EngineEditor();
 		private:

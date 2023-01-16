@@ -21,6 +21,7 @@ namespace NarakaKarEngine
 	{
 		class Render_Object;
 		class Texture;
+		class Scene_Fbo_Handler_Manager;
 		enum TexType;
 
 		struct Transform
@@ -50,7 +51,8 @@ namespace NarakaKarEngine
 			void Update(const glm::ivec2& screenDims, const bool& isUpdateBuffers);
 			void EndUpdate();
 
-			//void AddViewers(EngineUI::EngineUIMain* engineUI);
+			const GLuint& GetFboBuffer(const std::string& fboHandlerName, const GLuint& fboIndex, const GLuint& bufferIndex)  const;
+
 			//ToDo:
 			//static std::unique_ptr<std::map<TexType, std::vector<std::weak_ptr<Texture>>>> CreateTextureMap(std::vector<TexMapData>&& texMapData);
 

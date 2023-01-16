@@ -264,7 +264,7 @@ struct Scene_Fbo_Handler_Manager::Impl
 		auto fbo = std::make_shared<FrameBufferObject>(fboParams);
 		auto fboVec = std::make_unique<std::vector<std::shared_ptr<FrameBufferObject>>>();
 		fboVec->push_back(fbo);
-		auto fboHandlr = std::make_shared<Fbo_Handler>(std::move(fboVec), "CameraPass" + cameraId, true, 0, 0, nullptr, nullptr);
+		auto fboHandlr = std::make_shared<Fbo_Handler>(std::move(fboVec), "CameraPass" + std::to_string(cameraId), true, 0, 0, nullptr, nullptr);
 		m_FboHandlerVec->push_back(fboHandlr);
 		return fboHandlr;
 	}
