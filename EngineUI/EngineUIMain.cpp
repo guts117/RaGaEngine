@@ -190,13 +190,37 @@ bool EngineUIMain::IsUpdateBufferSize()
 	return IsUpdateFrameBuffersSize;
 }
 
-bool EngineUIMain::AddMouseEvent(int mouse_button, bool down)
+bool EngineUIMain::AddKeyBoardButtonEvent(int key, bool down)
+{
+	ImGuiIO& io = ImGui::GetIO();
+	io.AddKeyEvent(static_cast<ImGuiKey>(key), down);
+
+	return !io.WantCaptureKeyboard;
+}
+
+bool EngineUIMain::AddCursorPosEvent(float x, float y)
+{
+	ImGuiIO& io = ImGui::GetIO();
+	io.AddMousePosEvent(x, y);
+
+	return !io.WantCaptureMouse;
+}
+
+bool EngineUIMain::AddMouseButtonEvent(int mouse_button, bool down)
 {
 	// (1) ALWAYS forward mouse data to ImGui! This is automatic with default backends. With your own backend:
 	ImGuiIO& io = ImGui::GetIO();
 	io.AddMouseButtonEvent(mouse_button, down);
 
 	// (2) ONLY forward mouse data to your underlying app/game.
+	return !io.WantCaptureMouse;
+}
+
+bool EngineUIMain::AddMouseScrollEvent(float wheel_x, float wheel_y)
+{
+	ImGuiIO& io = ImGui::GetIO();
+	io.AddMouseWheelEvent(wheel_x, wheel_y);
+
 	return !io.WantCaptureMouse;
 }
 

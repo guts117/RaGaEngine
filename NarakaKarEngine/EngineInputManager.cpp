@@ -47,33 +47,39 @@ glm::vec2 EngineInputManager::GetCursorPos()
 
 void EngineInputManager::HandleKeysPresses(GLFWwindow* window, int key, int code, int action, int mode) 
 {
-	if (key >= 0 && key < 1024) {
-		if (action == GLFW_PRESS) {
-			keys[key] = true;
-		}
-		else if (action == GLFW_RELEASE) {
-			keys[key] = false;
+	if (EngineUIMain::AddMouseButtonEvent(key, action == GLFW_PRESS))
+	{
+		if (key >= 0 && key < 1024) {
+			if (action == GLFW_PRESS) {
+				keys[key] = true;
+			}
+			else if (action == GLFW_RELEASE) {
+				keys[key] = false;
+			}
 		}
 	}
 }
 void EngineInputManager::HandleCursorPosition(GLFWwindow* window, double xPos, double yPos) 
 {
-	if (mouseFirstMoved) {
+	if (EngineUIMain::AddCursorPosEvent(xPos, yPos))
+	{
+		if (mouseFirstMoved) {
+			lastX = static_cast<float>(xPos);
+			lastY = static_cast<float>(yPos);
+			mouseFirstMoved = false;
+		}
+
+		xChange = static_cast<float>(xPos) - lastX;
+		yChange = lastY - static_cast<float>(yPos);
+
 		lastX = static_cast<float>(xPos);
 		lastY = static_cast<float>(yPos);
-		mouseFirstMoved = false;
 	}
-
-	xChange = static_cast<float>(xPos) - lastX;
-	yChange = lastY - static_cast<float>(yPos);
-
-	lastX = static_cast<float>(xPos);
-	lastY = static_cast<float>(yPos);
 }
 
 void EngineInputManager::HandleMousePresses(GLFWwindow* window, int button, int action, int mode) 
 {
-	if (EngineUIMain::AddMouseEvent(button, action == GLFW_PRESS)) 
+	if (EngineUIMain::AddMouseButtonEvent(button, action == GLFW_PRESS)) 
 	{
 		if (button == GLFW_MOUSE_BUTTON_LEFT) {
 			if (action == GLFW_PRESS) {
@@ -101,7 +107,10 @@ void EngineInputManager::HandleMousePresses(GLFWwindow* window, int button, int 
 
 void EngineInputManager::HandleMouseScrolls(GLFWwindow* window, double xOffset, double yOffset)
 {
-	scrollVal = yOffset;
+	if (EngineUIMain::AddMouseScrollEvent(xOffset, yOffset)) 
+	{
+		scrollVal = yOffset;
+	}
 }
 
 EngineInputManager::~EngineInputManager()
