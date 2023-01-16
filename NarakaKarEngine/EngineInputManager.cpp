@@ -2,71 +2,101 @@
 #include "EngineInputManager.h"
 
 using namespace NarakaKarEngine;
-using namespace RenderEngine;
+using namespace InputManager;
+
+
+double EngineInputManager::scrollVal;
+bool EngineInputManager::keys[1024];
+
+bool EngineInputManager::isLeftMousePress;
+bool EngineInputManager::isLeftMouseRelease;
+bool EngineInputManager::isMiddleMousePress;
+bool EngineInputManager::isMiddleMouseRelease;
+
+GLfloat EngineInputManager::lastX;
+GLfloat EngineInputManager::lastY;
+GLfloat EngineInputManager::xChange;
+GLfloat EngineInputManager::yChange;
+bool EngineInputManager::mouseFirstMoved;
 
 EngineInputManager::EngineInputManager()
 {
-	//empty
+	for (size_t i = 0; i < 1024; i++) {
+		keys[i] = 0;
+	}
 }
 
-void EngineInputManager::handleKeys(GLFWwindow* window, int key, int code, int action, int mode) {
-	//Window* theWindow = static_cast<Window*>(glfwGetWindowUserPointer(window)); // grabbing that user pointer and casting it to Window*
-
-	//if (key >= 0 && key < 1024) {
-	//	if (action == GLFW_PRESS) {
-	//		theWindow->keys[key] = true;
-	//	}
-	//	else if (action == GLFW_RELEASE) {
-	//		theWindow->keys[key] = false;
-	//	}
-	//}
-}
-void EngineInputManager::handleMouse(GLFWwindow* window, double xPos, double yPos) {
-	//Window* theWindow = static_cast<Window*>(glfwGetWindowUserPointer(window)); // grabbing that user pointer and casting it to Window*
-
-	//if (theWindow->mouseFirstMoved) {
-	//	theWindow->lastX = static_cast<float>(xPos);
-	//	theWindow->lastY = static_cast<float>(yPos);
-	//	theWindow->mouseFirstMoved = false;
-	//}
-
-	//theWindow->xChange = static_cast<float>(xPos) - theWindow->lastX;
-	//theWindow->yChange = theWindow->lastY - static_cast<float>(yPos);
-
-	//theWindow->lastX = static_cast<float>(xPos);
-	//theWindow->lastY = static_cast<float>(yPos);
+GLfloat EngineInputManager::GetXChange() {
+	GLfloat theChange = xChange;
+	xChange = 0.0f;
+	return theChange;
 }
 
-void EngineInputManager::handleMouseClick(GLFWwindow* window, int button, int action, int mode) {
-	//Window* theWindow = static_cast<Window*>(glfwGetWindowUserPointer(window)); // grabbing that user pointer and casting it to Window*
-
-	//if (button == GLFW_MOUSE_BUTTON_LEFT) {
-	//	if (action == GLFW_PRESS) {
-	//		theWindow->isLeftMousePress = true;
-	//		theWindow->isLeftMouseRelease = false;
-	//	}
-	//	else if (action == GLFW_RELEASE) {
-	//		theWindow->isLeftMouseRelease = true;
-	//		theWindow->isLeftMousePress = false;
-	//	}
-	//}
-
-	//if (button == GLFW_MOUSE_BUTTON_MIDDLE) {
-	//	if (action == GLFW_PRESS) {
-	//		theWindow->isMiddleMousePress = true;
-	//		theWindow->isLeftMouseRelease = false;
-	//	}
-	//	else if (action == GLFW_RELEASE) {
-	//		theWindow->isLeftMouseRelease = true;
-	//		theWindow->isMiddleMousePress = false;
-	//	}
-	//}
+GLfloat  EngineInputManager::GetYChange() {
+	GLfloat theChange = yChange;
+	yChange = 0.0f;
+	return theChange;
 }
 
-void EngineInputManager::handleMouseScrolls(GLFWwindow* window, double xOffset, double yOffset)
+glm::vec2 EngineInputManager::GetCursorPos()
 {
-	//Window* theWindow = static_cast<Window*>(glfwGetWindowUserPointer(window)); // grabbing that user pointer and casting it to Window*
-	//theWindow->scrollVal = yOffset;
+	return glm::vec2(lastX, lastY);
+}
+
+void EngineInputManager::HandleKeysPresses(GLFWwindow* window, int key, int code, int action, int mode) 
+{
+	if (key >= 0 && key < 1024) {
+		if (action == GLFW_PRESS) {
+			keys[key] = true;
+		}
+		else if (action == GLFW_RELEASE) {
+			keys[key] = false;
+		}
+	}
+}
+void EngineInputManager::HandleCursorPosition(GLFWwindow* window, double xPos, double yPos) 
+{
+	if (mouseFirstMoved) {
+		lastX = static_cast<float>(xPos);
+		lastY = static_cast<float>(yPos);
+		mouseFirstMoved = false;
+	}
+
+	xChange = static_cast<float>(xPos) - lastX;
+	yChange = lastY - static_cast<float>(yPos);
+
+	lastX = static_cast<float>(xPos);
+	lastY = static_cast<float>(yPos);
+}
+
+void EngineInputManager::HandleMousePresses(GLFWwindow* window, int button, int action, int mode) 
+{
+	if (button == GLFW_MOUSE_BUTTON_LEFT) {
+		if (action == GLFW_PRESS) {
+			isLeftMousePress = true;
+			isLeftMouseRelease = false;
+		}
+		else if (action == GLFW_RELEASE) {
+			isLeftMouseRelease = true;
+			isLeftMousePress = false;
+		}
+	}
+
+	if (button == GLFW_MOUSE_BUTTON_MIDDLE) {
+		if (action == GLFW_PRESS) {
+			isMiddleMousePress = true;
+			isLeftMouseRelease = false;
+		}
+		else if (action == GLFW_RELEASE) {
+			isLeftMouseRelease = true;
+			isMiddleMousePress = false;
+		}
+	}
+}
+
+void EngineInputManager::HandleMouseScrolls(GLFWwindow* window, double xOffset, double yOffset)
+{
+	scrollVal = yOffset;
 }
 
 EngineInputManager::~EngineInputManager()

@@ -125,7 +125,6 @@ struct EngineUIMain::Impl
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		mainWindow->swapBuffers();
-		mainWindow->scrollVal = 0.0f;
 		mainWindow->SetCursorActive(isFocusedCount == 0);
 	}
 
@@ -146,6 +145,12 @@ struct EngineUIMain::Impl
 EngineUIMain::EngineUIMain(const bool installCallbacks, const std::string version)
 	: m_pImpl{ new Impl(installCallbacks, version) }
 {
+}
+
+void EngineUIMain::CreateInputCallbacks(const GLFWkeyfun& keyCallback, const GLFWcursorposfun& cursorPosCallback
+	, const GLFWmousebuttonfun& mouseBtnCallback, const GLFWscrollfun& mouseScrollCallback)
+{
+	Pimpl()->mainWindow->CreateInputCallbacks(keyCallback, cursorPosCallback, mouseBtnCallback, mouseScrollCallback);
 }
 
 void EngineUIMain::Update(const glm::ivec2& screenDims)
