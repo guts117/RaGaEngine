@@ -28,13 +28,12 @@ int main()
 	do 
 	{
 		screenDims = glm::ivec2(engineUI->GetScreenDimensions());
-		//get + handle user input events
-		glfwPollEvents();
 		physicsEngine->Update(0.016f);
 		renderEngine->Update(screenDims, engineUI->IsUpdateBufferSize());
 		engineUI->Update(screenDims);
-		engineUI->EndUpdate();
+		editor.Update();
 		renderEngine->EndUpdate();
+		engineUI->EndUpdate();
 	} while (!engineUI->IsEnd());
 
 	return 0;
