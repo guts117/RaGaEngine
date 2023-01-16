@@ -32,30 +32,31 @@ struct EngineEditor::Impl
 
 	void Update()
 	{
-		/*if (isEditorViewSelected)
+		if (isEditorViewSelected)
 		{
-			cameras[1]->keyControl(mainWindow->getKeys(), deltaTime);
-			auto xChange = 0.0f;
-			auto yChange = 0.0f;
+			//cameras[1]->keyControl(mainWindow->getKeys(), deltaTime);
+			//auto xChange = 0.0f;
+			//auto yChange = 0.0f;
 
-			if (mainWindow->isMiddleMousePress)
-			{
-				xChange = mainWindow->getXChange();
-				yChange = mainWindow->getYChange();
-			}
-			cameras[1]->mouseControl(xChange, yChange, mainWindow->scrollVal, deltaTime);
+			//if (mainWindow->isMiddleMousePress)
+			//{
+			//	xChange = mainWindow->getXChange();
+			//	yChange = mainWindow->getYChange();
+			//}
+			//cameras[1]->mouseControl(xChange, yChange, mainWindow->scrollVal, deltaTime);
+			std::cout << "yes editor" << std::endl;
 		}
 		else if(isGameViewSelected)
 		{
-			cameras[0]->keyControl(mainWindow->getKeys(), deltaTime);
-			cameras[0]->mouseControl(mainWindow->getXChange(), mainWindow->getYChange(), 0, 0);
+			std::cout << "yes game" << std::endl;
+			//cameras[0]->keyControl(mainWindow->getKeys(), deltaTime);
+			//cameras[0]->mouseControl(mainWindow->getXChange(), mainWindow->getYChange(), 0, 0);
 		}
 
-		if (mainWindow->getKeys()[GLFW_KEY_L]) {
-			spotLights[0]->Toggle();
-			mainWindow->getKeys()[GLFW_KEY_L] = false;
-		}
-		*/
+		//if (mainWindow->getKeys()[GLFW_KEY_L]) {
+		//	spotLights[0]->Toggle();
+		//	mainWindow->getKeys()[GLFW_KEY_L] = false;
+		//}
 	}
 
 	void EndUpdate()

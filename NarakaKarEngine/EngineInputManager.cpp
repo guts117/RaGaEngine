@@ -1,8 +1,10 @@
 #include "pch.h"
 #include "EngineInputManager.h"
+#include "EngineUIMain.h"
 
 using namespace NarakaKarEngine;
 using namespace InputManager;
+using namespace EngineUI;
 
 
 double EngineInputManager::scrollVal;
@@ -71,25 +73,28 @@ void EngineInputManager::HandleCursorPosition(GLFWwindow* window, double xPos, d
 
 void EngineInputManager::HandleMousePresses(GLFWwindow* window, int button, int action, int mode) 
 {
-	if (button == GLFW_MOUSE_BUTTON_LEFT) {
-		if (action == GLFW_PRESS) {
-			isLeftMousePress = true;
-			isLeftMouseRelease = false;
+	if (EngineUIMain::AddMouseEvent(button, action == GLFW_PRESS)) 
+	{
+		if (button == GLFW_MOUSE_BUTTON_LEFT) {
+			if (action == GLFW_PRESS) {
+				isLeftMousePress = true;
+				isLeftMouseRelease = false;
+			}
+			else if (action == GLFW_RELEASE) {
+				isLeftMouseRelease = true;
+				isLeftMousePress = false;
+			}
 		}
-		else if (action == GLFW_RELEASE) {
-			isLeftMouseRelease = true;
-			isLeftMousePress = false;
-		}
-	}
 
-	if (button == GLFW_MOUSE_BUTTON_MIDDLE) {
-		if (action == GLFW_PRESS) {
-			isMiddleMousePress = true;
-			isLeftMouseRelease = false;
-		}
-		else if (action == GLFW_RELEASE) {
-			isLeftMouseRelease = true;
-			isMiddleMousePress = false;
+		if (button == GLFW_MOUSE_BUTTON_MIDDLE) {
+			if (action == GLFW_PRESS) {
+				isMiddleMousePress = true;
+				isLeftMouseRelease = false;
+			}
+			else if (action == GLFW_RELEASE) {
+				isLeftMouseRelease = true;
+				isMiddleMousePress = false;
+			}
 		}
 	}
 }

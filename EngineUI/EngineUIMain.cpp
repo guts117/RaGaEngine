@@ -26,6 +26,7 @@ struct EngineUIMain::Impl
 		//Initialize IMGUI
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
+		ImGui::StyleColorsDark();
 		ImGui_ImplGlfw_InitForOpenGL(mainWindow->GetWindow(), installCallbacks);
 		ImGui_ImplOpenGL3_Init(version.c_str());
 	}
@@ -38,6 +39,9 @@ struct EngineUIMain::Impl
 
 	void Update(const glm::ivec2& screenDims)
 	{
+		//get + handle user input events
+		glfwPollEvents();
+
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
@@ -121,10 +125,11 @@ struct EngineUIMain::Impl
 
 	void EndUpdate()
 	{
-		IsUpdateFrameBuffersSize = false;
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		mainWindow->swapBuffers();
+
+		IsUpdateFrameBuffersSize = false;
 		mainWindow->SetCursorActive(isFocusedCount == 0);
 	}
 
@@ -183,6 +188,16 @@ glm::ivec2 EngineUIMain::GetScreenDimensions()
 bool EngineUIMain::IsUpdateBufferSize()
 {
 	return IsUpdateFrameBuffersSize;
+}
+
+bool EngineUIMain::AddMouseEvent(int mouse_button, bool down)
+{
+	// (1) ALWAYS forward mouse data to ImGui! This is automatic with default backends. With your own backend:
+	ImGuiIO& io = ImGui::GetIO();
+	io.AddMouseButtonEvent(mouse_button, down);
+
+	// (2) ONLY forward mouse data to your underlying app/game.
+	return !io.WantCaptureMouse;
 }
 
 bool EngineUIMain::IsEnd()
