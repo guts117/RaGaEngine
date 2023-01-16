@@ -68,7 +68,7 @@ struct EngineEditor::Impl
 		auto gameSelectCallback = [this](bool isSelected) { isGameViewSelected = isSelected; };
 		for(auto r2v : m_renderer2Viewers)
 		{
-			auto& fbo = renderEngineMain->GetFboBuffer(r2v.sceneFboName, r2v.fboIndex, r2v.bufferIndex);
+			auto fbo = renderEngineMain->GetFboBuffer(r2v.sceneFboName, r2v.fboIndex, r2v.bufferIndex);
 			
 			std::function<void(bool)> selectCallback;
 			if (r2v.viewerType == Editor)	{ selectCallback = editorSelectCallback; }

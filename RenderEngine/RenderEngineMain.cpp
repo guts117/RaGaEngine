@@ -1878,7 +1878,7 @@ void RenderEngineMain::EndUpdate()
 	Pimpl()->EndUpdate();
 }
 
-const GLuint& RenderEngineMain::GetFboBuffer(const std::string& fboHandlerName, const GLuint& fboIndex, const GLuint& bufferIndex) const
+const GLuint RenderEngineMain::GetFboBuffer(const std::string& fboHandlerName, const GLuint& fboIndex, const GLuint& bufferIndex) const
 {
 	auto fboHndlr = Pimpl()->m_SceneFboHandlerMgr->FindFboHandler(fboHandlerName);
 	return fboHndlr != nullptr ? fboHndlr->GetFBOBuffer(fboIndex, bufferIndex) : 0;
