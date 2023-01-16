@@ -41,7 +41,10 @@ namespace NarakaKarEngine
 			GLFWwindow* GetMainWindow();
 			glm::ivec2 GetScreenDimensions();
 			bool IsUpdateBufferSize();
-			static bool AddMouseEvent(int mouse_button, bool down);
+			static bool AddKeyBoardButtonEvent(int key, bool down);
+			static bool AddCursorPosEvent(float x, float y);
+			static bool AddMouseButtonEvent(int mouse_button, bool down);
+			static bool AddMouseScrollEvent(float wheel_x, float wheel_y);
 
 			bool IsEnd();
 

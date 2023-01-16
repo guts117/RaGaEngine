@@ -128,10 +128,10 @@ int Window::Initialise()
 
 void Window::CreateInputCallbacks(const GLFWkeyfun& keyCallback, const GLFWcursorposfun& cursorPosCallback, const GLFWmousebuttonfun& mouseBtnCallback, const GLFWscrollfun& mouseScrollCallback)
 {
-	//glfwSetKeyCallback(mainWindow, keyCallback);
-	//glfwSetCursorPosCallback(mainWindow, cursorPosCallback);
+	glfwSetKeyCallback(mainWindow, keyCallback);
+	glfwSetCursorPosCallback(mainWindow, cursorPosCallback);
 	glfwSetMouseButtonCallback(mainWindow, mouseBtnCallback);
-	//glfwSetScrollCallback(mainWindow, mouseScrollCallback);
+	glfwSetScrollCallback(mainWindow, mouseScrollCallback);
 }
 
 Window::~Window() {
