@@ -20,7 +20,15 @@ namespace NarakaKarEngine
 
 			void CreateInputCallbacks(const GLFWkeyfun& keyCallback, const GLFWcursorposfun& cursorPosCallback, const GLFWmousebuttonfun& mouseBtnCallback, const GLFWscrollfun& mouseScrollCallback);
 			inline void swapBuffers() { glfwSwapBuffers(mainWindow); }
-			inline void SetCursorActive(bool isActive) { if (isMouseActive != isActive) { isMouseActive = isActive; glfwSetInputMode(mainWindow, GLFW_CURSOR, isActive ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_HIDDEN); } }
+			inline void SetCursorActive(bool isActive) 
+			{
+				if (isMouseActive != isActive) 
+				{ 
+					std::cout << "change" << std::endl;
+					isMouseActive = isActive; 
+					glfwSetInputMode(mainWindow, GLFW_CURSOR, isActive ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_HIDDEN); 
+				} 
+			}
 			inline bool IsCursorHidden() { return glfwGetInputMode(mainWindow, GLFW_CURSOR) == GLFW_CURSOR_HIDDEN; }
 			inline void ResizeWindow(GLuint x, GLuint y) { glfwSetWindowSize(mainWindow, x, y); }
 

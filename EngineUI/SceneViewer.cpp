@@ -11,11 +11,11 @@ struct SceneViewer::Impl
 	GLuint m_textureID;
 	std::string m_viewerName;
 	SceneViewerType m_viewerType = SceneViewerType::Empty;
-	std::function<void(bool, bool)> m_SelectSceneCallback;
+	std::function<void(bool)> m_SelectSceneCallback;
 
 	Impl() = delete;
 
-	Impl(GLuint sceneTex, std::string sceneName, SceneViewerType viewerType, std::function<void(bool, bool)> selectCallback)
+	Impl(GLuint sceneTex, std::string sceneName, SceneViewerType viewerType, std::function<void(bool)> selectCallback)
 		: m_textureID{ sceneTex }
 		, m_viewerName{ sceneName }
 		, m_viewerType{ viewerType }
@@ -32,7 +32,7 @@ struct SceneViewer::Impl
 	GLuint GetTextureId() { return m_textureID; }
 	std::string GetViewerName() { return m_viewerName; }
 	SceneViewerType GetViewerType() { return m_viewerType; }
-	void InvokeSelectCallback(bool isSelected, bool isHideCursor) { m_SelectSceneCallback(isSelected, isHideCursor); }
+	void InvokeSelectCallback(bool isSelected) { m_SelectSceneCallback(isSelected); }
 
 	~Impl() = default;
 };
@@ -41,7 +41,7 @@ struct SceneViewer::Impl
 
 SceneViewer::SceneViewer() = default;
 
-SceneViewer::SceneViewer(GLuint sceneTex, std::string sceneName, SceneViewerType viewerType, std::function<void(bool, bool)> selectCallback)
+SceneViewer::SceneViewer(GLuint sceneTex, std::string sceneName, SceneViewerType viewerType, std::function<void(bool)> selectCallback)
 	: m_pImpl{ std::make_unique<Impl>(sceneTex, sceneName, viewerType, selectCallback) }
 {
 }
@@ -52,6 +52,6 @@ std::string SceneViewer::GetViewerName() { return Pimpl()->GetViewerName(); }
 
 SceneViewerType SceneViewer::GetViewerType() { return Pimpl()->GetViewerType(); }
 
-void SceneViewer::InvokeSelectCallback(bool isSelected, bool isHideCursor) { Pimpl()->InvokeSelectCallback(isSelected, isHideCursor); }
+void SceneViewer::InvokeSelectCallback(bool isSelected) { Pimpl()->InvokeSelectCallback(isSelected); }
 
 SceneViewer::~SceneViewer() = default;

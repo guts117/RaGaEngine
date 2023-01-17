@@ -13,12 +13,12 @@ namespace NarakaKarEngine
 		{
 		public:
 			explicit SceneViewer();
-			explicit SceneViewer(GLuint sceneTex, std::string sceneName, SceneViewerType viewerType, std::function<void(bool, bool)> selectCallback);
+			explicit SceneViewer(GLuint sceneTex, std::string sceneName, SceneViewerType viewerType, std::function<void(bool)> selectCallback);
 
 			GLuint GetTextureId();
 			std::string GetViewerName();
 			SceneViewerType GetViewerType();
-			void InvokeSelectCallback(bool isSelected, bool isHideCursor);
+			void InvokeSelectCallback(bool isSelected);
 
 			~SceneViewer();
 		private:
