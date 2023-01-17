@@ -47,7 +47,8 @@ glm::vec2 EngineInputManager::GetCursorPos()
 
 void EngineInputManager::HandleKeysPresses(GLFWwindow* window, int key, int code, int action, int mode) 
 {
-	if (EngineUIMain::AddMouseButtonEvent(key, action == GLFW_PRESS))
+	//ToDo: Key inputs on Imgui Windows.
+	if (EngineUIMain::AddKeyBoardButtonEvent(ImGuiKey::ImGuiKey_None, false))
 	{
 		if (key >= 0 && key < 1024) {
 			if (action == GLFW_PRESS) {

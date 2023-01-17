@@ -3,11 +3,13 @@
 #include "EngineUIMain.h"
 #include "RenderEngineMain.h"
 #include "SceneViewer.h"
+#include "EngineInputManager.h"
 
 using namespace NarakaKarEngine;
 using namespace RenderEngine;
 using namespace NarakaEditor;
 using namespace EngineUI;
+using namespace InputManager;
 
 struct EngineEditor::Impl
 {
@@ -38,25 +40,27 @@ struct EngineEditor::Impl
 			//auto xChange = 0.0f;
 			//auto yChange = 0.0f;
 
-			//if (mainWindow->isMiddleMousePress)
-			//{
+			if (EngineInputManager::IsLeftMousePress())
+			{
+				std::cout << "yes editor" << std::endl;
 			//	xChange = mainWindow->getXChange();
 			//	yChange = mainWindow->getYChange();
-			//}
+			}
 			//cameras[1]->mouseControl(xChange, yChange, mainWindow->scrollVal, deltaTime);
-			std::cout << "yes editor" << std::endl;
+
 		}
 		else if(isGameViewSelected)
 		{
-			std::cout << "yes game" << std::endl;
+			if (EngineInputManager::GetKeys()[GLFW_KEY_L])
+			{
+				std::cout << "L" << std::endl;
+				//spotLights[0]->Toggle();
+				//mainWindow->getKeys()[GLFW_KEY_L] = false;
+			}
+			//std::cout << "yes game" << std::endl;
 			//cameras[0]->keyControl(mainWindow->getKeys(), deltaTime);
 			//cameras[0]->mouseControl(mainWindow->getXChange(), mainWindow->getYChange(), 0, 0);
 		}
-
-		//if (mainWindow->getKeys()[GLFW_KEY_L]) {
-		//	spotLights[0]->Toggle();
-		//	mainWindow->getKeys()[GLFW_KEY_L] = false;
-		//}
 	}
 
 	void EndUpdate()
