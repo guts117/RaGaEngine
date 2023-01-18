@@ -14,7 +14,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NarakaKarEngine", "NarakaKa
 		{72A8CB76-09DD-416B-B80D-AD5A38392A53} = {72A8CB76-09DD-416B-B80D-AD5A38392A53}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EngineUI", "EngineUI\EngineUI.vcxproj", "{72A8CB76-09DD-416B-B80D-AD5A38392A53}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NarakaCreator", "NarakaCreator\NarakaCreator.vcxproj", "{72A8CB76-09DD-416B-B80D-AD5A38392A53}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

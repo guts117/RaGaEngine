@@ -2,22 +2,20 @@
 #include "RenderEngineMain.h"
 #include "EngineUIMain.h"
 #include "PhysicsEngineMain.h"
-#include "EngineInputManager.h"
 #include "EngineEditor.h"
 
 using namespace NarakaKarEngine;
+using namespace NarakaCreator;
 using namespace RenderEngine;
 using namespace EngineUI;
 using namespace PhysicsEngine;
-using namespace InputManager;
-using namespace NarakaEditor;
 
 
 int main()
 {
 	auto physicsEngine = std::make_unique<PhysicsEngineMain>();
 	auto engineUI = std::make_unique<EngineUIMain>(true, "#version 460");
-	engineUI->CreateInputCallbacks(EngineInputManager::HandleKeysPresses, EngineInputManager::HandleCursorPosition, EngineInputManager::HandleMousePresses, EngineInputManager::HandleMouseScrolls);
+	engineUI->CreateInputCallbacks();
 	glm::ivec2 screenDims = glm::ivec2(engineUI->GetScreenDimensions());
 	std::unique_ptr<RenderEngineMain> renderEngine = std::make_unique<RenderEngineMain>(screenDims);
 
