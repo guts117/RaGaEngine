@@ -12,11 +12,6 @@
 
 namespace NarakaKarEngine
 {
-	namespace EngineUI
-	{
-		class EngineUIMain;
-	}
-
 	namespace RenderEngine
 	{
 		class Render_Object;
