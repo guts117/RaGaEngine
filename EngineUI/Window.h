@@ -24,7 +24,6 @@ namespace NarakaKarEngine
 			{
 				if (isMouseActive != isActive) 
 				{ 
-					std::cout << "change" << std::endl;
 					isMouseActive = isActive; 
 					glfwSetInputMode(mainWindow, GLFW_CURSOR, isActive ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_HIDDEN); 
 				} 

@@ -12,7 +12,6 @@ extern bool IsUpdateFrameBuffersSize;
 
 struct EngineUIMain::Impl
 {
-	int isHideCursorCount;
 	int hideWindowIndex;
 	std::unique_ptr<Window> mainWindow;
 	std::unique_ptr<std::vector<std::shared_ptr<SceneViewer>>> m_sceneList;
@@ -20,8 +19,7 @@ struct EngineUIMain::Impl
 	Impl() = delete;
 
 	Impl(const bool installCallbacks, const std::string version)
-		: isHideCursorCount{ 0 }
-		, m_sceneList{ std::make_unique<std::vector<std::shared_ptr<SceneViewer>>>() }
+		: m_sceneList{ std::make_unique<std::vector<std::shared_ptr<SceneViewer>>>() }
 		, mainWindow{ std::make_unique<Window>() }
 	{		
 		mainWindow->Initialise();
@@ -51,12 +49,6 @@ struct EngineUIMain::Impl
 		ImGui::NewFrame();
 ;
 		auto isHoveredCnt = 0; 
-		auto isMouseHidden = mainWindow->IsCursorHidden();
-
-		if (hideWindowIndex >= 0 && m_sceneList->at(hideWindowIndex)->GetViewerType() == Editor && ImGui::IsMouseDown(ImGuiMouseButton_Middle))
-		{
-			ImGui::SetWindowFocus(m_sceneList->at(hideWindowIndex)->GetViewerName().c_str());
-		}
 
 		for (int i = 0; i < m_sceneList->size(); ++i)
 		{
@@ -65,41 +57,30 @@ struct EngineUIMain::Impl
 			ImGui::Image((ImTextureID)m_sceneList->at(i)->GetTextureId(), ImGui::GetWindowSize(), ImVec2(0, 1), ImVec2(1, 0));
 
 			auto isSelected = false;
-			auto isHideMouse = false;
 			auto isDragging = ImGui::IsMouseDragging(ImGuiMouseButton_Left);
 
 			if (!isDragging)
 			{
+				auto pos = ImGui::GetWindowPos();
+				auto maxx = pos.x + ImGui::GetWindowWidth();
+				auto maxy = pos.y + ImGui::GetWindowHeight();
+				auto isHovered = ImGui::IsMouseHoveringRect(pos, ImVec2(maxx, maxy));
+				auto isFocused = ImGui::IsWindowDocked() ? ImGui::IsWindowFocused() : true;
+
 				if (m_sceneList->at(i)->GetViewerType() == Editor && hideWindowIndex < 0)
 				{
-					auto pos = ImGui::GetWindowPos();
-					auto maxx = pos.x + ImGui::GetWindowWidth();
-					auto maxy = pos.y + ImGui::GetWindowHeight();
-					auto isHovered = ImGui::IsMouseHoveringRect(pos, ImVec2(maxx, maxy));
-
-					if (isHovered)
-					{
-						ImGui::SetWindowFocus(m_sceneList->at(i)->GetViewerName().c_str());
-						ImGui::GetIO().WantCaptureMouse = false;
-					}
-
-					auto isFocused = ImGui::IsWindowFocused();
 					isSelected = isHovered && isFocused;
-
 					if (isSelected)
 					{
 						++isHoveredCnt;
-
-						if (m_sceneList->at(i)->GetViewerType() == Editor && ImGui::IsMouseDown(ImGuiMouseButton_Middle))
-						{
-							hideWindowIndex = i;
-						}
+						if (ImGui::IsMouseDown(ImGuiMouseButton_Middle)) { hideWindowIndex = i; }
+						ImGui::SetWindowFocus(m_sceneList->at(i)->GetViewerName().c_str());
+						ImGui::GetIO().WantCaptureMouse = false;
 					}
 				}
-				else if(m_sceneList->at(i)->GetViewerType() == InGame)
+				else if(m_sceneList->at(i)->GetViewerType() == InGame && hideWindowIndex == i || hideWindowIndex < 0)
 				{
-					isSelected = ImGui::IsWindowFocused();
-
+					isSelected = isHovered && isFocused;
 					if (isSelected) 
 					{
 						++isHoveredCnt;
@@ -117,7 +98,6 @@ struct EngineUIMain::Impl
 
 		if (isHoveredCnt == 0 && !ImGui::GetIO().WantCaptureMouse)
 		{
-			std::cout << "yes" << std::endl;
 			ImGui::GetIO().WantCaptureMouse = true;
 			ImGui::SetWindowFocus(nullptr);
 			hideWindowIndex = -1;
