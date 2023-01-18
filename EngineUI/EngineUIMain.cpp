@@ -114,8 +114,8 @@ struct EngineUIMain::Impl
 			ImGui::GetIO().ConfigFlags &= ~(ImGuiConfigFlags_NoMouse | ImGuiConfigFlags_NoMouseCursorChange);
 		}
 
-		ImGui::Begin("Hierarchy");
-		ImGui::Text("Put Scene Hierarchy Here!!!!");
+		ImGui::Begin("Rendering Graph");
+		ImGui::Text("ToDo: Show Shader Hierarchy Here!!!!");
 		ImGui::SetWindowSize(ImVec2(screenDims.x / 2, screenDims.y / 2));
 		ImGui::End();
 	}
