@@ -7,7 +7,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/matrix_decompose.hpp>
 
-using namespace NarakaKarEngine;
+using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
 Billboard_Render_Pass_Handler::Billboard_Render_Pass_Handler(std::shared_ptr<Fbo_Handler> fboHandlr

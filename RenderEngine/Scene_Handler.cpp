@@ -2,7 +2,7 @@
 #include "Scene_Handler.h"
 #include "Render_Pass_Handler.h"
 
-using namespace NarakaKarEngine;
+using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
 struct Scene_Handler::Impl

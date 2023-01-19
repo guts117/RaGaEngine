@@ -5,7 +5,7 @@
 #include "Render_Object.h"
 #include "RenderingCommonValues.h"
 
-using namespace NarakaKarEngine;
+using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
 Motion_Blur_Render_Pass_Handler::Motion_Blur_Render_Pass_Handler(std::shared_ptr<Fbo_Handler> fboHandlr

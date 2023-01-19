@@ -6,7 +6,7 @@
 
 //Handles rendering 
 
-namespace NarakaKarEngine
+namespace NarakaRenderEngine
 {
 	namespace RenderEngine
 	{	

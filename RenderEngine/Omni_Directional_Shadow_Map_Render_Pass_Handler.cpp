@@ -5,7 +5,7 @@
 #include "Render_Object.h"
 #include "RenderingCommonValues.h"
 
-using namespace NarakaKarEngine;
+using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
 Omni_Directional_Shadow_Map_Render_Pass_Handler::Omni_Directional_Shadow_Map_Render_Pass_Handler(std::shared_ptr<Fbo_Handler> fboHandlr

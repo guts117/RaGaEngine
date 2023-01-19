@@ -1,7 +1,7 @@
 #ifndef PARTICLESYSTEM
 #define PARTICLESYSTEM
 
-namespace NarakaKarEngine
+namespace NarakaRenderEngine
 {
 	namespace RenderEngine
 	{

@@ -4,7 +4,7 @@
 #include "render_pch.h"
 
 //Loads and manages all the shaders
-namespace NarakaKarEngine
+namespace NarakaRenderEngine
 {
 	namespace RenderEngine 
 	{

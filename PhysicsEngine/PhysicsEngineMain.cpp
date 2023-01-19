@@ -2,7 +2,7 @@
 #include "PhysicsEngineMain.h"
 #include <bullet/btBulletDynamicsCommon.h>
 
-using namespace NarakaKarEngine;
+using namespace NarakaPhysicsEngine;
 using namespace PhysicsEngine;
 
 struct PhysicsEngineMain::Impl 

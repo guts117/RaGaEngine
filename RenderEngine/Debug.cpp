@@ -1,7 +1,7 @@
 #include "render_pch.h"
 #include "Debug.h"
 
-using namespace NarakaKarEngine;
+using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
 void Debug::DebugPrintReferenceTBN(std::string header, GLfloat* vertices, int offset, glm::vec3 nm) {

@@ -1,14 +1,17 @@
 #ifndef ENGINE_EDITOR
 #define ENGINE_EDITOR
 
+#ifdef NARAKA_CREATOR_EXPORTS
+#define NARAKA_CREATOR_API __declspec(dllexport)
+#else
+#define NARAKA_CREATOR_API __declspec(dllimport)
+#endif
+
 #include "creator_pch.h"
 
-namespace NarakaKarEngine
+namespace NarakaRenderEngine::RenderEngine
 {
-	namespace RenderEngine
-	{
-		class RenderEngineMain;
-	}
+	class RenderEngineMain;
 }
 
 namespace NarakaCreator
@@ -28,22 +31,25 @@ namespace NarakaCreator
 		int bufferIndex;
 	};
 
-	class EngineEditor
+	class NARAKA_CREATOR_API EngineEditor
 	{
 	public:
-		explicit EngineEditor() = delete;
-		explicit EngineEditor(std::vector<RendererToViewer>&& render2Views);
+		explicit EngineEditor();
 
 		EngineEditor(EngineEditor&& rhs) noexcept = delete;
 		EngineEditor& operator=(EngineEditor&& rhs) noexcept = delete;
 
 		EngineEditor(const EngineEditor& rhs) noexcept = delete;
 		EngineEditor& operator=(const EngineEditor& rhs) noexcept = delete;
+		
+		bool IsUpdateBufferSize();
+		glm::ivec2 GetScreenDimensions();
+		bool IsEnd();
 
-		void Update();
+		void Update(const glm::ivec2& screenDims);
 		void EndUpdate();
 
-		void AddSceneViewers(EngineUI::EngineUIMain* engineUI, const RenderEngine::RenderEngineMain* renderEngineMain);
+		void AddSceneViewers(const NarakaRenderEngine::RenderEngine::RenderEngineMain* renderEngineMain);
 
 		~EngineEditor();
 	private:

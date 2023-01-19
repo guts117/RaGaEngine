@@ -9,7 +9,7 @@
 
 #include "physics_pch.h"
 
-namespace NarakaKarEngine
+namespace NarakaPhysicsEngine
 {
 	namespace PhysicsEngine
 	{

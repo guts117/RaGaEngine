@@ -3,7 +3,7 @@
 
 #include "RenderingCommonValues.h"
 
-namespace NarakaKarEngine
+namespace NarakaRenderEngine
 {
 	namespace RenderEngine
 	{

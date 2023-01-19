@@ -3,7 +3,7 @@
 
 #include "PointLight.h"
 
-namespace NarakaKarEngine
+namespace NarakaRenderEngine
 {
 	namespace RenderEngine
 	{

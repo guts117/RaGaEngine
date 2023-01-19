@@ -2,7 +2,7 @@
 #include "Render_Pass_Handler.h"
 #include "Fbo_Handler.h"
 
-using namespace NarakaKarEngine;
+using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
 Render_Pass_Handler::Render_Pass_Handler(std::shared_ptr<Fbo_Handler> fboHandlr

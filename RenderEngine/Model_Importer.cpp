@@ -4,7 +4,7 @@
 #include "Mesh.h"
 #include "RenderEngineMain.h"
 
-using namespace NarakaKarEngine;
+using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
 
