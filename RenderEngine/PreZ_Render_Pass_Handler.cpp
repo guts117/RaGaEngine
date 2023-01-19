@@ -4,7 +4,7 @@
 #include "Shader_Object.h"
 #include "Render_Object.h"
 
-using namespace NarakaKarEngine;
+using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
 PreZ_Render_Pass_Handler::PreZ_Render_Pass_Handler(std::shared_ptr<Fbo_Handler> fboHandlr

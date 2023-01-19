@@ -4,7 +4,7 @@
 #include "stb_image.h"
 #include "RenderingCommonValues.h"
 
-using namespace NarakaKarEngine;
+using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
 

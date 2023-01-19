@@ -2,7 +2,7 @@
 #include "SpotLight.h"
 #include "Scene_Fbo_Handler_Manager.h"
 
-using namespace NarakaKarEngine;
+using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
 SpotLight::SpotLight() : PointLight() {

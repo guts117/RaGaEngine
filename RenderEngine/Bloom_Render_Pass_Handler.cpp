@@ -5,7 +5,7 @@
 #include "Render_Object.h"
 #include "RenderingCommonValues.h"
 
-using namespace NarakaKarEngine;
+using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
 Bloom_Render_Pass_Handler::Bloom_Render_Pass_Handler(std::shared_ptr<Fbo_Handler> fboHandlr

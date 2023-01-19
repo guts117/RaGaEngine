@@ -10,7 +10,7 @@
 #define RENDER_ENGINE_API __declspec(dllimport)
 #endif
 
-namespace NarakaKarEngine
+namespace NarakaRenderEngine
 {
 	namespace RenderEngine
 	{

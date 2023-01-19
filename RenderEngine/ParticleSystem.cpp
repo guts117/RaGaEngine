@@ -3,7 +3,7 @@
 #include "RenderingCommonValues.h"
 #include "Particle.h"
 
-using namespace NarakaKarEngine;
+using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
 ParticleSystem::ParticleSystem()

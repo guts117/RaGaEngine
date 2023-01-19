@@ -1,7 +1,7 @@
 #include "render_pch.h"
 #include "Mesh.h"
 
-using namespace NarakaKarEngine;
+using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
 //ToDo: Add Support for Render with Static and Dynamic Batching.

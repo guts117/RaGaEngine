@@ -3,7 +3,7 @@
 
 #include "Render_Pass_Handler.h"
 
-namespace NarakaKarEngine
+namespace NarakaRenderEngine
 {
 	namespace RenderEngine
 	{

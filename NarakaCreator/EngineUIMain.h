@@ -1,10 +1,10 @@
 #ifndef ENGINE_UI_MAIN
 #define ENGINE_UI_MAIN
 
-#ifdef ENGINE_UI_EXPORTS
-#define ENGINE_UI_API __declspec(dllexport)
+#ifdef NARAKA_CREATOR_EXPORTS
+#define NARAKA_CREATOR_API __declspec(dllexport)
 #else
-#define ENGINE_UI_API __declspec(dllimport)
+#define NARAKA_CREATOR_API __declspec(dllimport)
 #endif
 
 #include "creator_pch.h"
@@ -21,7 +21,7 @@ namespace NarakaCreator
 			//Add other sceneviewers for debug purposes too 
 		};
 
-		class ENGINE_UI_API EngineUIMain
+		class NARAKA_CREATOR_API EngineUIMain
 		{
 		public:
 			explicit EngineUIMain() = delete;
@@ -33,7 +33,6 @@ namespace NarakaCreator
 			EngineUIMain(const EngineUIMain& rhs) noexcept = delete;
 			EngineUIMain& operator=(const EngineUIMain& rhs) noexcept = delete;
 
-			void CreateInputCallbacks();
 			void Update(const glm::ivec2& screenDims);
 			void EndUpdate();
 
@@ -50,7 +49,7 @@ namespace NarakaCreator
 
 			~EngineUIMain();
 		private:
-			struct ENGINE_UI_API Impl;
+			struct Impl;
 
 			const Impl* Pimpl() const { return m_pImpl.get(); }
 			Impl* Pimpl() { return m_pImpl.get(); }

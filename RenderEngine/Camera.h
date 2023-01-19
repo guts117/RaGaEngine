@@ -3,7 +3,7 @@
 
 #include "render_pch.h"
 
-namespace NarakaKarEngine
+namespace NarakaRenderEngine
 {
 	namespace RenderEngine
 	{

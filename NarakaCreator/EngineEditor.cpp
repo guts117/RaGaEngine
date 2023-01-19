@@ -5,23 +5,22 @@
 #include "SceneViewer.h"
 #include "EngineInputManager.h"
 
-using namespace NarakaKarEngine;
 using namespace NarakaCreator;
+using namespace NarakaRenderEngine;
 using namespace RenderEngine;
-using namespace NarakaCreator;
 using namespace EngineUI;
 using namespace InputManager;
 
 struct EngineEditor::Impl
 {
+	EngineUIMain engineUI;
 	std::vector<RendererToViewer> m_renderer2Viewers;
 	bool isEditorViewSelected;
 	bool isGameViewSelected;
 		
-	Impl() = delete;
-
-	Impl(std::vector<RendererToViewer>&& render2Views)
-		: m_renderer2Viewers{ std::move(render2Views) }
+	Impl()
+		: engineUI { true, "#version 460" }
+		, m_renderer2Viewers{ RendererToViewer { "Final_Output_Pass", "EditorView", Editor, 0, 0 } , RendererToViewer { "CameraPass0", "GameView", InGame, 0, 0 } }
 		, isEditorViewSelected { false }
 		, isGameViewSelected { false }
 	{
@@ -33,8 +32,10 @@ struct EngineEditor::Impl
 	Impl(const Impl& rhs) = delete;
 	Impl& operator=(const Impl& rhs) = delete;
 
-	void Update()
+	void Update(const glm::ivec2& screenDims)
 	{
+		engineUI.Update(screenDims);
+
 		if (isEditorViewSelected)
 		{
 			//cameras[1]->keyControl(mainWindow->getKeys(), deltaTime);
@@ -66,9 +67,10 @@ struct EngineEditor::Impl
 
 	void EndUpdate()
 	{
+		engineUI.EndUpdate();
 	}
 
-	void AddSceneViewers(EngineUIMain* engineUI, const RenderEngineMain* renderEngineMain)
+	void AddSceneViewers(const RenderEngineMain* renderEngineMain)
 	{
 		auto editorSelectCallback = [this](bool isSelected) { isEditorViewSelected = isSelected; };
 		auto gameSelectCallback = [this](bool isSelected) { isGameViewSelected = isSelected; };
@@ -79,21 +81,35 @@ struct EngineEditor::Impl
 			std::function<void(bool)> selectCallback;
 			if (r2v.viewerType == Editor)	{ selectCallback = editorSelectCallback; }
 			else							{ selectCallback = gameSelectCallback; }
-			engineUI->AddSceneViewers(fbo, r2v.viewerName, static_cast<SceneViewerType>(r2v.viewerType), selectCallback);
+			engineUI.AddSceneViewers(fbo, r2v.viewerName, static_cast<SceneViewerType>(r2v.viewerType), selectCallback);
 		}
 	}
 
 	~Impl() = default;
 };
 
-EngineEditor::EngineEditor(std::vector<RendererToViewer>&& render2Views)
-	: m_pImpl{ std::make_unique<Impl>(std::move(render2Views))}
+EngineEditor::EngineEditor()
+	: m_pImpl{ std::make_unique<Impl>()}
 {
 }
 
-void EngineEditor::Update()
+bool EngineEditor::IsUpdateBufferSize() 
 {
-	Pimpl()->Update();
+	return Pimpl()->engineUI.IsUpdateBufferSize();
+}
+
+glm::ivec2 EngineEditor::GetScreenDimensions()
+{
+	return Pimpl()->engineUI.GetScreenDimensions();
+}
+
+bool EngineEditor::IsEnd()
+{
+	return Pimpl()->engineUI.IsEnd();
+}
+void EngineEditor::Update(const glm::ivec2& screenDims)
+{
+	Pimpl()->Update(screenDims);
 }
 
 void EngineEditor::EndUpdate()
@@ -101,9 +117,9 @@ void EngineEditor::EndUpdate()
 	Pimpl()->EndUpdate();
 }
 
-void EngineEditor::AddSceneViewers(EngineUIMain* engineUI, const RenderEngineMain* renderEngineMain)
+void EngineEditor::AddSceneViewers(const RenderEngineMain* renderEngineMain)
 {
-	Pimpl()->AddSceneViewers(engineUI, renderEngineMain);
+	Pimpl()->AddSceneViewers(renderEngineMain);
 }
 
 EngineEditor::~EngineEditor() = default;

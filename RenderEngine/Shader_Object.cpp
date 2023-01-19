@@ -6,7 +6,7 @@
 #include <iterator>
 #include "exprtk.hpp"
 
-using namespace NarakaKarEngine;
+using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
 struct Shader_Object::Impl

@@ -43,9 +43,8 @@
 #include <glm/gtx/euler_angles.hpp>
 #include <regex>
 
-using namespace NarakaKarEngine;
+using namespace NarakaRenderEngine;
 using namespace RenderEngine;
-using namespace EngineUI;
 
 struct RenderEngineMain::Impl
 {

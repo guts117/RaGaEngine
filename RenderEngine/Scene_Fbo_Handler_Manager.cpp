@@ -5,7 +5,7 @@
 #include "RenderingCommonValues.h"
 #include <cereal/access.hpp>
 
-using namespace NarakaKarEngine;
+using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
 struct Scene_Fbo_Handler_Manager::Impl

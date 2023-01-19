@@ -4,7 +4,7 @@
 #include "render_pch.h"
 #include "RenderingCommonValues.h"
 
-namespace NarakaKarEngine
+namespace NarakaRenderEngine
 {
 	namespace RenderEngine
 	{

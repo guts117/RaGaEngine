@@ -1,7 +1,7 @@
 #ifndef SCENE_HANDLER
 #define SCENE_HANDLER
 
-namespace NarakaKarEngine
+namespace NarakaRenderEngine
 {
 	namespace RenderEngine
 	{

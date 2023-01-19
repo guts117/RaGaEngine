@@ -1,7 +1,7 @@
 #include "render_pch.h"
 #include "Particle.h"
 
-using namespace NarakaKarEngine;
+using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
 bool Particle::operator<(const Particle& that) const

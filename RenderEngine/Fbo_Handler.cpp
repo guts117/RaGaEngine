@@ -2,7 +2,7 @@
 #include "Fbo_Handler.h"
 #include "FrameBufferObject.h"
 
-using namespace NarakaKarEngine;
+using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
 struct Fbo_Handler::Impl
@@ -136,7 +136,7 @@ const GLuint& Fbo_Handler::GetFBOBuffer(const GLuint& fboIndex, const GLuint& bu
 	return Pimpl()->m_FboVec->at(fboIndex)->GetBuffer(bufferIndex);
 }
 
-const GLuint& NarakaKarEngine::RenderEngine::Fbo_Handler::GetFBOId(const GLuint& fboIndex) const
+const GLuint& NarakaRenderEngine::RenderEngine::Fbo_Handler::GetFBOId(const GLuint& fboIndex) const
 {
 	return Pimpl()->m_FboVec->at(fboIndex)->GetFboId();
 }

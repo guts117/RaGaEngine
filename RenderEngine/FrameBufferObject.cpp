@@ -1,7 +1,7 @@
 #include "render_pch.h"
 #include "FrameBufferObject.h"
 
-using namespace NarakaKarEngine;
+using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
 struct FrameBufferObject::Impl

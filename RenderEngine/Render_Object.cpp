@@ -4,7 +4,7 @@
 #include "Texture.h"
 #include "Shader_Object.h"
 
-using namespace NarakaKarEngine;
+using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
 struct Render_Object::Impl
