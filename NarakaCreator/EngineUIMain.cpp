@@ -76,10 +76,7 @@ struct EngineUIMain::Impl
 					isSelected = isHovered && isFocused;
 					if (isSelected)
 					{
-						++isHoveredCnt;
-						if (ImGui::IsMouseDown(ImGuiMouseButton_Middle)) { hideWindowIndex = i; }
 						ImGui::SetWindowFocus(m_sceneList->at(i)->GetViewerName().c_str());
-						ImGui::GetIO().WantCaptureMouse = false;
 					}
 				}
 				else if(m_sceneList->at(i)->GetViewerType() == InGame && hideWindowIndex == i || hideWindowIndex < 0)

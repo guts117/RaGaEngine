@@ -42,7 +42,7 @@ struct EngineEditor::Impl
 			//auto xChange = 0.0f;
 			//auto yChange = 0.0f;
 
-			if (EngineInputManager::IsLeftMousePress())
+			if (ImGui::IsMouseDown(ImGuiMouseButton_Middle))
 			{
 				std::cout << "yes editor" << std::endl;
 			//	xChange = mainWindow->getXChange();
