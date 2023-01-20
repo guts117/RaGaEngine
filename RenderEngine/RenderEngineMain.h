@@ -19,19 +19,6 @@ namespace NarakaRenderEngine
 		class Scene_Fbo_Handler_Manager;
 		enum TexType;
 
-		struct Transform
-		{
-			glm::vec3 Position;
-			glm::quat Rotation;
-			glm::vec3 Scale;
-		};
-
-		struct VObject
-		{
-			std::unique_ptr<Transform> transform;
-			std::weak_ptr<Render_Object> render_object;
-		};
-
 		struct TexMapData
 		{
 			TexType&& type;

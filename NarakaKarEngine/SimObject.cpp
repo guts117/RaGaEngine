@@ -3,10 +3,3 @@
 
 using namespace NarakaKarEngine;
 
-SimObject::SimObject()
-{
-}
-
-SimObject::~SimObject()
-{
-}
