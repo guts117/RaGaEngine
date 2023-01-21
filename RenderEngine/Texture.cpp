@@ -8,12 +8,14 @@ using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
 
-struct Texture::Impl
+struct alignas(alignof(std::string)) Texture::Impl
 {
+	std::string m_fileLocation = "";
 	GLuint m_textureID			= 0;
-	int m_width = 0, m_height = 0, m_bitDepth = 0;
-	std::string m_fileLocation	= "";
-	bool m_isSRGB				= false;
+	int m_width = 0;
+	int m_height = 0;
+	int m_bitDepth = 0;
+	bool m_isSRGB  = false;
 
 	Impl() = default;
 
@@ -22,26 +24,8 @@ struct Texture::Impl
 		, m_isSRGB{ isSRGB }
 	{}
 
-	Impl(Impl&& rhs) noexcept
-		: m_textureID{ std::exchange(rhs.m_textureID, 0) }
-		, m_width{ std::exchange(rhs.m_width, 0) }
-		, m_height{ std::exchange(rhs.m_height, 0) }
-		, m_bitDepth{ std::exchange(rhs.m_bitDepth, 0) }
-		, m_fileLocation{ std::move(rhs.m_fileLocation) }
-		, m_isSRGB{ std::exchange(rhs.m_isSRGB, false)}
-	{}
-
-	Impl& operator=(Impl&& rhs) noexcept {
-		if (this != &rhs) {
-			m_textureID = std::exchange(rhs.m_textureID, 0);
-			m_width = std::exchange(rhs.m_width, 0);
-			m_height = std::exchange(rhs.m_height, 0);
-			m_bitDepth = std::exchange(rhs.m_bitDepth, 0);
-			m_fileLocation = std::move(rhs.m_fileLocation);
-			m_isSRGB = std::exchange(rhs.m_isSRGB, false);
-		}
-		return *this;
-	}
+	Impl(Impl&& rhs) noexcept = delete;
+	Impl& operator=(Impl&& rhs) noexcept = delete;
 
 	Impl(const Impl& rhs) noexcept = delete;
 	Impl& operator=(const Impl& rhs) = delete;
@@ -319,9 +303,19 @@ struct Texture::Impl
 	};
 };
 
-Texture::Texture() :  m_pImpl{ new Impl() } {}
+Texture::Texture() : m_pImpl{ new (&buffer) Impl() }
+{
+	//10% tolerance margin
+	static_assert(sizeof(Impl) <= BuffSize && BuffSize <= sizeof(Impl) * 1.1, "Texture:: BuffSize needs to be changed");
+	static_assert(BuffAlign == alignof(Impl), "Texture:: BuffAlign needs to be changed");
+}
 
-Texture::Texture(std::string fileLoc, bool isSRGB) : m_pImpl{ new Impl(fileLoc, isSRGB) } {}
+Texture::Texture(std::string fileLoc, bool isSRGB) : m_pImpl{ new (&buffer) Impl(fileLoc, isSRGB) } 
+{
+ 	// 10% tolerance margin
+	static_assert(sizeof(Impl) <= BuffSize && BuffSize <= sizeof(Impl) * 1.1, "Texture:: BuffSize needs to be changed");
+	static_assert(BuffAlign == alignof(Impl), "Texture:: BuffAlign needs to be changed");
+}
 
 bool Texture::LoadTexture2D() {
 	return Pimpl()->LoadTexture2D();

@@ -26,6 +26,8 @@ namespace NarakaRenderEngine
 		class Texture
 		{
 		public:
+			struct Impl;
+
 			explicit Texture();
 			explicit Texture(std::string fileLoc, bool isSRGB = false);
 
@@ -64,13 +66,21 @@ namespace NarakaRenderEngine
 			const GLuint GetTextureID();
 
 			~Texture();
+
 		private:
-			struct Impl;
 
-			const Impl* Pimpl() const { return m_pImpl.get(); }
-			Impl* Pimpl() { return m_pImpl.get(); }
+			const Impl* Pimpl() const { return m_pImpl; }
+			Impl* Pimpl() { return m_pImpl; }
 
-			std::unique_ptr<Impl> m_pImpl;
+#ifdef NDEBUG //size of string is different between debug and release
+			static const size_t BuffSize = alignof(std::string) * 7;
+#else
+			static const size_t BuffSize = alignof(std::string) * 8;
+#endif
+			static const size_t BuffAlign = alignof(std::string);
+			
+			alignas(BuffAlign) std::byte buffer[BuffSize];
+			Impl* m_pImpl;
 		};
 	}
 }
