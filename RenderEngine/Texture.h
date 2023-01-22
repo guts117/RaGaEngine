@@ -2,7 +2,7 @@
 #define TEXTURE
 
 #include "render_pch.h"
-//#include "spimpl.h"
+#include <ForwardDeclaredPimpl.h>
 
 namespace NarakaRenderEngine
 {
@@ -69,18 +69,14 @@ namespace NarakaRenderEngine
 
 		private:
 
-			const Impl* Pimpl() const { return m_pImpl; }
-			Impl* Pimpl() { return m_pImpl; }
+			const Impl& Pimpl() const { return m_pImpl.Get(); }
+			Impl& Pimpl() { return m_pImpl.Get(); }
 
 #ifdef NDEBUG //size of string is different between debug and release
-			static const size_t BuffSize = alignof(std::string) * 7;
+			ForwardDeclaredPimpl<Impl, alignof(std::string) * 7, alignof(std::string)> m_pImpl;
 #else
-			static const size_t BuffSize = alignof(std::string) * 8;
-#endif
-			static const size_t BuffAlign = alignof(std::string);
-			
-			alignas(BuffAlign) std::byte buffer[BuffSize];
-			Impl* m_pImpl;
+			ForwardDeclaredPimpl<Impl, alignof(std::string) * 8, alignof(std::string)> m_pImpl;
+#endif;
 		};
 	}
 }

@@ -89,23 +89,23 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(SolutionDir)deps/Common/include/imgui/;$(SolutionDir)deps/Common/include/cereal/;$(SolutionDir)deps/Common/include/exprtk;$(SolutionDir)deps/Common/include/spimpl;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(SolutionDir)deps/Common/include/imgui/;$(SolutionDir)deps/Common/include/cereal/;$(SolutionDir)deps/Common/include/exprtk;$(SolutionDir)deps/Common/include/spimpl;$(SolutionDir)deps/Common/include/fdpimpl;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)deps/$(Platform)/lib/;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(SolutionDir)deps/Common/include/imgui/;$(SolutionDir)deps/Common/include/cereal/;$(SolutionDir)deps/Common/include/exprtk;$(SolutionDir)deps/Common/include/spimpl;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(SolutionDir)deps/Common/include/imgui/;$(SolutionDir)deps/Common/include/cereal/;$(SolutionDir)deps/Common/include/exprtk;$(SolutionDir)deps/Common/include/spimpl;$(SolutionDir)deps/Common/include/fdpimpl;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)deps/$(Platform)/lib/;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(SolutionDir)deps/Common/include/imgui/;$(SolutionDir)deps/Common/include/cereal/;$(SolutionDir)deps/Common/include/exprtk;$(SolutionDir)deps/Common/include/spimpl;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(SolutionDir)deps/Common/include/imgui/;$(SolutionDir)deps/Common/include/cereal/;$(SolutionDir)deps/Common/include/exprtk;$(SolutionDir)deps/Common/include/spimpl;$(SolutionDir)deps/Common/include/fdpimpl;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)deps/$(Platform)/lib/;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(SolutionDir)deps/Common/include/imgui/;$(SolutionDir)deps/Common/include/cereal/;$(SolutionDir)deps/Common/include/exprtk;$(SolutionDir)deps/Common/include/spimpl;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)deps/$(Platform)/include/;$(SolutionDir)deps/Common/include/imgui/;$(SolutionDir)deps/Common/include/cereal/;$(SolutionDir)deps/Common/include/exprtk;$(SolutionDir)deps/Common/include/spimpl;$(SolutionDir)deps/Common/include/fdpimpl;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)deps/$(Platform)/lib/;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
