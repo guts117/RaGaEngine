@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "RenderEngineMain.h"
 #include "PhysicsEngineMain.h"
-#include "EngineEditor.h"
+#include "EngineEditorMain.h"
 
 //using namespace NarakaKarEngine;
 using namespace NarakaCreator;
@@ -14,7 +14,7 @@ using namespace PhysicsEngine;
 int main()
 {
 	auto physicsEngine = std::make_unique<PhysicsEngineMain>();
-	auto creator = EngineEditor();
+	auto creator = EngineEditorMain();
 	glm::ivec2 screenDims = glm::ivec2(creator.GetScreenDimensions());
 	std::unique_ptr<RenderEngineMain> renderEngine = std::make_unique<RenderEngineMain>(screenDims);
 	creator.AddSceneViewers(renderEngine.get());

@@ -20,7 +20,7 @@
     <ClInclude Include="Transform.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="EngineSimulator.h">
+    <ClInclude Include="EngineSimulatorMain.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -37,7 +37,7 @@
     <ClCompile Include="Transform.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="EngineSimulator.cpp">
+    <ClCompile Include="EngineSimulatorMain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

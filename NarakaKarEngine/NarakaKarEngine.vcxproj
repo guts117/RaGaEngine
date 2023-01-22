@@ -19,13 +19,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="EngineSimulator.h" />
+    <ClInclude Include="EngineSimulatorMain.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="SimObject.h" />
     <ClInclude Include="Transform.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="EngineSimulator.cpp" />
+    <ClCompile Include="EngineSimulatorMain.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

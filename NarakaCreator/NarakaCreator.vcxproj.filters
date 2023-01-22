@@ -53,7 +53,7 @@
     <ClCompile Include="EngineInputManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="EngineEditor.cpp">
+    <ClCompile Include="EngineEditorMain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -70,7 +70,7 @@
     <ClInclude Include="creator_pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="EngineEditor.h">
+    <ClInclude Include="EngineEditorMain.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="EngineInputManager.h">

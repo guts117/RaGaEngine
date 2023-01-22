@@ -1,15 +1,22 @@
 #include "pch.h"
-#include "EngineSimulator.h"
+#include "EngineSimulatorMain.h"
 #include "SimObject.h"
 #include "Transform.h"
 
 using namespace NarakaKarEngine;
 
 
-struct EngineSimulatorMain::Impl
+struct EngineSimulatorMainMain::Impl
 {
 	std::vector<Transform> transformPool = std::vector<Transform>();
 	std::vector<SimObject> simObjectpool = std::vector<SimObject>();
+
+	//where game loops happen;
+	std::vector<std::function<void()>> startFuncPool;
+	std::vector<std::function<void()>> preUpdateFuncPool;
+	std::vector<std::function<void()>> updateFuncPool;
+	std::vector<std::function<void()>> endUpdateFuncPool;
+	std::vector<std::function<void()>> endFuncPool;
 
 	Impl() = delete;
 
@@ -39,14 +46,18 @@ struct EngineSimulatorMain::Impl
 };
 
 
-void EngineSimulatorMain::Update(const glm::ivec2& screenDims)
+void EngineSimulatorMainMain::Update(const glm::ivec2& screenDims)
 {
 }
 
-void EngineSimulatorMain::EndUpdate()
+void EngineSimulatorMainMain::EndUpdate()
 {
 }
 
-EngineSimulatorMain::~EngineSimulatorMain()
+void NarakaKarEngine::EngineSimulatorMainMain::AddToUpdateStack(std::function<void(glm::ivec2)>)
+{
+}
+
+EngineSimulatorMainMain::~EngineSimulatorMainMain()
 {
 }
