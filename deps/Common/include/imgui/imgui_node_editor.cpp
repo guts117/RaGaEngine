@@ -20,7 +20,11 @@
 # include <streambuf>
 # include <type_traits>
 
-// https://stackoverflow.com/a/8597498
+//ToDo: Note from Rabin: Good explanation off what is happening here. Read afterwards.
+//https://learn.microsoft.com/en-us/cpp/preprocessor/c-cpp-preprocessor-reference?view=msvc-170
+//https://thewolfsound.com/sfinae-substitution-failure-is-not-an-error/
+//https://stackoverflow.com/a/8597498
+
 # define DECLARE_HAS_NESTED(Name, Member)                                          \
                                                                                    \
     template<class T>                                                              \
@@ -45,13 +49,13 @@ namespace Detail {
     struct KeyTester_ ## Key                                                                        \
     {                                                                                               \
         template <typename T>                                                                       \
-        static int Get(typename std::enable_if<has_nested_ ## Key<ImGuiKey_>::value, T>::type*)     \
+        static ImGuiKey Get(typename std::enable_if<has_nested_ ## Key<ImGuiKey>::value, T>::type*)     \
         {                                                                                           \
             return ImGui::GetKeyIndex(T::Key);                                                      \
         }                                                                                           \
                                                                                                     \
         template <typename T>                                                                       \
-        static int Get(typename std::enable_if<!has_nested_ ## Key<ImGuiKey_>::value, T>::type*)    \
+        static ImGuiKey Get(typename std::enable_if<!has_nested_ ## Key<ImGuiKey>::value, T>::type*)    \
         {                                                                                           \
             return -1;                                                                              \
         }                                                                                           \
@@ -60,14 +64,14 @@ namespace Detail {
 DECLARE_KEY_TESTER(ImGuiKey_F);
 DECLARE_KEY_TESTER(ImGuiKey_D);
 
-static inline int GetKeyIndexForF()
+static inline ImGuiKey GetKeyIndexForF()
 {
-    return KeyTester_ImGuiKey_F::Get<ImGuiKey_>(nullptr);
+    return KeyTester_ImGuiKey_F::Get<ImGuiKey>(nullptr);
 }
 
-static inline int GetKeyIndexForD()
+static inline ImGuiKey GetKeyIndexForD()
 {
-    return KeyTester_ImGuiKey_D::Get<ImGuiKey_>(nullptr);
+    return KeyTester_ImGuiKey_D::Get<ImGuiKey>(nullptr);
 }
 
 } // namespace Detail
