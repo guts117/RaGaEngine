@@ -10,7 +10,7 @@
 // CREDITS
 //   Written by Michal Cichon
 
-//ToDo: Handle serialization with Cereal.
+//ToDo: Serialize This. Handle serialization with Cereal.
 
 # ifndef __CRUDE_JSON_H__
 # define __CRUDE_JSON_H__
