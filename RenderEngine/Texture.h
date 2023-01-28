@@ -26,8 +26,6 @@ namespace NarakaRenderEngine
 		class Texture
 		{
 		public:
-			struct Impl;
-
 			explicit Texture();
 			explicit Texture(std::string fileLoc, bool isSRGB = false);
 
@@ -68,6 +66,7 @@ namespace NarakaRenderEngine
 			~Texture();
 
 		private:
+			struct Impl;
 
 			const Impl& Pimpl() const { return m_pImpl.Get(); }
 			Impl& Pimpl() { return m_pImpl.Get(); }
