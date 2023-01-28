@@ -50,6 +50,8 @@ namespace NarakaCreator
 			~EngineUIMain();
 		private:
 			struct Impl;
+			struct SimpleNodeEditorExample;
+			struct BasicInteractionNodeEditorExample;
 
 			const Impl* Pimpl() const { return m_pImpl.get(); }
 			Impl* Pimpl() { return m_pImpl.get(); }
