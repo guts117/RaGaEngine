@@ -2,4 +2,3 @@
 #include "SimObject.h"
 
 using namespace NarakaKarEngine;
-

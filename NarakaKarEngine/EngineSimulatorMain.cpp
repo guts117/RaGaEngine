@@ -12,6 +12,7 @@ struct EngineSimulatorMainMain::Impl
 	std::vector<SimObject> simObjectpool = std::vector<SimObject>();
 
 	//where game loops happen;
+	std::vector<std::function<void()>> onCreation;
 	std::vector<std::function<void()>> startFuncPool;
 	std::vector<std::function<void()>> preUpdateFuncPool;
 	std::vector<std::function<void()>> updateFuncPool;

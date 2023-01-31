@@ -23,6 +23,9 @@
     <ClInclude Include="EngineSimulatorMain.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SimObjectHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -38,6 +41,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="EngineSimulatorMain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SimObjectHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -22,6 +22,7 @@
     <ClInclude Include="EngineSimulatorMain.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="SimObject.h" />
+    <ClInclude Include="SimObjectHandler.h" />
     <ClInclude Include="Transform.h" />
   </ItemGroup>
   <ItemGroup>
@@ -34,6 +35,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="SimObject.cpp" />
+    <ClCompile Include="SimObjectHandler.cpp" />
     <ClCompile Include="Transform.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
