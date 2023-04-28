@@ -11,12 +11,12 @@ namespace NarakaKarEngine
 	public:
 		explicit SimObjectHandler(std::shared_ptr<SimObject> simObj);
 
-		virtual void OnCreation();
-		virtual void OnFixedUpdate(); //This will run independent of the other function. the timing can be changed per function probably. Unity uses the physics deltatime.
-		virtual void OnPreUpdate();
-		virtual void OnUpdate();
-		virtual void OnPostUpdate();
-		virtual void OnDestruction();
+		//virtual void OnCreation();
+		//virtual void OnFixedUpdate(); //This will run independent of the other function. the timing can be changed per function probably. Unity uses the physics deltatime.
+		//virtual void OnPreUpdate();
+		//virtual void OnUpdate();
+		//virtual void OnPostUpdate();
+		//virtual void OnDestruction();
 
 		virtual ~SimObjectHandler() = 0;
 	private:
