@@ -47,10 +47,14 @@ namespace NarakaRenderEngine
 		private:
 			struct Impl;
 
-			const Impl* Pimpl() const { return m_pImpl.get(); }
-			Impl* Pimpl() { return m_pImpl.get(); }
+			const Impl& Pimpl() const { return m_pImpl.Get(); }
+			Impl& Pimpl() { return m_pImpl.Get(); }
 
-			std::unique_ptr<Impl> m_pImpl;
+#ifdef NDEBUG //size of string is different between debug(40) and release(32)
+			ForwardDeclaredPimpl<Impl, alignof(std::string) * 9, alignof(std::string)> m_pImpl;
+#else
+			ForwardDeclaredPimpl<Impl, alignof(std::string) * 10, alignof(std::string)> m_pImpl;
+#endif;
 		};
 	}
 }
