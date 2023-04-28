@@ -166,10 +166,6 @@ struct RenderEngineMain::Impl
 	std::shared_ptr<std::vector<std::vector<std::shared_ptr<Render_Object>>>> sceneObjRO;
 	std::shared_ptr<std::vector<std::vector<std::shared_ptr<Render_Object>>>> billboardRO;
 
-	//ToDo: vector of all virtual objects should be in a different class
-	static std::shared_ptr<std::vector<std::shared_ptr<Transform>>> transformPool;
-	std::shared_ptr<std::vector<std::shared_ptr<VObject>>> vObjectPool;
-
 	void AddToMeshPool(std::shared_ptr<Mesh>&& mesh)
 	{
 		meshPool->push_back(std::move(mesh));
@@ -833,9 +829,7 @@ struct RenderEngineMain::Impl
 		}
 
 		if (!drawFluidSim && !drawSmokeSim)
-		{
-			UpdateObjectTransforms();
-			
+		{		
 			for(auto& camera: cameras)
 			{
 				auto camParam = CamParam{ camera->getCameraPosition(), camera->GetProjectionMatrix(screenDims), camera->CalculateViewMatrix()
@@ -1238,62 +1232,6 @@ struct RenderEngineMain::Impl
 	//	plainTexture->UseTexture(0);
 	//	particleList[0]->RenderInstancedMesh();
 	//}
-
-	//Will be in Transform class or VObject class
-	void Translate(const std::weak_ptr<Render_Object>& renderObj, glm::vec3 position)
-	{
-		if(auto ro = renderObj.lock())
-		{
-			if (auto model = ro->GetModelMatrix().lock())
-			{
-				*model = glm::translate(*model, position);
-			}
-		}
-	}
-
-	void RotateOnAxis(const std::weak_ptr<Render_Object>& renderObj, float angleInDegrees, glm::vec3 axis)
-	{
-		if (auto ro = renderObj.lock())
-		{
-			if (auto model = ro->GetModelMatrix().lock())
-			{
-				*model = glm::rotate(*model, angleInDegrees * toRadians, axis);
-			}
-		}
-	}
-
-	void Scale(const std::weak_ptr<Render_Object>& renderObj, glm::vec3 scale)
-	{
-		if (auto ro = renderObj.lock())
-		{
-			if (auto model = ro->GetModelMatrix().lock()) 
-			{
-				*model = glm::scale(*model, scale);
-			}
-		}
-	}
-
-	void Transform(const std::weak_ptr<Render_Object>& renderObj, const Transform& transform)
-	{
-		if (auto ro = renderObj.lock())
-		{
-			if (auto model = ro->GetModelMatrix().lock())
-			{
-				*model = glm::translate(*model, transform.Position);
-				*model = glm::toMat4(transform.Rotation);
-				*model = glm::scale(*model, transform.Scale);
-			}
-		}
-	}
-
-	void UpdateObjectTransforms() 
-	{
-		//ToDo: Temporary
-		//for (auto obj : *vObjectPool)
-		//{
-		//	Transform(obj->render_object, *obj->transform);
-		//}
-	}
 
 	void DirectionalShadowMapPass(DirectionalLight* light, const CamParam& camParam, const glm::ivec2& screenDims) {
 

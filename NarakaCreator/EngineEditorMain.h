@@ -31,16 +31,16 @@ namespace NarakaCreator
 		int bufferIndex;
 	};
 
-	class NARAKA_CREATOR_API EngineEditor
+	class NARAKA_CREATOR_API EngineEditorMain
 	{
 	public:
-		explicit EngineEditor();
+		explicit EngineEditorMain();
 
-		EngineEditor(EngineEditor&& rhs) noexcept = delete;
-		EngineEditor& operator=(EngineEditor&& rhs) noexcept = delete;
+		EngineEditorMain(EngineEditorMain&& rhs) noexcept = delete;
+		EngineEditorMain& operator=(EngineEditorMain&& rhs) noexcept = delete;
 
-		EngineEditor(const EngineEditor& rhs) noexcept = delete;
-		EngineEditor& operator=(const EngineEditor& rhs) noexcept = delete;
+		EngineEditorMain(const EngineEditorMain& rhs) noexcept = delete;
+		EngineEditorMain& operator=(const EngineEditorMain& rhs) noexcept = delete;
 		
 		bool IsUpdateBufferSize();
 		glm::ivec2 GetScreenDimensions();
@@ -51,7 +51,7 @@ namespace NarakaCreator
 
 		void AddSceneViewers(const NarakaRenderEngine::RenderEngine::RenderEngineMain* renderEngineMain);
 
-		~EngineEditor();
+		~EngineEditorMain();
 	private:
 		struct Impl;
 

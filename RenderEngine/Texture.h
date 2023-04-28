@@ -2,7 +2,7 @@
 #define TEXTURE
 
 #include "render_pch.h"
-//#include "spimpl.h"
+#include <ForwardDeclaredPimpl.h>
 
 namespace NarakaRenderEngine
 {
@@ -64,13 +64,18 @@ namespace NarakaRenderEngine
 			const GLuint GetTextureID();
 
 			~Texture();
+
 		private:
 			struct Impl;
 
-			const Impl* Pimpl() const { return m_pImpl.get(); }
-			Impl* Pimpl() { return m_pImpl.get(); }
+			const Impl& Pimpl() const { return m_pImpl.Get(); }
+			Impl& Pimpl() { return m_pImpl.Get(); }
 
-			std::unique_ptr<Impl> m_pImpl;
+#ifdef NDEBUG //size of string is different between debug and release
+			ForwardDeclaredPimpl<Impl, alignof(std::string) * 7, alignof(std::string)> m_pImpl;
+#else
+			ForwardDeclaredPimpl<Impl, alignof(std::string) * 8, alignof(std::string)> m_pImpl;
+#endif;
 		};
 	}
 }

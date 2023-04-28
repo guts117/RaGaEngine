@@ -1,5 +1,5 @@
 #include "creator_pch.h"
-#include "EngineEditor.h"
+#include "EngineEditorMain.h"
 #include "EngineUIMain.h"
 #include "RenderEngineMain.h"
 #include "SceneViewer.h"
@@ -11,7 +11,7 @@ using namespace RenderEngine;
 using namespace EngineUI;
 using namespace InputManager;
 
-struct EngineEditor::Impl
+struct EngineEditorMain::Impl
 {
 	EngineUIMain engineUI;
 	std::vector<RendererToViewer> m_renderer2Viewers;
@@ -88,38 +88,38 @@ struct EngineEditor::Impl
 	~Impl() = default;
 };
 
-EngineEditor::EngineEditor()
+EngineEditorMain::EngineEditorMain()
 	: m_pImpl{ std::make_unique<Impl>()}
 {
 }
 
-bool EngineEditor::IsUpdateBufferSize() 
+bool EngineEditorMain::IsUpdateBufferSize() 
 {
 	return Pimpl()->engineUI.IsUpdateBufferSize();
 }
 
-glm::ivec2 EngineEditor::GetScreenDimensions()
+glm::ivec2 EngineEditorMain::GetScreenDimensions()
 {
 	return Pimpl()->engineUI.GetScreenDimensions();
 }
 
-bool EngineEditor::IsEnd()
+bool EngineEditorMain::IsEnd()
 {
 	return Pimpl()->engineUI.IsEnd();
 }
-void EngineEditor::Update(const glm::ivec2& screenDims)
+void EngineEditorMain::Update(const glm::ivec2& screenDims)
 {
 	Pimpl()->Update(screenDims);
 }
 
-void EngineEditor::EndUpdate()
+void EngineEditorMain::EndUpdate()
 {
 	Pimpl()->EndUpdate();
 }
 
-void EngineEditor::AddSceneViewers(const RenderEngineMain* renderEngineMain)
+void EngineEditorMain::AddSceneViewers(const RenderEngineMain* renderEngineMain)
 {
 	Pimpl()->AddSceneViewers(renderEngineMain);
 }
 
-EngineEditor::~EngineEditor() = default;
+EngineEditorMain::~EngineEditorMain() = default;

@@ -8,12 +8,14 @@ using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
 
-struct Texture::Impl
+struct alignas(alignof(std::string)) Texture::Impl
 {
+	std::string m_fileLocation = "";
 	GLuint m_textureID			= 0;
-	int m_width = 0, m_height = 0, m_bitDepth = 0;
-	std::string m_fileLocation	= "";
-	bool m_isSRGB				= false;
+	int m_width = 0;
+	int m_height = 0;
+	int m_bitDepth = 0;
+	bool m_isSRGB  = false;
 
 	Impl() = default;
 
@@ -22,26 +24,8 @@ struct Texture::Impl
 		, m_isSRGB{ isSRGB }
 	{}
 
-	Impl(Impl&& rhs) noexcept
-		: m_textureID{ std::exchange(rhs.m_textureID, 0) }
-		, m_width{ std::exchange(rhs.m_width, 0) }
-		, m_height{ std::exchange(rhs.m_height, 0) }
-		, m_bitDepth{ std::exchange(rhs.m_bitDepth, 0) }
-		, m_fileLocation{ std::move(rhs.m_fileLocation) }
-		, m_isSRGB{ std::exchange(rhs.m_isSRGB, false)}
-	{}
-
-	Impl& operator=(Impl&& rhs) noexcept {
-		if (this != &rhs) {
-			m_textureID = std::exchange(rhs.m_textureID, 0);
-			m_width = std::exchange(rhs.m_width, 0);
-			m_height = std::exchange(rhs.m_height, 0);
-			m_bitDepth = std::exchange(rhs.m_bitDepth, 0);
-			m_fileLocation = std::move(rhs.m_fileLocation);
-			m_isSRGB = std::exchange(rhs.m_isSRGB, false);
-		}
-		return *this;
-	}
+	Impl(Impl&& rhs) noexcept = default;
+	Impl& operator=(Impl&& rhs) noexcept = default;
 
 	Impl(const Impl& rhs) noexcept = delete;
 	Impl& operator=(const Impl& rhs) = delete;
@@ -319,87 +303,91 @@ struct Texture::Impl
 	};
 };
 
-Texture::Texture() :  m_pImpl{ new Impl() } {}
+Texture::Texture() : m_pImpl{ std::move(Impl()) }
+{
+}
 
-Texture::Texture(std::string fileLoc, bool isSRGB) : m_pImpl{ new Impl(fileLoc, isSRGB) } {}
+Texture::Texture(std::string fileLoc, bool isSRGB) : m_pImpl{ std::move(Impl(fileLoc, isSRGB)) }
+{
+}
 
 bool Texture::LoadTexture2D() {
-	return Pimpl()->LoadTexture2D();
+	return Pimpl().LoadTexture2D();
 }
 
 bool Texture::LoadTextureArray(const glm::vec2& resolution, const int numOfLayers) {
-	return Pimpl()->LoadTextureArray(resolution, numOfLayers);
+	return Pimpl().LoadTextureArray(resolution, numOfLayers);
 }
 
 bool Texture::LoadCubeMap() {
-	return Pimpl()->LoadCubeMap();
+	return Pimpl().LoadCubeMap();
 }
 
 bool Texture::LoadTextureHDR() {
-	return Pimpl()->LoadTextureHDR();
+	return Pimpl().LoadTextureHDR();
 }
 
 bool Texture::LoadNativeTexture(const std::vector<glm::vec3>& noiseData) {
-	return Pimpl()->LoadNativeTexture(noiseData);
+	return Pimpl().LoadNativeTexture(noiseData);
 }
 
 bool Texture::CreateTextureArray(const glm::vec2& resolution, const int numOfLayers, bool createMipMaps)
 {
-	return Pimpl()->CreateTextureArray(resolution, numOfLayers, createMipMaps);
+	return Pimpl().CreateTextureArray(resolution, numOfLayers, createMipMaps);
 }
 
 bool Texture::CreateTexture3D(const glm::vec3& resolution, bool createMipMaps)
 {
-	return Pimpl()->CreateTexture3D(resolution, createMipMaps);
+	return Pimpl().CreateTexture3D(resolution, createMipMaps);
 }
 bool Texture::CreateTexture(const glm::vec2& resolution)
 {
-	return Pimpl()->CreateTexture(resolution);
+	return Pimpl().CreateTexture(resolution);
 }
 
 void Texture::UseTextureTemp(GLuint i) {
-	Pimpl()->UseTextureTemp(i);
+	Pimpl().UseTextureTemp(i);
 }
 
 void Texture::UseTexture(GLuint i) {
-	Pimpl()->UseTexture(i);
+	Pimpl().UseTexture(i);
 }
 
 void Texture::UseTextureArray(GLuint i) {
-	Pimpl()->UseTextureArray(i);
+	Pimpl().UseTextureArray(i);
 }
 
 void Texture::UseTexture3D(GLuint i) {
-	Pimpl()->UseTexture3D(i);
+	Pimpl().UseTexture3D(i);
 }
 
 void Texture::UseTextureReadWrite(GLuint i, bool isWriteOnly, bool isLayered) {
-	Pimpl()->UseTextureReadWrite(i, isWriteOnly, isLayered);
+	Pimpl().UseTextureReadWrite(i, isWriteOnly, isLayered);
 }
 
 void Texture::UseCubeMap(GLuint i) {
-	Pimpl()->UseCubeMap(i);
+	Pimpl().UseCubeMap(i);
 }
 
 void Texture::GetTextureData(float* data) {
-	Pimpl()->GetTextureData(data);
+	Pimpl().GetTextureData(data);
 }
 
 //Getters
 const int Texture::GetWidth() {
-	return Pimpl()->m_width;
+	return Pimpl().m_width;
 }
 
 const int Texture::GetHeight() {
-	return Pimpl()->m_height;
+	return Pimpl().m_height;
 }
 
 const int Texture::GetBitDepth() {
-	return Pimpl()->m_bitDepth;
+	return Pimpl().m_bitDepth;
 }
 
 const GLuint Texture::GetTextureID() {
-	return Pimpl()->m_textureID;
+	return Pimpl().m_textureID;
 }
 
 Texture::~Texture() = default;
