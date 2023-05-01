@@ -80,7 +80,7 @@ namespace NarakaRenderEngine
 			const Impl& Pimpl() const { return m_pImpl.Get(); }
 			Impl& Pimpl() { return m_pImpl.Get(); }
 
-#ifdef NDEBUG
+#ifdef NDEBUG //size of vector<> is different between debug(32) and release(24)
 			ForwardDeclaredPimpl<Impl, alignof(void*) * 9, alignof(void*)> m_pImpl;
 #else
 			ForwardDeclaredPimpl<Impl, alignof(void*) * 11, alignof(void*)> m_pImpl;
