@@ -4,22 +4,22 @@
 using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
-struct FrameBufferObject::Impl
+struct alignas(alignof(void*)) FrameBufferObject::Impl
 {
-	GLuint m_FboId;
 	std::shared_ptr<FBOParams> m_FboParam;
 	std::vector<GLuint>m_ReadWriteBuffers;
 	std::vector<GLuint>m_WriteBuffers;
+	GLuint m_FboId;
 
 	Impl() = delete;
 
 	Impl(std::shared_ptr<FBOParams> fboParams)
-		: m_FboId{ 0 }
-		, m_FboParam{ fboParams }
+		: m_FboParam{ fboParams }
 		, m_ReadWriteBuffers{ std::vector<GLuint>() }
 		, m_WriteBuffers{ std::vector<GLuint>() }
+		, m_FboId{ 0 }
  
-	{
+	{	
 		glGenFramebuffers(1, &m_FboId);
 		glBindFramebuffer(m_FboParam->Target, m_FboId);
 
@@ -195,70 +195,73 @@ struct FrameBufferObject::Impl
 		return m_FboParam->Height;
 	}
 
-	~Impl()
-	{
-		if (m_FboId) { glDeleteFramebuffers(1, &m_FboId); }
-		for (auto i = 0; i < m_ReadWriteBuffers.size(); ++i)
-		{
-			if (m_ReadWriteBuffers[i]) { glDeleteTextures(1, &m_ReadWriteBuffers[i]); }
-		}
-		for (auto i = 0; i < m_WriteBuffers.size(); ++i)
-		{
-			if (m_WriteBuffers[i]) { glDeleteBuffers(1, &m_WriteBuffers[i]); }
-		}
-	}
+	~Impl() = default;
 };
 
-FrameBufferObject::FrameBufferObject(std::shared_ptr<FBOParams> fboParams) : m_pImpl{ new Impl(fboParams) } {}
+FrameBufferObject::FrameBufferObject(std::shared_ptr<FBOParams> fboParams) : m_pImpl{ Impl(fboParams) } {}
 
 void FrameBufferObject::Bind() const
 {
-	Pimpl()->Bind();
+	Pimpl().Bind();
 }
 
 void FrameBufferObject::WriteToBuffer(const GLuint& texParamIndex, const GLuint& bufferIndex, const GLuint& faceId, const GLuint& mipLevel) const
 {
-	Pimpl()->WriteToBuffer(texParamIndex, bufferIndex, faceId, mipLevel);
+	Pimpl().WriteToBuffer(texParamIndex, bufferIndex, faceId, mipLevel);
 }
 
 void FrameBufferObject::AttachColorBufferToTexture(const GLenum& textureUnit, const GLuint& texParamIndex, const GLuint& bufferIndex) const
 {
-	Pimpl()->AttachColorBufferToTexture(textureUnit, texParamIndex, bufferIndex);
+	Pimpl().AttachColorBufferToTexture(textureUnit, texParamIndex, bufferIndex);
 }
 
 void FrameBufferObject::CreateMipMap(const GLuint& texParamIndex, const GLuint& bufferIndex) const
 {
-	Pimpl()->CreateMipMap(texParamIndex, bufferIndex);
+	Pimpl().CreateMipMap(texParamIndex, bufferIndex);
 }
 
 void FrameBufferObject::ResizeBuffers(int width, int height)
 {
-	Pimpl()->ResizeBuffers(width, height);
+	Pimpl().ResizeBuffers(width, height);
 }
 
 void FrameBufferObject::Blit(const GLuint& to_fboID) 
 {
-	glBlitNamedFramebuffer(Pimpl()->m_FboId, to_fboID, 0, 0, Pimpl()->GetWidth(), Pimpl()->GetHeight(), 0, 0, Pimpl()->GetWidth(), Pimpl()->GetHeight(), GL_COLOR_BUFFER_BIT, GL_LINEAR);
+	glBlitNamedFramebuffer(Pimpl().m_FboId, to_fboID, 0, 0, Pimpl().GetWidth(), Pimpl().GetHeight(), 0, 0, Pimpl().GetWidth(), Pimpl().GetHeight(), GL_COLOR_BUFFER_BIT, GL_LINEAR);
 }
 
 const GLuint& FrameBufferObject::GetWidth() const
 {
-	return Pimpl()->GetWidth();
+	return Pimpl().GetWidth();
 }
 
 const GLuint& FrameBufferObject::GetHeight() const
 {
-	return Pimpl()->GetHeight();
+	return Pimpl().GetHeight();
 }
 
 const GLuint& FrameBufferObject::GetBuffer(const GLuint& bufferIndex) const
 {
-	return Pimpl()->m_ReadWriteBuffers[bufferIndex];
+	return Pimpl().m_ReadWriteBuffers[bufferIndex];
 }
 
 const GLuint FrameBufferObject::GetFboId() const 
 {
-	return Pimpl()->m_FboId;
+	return Pimpl().m_FboId;
 }
 
-FrameBufferObject::~FrameBufferObject() = default;
+FrameBufferObject::~FrameBufferObject() 
+{
+	//ToDo: Redesign or Rethink this again 
+	//Moved here from Impl otherwise temporary that is moved to m_pimpl is destructed at FrameBufferObject constructor
+	auto&& pimpl = Pimpl();
+	if (pimpl.m_FboId) { glDeleteFramebuffers(1, &pimpl.m_FboId); }
+	for (auto i = 0; i < pimpl.m_ReadWriteBuffers.size(); ++i)
+	{
+		if (pimpl.m_ReadWriteBuffers[i]) { glDeleteTextures(1, &pimpl.m_ReadWriteBuffers[i]); }
+	}
+	for (auto i = 0; i < pimpl.m_WriteBuffers.size(); ++i)
+	{
+		if (pimpl.m_WriteBuffers[i]) { glDeleteBuffers(1, &pimpl.m_WriteBuffers[i]); }
+	}
+}
