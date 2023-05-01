@@ -351,7 +351,7 @@ struct RenderEngineMain::Impl
 	{
 		glEnable(GL_TEXTURE_3D);
 		lastFrameTime = static_cast<GLfloat>(glfwGetTime());
-		CreateBillboard();
+		//CreateBillboard();
 		//CreateParticles();
 
 		texturePool = std::make_shared<std::vector<std::shared_ptr<Texture>>>();
@@ -1064,7 +1064,7 @@ struct RenderEngineMain::Impl
 		MathUtil::CalcAverageNormals(indices, vertices, 5);
 		MathUtil::CalcAverageTangents(indices, vertices, 8);
 
-		return std::make_shared<Mesh>(0, std::move(vertices), std::move(indices), std::move(MeshGenParams{true, true}));
+		return std::make_shared<Mesh>(0, std::move(vertices), std::move(indices), std::move(MeshGenParams{ true, true }));
 	}
 
 	std::shared_ptr<Mesh> CreatePlane()

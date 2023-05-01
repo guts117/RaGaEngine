@@ -77,7 +77,7 @@ Fbo_Handler::Fbo_Handler(std::unique_ptr<std::vector<std::shared_ptr<FrameBuffer
 	, const GLuint& height
 	, Fbo_Handler* prevHandler
 	, Fbo_Handler* nextHandler)
-	: m_pImpl{ std::move(Impl(std::move(fboVectorPtr), handlerName, isWindowSized, width, height, prevHandler, nextHandler)) }
+	: m_pImpl{ Impl(std::move(fboVectorPtr), handlerName, isWindowSized, width, height, prevHandler, nextHandler) }
 {
 }
 

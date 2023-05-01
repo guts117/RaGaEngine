@@ -303,11 +303,11 @@ struct alignas(alignof(std::string)) Texture::Impl
 	};
 };
 
-Texture::Texture() : m_pImpl{ std::move(Impl()) }
+Texture::Texture() : m_pImpl{ Impl() }
 {
 }
 
-Texture::Texture(std::string fileLoc, bool isSRGB) : m_pImpl{ std::move(Impl(fileLoc, isSRGB)) }
+Texture::Texture(std::string fileLoc, bool isSRGB) : m_pImpl{ Impl(fileLoc, isSRGB) }
 {
 }
 

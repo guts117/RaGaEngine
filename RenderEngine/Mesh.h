@@ -22,10 +22,10 @@ namespace NarakaRenderEngine
 		public:
 			explicit Mesh() = delete;
 
-			explicit Mesh(GLuint&& materialIndex, std::vector<std::vector<GLfloat>>&& vertices, std::vector<GLuint>&& indices, MeshGenParams&& meshGenParams);
+			explicit Mesh(GLuint materialIndex, std::vector<std::vector<GLfloat>>&& vertices, std::vector<GLuint>&& indices, MeshGenParams&& meshGenParams);
 
-			Mesh(Mesh&& rhs);
-			Mesh& operator= (Mesh&& rhs);
+			Mesh(Mesh&& rhs) = default;
+			Mesh& operator= (Mesh&& rhs) = default;
 
 			Mesh(const Mesh& rhs) = delete;
 			Mesh& operator= (const Mesh& rhs) = delete;
@@ -38,10 +38,10 @@ namespace NarakaRenderEngine
 		private:
 			struct Impl;
 
-			const Impl* Pimpl() const { return m_pImpl.get(); }
-			Impl* Pimpl() { return m_pImpl.get(); }
+			const Impl& Pimpl() const { return m_pImpl.Get(); }
+			Impl& Pimpl() { return m_pImpl.Get(); }
 
-			std::unique_ptr<Impl> m_pImpl;		
+			ForwardDeclaredPimpl<Impl, alignof(GLuint) * 8, alignof(GLuint)> m_pImpl;
 		};
 	}
 }
