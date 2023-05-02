@@ -13,6 +13,12 @@ struct alignas(alignof(void*)) FrameBufferObject::Impl
 
 	Impl() = delete;
 
+	Impl(Impl&& rhs) noexcept = default;
+	Impl& operator=(Impl&& rhs) noexcept = default;
+
+	Impl(const Impl& rhs) noexcept = delete;
+	Impl& operator=(const Impl& rhs) noexcept = delete;
+
 	Impl(std::shared_ptr<FBOParams> fboParams)
 		: m_FboParam{ fboParams }
 		, m_ReadWriteBuffers{ std::vector<GLuint>() }

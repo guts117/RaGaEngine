@@ -9,7 +9,7 @@
 using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
-struct Shader_Object::Impl
+struct alignas(alignof(void*)) Shader_Object::Impl
 {	
 	struct ShaderCodeType
 	{
@@ -59,16 +59,24 @@ struct Shader_Object::Impl
 		std::any VarData;
 	};
 
-	std::unique_ptr<std::vector<std::string>> m_ShaderLocs;
+	std::vector<std::string> m_ShaderLocs;
+	std::vector<ShaderInputVariable> m_ShaderInputs;
 	GLuint m_ShaderProgramID;
-	std::unique_ptr<std::vector<ShaderInputVariable>> m_ShaderInputs;
 	GLenum m_ShaderType;
 	GLint m_TextureUnit;
 
+	Impl() = delete;
+
+	Impl(Impl&& rhs) noexcept = default;
+	Impl& operator=(Impl&& rhs) noexcept = default;
+
+	Impl(const Impl& rhs) noexcept = delete; 
+	Impl& operator=(const Impl& rhs) noexcept = delete;
+
 	Impl(const std::vector<std::string>& shaderLocs)
-		: m_ShaderLocs { std::make_unique<std::vector<std::string>>(shaderLocs) }
-		, m_ShaderProgramID { 0 }
-		, m_ShaderInputs{ std::make_unique<std::vector<ShaderInputVariable>>()}
+		: m_ShaderLocs { std::move(shaderLocs) }
+		, m_ShaderInputs{ std::vector<ShaderInputVariable>() }
+		, m_ShaderProgramID{ 0 }
 		, m_ShaderType { 0 }
 		, m_TextureUnit { 0 }
 	{
@@ -428,7 +436,7 @@ struct Shader_Object::Impl
 							snprintf(locBuff, sizeof(locBuff), (varName + "[%zd]").c_str(), i);
 							vecArr.push_back(glGetUniformLocation(m_ShaderProgramID, locBuff));
 						}
-						m_ShaderInputs->push_back(ShaderInputVariable{ type, varName, SLDataTypeArr{vecArr} });
+						m_ShaderInputs.push_back(ShaderInputVariable{ type, varName, SLDataTypeArr{vecArr} });
 					}
 					else
 					{
@@ -445,14 +453,14 @@ struct Shader_Object::Impl
 							}
 							vecArr.push_back(SLStruct{ vec });
 						}
-						m_ShaderInputs->push_back(ShaderInputVariable{ type, varName, SLStructTypeArr{vecArr} });
+						m_ShaderInputs.push_back(ShaderInputVariable{ type, varName, SLStructTypeArr{vecArr} });
 					}
 				}
 				else
 				{
 					if (structTMaps.find(type) == structTMaps.end())
 					{
-						m_ShaderInputs->push_back(ShaderInputVariable{ type, fullVarName, glGetUniformLocation(m_ShaderProgramID, fullVarName.c_str()) });
+						m_ShaderInputs.push_back(ShaderInputVariable{ type, fullVarName, glGetUniformLocation(m_ShaderProgramID, fullVarName.c_str()) });
 					}
 					else
 					{
@@ -461,7 +469,7 @@ struct Shader_Object::Impl
 						{
 							vec.push_back(SLStructMember{ structTMaps[type][i].type,structTMaps[type][i].memberName, glGetUniformLocation(m_ShaderProgramID, (fullVarName + "." + structTMaps[type][i].memberName).c_str()) });
 						}
-						m_ShaderInputs->push_back(ShaderInputVariable{ type, fullVarName, SLStruct{vec} });
+						m_ShaderInputs.push_back(ShaderInputVariable{ type, fullVarName, SLStruct{vec} });
 					}
 				}
 			}
@@ -621,9 +629,9 @@ struct Shader_Object::Impl
 
 	void SetVariable(std::string&& varName, const std::any& value, const GLuint& index = 0, std::string&& memName = "") const
 	{
-		auto it = std::find_if(m_ShaderInputs->begin(), m_ShaderInputs->end(), [&](ShaderInputVariable& var) {return var.VarName == varName; });
+		auto it = std::find_if(m_ShaderInputs.begin(), m_ShaderInputs.end(), [&](const ShaderInputVariable& var) {return var.VarName == varName; });
 
-		if (it != m_ShaderInputs->end())
+		if (it != m_ShaderInputs.end())
 		{
 			if (auto data = CheckInputDataType<GLint>(it->VarData))
 			{			
@@ -674,61 +682,55 @@ struct Shader_Object::Impl
 		}
 	}
 
-	~Impl() 
-	{
-		if (m_ShaderProgramID!= 0) {
-			glDeleteProgram(m_ShaderProgramID);
-			m_ShaderProgramID = 0;
-		}
-	}
+	~Impl() = default;
 };
 
-Shader_Object::Shader_Object(const std::vector<std::string>& shaders) : m_pImpl{new Impl(shaders)} 
+Shader_Object::Shader_Object(const std::vector<std::string>& shaders) : m_pImpl{ Impl(shaders) } 
 {
 }
 
 void Shader_Object::ValidateShaderObject() const
 {
-	Pimpl()->Validate();
+	Pimpl().Validate();
 }
 
 const GLuint& Shader_Object::GetShaderObjectProgramID() const
 {
-	return Pimpl()->m_ShaderProgramID;
+	return Pimpl().m_ShaderProgramID;
 }
 
 const GLuint Shader_Object::SetTextureUnit(std::string&& textureName)
 {
-	GLint& texUnit = Pimpl()->m_TextureUnit;
+	GLint& texUnit = Pimpl().m_TextureUnit;
 	SetVariable(std::move(textureName), texUnit);
 	return texUnit++;
 }
 
 const GLuint Shader_Object::SetTextureUnit(std::string&& varName, const GLuint& index, std::string&& texName)
 {
-	GLint& texUnit = Pimpl()->m_TextureUnit;
+	GLint& texUnit = Pimpl().m_TextureUnit;
 	SetVariable(std::move(varName), texUnit, index, std::move(texName));
 	return texUnit++;
 }
 
 const GLuint Shader_Object::GetTextureUnit() const
 {
-	return Pimpl()->m_TextureUnit;
+	return Pimpl().m_TextureUnit;
 }
 
 const void Shader_Object::ResetTextureUnit(GLuint&& resetToUnit)
 {
-	Pimpl()->m_TextureUnit = resetToUnit;
+	Pimpl().m_TextureUnit = resetToUnit;
 }
 
 void Shader_Object::UseShaderObject() const
 {
-	glUseProgram(Pimpl()->m_ShaderProgramID);
+	glUseProgram(Pimpl().m_ShaderProgramID);
 }
 
 void Shader_Object::DispatchShaderObject(const glm::uvec3& threadGroupCnt) const
 {
-	if (Pimpl()->m_ShaderType == GL_COMPUTE_SHADER) 
+	if (Pimpl().m_ShaderType == GL_COMPUTE_SHADER) 
 	{
 		glDispatchCompute(threadGroupCnt.x, threadGroupCnt.y, threadGroupCnt.z);
 		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
@@ -737,7 +739,16 @@ void Shader_Object::DispatchShaderObject(const glm::uvec3& threadGroupCnt) const
 
 void Shader_Object::SetVariable(std::string&& varName, const std::any& value, const GLuint& index, std::string&& memName) const
 {
-	Pimpl()->SetVariable(std::move(varName), value, index, std::move(memName));
+	Pimpl().SetVariable(std::move(varName), value, index, std::move(memName));
 }
 
-Shader_Object::~Shader_Object() = default;
+Shader_Object::~Shader_Object() 
+{
+	//ToDo: Redesign or Rethink this again 
+	//Moved here from Impl otherwise temporary that is moved to m_pimpl is destructed at Shader_Object constructor
+	if (Pimpl().m_ShaderProgramID != 0) 
+	{
+		glDeleteProgram(Pimpl().m_ShaderProgramID);
+		Pimpl().m_ShaderProgramID = 0;
+	}
+}
