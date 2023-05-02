@@ -186,7 +186,7 @@ struct RenderEngineMain::Impl
 		for(auto i = 0; i< texMapData.size(); ++i)
 		{
 			TexMapData& dat = texMapData[i];
-			auto texture = std::make_shared<Texture>(dat.path, dat.type == TexType::Albedo || TexType::Default);
+			auto texture = std::make_shared<Texture>(std::move(dat.path), dat.type == TexType::Albedo || TexType::Default);
 			auto wTexPtr = std::weak_ptr<Texture>(texture);
 			texturePool->push_back(texture);
 			if(texture->LoadTexture2D())

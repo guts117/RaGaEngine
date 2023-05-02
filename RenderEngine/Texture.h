@@ -26,7 +26,7 @@ namespace NarakaRenderEngine
 		{
 		public:
 			explicit Texture();
-			explicit Texture(std::string fileLoc, bool isSRGB = false);
+			explicit Texture(std::string&& fileLoc, bool isSRGB = false);
 
 			Texture(Texture&& rhs) noexcept = default;
 			Texture& operator=(Texture&& rhs) noexcept = default;

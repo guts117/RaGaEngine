@@ -19,8 +19,8 @@ struct alignas(alignof(std::string)) Texture::Impl
 
 	Impl() = default;
 
-	Impl(std::string fileLoc, bool isSRGB)
-		: m_fileLocation{ fileLoc }
+	Impl(std::string&& fileLoc, bool isSRGB)
+		: m_fileLocation{ std::move(fileLoc) }
 		, m_isSRGB{ isSRGB }
 	{}
 
@@ -305,7 +305,7 @@ Texture::Texture() : m_pImpl{ Impl() }
 {
 }
 
-Texture::Texture(std::string fileLoc, bool isSRGB) : m_pImpl{ Impl(fileLoc, isSRGB) }
+Texture::Texture(std::string&& fileLoc, bool isSRGB) : m_pImpl{ Impl(std::move(fileLoc), isSRGB) }
 {
 }
 
