@@ -73,7 +73,7 @@ struct alignas(alignof(void*)) Shader_Object::Impl
 	Impl(const Impl& rhs) noexcept = delete; 
 	Impl& operator=(const Impl& rhs) noexcept = delete;
 
-	Impl(const std::vector<std::string>& shaderLocs)
+	Impl(std::vector<std::string>&& shaderLocs)
 		: m_ShaderLocs { std::move(shaderLocs) }
 		, m_ShaderInputs{ std::vector<ShaderInputVariable>() }
 		, m_ShaderProgramID{ 0 }
@@ -81,9 +81,9 @@ struct alignas(alignof(void*)) Shader_Object::Impl
 		, m_TextureUnit { 0 }
 	{
 		std::vector<ShaderCodeType> shaderCodes;
-		for(auto locIndex = 0; locIndex < shaderLocs.size(); ++locIndex)
+		for(auto locIndex = 0; locIndex < m_ShaderLocs.size(); ++locIndex)
 		{
-			shaderCodes.push_back(ReadFile(shaderLocs[locIndex]));
+			shaderCodes.push_back(ReadFile(m_ShaderLocs[locIndex]));
 		}
 		
 		CompileShader(shaderCodes);
@@ -685,7 +685,7 @@ struct alignas(alignof(void*)) Shader_Object::Impl
 	~Impl() = default;
 };
 
-Shader_Object::Shader_Object(const std::vector<std::string>& shaders) : m_pImpl{ Impl(shaders) } 
+Shader_Object::Shader_Object(std::vector<std::string>&& shaders) : m_pImpl{ Impl(std::move(shaders)) } 
 {
 }
 

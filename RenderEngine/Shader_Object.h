@@ -11,7 +11,7 @@ namespace NarakaRenderEngine
 		{
 		public:
 			explicit Shader_Object() = delete;
-			explicit Shader_Object(const std::vector<std::string>& shaderLocs);
+			explicit Shader_Object(std::vector<std::string>&& shaderLocs);
 
 			void ValidateShaderObject() const;
 			void UseShaderObject() const;
