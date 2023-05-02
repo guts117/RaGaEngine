@@ -49,7 +49,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Scene_Fbo_Handler_Manager.cpp" />
-    <ClCompile Include="Scene_Handler.cpp" />
     <ClCompile Include="Render_Pass_Handler.cpp" />
     <ClCompile Include="Scene_Render_Pass_Handler.cpp" />
     <ClCompile Include="Scene_Shader_Object_Manager.cpp" />
@@ -88,7 +87,6 @@
     <ClInclude Include="Render_Object.h" />
     <ClInclude Include="render_pch.h" />
     <ClInclude Include="Scene_Fbo_Handler_Manager.h" />
-    <ClInclude Include="Scene_Handler.h" />
     <ClInclude Include="Render_Pass_Handler.h" />
     <ClInclude Include="Scene_Render_Pass_Handler.h" />
     <ClInclude Include="Scene_Shader_Object_Manager.h" />

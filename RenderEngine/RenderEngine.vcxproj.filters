@@ -68,9 +68,6 @@
     <ClCompile Include="Shader_Object.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Scene_Handler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Render_Object.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -182,9 +179,6 @@
       <Filter>Header Files\RenderEngine</Filter>
     </ClInclude>
     <ClInclude Include="Shader_Object.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Scene_Handler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Render_Object.h">
