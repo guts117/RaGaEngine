@@ -298,9 +298,7 @@ struct alignas(alignof(std::string)) Texture::Impl
 		glDeleteTextures(1, &m_textureID);
 	}
 
-	~Impl() {
-		ClearTexture();
-	};
+	~Impl() = default;
 };
 
 Texture::Texture() : m_pImpl{ Impl() }
@@ -390,4 +388,9 @@ const GLuint Texture::GetTextureID() {
 	return Pimpl().m_textureID;
 }
 
-Texture::~Texture() = default;
+Texture::~Texture() 
+{
+	//ToDo: Redesign or Rethink this again 
+	//Moved here from Impl otherwise temporary that is moved to m_pimpl is destructed at Texture constructor
+	Pimpl().ClearTexture();
+}
