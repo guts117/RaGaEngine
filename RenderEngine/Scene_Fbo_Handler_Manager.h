@@ -23,9 +23,9 @@ namespace NarakaRenderEngine
 			Scene_Fbo_Handler_Manager(const Scene_Fbo_Handler_Manager& rhs) noexcept = delete;
 			Scene_Fbo_Handler_Manager& operator=(const Scene_Fbo_Handler_Manager& rhs) noexcept = delete;
 
-			std::shared_ptr<Fbo_Handler> FindFboHandler(const std::string& handlerName) const;
+			Fbo_Handler* FindFboHandler(const std::string& handlerName);
 			void ResizeScreenFboHandlers(const GLuint& width, const GLuint& height);
-			std::shared_ptr<Fbo_Handler>  AddGameCameraFboHandlers(const int& cameraId, const glm::ivec2& screenDims);
+			Fbo_Handler* AddGameCameraFboHandlers(const int& cameraId, const glm::ivec2& screenDims);
 			~Scene_Fbo_Handler_Manager();
 
 		private:

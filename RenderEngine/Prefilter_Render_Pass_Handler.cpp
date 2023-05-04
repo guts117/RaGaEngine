@@ -7,7 +7,7 @@
 using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
-Prefilter_Render_Pass_Handler::Prefilter_Render_Pass_Handler(std::shared_ptr<Fbo_Handler> fboHandlr
+Prefilter_Render_Pass_Handler::Prefilter_Render_Pass_Handler(Fbo_Handler* fboHandlr
 	, const std::vector<std::shared_ptr<Shader_Object>>& shaderVec
 	, std::shared_ptr<std::vector<std::shared_ptr<std::any>>> inputs)
 	: Render_Pass_Handler(fboHandlr, shaderVec, inputs)
@@ -57,9 +57,9 @@ void Prefilter_Render_Pass_Handler::Update(const std::vector<std::vector<std::sh
 				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 				shader->ValidateShaderObject();
 
-				if (auto val = CheckInputDataType<std::shared_ptr<Fbo_Handler>>(*m_inputs->at(0))) 
+				if (auto val = CheckInputDataType<Fbo_Handler*>(*m_inputs->at(0))) 
 				{
-					val->get()->AttachFBOToTextureUnit(0, shader->SetTextureUnit("skybox"), 0, 0);
+					val->AttachFBOToTextureUnit(0, shader->SetTextureUnit("skybox"), 0, 0);
 				}
 
 				for (auto roIndex = 0; roIndex < renderObj[shaderIndex].size(); ++roIndex)

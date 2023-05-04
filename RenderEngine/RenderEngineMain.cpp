@@ -117,20 +117,20 @@ struct RenderEngineMain::Impl
 	std::shared_ptr <Shader_Object> billboardShader;
 	std::shared_ptr <Shader_Object> particleShader;
 
-	std::shared_ptr <Fbo_Handler> environmentMap;
-	std::shared_ptr <Fbo_Handler> irradianceMap;
-	std::shared_ptr <Fbo_Handler> prefilterMap;
-	std::shared_ptr <Fbo_Handler> brdfMap;
-	std::shared_ptr <Fbo_Handler> depthMap;
-	std::shared_ptr <Fbo_Handler> ssaoFbo;
-	std::shared_ptr <Fbo_Handler> ssaoBlurFbo;
-	std::shared_ptr <Fbo_Handler> sceneFbo;
-	std::shared_ptr <Fbo_Handler> motionBlurFbo;
-	std::shared_ptr <Fbo_Handler> bloomFbo;
-	std::shared_ptr <Fbo_Handler> exposureFbo;
+	Fbo_Handler* environmentMap;
+	Fbo_Handler* irradianceMap;
+	Fbo_Handler* prefilterMap;
+	Fbo_Handler* brdfMap;
+	Fbo_Handler* depthMap;
+	Fbo_Handler* ssaoFbo;
+	Fbo_Handler* ssaoBlurFbo;
+	Fbo_Handler* sceneFbo;
+	Fbo_Handler* motionBlurFbo;
+	Fbo_Handler* bloomFbo;
+	Fbo_Handler* exposureFbo;
 
-	std::shared_ptr <Fbo_Handler> omniShadowMaps;
-	std::shared_ptr <Fbo_Handler> cameraBlitFbo;
+	Fbo_Handler* omniShadowMaps;
+	Fbo_Handler* cameraBlitFbo;
 
 	//ToDo: #62
 	//ToDo: To whomever it may concern. Probably me -_-
@@ -710,7 +710,7 @@ struct RenderEngineMain::Impl
 
 		auto irrConvShaders = std::vector<std::shared_ptr<Shader_Object>>{ irradianceConvolutionShader };
 		auto inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
-		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(environmentMap)));
+		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(environmentMap)));
 		irrConvRPHandler = std::make_shared<Irradiance_Convolution_Render_Pass_Handler>(irradianceMap, irrConvShaders, inputs);
 		irrConvRPHandler->Update(*cwCubeRO);
 
@@ -733,45 +733,45 @@ struct RenderEngineMain::Impl
 
 		auto ssaoShaders = std::vector<std::shared_ptr<Shader_Object>>{ ssaoShader };
 		inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
-		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(depthMap)));
+		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(depthMap)));
 		ssaoRPHandler = std::make_shared<Ssao_Render_Pass_Handler>(ssaoFbo, ssaoShaders, inputs);
 		InitSSAO();
 
 		auto ssaoBlurShaders = std::vector<std::shared_ptr<Shader_Object>>{ ssaoBlurShader };
 		inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
-		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(ssaoFbo)));
+		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(ssaoFbo)));
 		ssaoBlurRPHandler = std::make_shared<Ssao_Blur_Render_Pass_Handler>(ssaoBlurFbo, ssaoBlurShaders, inputs);
 
 		auto sceneShaders = std::vector<std::shared_ptr<Shader_Object>>{ unrigShader, rigShader, terrShader};
 		inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
-		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(mainLight->GetShadowMap())));
-		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(omniShadowMaps)));
-		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(irradianceMap)));
-		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(prefilterMap)));
-		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(brdfMap)));
-		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(ssaoBlurFbo)));
-		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(depthMap)));
+		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(mainLight->GetShadowMap())));
+		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(omniShadowMaps)));
+		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(irradianceMap)));
+		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(prefilterMap)));
+		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(brdfMap)));
+		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(ssaoBlurFbo)));
+		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(depthMap)));
 		sceneRPHandler = std::make_shared<Scene_Render_Pass_Handler>(sceneFbo, sceneShaders, inputs);
 
 		auto bloomShaders = std::vector<std::shared_ptr<Shader_Object>>{ bloomShader };
 		inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
-		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(sceneFbo)));
+		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(sceneFbo)));
 		bloomRPHandler = std::make_shared<Bloom_Render_Pass_Handler>(bloomFbo, bloomShaders, inputs);
 
 		auto motionBlurShaders = std::vector<std::shared_ptr<Shader_Object>>{ motionBlurShader };
 		inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
-		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(sceneFbo)));
+		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(sceneFbo)));
 		motionBlurRPHandler = std::make_shared<Motion_Blur_Render_Pass_Handler>(motionBlurFbo, motionBlurShaders, inputs);
 
 		auto exosureShaders = std::vector<std::shared_ptr<Shader_Object>>{ exposureShader };
 		inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
-		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(bloomFbo)));
-		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(motionBlurFbo)));
+		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(bloomFbo)));
+		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(motionBlurFbo)));
 		exposureRPHandler = std::make_shared<Exposure_Render_Pass_Handler>(exposureFbo, exosureShaders, inputs);
 
 		auto skyboxShaders = std::vector<std::shared_ptr<Shader_Object>>{ skyboxShader };
 		inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
-		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(environmentMap)));
+		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(environmentMap)));
 		skyboxRPHandler = std::make_shared<Skybox_Render_Pass_Handler>(sceneFbo, skyboxShaders, inputs);
 
 		auto billboardShaders = std::vector<std::shared_ptr<Shader_Object>>{ billboardShader };
@@ -852,7 +852,7 @@ struct RenderEngineMain::Impl
 
 				if (!camera->isEditor)
 				{
-					exposureFbo->Blit(0, *cameraBlitFbo, 0);
+					exposureFbo->Blit(0, cameraBlitFbo, 0);
 					auto lowerLight = camParam.Position;
 					lowerLight.y -= 0.1f;
 					spotLights[0]->SetFlash(lowerLight, camera->getCameraDirection());

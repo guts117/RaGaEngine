@@ -12,7 +12,7 @@ namespace NarakaRenderEngine
         {
         public:
             explicit Irradiance_Convolution_Render_Pass_Handler() = delete;
-            explicit Irradiance_Convolution_Render_Pass_Handler(std::shared_ptr<Fbo_Handler> fboHandlr
+            explicit Irradiance_Convolution_Render_Pass_Handler(Fbo_Handler* fboHandlr
                 , const std::vector<std::shared_ptr<Shader_Object>>& shaderVec
                 , std::shared_ptr<std::vector<std::shared_ptr<std::any>>> inputs = nullptr);
 

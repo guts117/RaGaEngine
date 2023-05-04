@@ -12,7 +12,7 @@ namespace NarakaRenderEngine
         {
         public:
             explicit Directional_Shadow_Map_Render_Pass_Handler() = delete;
-            explicit Directional_Shadow_Map_Render_Pass_Handler(std::shared_ptr<Fbo_Handler> fboHandlr
+            explicit Directional_Shadow_Map_Render_Pass_Handler(Fbo_Handler* fboHandlr
                 , const std::vector<std::shared_ptr<Shader_Object>>& shaderVec
                 , std::shared_ptr<std::vector<std::shared_ptr<std::any>>> inputs = nullptr);
 

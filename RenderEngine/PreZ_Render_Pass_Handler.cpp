@@ -7,7 +7,7 @@
 using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
-PreZ_Render_Pass_Handler::PreZ_Render_Pass_Handler(std::shared_ptr<Fbo_Handler> fboHandlr
+PreZ_Render_Pass_Handler::PreZ_Render_Pass_Handler(Fbo_Handler* fboHandlr
 	, const std::vector<std::shared_ptr<Shader_Object>>& shaderVec
 	, std::shared_ptr<std::vector<std::shared_ptr<std::any>>> inputs)
 	: Render_Pass_Handler(fboHandlr, shaderVec, inputs)

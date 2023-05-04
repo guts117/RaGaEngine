@@ -8,7 +8,7 @@
 using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
-Bloom_Render_Pass_Handler::Bloom_Render_Pass_Handler(std::shared_ptr<Fbo_Handler> fboHandlr
+Bloom_Render_Pass_Handler::Bloom_Render_Pass_Handler(Fbo_Handler* fboHandlr
 	, const std::vector<std::shared_ptr<Shader_Object>>& shaderVec
 	, std::shared_ptr<std::vector<std::shared_ptr<std::any>>> inputs)
 	: Render_Pass_Handler(fboHandlr, shaderVec, inputs)
@@ -33,9 +33,9 @@ void Bloom_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared
 		shader->ResetTextureUnit(0);
 		shader->UseShaderObject();
 
-		if (auto val = CheckInputDataType<std::shared_ptr<Fbo_Handler>>(*m_inputs->at(0)))
+		if (auto val = CheckInputDataType<Fbo_Handler*>(*m_inputs->at(0)))
 		{
-			val->get()->AttachFBOToTextureUnit(0, shader->SetTextureUnit("theTexture"), 0, 1);
+			val->AttachFBOToTextureUnit(0, shader->SetTextureUnit("theTexture"), 0, 1);
 		}
 
 		for (int i = 0; i < amount; ++i)

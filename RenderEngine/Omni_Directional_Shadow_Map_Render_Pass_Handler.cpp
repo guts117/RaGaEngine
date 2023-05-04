@@ -8,7 +8,7 @@
 using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
-Omni_Directional_Shadow_Map_Render_Pass_Handler::Omni_Directional_Shadow_Map_Render_Pass_Handler(std::shared_ptr<Fbo_Handler> fboHandlr
+Omni_Directional_Shadow_Map_Render_Pass_Handler::Omni_Directional_Shadow_Map_Render_Pass_Handler(Fbo_Handler* fboHandlr
 	, const std::vector<std::shared_ptr<Shader_Object>>& shaderVec
 	, std::shared_ptr<std::vector<std::shared_ptr<std::any>>> inputs)
 	: Render_Pass_Handler(fboHandlr, shaderVec, inputs)

@@ -8,7 +8,7 @@
 using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
-Motion_Blur_Render_Pass_Handler::Motion_Blur_Render_Pass_Handler(std::shared_ptr<Fbo_Handler> fboHandlr
+Motion_Blur_Render_Pass_Handler::Motion_Blur_Render_Pass_Handler(Fbo_Handler* fboHandlr
 	, const std::vector<std::shared_ptr<Shader_Object>>& shaderVec
 	, std::shared_ptr<std::vector<std::shared_ptr<std::any>>> inputs)
 	: Render_Pass_Handler(fboHandlr, shaderVec, inputs)
@@ -34,12 +34,12 @@ void Motion_Blur_Render_Pass_Handler::Update(const std::vector<std::vector<std::
 
 		shader->SetVariable("uVelocityScale", camParam->fps / 30.0f);
 
-		auto val = CheckInputDataType<std::shared_ptr<Fbo_Handler>>(*m_inputs->at(0));
+		auto val = CheckInputDataType<Fbo_Handler*>(*m_inputs->at(0));
 
 		if (val)
 		{
-			val->get()->AttachFBOToTextureUnit(0, shader->SetTextureUnit("theTexture"), 0, 0);
-			val->get()->AttachFBOToTextureUnit(0, shader->SetTextureUnit("motionTexture"), 1, 2);
+			val->AttachFBOToTextureUnit(0, shader->SetTextureUnit("theTexture"), 0, 0);
+			val->AttachFBOToTextureUnit(0, shader->SetTextureUnit("motionTexture"), 1, 2);
 		}
 
 		for (auto roIndex = 0; roIndex < renderObj[shaderIndex].size(); ++roIndex)

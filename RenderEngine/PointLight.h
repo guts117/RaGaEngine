@@ -25,11 +25,11 @@ namespace NarakaRenderEngine
 			glm::vec3 color = glm::vec3(1.0f, 1.0f, 1.0f);;
 			glm::mat4 lightProj = glm::mat4();
 	
-			std::shared_ptr<Fbo_Handler> GetShadowMap() { return shadowMap; }
+			Fbo_Handler* GetShadowMap() { return shadowMap; }
 			
 			~PointLight() = default;
 		protected:
-			std::shared_ptr<Fbo_Handler> shadowMap;
+			Fbo_Handler* shadowMap;
 		};
 	}
 }

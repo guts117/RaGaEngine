@@ -55,7 +55,7 @@ namespace NarakaRenderEngine
 		{
 		public:
 			explicit Render_Pass_Handler() = delete;
-			explicit Render_Pass_Handler(std::shared_ptr<Fbo_Handler> fboHandlr
+			explicit Render_Pass_Handler(Fbo_Handler* fboHandlr
 												, const std::vector<std::shared_ptr<Shader_Object>>& shaderVec
 												, std::shared_ptr<std::vector<std::shared_ptr<std::any>>> inputs = nullptr);
 
@@ -73,12 +73,19 @@ namespace NarakaRenderEngine
 		protected:
 
 			template <typename T>
-			const T* CheckInputDataType(const std::any& data) noexcept
+			auto CheckInputDataType(const std::any& data) const noexcept
 			{
-				return std::any_cast<T>(&data);
+				if constexpr (std::is_pointer_v<T>) 
+				{
+					return std::any_cast<T>(data);
+				}
+				else
+				{
+					return std::any_cast<T>(&data);
+				}
 			}
 
-			std::shared_ptr<Fbo_Handler> m_fboHandler;
+			Fbo_Handler* m_fboHandler;
 			std::unique_ptr<std::vector<std::shared_ptr<Shader_Object>>> m_shaderVec;
 			std::shared_ptr<std::vector<std::shared_ptr<std::any>>> m_inputs;
 			std::shared_ptr<std::vector<std::shared_ptr<GLint>>> m_outputs;
