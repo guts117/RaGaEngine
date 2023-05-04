@@ -8,16 +8,16 @@
 using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
-struct Scene_Fbo_Handler_Manager::Impl
+struct alignas(alignof(std::string)) Scene_Fbo_Handler_Manager::Impl
 {
-	std::vector<Fbo_Handler> m_FboHandlerVec;
 	std::string m_SceneName;
+	std::vector<Fbo_Handler> m_FboHandlerVec;
 
 	Impl() = delete;
 
 	Impl(const std::string& sceneName, const glm::ivec2& screenDims)
-		: m_FboHandlerVec{ std::vector<Fbo_Handler>() }
-		, m_SceneName{ sceneName }
+		: m_SceneName{ sceneName }
+		, m_FboHandlerVec{ std::vector<Fbo_Handler>() } 
 	{
 		//m_FboHandlerVec.reserve(100);
 		GLuint ScreenWidth = screenDims.x;
@@ -304,34 +304,46 @@ struct Scene_Fbo_Handler_Manager::Impl
 		return &m_FboHandlerVec.back();
 	}
 
-	Impl(Impl&& rhs) noexcept = default;
-	Impl& operator=(Impl&& rhs) noexcept = default;
+	Impl(Impl&& rhs) noexcept 
+		: m_SceneName {std::move(rhs.m_SceneName)}
+		, m_FboHandlerVec {std::move(rhs.m_FboHandlerVec)}
+	{
+	}
+	Impl& operator=(Impl&& rhs) noexcept 
+	{
+		m_SceneName = std::move(rhs.m_SceneName);
+		m_FboHandlerVec = std::move(rhs.m_FboHandlerVec);
+		return *this;
+	}
 
 	Impl(const Impl& rhs) noexcept = delete;
 	Impl& operator=(const Impl& rhs) noexcept = delete;
 
-	~Impl() = default;
+	~Impl() noexcept = default;
 };
 
 Scene_Fbo_Handler_Manager::Scene_Fbo_Handler_Manager(const std::string& sceneName, const glm::ivec2& screenDims)
-	: m_pImpl{ std::make_unique<Impl>(sceneName, screenDims) }
+	: m_pImpl{ Impl(sceneName, screenDims) }
 {
 }
 
+Scene_Fbo_Handler_Manager::Scene_Fbo_Handler_Manager(Scene_Fbo_Handler_Manager&& rhs) noexcept = default;
+Scene_Fbo_Handler_Manager& Scene_Fbo_Handler_Manager::operator=(Scene_Fbo_Handler_Manager&& rhs) noexcept = default;
+
 Fbo_Handler* Scene_Fbo_Handler_Manager::FindFboHandler(const std::string& handlerName)
 {
-	return Pimpl()->FindFboHandler(handlerName);
+	return Pimpl().FindFboHandler(handlerName);
 }
 
 
 void Scene_Fbo_Handler_Manager::ResizeScreenFboHandlers(const GLuint& width, const GLuint& height)
 {
-	Pimpl()->ResizeScreenFboHandlers(width, height);
+	Pimpl().ResizeScreenFboHandlers(width, height);
 }
 
 Fbo_Handler* Scene_Fbo_Handler_Manager::AddGameCameraFboHandlers(const int& cameraId, const glm::ivec2& screenDims)
 {
-	return Pimpl()->AddGameCameraFboHandlers(cameraId, screenDims);
+	return Pimpl().AddGameCameraFboHandlers(cameraId, screenDims);
 }
 
-Scene_Fbo_Handler_Manager::~Scene_Fbo_Handler_Manager() = default;
+Scene_Fbo_Handler_Manager::~Scene_Fbo_Handler_Manager() noexcept = default;
