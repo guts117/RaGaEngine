@@ -8,7 +8,7 @@ using namespace RenderEngine;
 struct alignas(alignof(std::string)) Fbo_Handler::Impl
 {
 	std::string m_HandlerName;
-	std::unique_ptr<std::vector<std::shared_ptr<FrameBufferObject>>> m_FboVec;
+	std::vector<FrameBufferObject> m_FboVec;
 	Fbo_Handler* m_PrevHandler;
 	Fbo_Handler* m_NextHandler;
 	GLuint m_Width;
@@ -17,7 +17,7 @@ struct alignas(alignof(std::string)) Fbo_Handler::Impl
 
 	Impl() = delete;
 
-	Impl(std::unique_ptr<std::vector<std::shared_ptr<FrameBufferObject>>>&& fboVectorPtr
+	Impl(std::vector<FrameBufferObject>&& fboVector
 		, const std::string& handlerName
 		, const bool& isWindowSized
 		, const GLuint& width
@@ -25,7 +25,7 @@ struct alignas(alignof(std::string)) Fbo_Handler::Impl
 		, Fbo_Handler* prevHandler
 		, Fbo_Handler* nextHandler)
 		: m_HandlerName{ handlerName }	
-		, m_FboVec{ std::move(fboVectorPtr) }
+		, m_FboVec{ std::move(fboVector) }
 		, m_PrevHandler{ prevHandler }
 		, m_NextHandler{ nextHandler }
 		, m_Width{ width }
@@ -34,43 +34,97 @@ struct alignas(alignof(std::string)) Fbo_Handler::Impl
 	{
 	}
 
-	Impl(Impl&& rhs) noexcept = default;
-	Impl& operator=(Impl&& rhs) noexcept = default;
+	Impl(Impl&& rhs) noexcept 
+		: m_HandlerName{std::move(rhs.m_HandlerName)}
+		, m_FboVec{std::move(rhs.m_FboVec)}
+		, m_PrevHandler{std::exchange(rhs.m_PrevHandler, nullptr)}
+		, m_NextHandler{std::exchange(rhs.m_NextHandler, nullptr)}
+		, m_Width{std::exchange(rhs.m_Width, 0)}
+		, m_Height{std::exchange(rhs.m_Height, 0)}
+		, m_isWindowSized{std::exchange(rhs.m_isWindowSized, false)}
+	{
+	};
+	Impl& operator=(Impl&& rhs) noexcept 
+	{
+		m_HandlerName = std::move(rhs.m_HandlerName);
+		m_FboVec = std::move(rhs.m_FboVec);
+		m_PrevHandler = std::exchange(rhs.m_PrevHandler, nullptr);
+		m_NextHandler = std::exchange(rhs.m_NextHandler, nullptr);
+		m_Width = std::exchange(rhs.m_Width, 0);
+		m_Height = std::exchange(rhs.m_Height, 0);
+		m_isWindowSized = std::exchange(rhs.m_isWindowSized, false);
+		return *this;
+	};
 
 	Impl(const Impl& rhs) noexcept = delete;
 	Impl& operator=(const Impl& rhs) noexcept = delete;
 
+	const std::string& GetHandlerName() const
+	{
+		return m_HandlerName;
+	}
+
+	bool CanResizeWithWindow() const
+	{
+		return m_isWindowSized;
+	}
+
 	void Bind(const GLuint& fboIndex) const
 	{
-		m_FboVec->at(fboIndex)->Bind();
+		m_FboVec.at(fboIndex).Bind();
 	}
 
 	void WriteToFBO(const GLuint& fboIndex, const GLuint& texGenParamIndex, const GLuint& bufferIndex, const GLuint& faceId, const GLuint& mipLevel) const
 	{
-		m_FboVec->at(fboIndex)->WriteToBuffer(texGenParamIndex, bufferIndex, faceId, mipLevel);
+		m_FboVec.at(fboIndex).WriteToBuffer(texGenParamIndex, bufferIndex, faceId, mipLevel);
 	}
 	void AttachFBOToTextureUnit(const GLuint& fboIndex, const GLuint& textureUnit, const GLuint& texGenParamIndex, const GLuint& bufferIndex) const
 	{
-		m_FboVec->at(fboIndex)->AttachColorBufferToTexture(GL_TEXTURE0 + textureUnit, texGenParamIndex, bufferIndex);
+		m_FboVec.at(fboIndex).AttachColorBufferToTexture(GL_TEXTURE0 + textureUnit, texGenParamIndex, bufferIndex);
 	}
 
 	void CreateFBOMipMap(const GLuint& fboIndex, const GLuint& texGenParamIndex, const GLuint& bufferIndex) const
 	{
-		m_FboVec->at(fboIndex)->CreateMipMap(texGenParamIndex, bufferIndex);
+		m_FboVec.at(fboIndex).CreateMipMap(texGenParamIndex, bufferIndex);
 	}
 
 	void ResizeFBO(const GLuint& width, const GLuint& height)
 	{
-		for (auto i = 0; i < m_FboVec->size(); ++i)
+		for (auto i = 0; i < m_FboVec.size(); ++i)
 		{
-			m_FboVec->at(i)->ResizeBuffers(width, height);
+			m_FboVec.at(i).ResizeBuffers(width, height);
 		}
 	}
 
-	~Impl() = default;
+	void Blit(const GLuint& fboIndex, const Fbo_Handler* toFboHandlr, const GLuint& toFboIndex) const
+	{
+		m_FboVec.at(fboIndex).Blit(toFboHandlr->GetFBOId(toFboIndex));
+	}
+
+	const GLuint& GetFBOWidth(const GLuint& fboIndex) const
+	{
+		return m_FboVec.at(fboIndex).GetWidth();
+	}
+
+	const GLuint& GetFBOHeight(const GLuint& fboIndex) const
+	{
+		return m_FboVec.at(fboIndex).GetHeight();
+	}
+
+	const GLuint& GetFBOBuffer(const GLuint& fboIndex, const GLuint& bufferIndex) const
+	{
+		return m_FboVec.at(fboIndex).GetBuffer(bufferIndex);
+	}
+
+	const GLuint& GetFBOId(const GLuint& fboIndex) const
+	{
+		return m_FboVec.at(fboIndex).GetFboId();
+	}
+
+	~Impl() noexcept = default;
 };
 
-Fbo_Handler::Fbo_Handler(std::unique_ptr<std::vector<std::shared_ptr<FrameBufferObject>>>&& fboVectorPtr
+Fbo_Handler::Fbo_Handler(std::vector<FrameBufferObject>&& fboVectorPtr
 	, const std::string& handlerName
 	, const bool& isWindowSized
 	, const GLuint& width
@@ -81,14 +135,17 @@ Fbo_Handler::Fbo_Handler(std::unique_ptr<std::vector<std::shared_ptr<FrameBuffer
 {
 }
 
+Fbo_Handler::Fbo_Handler(Fbo_Handler&& rhs) noexcept = default;
+Fbo_Handler& Fbo_Handler::operator=(Fbo_Handler&& rhs) noexcept = default;
+
 const std::string& Fbo_Handler::GetHandlerName() const
 {
-	return Pimpl().m_HandlerName;
+	return Pimpl().GetHandlerName();
 }
 
 bool Fbo_Handler::CanResizeWithWindow() const
 {
-	return Pimpl().m_isWindowSized;
+	return Pimpl().CanResizeWithWindow();
 }
 
 void Fbo_Handler::BindFBO(const GLuint& fboIndex) const
@@ -116,29 +173,29 @@ void Fbo_Handler::ResizeFBO(const GLuint& width, const GLuint& height)
 	Pimpl().ResizeFBO(width, height);
 }
 
-void Fbo_Handler::Blit(const GLuint& fboIndex, const Fbo_Handler& toFboHandlr, const GLuint& toFboIndex) const
+void Fbo_Handler::Blit(const GLuint& fboIndex, const Fbo_Handler* toFboHandlr, const GLuint& toFboIndex) const
 {
-	Pimpl().m_FboVec->at(fboIndex)->Blit(toFboHandlr.GetFBOId(toFboIndex));
+	Pimpl().Blit(fboIndex, toFboHandlr, toFboIndex);
 }
 
 const GLuint& Fbo_Handler::GetFBOWidth(const GLuint& fboIndex) const
 {
-	return Pimpl().m_FboVec->at(fboIndex)->GetWidth();
+	return Pimpl().GetFBOWidth(fboIndex);
 }
 
 const GLuint& Fbo_Handler::GetFBOHeight(const GLuint& fboIndex) const
 {
-	return Pimpl().m_FboVec->at(fboIndex)->GetHeight();
+	return Pimpl().GetFBOHeight(fboIndex);
 }
 
 const GLuint& Fbo_Handler::GetFBOBuffer(const GLuint& fboIndex, const GLuint& bufferIndex) const
 {
-	return Pimpl().m_FboVec->at(fboIndex)->GetBuffer(bufferIndex);
+	return Pimpl().GetFBOBuffer(fboIndex, bufferIndex);
 }
 
-const GLuint& NarakaRenderEngine::RenderEngine::Fbo_Handler::GetFBOId(const GLuint& fboIndex) const
+const GLuint& Fbo_Handler::GetFBOId(const GLuint& fboIndex) const
 {
-	return Pimpl().m_FboVec->at(fboIndex)->GetFboId();
+	return Pimpl().GetFBOId(fboIndex);
 }
 
-Fbo_Handler::~Fbo_Handler() = default;
+Fbo_Handler::~Fbo_Handler() noexcept = default;

@@ -10,22 +10,43 @@ using namespace RenderEngine;
 
 struct alignas(alignof(std::string)) Texture::Impl
 {
-	std::string m_fileLocation = "";
-	GLuint m_textureID			= 0;
-	int m_width = 0;
-	int m_height = 0;
-	int m_bitDepth = 0;
-	bool m_isSRGB  = false;
+	std::string m_fileLocation;
+	GLuint m_textureID;
+	int m_width;
+	int m_height;
+	int m_bitDepth;
+	bool m_isSRGB;
 
 	Impl() = default;
 
 	Impl(std::string&& fileLoc, bool isSRGB)
 		: m_fileLocation{ std::move(fileLoc) }
+		, m_textureID {0}
+		, m_width {0}
+		, m_height {0}
+		, m_bitDepth {0}
 		, m_isSRGB{ isSRGB }
 	{}
 
-	Impl(Impl&& rhs) noexcept = default;
-	Impl& operator=(Impl&& rhs) noexcept = default;
+	Impl(Impl&& rhs) noexcept 
+		: m_fileLocation {std::move(rhs.m_fileLocation)}
+		, m_textureID {std::exchange(rhs.m_textureID, 0)}
+		, m_width {std::exchange(rhs.m_width, 0)}
+		, m_height {std::exchange(rhs.m_height, 0)}
+		, m_bitDepth {std::exchange(rhs.m_bitDepth, 0)}
+		, m_isSRGB {std::exchange(rhs.m_isSRGB, false)}
+	{
+	}
+	Impl& operator=(Impl&& rhs) noexcept 
+	{
+		m_fileLocation = std::move(rhs.m_fileLocation);
+		m_textureID = std::exchange(rhs.m_textureID, 0);
+		m_width = std::exchange(rhs.m_width, 0);
+		m_height = std::exchange(rhs.m_height, 0);
+		m_bitDepth = std::exchange(rhs.m_bitDepth, 0);
+		m_isSRGB = std::exchange(rhs.m_isSRGB, false);
+		return *this;
+	}
 
 	Impl(const Impl& rhs) noexcept = delete;
 	Impl& operator=(const Impl& rhs) = delete;
@@ -294,11 +315,13 @@ struct alignas(alignof(std::string)) Texture::Impl
 		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, data);
 	}
 
-	void ClearTexture() {
-		glDeleteTextures(1, &m_textureID);
+	~Impl() noexcept
+	{
+		if (m_textureID > 0)
+		{
+			glDeleteTextures(1, &m_textureID);
+		}
 	}
-
-	~Impl() = default;
 };
 
 Texture::Texture() : m_pImpl{ Impl() }
@@ -308,6 +331,10 @@ Texture::Texture() : m_pImpl{ Impl() }
 Texture::Texture(std::string&& fileLoc, bool isSRGB) : m_pImpl{ Impl(std::move(fileLoc), isSRGB) }
 {
 }
+
+Texture::Texture(Texture&& rhs) noexcept = default;
+
+Texture& Texture::operator=(Texture&& rhs) noexcept = default;
 
 bool Texture::LoadTexture2D() {
 	return Pimpl().LoadTexture2D();
@@ -388,9 +415,4 @@ const GLuint Texture::GetTextureID() {
 	return Pimpl().m_textureID;
 }
 
-Texture::~Texture() 
-{
-	//ToDo: Redesign or Rethink this again 
-	//Moved here from Impl otherwise temporary that is moved to m_pimpl is destructed at Texture constructor
-	Pimpl().ClearTexture();
-}
+Texture::~Texture() noexcept = default;

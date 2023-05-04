@@ -28,8 +28,8 @@ namespace NarakaRenderEngine
 			explicit Texture();
 			explicit Texture(std::string&& fileLoc, bool isSRGB = false);
 
-			Texture(Texture&& rhs) noexcept = default;
-			Texture& operator=(Texture&& rhs) noexcept = default;
+			Texture(Texture&& rhs) noexcept;
+			Texture& operator=(Texture&& rhs) noexcept;
 
 			Texture(const Texture& rhs) noexcept = delete;
 			Texture& operator=(const Texture& rhs) noexcept = delete;
@@ -62,7 +62,7 @@ namespace NarakaRenderEngine
 			const int GetBitDepth();
 			const GLuint GetTextureID();
 
-			~Texture();
+			~Texture() noexcept;
 
 		private:
 			struct Impl;

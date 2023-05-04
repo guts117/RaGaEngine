@@ -3,6 +3,7 @@
 
 #include "render_pch.h"
 #include "VertexBoneData.h"
+#include "ForwardDeclaredPimpl.h"
 
 namespace NarakaRenderEngine
 {
@@ -21,11 +22,10 @@ namespace NarakaRenderEngine
 		{
 		public:
 			explicit Mesh() = delete;
-
 			explicit Mesh(GLuint materialIndex, std::vector<std::vector<GLfloat>>&& vertices, std::vector<GLuint>&& indices, MeshGenParams&& meshGenParams);
 
-			Mesh(Mesh&& rhs) = default;
-			Mesh& operator= (Mesh&& rhs) = default;
+			Mesh(Mesh&& rhs) noexcept;
+			Mesh& operator= (Mesh&& rhs) noexcept;
 
 			Mesh(const Mesh& rhs) = delete;
 			Mesh& operator= (const Mesh& rhs) = delete;
@@ -34,7 +34,7 @@ namespace NarakaRenderEngine
 			const GLuint& GetMaterialIndex() const;
 			const bool& IsTessellated() const;
 
-			~Mesh();
+			~Mesh() noexcept;
 		private:
 			struct Impl;
 

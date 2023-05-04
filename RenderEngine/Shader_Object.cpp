@@ -67,8 +67,23 @@ struct alignas(alignof(void*)) Shader_Object::Impl
 
 	Impl() = delete;
 
-	Impl(Impl&& rhs) noexcept = default;
-	Impl& operator=(Impl&& rhs) noexcept = default;
+	Impl(Impl&& rhs) noexcept 
+		: m_ShaderLocs {std::move(rhs.m_ShaderLocs)}
+		, m_ShaderInputs {std::move(rhs.m_ShaderInputs)}
+		, m_ShaderProgramID {std::exchange(rhs.m_ShaderProgramID, 0)}
+		, m_ShaderType {std::exchange(rhs.m_ShaderType, 0)}
+		, m_TextureUnit {std::exchange(rhs.m_TextureUnit, 0)}
+	{
+	};
+	Impl& operator=(Impl&& rhs) noexcept 
+	{
+		m_ShaderLocs = std::move(rhs.m_ShaderLocs);
+		m_ShaderInputs = std::move(rhs.m_ShaderInputs);
+		m_ShaderProgramID = std::exchange(rhs.m_ShaderProgramID, 0);
+		m_ShaderType = std::exchange(rhs.m_ShaderType, 0);
+		m_TextureUnit = std::exchange(rhs.m_TextureUnit, 0);
+		return *this;
+	};
 
 	Impl(const Impl& rhs) noexcept = delete; 
 	Impl& operator=(const Impl& rhs) noexcept = delete;
@@ -491,9 +506,16 @@ struct alignas(alignof(void*)) Shader_Object::Impl
 	}
 
 	template <typename T>
-	const T* CheckInputDataType(const std::any& data) const
+	auto CheckInputDataType(const std::any& data) const noexcept
 	{
-		return std::any_cast<T>(&data);
+		if constexpr (std::is_pointer_v<T>)
+		{
+			return std::any_cast<T>(data);
+		}
+		else
+		{
+			return std::any_cast<T>(&data);
+		}
 	}
 
 	void SetShaderData(const std::string& type, const GLint& location, const std::any& value) const
@@ -682,12 +704,22 @@ struct alignas(alignof(void*)) Shader_Object::Impl
 		}
 	}
 
-	~Impl() = default;
+	~Impl() noexcept 
+	{
+		if (m_ShaderProgramID != 0)
+		{
+			glDeleteProgram(m_ShaderProgramID);
+			m_ShaderProgramID = 0;
+		}
+	};
 };
 
 Shader_Object::Shader_Object(std::vector<std::string>&& shaders) : m_pImpl{ Impl(std::move(shaders)) } 
 {
 }
+
+Shader_Object::Shader_Object(Shader_Object&& rhs) noexcept = default;
+Shader_Object& Shader_Object::operator=(Shader_Object&& rhs) noexcept = default;
 
 void Shader_Object::ValidateShaderObject() const
 {
@@ -742,13 +774,4 @@ void Shader_Object::SetVariable(std::string&& varName, const std::any& value, co
 	Pimpl().SetVariable(std::move(varName), value, index, std::move(memName));
 }
 
-Shader_Object::~Shader_Object() 
-{
-	//ToDo: Redesign or Rethink this again 
-	//Moved here from Impl otherwise temporary that is moved to m_pimpl is destructed at Shader_Object constructor
-	if (Pimpl().m_ShaderProgramID != 0) 
-	{
-		glDeleteProgram(Pimpl().m_ShaderProgramID);
-		Pimpl().m_ShaderProgramID = 0;
-	}
-}
+Shader_Object::~Shader_Object() noexcept = default;

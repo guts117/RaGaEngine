@@ -6,58 +6,71 @@ using namespace RenderEngine;
 
 struct alignas(alignof(void*)) FrameBufferObject::Impl
 {
-	std::shared_ptr<FBOParams> m_FboParam;
+	FBOParams m_FboParam;
 	std::vector<GLuint>m_ReadWriteBuffers;
 	std::vector<GLuint>m_WriteBuffers;
 	GLuint m_FboId;
 
 	Impl() = delete;
 
-	Impl(Impl&& rhs) noexcept = default;
-	Impl& operator=(Impl&& rhs) noexcept = default;
+	Impl(Impl&& rhs) noexcept 
+		: m_FboParam {std::move(rhs.m_FboParam)}
+		, m_ReadWriteBuffers{std::move(rhs.m_ReadWriteBuffers)}
+		, m_WriteBuffers{std::move(rhs.m_WriteBuffers)}
+		, m_FboId{std::exchange(rhs.m_FboId, 0)}
+	{
+	}
+	Impl& operator=(Impl&& rhs) noexcept 
+	{
+		m_FboParam = std::move(rhs.m_FboParam);
+		m_ReadWriteBuffers = std::move(rhs.m_ReadWriteBuffers);
+		m_WriteBuffers = std::move(rhs.m_WriteBuffers);
+		m_FboId = std::exchange(rhs.m_FboId, 0);
+		return *this;
+	}
 
 	Impl(const Impl& rhs) noexcept = delete;
-	Impl& operator=(const Impl& rhs) noexcept = delete;
+	Impl& operator=(const Impl& rhs) = delete;
 
-	Impl(std::shared_ptr<FBOParams> fboParams)
-		: m_FboParam{ fboParams }
+	Impl(FBOParams&& fboParams)
+		: m_FboParam{ std::move(fboParams) }
 		, m_ReadWriteBuffers{ std::vector<GLuint>() }
 		, m_WriteBuffers{ std::vector<GLuint>() }
 		, m_FboId{ 0 }
  
 	{	
 		glGenFramebuffers(1, &m_FboId);
-		glBindFramebuffer(m_FboParam->Target, m_FboId);
+		glBindFramebuffer(m_FboParam.Target, m_FboId);
 
-		auto has_Color_Attachment = m_FboParam->Attachment == GL_COLOR_ATTACHMENT0;
+		auto has_Color_Attachment = m_FboParam.Attachment == GL_COLOR_ATTACHMENT0;
 
-		for (auto fboTexParamIndex = 0; fboTexParamIndex < m_FboParam->FboTexGenParams.size(); ++fboTexParamIndex)
+		for (auto fboTexParamIndex = 0; fboTexParamIndex < m_FboParam.FboTexGenParams.size(); ++fboTexParamIndex)
 		{
-			auto texMaxCount = m_FboParam->FboTexGenParams[fboTexParamIndex].ColorBufferSize;
+			auto texMaxCount = m_FboParam.FboTexGenParams[fboTexParamIndex].ColorBufferSize;
 			for (auto texCount = 0; texCount < texMaxCount; ++texCount)
 			{
 				GLuint tempColorBuf = 0;
 				glGenTextures(1, &tempColorBuf);
 
-				FBOTexGenParams& bufferParams = m_FboParam->FboTexGenParams[fboTexParamIndex];
+				FBOTexGenParams& bufferParams = m_FboParam.FboTexGenParams[fboTexParamIndex];
 				glBindTexture(bufferParams.Target, tempColorBuf);
 				if (bufferParams.Target == GL_TEXTURE_CUBE_MAP)
 				{
 					for (size_t faceCnt = 0; faceCnt < 6; faceCnt++)
 					{
-						glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + faceCnt, bufferParams.Level, bufferParams.InternalFormat, m_FboParam->Width, m_FboParam->Height, bufferParams.Border, bufferParams.Format, bufferParams.Type, bufferParams.PixelData);
+						glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + faceCnt, bufferParams.Level, bufferParams.InternalFormat, m_FboParam.Width, m_FboParam.Height, bufferParams.Border, bufferParams.Format, bufferParams.Type, bufferParams.PixelData);
 					}
 				}
 				else
 				{
-					glTexImage2D(bufferParams.Target, bufferParams.Level, bufferParams.InternalFormat, m_FboParam->Width, m_FboParam->Height, bufferParams.Border, bufferParams.Format, bufferParams.Type, bufferParams.PixelData);
+					glTexImage2D(bufferParams.Target, bufferParams.Level, bufferParams.InternalFormat, m_FboParam.Width, m_FboParam.Height, bufferParams.Border, bufferParams.Format, bufferParams.Type, bufferParams.PixelData);
 				}
 
-				if (!m_FboParam->IsAttachBufferLater)
+				if (!m_FboParam.IsAttachBufferLater)
 				{
 					//useless since OpenGL 4.5
-					//glFramebufferTexture2D(m_FboParam->Target, m_FboParam->Attachment + m_ReadWriteBuffers.size(), bufferParams.Target, tempColorBuf, 0);
-					glFramebufferTexture(m_FboParam->Target, m_FboParam->Attachment + (has_Color_Attachment ? m_ReadWriteBuffers.size() : 0), tempColorBuf, 0);
+					//glFramebufferTexture2D(m_FboParam.Target, m_FboParam.Attachment + m_ReadWriteBuffers.size(), bufferParams.Target, tempColorBuf, 0);
+					glFramebufferTexture(m_FboParam.Target, m_FboParam.Attachment + (has_Color_Attachment ? m_ReadWriteBuffers.size() : 0), tempColorBuf, 0);
 				}
 
 				for (auto j = 0; j < bufferParams.FboTexParams.size(); ++j)
@@ -74,29 +87,29 @@ struct alignas(alignof(void*)) FrameBufferObject::Impl
 			std::unique_ptr<GLenum[]> attachments = std::make_unique<GLenum[]>(m_ReadWriteBuffers.size());
 			for (int i = 0; i < m_ReadWriteBuffers.size(); ++i)
 			{
-				attachments[i] = m_FboParam->Attachment + i;
+				attachments[i] = m_FboParam.Attachment + i;
 			}
 
 			glDrawBuffers(m_ReadWriteBuffers.size(), attachments.get());
 		}
 
-		for(auto rboParamIndex = 0; rboParamIndex < m_FboParam->FBORenderBufferParams.size(); ++rboParamIndex)
+		for(auto rboParamIndex = 0; rboParamIndex < m_FboParam.FBORenderBufferParams.size(); ++rboParamIndex)
 		{
 			GLuint tempRbo = 0;
 			glGenRenderbuffers(1, &tempRbo);
 			glBindRenderbuffer(GL_RENDERBUFFER, tempRbo);
-			glRenderbufferStorage(GL_RENDERBUFFER, m_FboParam->FBORenderBufferParams[rboParamIndex].InternalFormat, m_FboParam->Width, m_FboParam->Height);
-			glFramebufferRenderbuffer(m_FboParam->Target, m_FboParam->FBORenderBufferParams[rboParamIndex].Attachment + m_WriteBuffers.size(), GL_RENDERBUFFER, tempRbo);
+			glRenderbufferStorage(GL_RENDERBUFFER, m_FboParam.FBORenderBufferParams[rboParamIndex].InternalFormat, m_FboParam.Width, m_FboParam.Height);
+			glFramebufferRenderbuffer(m_FboParam.Target, m_FboParam.FBORenderBufferParams[rboParamIndex].Attachment + m_WriteBuffers.size(), GL_RENDERBUFFER, tempRbo);
 			m_WriteBuffers.push_back(tempRbo);
 		}
 
-		auto status = glCheckFramebufferStatus(m_FboParam->Target);
+		auto status = glCheckFramebufferStatus(m_FboParam.Target);
 		if (status != GL_FRAMEBUFFER_COMPLETE)
 		{
 			printf("Framebuffer Genereration failed \n error: %i\n", status);
 		}
 
-		glBindFramebuffer(m_FboParam->Target, 0);
+		glBindFramebuffer(m_FboParam.Target, 0);
 	}
 
 	void SetTexParams(const FBOTexGenParams& params, const int& texParamIndex)
@@ -129,49 +142,49 @@ struct alignas(alignof(void*)) FrameBufferObject::Impl
 
 	void Bind() const
 	{
-		glBindFramebuffer(m_FboParam->Target, m_FboId);
+		glBindFramebuffer(m_FboParam.Target, m_FboId);
 	}
 
 	void WriteToBuffer(const GLuint& texParamIndex, const GLuint& bufferIndex, const GLuint& faceId, const GLuint& mipLevel) const
 	{
 		//ToDo: Add support for other type of fbo buffers in the future
-		if (m_FboParam->FboTexGenParams[texParamIndex].Target == GL_TEXTURE_CUBE_MAP)
+		if (m_FboParam.FboTexGenParams[texParamIndex].Target == GL_TEXTURE_CUBE_MAP)
 		{
-			glFramebufferTextureLayer(m_FboParam->Target, m_FboParam->Attachment + bufferIndex, m_ReadWriteBuffers[bufferIndex], mipLevel, faceId);
+			glFramebufferTextureLayer(m_FboParam.Target, m_FboParam.Attachment + bufferIndex, m_ReadWriteBuffers[bufferIndex], mipLevel, faceId);
 			//useless since OpenGL 4.5
-			//glFramebufferTexture2D(m_FboParam->Target, m_FboParam->Attachment + bufferIndex, GL_TEXTURE_CUBE_MAP_POSITIVE_X + faceId, m_ReadWriteBuffers[bufferIndex], 0);
+			//glFramebufferTexture2D(m_FboParam.Target, m_FboParam.Attachment + bufferIndex, GL_TEXTURE_CUBE_MAP_POSITIVE_X + faceId, m_ReadWriteBuffers[bufferIndex], 0);
 		}
 		else
 		{
-			glFramebufferTexture(m_FboParam->Target, m_FboParam->Attachment + (m_FboParam->Attachment == GL_COLOR_ATTACHMENT0 ? bufferIndex : 0), m_ReadWriteBuffers[bufferIndex], mipLevel);
+			glFramebufferTexture(m_FboParam.Target, m_FboParam.Attachment + (m_FboParam.Attachment == GL_COLOR_ATTACHMENT0 ? bufferIndex : 0), m_ReadWriteBuffers[bufferIndex], mipLevel);
 		}
 	}
 
 	void AttachColorBufferToTexture(const GLenum& textureUnit, const GLuint& texParamIndex, const GLuint& bufferIndex) const
 	{
 		glActiveTexture(textureUnit);
-		glBindTexture(m_FboParam->FboTexGenParams[texParamIndex].Target, m_ReadWriteBuffers[bufferIndex]);
+		glBindTexture(m_FboParam.FboTexGenParams[texParamIndex].Target, m_ReadWriteBuffers[bufferIndex]);
 	}
 
 	void CreateMipMap(const GLuint& texParamIndex, const GLuint& bufferIndex) const
 	{
 		if (m_ReadWriteBuffers[bufferIndex])
 		{
-			glBindTexture(m_FboParam->FboTexGenParams[texParamIndex].Target, m_ReadWriteBuffers[bufferIndex]);
-			glGenerateMipmap(m_FboParam->FboTexGenParams[texParamIndex].Target);
+			glBindTexture(m_FboParam.FboTexGenParams[texParamIndex].Target, m_ReadWriteBuffers[bufferIndex]);
+			glGenerateMipmap(m_FboParam.FboTexGenParams[texParamIndex].Target);
 		}
 	}
 
 	void ResizeBuffers(int width, int height)
 	{
-		m_FboParam->Width = width;
-		m_FboParam->Height = height;
+		m_FboParam.Width = width;
+		m_FboParam.Height = height;
 
 		auto bufCnt = 0;
-		for (auto fboTexParamIndex = 0; fboTexParamIndex < m_FboParam->FboTexGenParams.size(); ++fboTexParamIndex)
+		for (auto fboTexParamIndex = 0; fboTexParamIndex < m_FboParam.FboTexGenParams.size(); ++fboTexParamIndex)
 		{
-			auto texCount = m_FboParam->FboTexGenParams[fboTexParamIndex].ColorBufferSize;
-			FBOTexGenParams& bufferParams = m_FboParam->FboTexGenParams[fboTexParamIndex];
+			auto texCount = m_FboParam.FboTexGenParams[fboTexParamIndex].ColorBufferSize;
+			FBOTexGenParams& bufferParams = m_FboParam.FboTexGenParams[fboTexParamIndex];
 			for (auto i = 0; i < texCount; ++i)
 			{
 				glBindTexture(bufferParams.Target, m_ReadWriteBuffers[bufCnt++]);
@@ -180,31 +193,50 @@ struct alignas(alignof(void*)) FrameBufferObject::Impl
 			glBindTexture(bufferParams.Target, 0);
 		}
 
-		for (auto rboParamIndex = 0; rboParamIndex < m_FboParam->FBORenderBufferParams.size(); ++rboParamIndex)
+		for (auto rboParamIndex = 0; rboParamIndex < m_FboParam.FBORenderBufferParams.size(); ++rboParamIndex)
 		{
 			glGenRenderbuffers(1, &m_WriteBuffers[rboParamIndex]);
 			glBindRenderbuffer(GL_RENDERBUFFER, m_WriteBuffers[rboParamIndex]);
-			glRenderbufferStorage(GL_RENDERBUFFER, m_FboParam->FBORenderBufferParams[rboParamIndex].InternalFormat, m_FboParam->Width, m_FboParam->Height);
-			glFramebufferRenderbuffer(m_FboParam->Target, m_FboParam->FBORenderBufferParams[rboParamIndex].Attachment, GL_RENDERBUFFER, m_WriteBuffers[rboParamIndex]);
+			glRenderbufferStorage(GL_RENDERBUFFER, m_FboParam.FBORenderBufferParams[rboParamIndex].InternalFormat, m_FboParam.Width, m_FboParam.Height);
+			glFramebufferRenderbuffer(m_FboParam.Target, m_FboParam.FBORenderBufferParams[rboParamIndex].Attachment, GL_RENDERBUFFER, m_WriteBuffers[rboParamIndex]);
 		
-			glNamedRenderbufferStorage(m_WriteBuffers[rboParamIndex], m_FboParam->FBORenderBufferParams[rboParamIndex].InternalFormat, width, height);
+			glNamedRenderbufferStorage(m_WriteBuffers[rboParamIndex], m_FboParam.FBORenderBufferParams[rboParamIndex].InternalFormat, width, height);
 		}
+	}
+
+	void Blit(const GLuint& to_fboID) const
+	{
+		glBlitNamedFramebuffer(m_FboId, to_fboID, 0, 0, GetWidth(), GetHeight(), 0, 0, GetWidth(), GetHeight(), GL_COLOR_BUFFER_BIT, GL_LINEAR);
 	}
 
 	const GLuint& GetWidth() const
 	{
-		return m_FboParam->Width;
+		return m_FboParam.Width;
 	}
 
 	const GLuint& GetHeight() const
 	{
-		return m_FboParam->Height;
+		return m_FboParam.Height;
 	}
 
-	~Impl() = default;
+	~Impl() noexcept 
+	{
+		if (m_FboId) { glDeleteFramebuffers(1, &m_FboId); }
+		for (auto i = 0; i < m_ReadWriteBuffers.size(); ++i)
+		{
+			if (m_ReadWriteBuffers[i]) { glDeleteTextures(1, &m_ReadWriteBuffers[i]); }
+		}
+		for (auto i = 0; i < m_WriteBuffers.size(); ++i)
+		{
+			if (m_WriteBuffers[i]) { glDeleteBuffers(1, &m_WriteBuffers[i]); }
+		}
+	}
 };
 
-FrameBufferObject::FrameBufferObject(std::shared_ptr<FBOParams> fboParams) : m_pImpl{ Impl(fboParams) } {}
+FrameBufferObject::FrameBufferObject(FBOParams&& fboParams) : m_pImpl{ Impl(std::move(fboParams)) } {}
+
+FrameBufferObject::FrameBufferObject(FrameBufferObject&& rhs) noexcept = default;
+FrameBufferObject& FrameBufferObject::operator=(FrameBufferObject&& rhs) noexcept = default;
 
 void FrameBufferObject::Bind() const
 {
@@ -231,9 +263,9 @@ void FrameBufferObject::ResizeBuffers(int width, int height)
 	Pimpl().ResizeBuffers(width, height);
 }
 
-void FrameBufferObject::Blit(const GLuint& to_fboID) 
+void FrameBufferObject::Blit(const GLuint& to_fboID) const
 {
-	glBlitNamedFramebuffer(Pimpl().m_FboId, to_fboID, 0, 0, Pimpl().GetWidth(), Pimpl().GetHeight(), 0, 0, Pimpl().GetWidth(), Pimpl().GetHeight(), GL_COLOR_BUFFER_BIT, GL_LINEAR);
+	Pimpl().Blit(to_fboID);
 }
 
 const GLuint& FrameBufferObject::GetWidth() const
@@ -256,18 +288,4 @@ const GLuint FrameBufferObject::GetFboId() const
 	return Pimpl().m_FboId;
 }
 
-FrameBufferObject::~FrameBufferObject() 
-{
-	//ToDo: Redesign or Rethink this again 
-	//Moved here from Impl otherwise temporary that is moved to m_pimpl is destructed at FrameBufferObject constructor
-	auto&& pimpl = Pimpl();
-	if (pimpl.m_FboId) { glDeleteFramebuffers(1, &pimpl.m_FboId); }
-	for (auto i = 0; i < pimpl.m_ReadWriteBuffers.size(); ++i)
-	{
-		if (pimpl.m_ReadWriteBuffers[i]) { glDeleteTextures(1, &pimpl.m_ReadWriteBuffers[i]); }
-	}
-	for (auto i = 0; i < pimpl.m_WriteBuffers.size(); ++i)
-	{
-		if (pimpl.m_WriteBuffers[i]) { glDeleteBuffers(1, &pimpl.m_WriteBuffers[i]); }
-	}
-}
+FrameBufferObject::~FrameBufferObject() noexcept = default;

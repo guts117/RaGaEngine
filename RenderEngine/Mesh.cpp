@@ -12,8 +12,30 @@ struct alignas(alignof(GLuint)) Mesh::Impl
 
 	Impl() = delete;
 
-	Impl(Impl&& rhs) noexcept = default;
-	Impl& operator=(Impl&& rhs) noexcept = default;
+	Impl(Impl&& rhs) noexcept
+		: m_MaterialIndex{ std::exchange(rhs.m_MaterialIndex, 0) }
+		, m_IndexCnt{ std::exchange(rhs.m_IndexCnt, 0) }
+		, m_VAO{ std::exchange(rhs.m_VAO, 0) }
+		, m_VBO{ std::exchange(rhs.m_VBO, 0) }
+		, m_IBO{ std::exchange(rhs.m_IBO, 0) }
+		, m_VBO_bones{ std::exchange(rhs.m_VBO_bones, 0) }
+		, m_InstanceCnt{ std::exchange(rhs.m_InstanceCnt, 0) }
+		, m_IsTesselated{ std::exchange(rhs.m_IsTesselated, false) } 
+	{
+	};
+	Impl& operator=(Impl&& rhs) noexcept 
+	{
+		m_MaterialIndex = std::exchange(rhs.m_MaterialIndex, 0);
+		m_IndexCnt = std::exchange(rhs.m_IndexCnt, 0);
+		m_VAO = std::exchange(rhs.m_VAO, 0);
+		m_VBO = std::exchange(rhs.m_VBO, 0);
+		m_IBO = std::exchange(rhs.m_IBO, 0);
+		m_VBO_bones = std::exchange(rhs.m_VBO_bones, 0);
+		m_InstanceCnt = std::exchange(rhs.m_InstanceCnt, 0);
+		m_IsTesselated = std::exchange(rhs.m_IsTesselated, false);
+
+		return *this;
+	};
 
 	Impl(const Impl& rhs) noexcept = delete;
 	Impl& operator=(const Impl& rhs) noexcept = delete;
@@ -114,13 +136,31 @@ struct alignas(alignof(GLuint)) Mesh::Impl
 		}
 	}
 
-	~Impl() = default;
+	~Impl() noexcept
+	{
+		if (m_VBO != 0) {
+			glDeleteBuffers(1, &m_VBO);
+		}
+		if (m_VAO != 0) {
+			glDeleteVertexArrays(1, &m_VAO);
+		}
+		if (m_IBO != 0) {
+			glDeleteBuffers(1, &m_IBO);
+		}
+
+		if (m_VBO_bones != 0) {
+			glDeleteBuffers(1, &m_VBO_bones);
+		}
+	};
 };
 
 Mesh::Mesh(GLuint materialIndex, std::vector<std::vector<GLfloat>>&& vertices, std::vector<GLuint>&& indices, MeshGenParams&& meshGenParams)
 	: m_pImpl { Impl(materialIndex,std::move(vertices), std::move(indices), std::move(meshGenParams)) }
 {
 }
+
+Mesh::Mesh(Mesh&& rhs) noexcept = default;
+Mesh& Mesh::operator= (Mesh&& rhs) noexcept = default;
 
 void Mesh::RenderMesh() 
 {
@@ -138,23 +178,4 @@ const bool& Mesh::IsTessellated() const
 }
 
 //ToDo: Add Support for Render with Static and Dynamic Batching.
-
-Mesh::~Mesh() 
-{
-	//ToDo: Redesign or Rethink this again 
-	//Moved here from Impl otherwise temporary that is moved to m_pimpl is destructed at Mesh constructor
-	auto&& pimpl = Pimpl();
-	if (pimpl.m_VBO != 0) {
-		glDeleteBuffers(1, &pimpl.m_VBO);
-	}
-	if (pimpl.m_VAO != 0) {
-		glDeleteVertexArrays(1, &pimpl.m_VAO);
-	}
-	if (pimpl.m_IBO != 0) {
-		glDeleteBuffers(1, &pimpl.m_IBO);
-	}
-
-	if (pimpl.m_VBO_bones != 0) {
-		glDeleteBuffers(1, &pimpl.m_VBO_bones);
-	}
-};
+Mesh::~Mesh() noexcept = default;

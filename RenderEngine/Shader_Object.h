@@ -2,6 +2,7 @@
 #define SHADER_OBJECT
 
 #include "render_pch.h"
+#include "ForwardDeclaredPimpl.h"
 
 namespace NarakaRenderEngine
 {
@@ -12,6 +13,12 @@ namespace NarakaRenderEngine
 		public:
 			explicit Shader_Object() = delete;
 			explicit Shader_Object(std::vector<std::string>&& shaderLocs);
+
+			Shader_Object(Shader_Object&& rhs) noexcept;
+			Shader_Object& operator=(Shader_Object&& rhs) noexcept;
+
+			Shader_Object(const Shader_Object& rhs) noexcept = delete;
+			Shader_Object& operator=(const Shader_Object& rhs) noexcept = delete;
 
 			void ValidateShaderObject() const;
 			void UseShaderObject() const;
@@ -24,7 +31,7 @@ namespace NarakaRenderEngine
 
 			void SetVariable(std::string&& varName, const std::any& value, const GLuint& index = 0, std::string&& memName = "") const;
 
-			~Shader_Object();
+			~Shader_Object() noexcept;
 
 		private:
 			struct Impl;
