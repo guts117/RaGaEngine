@@ -14,7 +14,7 @@ Environment_Map_Render_Pass_Handler::Environment_Map_Render_Pass_Handler(Fbo_Han
 {
 }
 
-void Environment_Map_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared_ptr<Render_Object>>>& renderObj, const CamParam* camParam, const LightParam* lightParam)
+void Environment_Map_Render_Pass_Handler::Update(const std::vector<std::vector<Render_Object>>& renderObj, const CamParam* camParam, const LightParam* lightParam)
 {
 	auto captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
 
@@ -51,7 +51,7 @@ void Environment_Map_Render_Pass_Handler::Update(const std::vector<std::vector<s
 			shader->ResetTextureUnit(0);
 			for (auto roIndex = 0; roIndex < renderObj[shaderIndex].size(); ++roIndex)
 			{
-				renderObj[shaderIndex][roIndex]->RenderObject(*shader, std::move(RenderObjectParams{false, true}));
+				renderObj[shaderIndex][roIndex].RenderObject(*shader, std::move(RenderObjectParams{false, true}));
 			}
 		}
 	}

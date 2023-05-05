@@ -28,6 +28,7 @@ namespace NarakaRenderEngine
 		class RENDER_ENGINE_API RenderEngineMain
 		{
 		public:
+			explicit RenderEngineMain() = delete;
 			explicit RenderEngineMain(const glm::ivec2& screenDims);
 
 			void Update(const glm::ivec2& screenDims, const bool& isUpdateBuffers);
@@ -38,10 +39,10 @@ namespace NarakaRenderEngine
 			//ToDo:
 			//static std::unique_ptr<std::map<TexType, std::vector<std::weak_ptr<Texture>>>> CreateTextureMap(std::vector<TexMapData>&& texMapData);
 
-			~RenderEngineMain();
+			~RenderEngineMain() noexcept;
 
-			RenderEngineMain(RenderEngineMain&& rhs) noexcept = delete;
-			RenderEngineMain& operator=(RenderEngineMain&& rhs) noexcept = delete;
+			RenderEngineMain(RenderEngineMain&& rhs) noexcept;
+			RenderEngineMain& operator=(RenderEngineMain&& rhs) noexcept;
 
 			RenderEngineMain(const RenderEngineMain& rhs) noexcept = delete;
 			RenderEngineMain& operator=(const RenderEngineMain& rhs) noexcept = delete;

@@ -19,6 +19,7 @@ namespace NarakaRenderEngine
 			Displacement,
 			Blend,
 			Noise,
+			HDR,
 			Max
 		};
 

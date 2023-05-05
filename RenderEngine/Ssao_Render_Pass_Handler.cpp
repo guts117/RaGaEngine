@@ -42,7 +42,7 @@ void Ssao_Render_Pass_Handler::Init()
 	}
 }
 
-void Ssao_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared_ptr<Render_Object>>>& renderObj, const CamParam* camParam, const LightParam* lightParam)
+void Ssao_Render_Pass_Handler::Update(const std::vector<std::vector<Render_Object>>& renderObj, const CamParam* camParam, const LightParam* lightParam)
 {
 	glViewport(0, 0, m_fboHandler->GetFBOWidth(), m_fboHandler->GetFBOHeight());
 
@@ -69,7 +69,7 @@ void Ssao_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared_
 
 		for (auto roIndex = 0; roIndex < renderObj[shaderIndex].size(); ++roIndex)
 		{
-			renderObj[shaderIndex][roIndex]->RenderObject(*shader, std::move(RenderObjectParams{ false, true}));
+			renderObj[shaderIndex][roIndex].RenderObject(*shader, std::move(RenderObjectParams{ false, true}));
 		}
 		shader->ValidateShaderObject();
 	}

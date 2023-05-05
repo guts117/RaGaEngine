@@ -17,7 +17,7 @@ Billboard_Render_Pass_Handler::Billboard_Render_Pass_Handler(Fbo_Handler* fboHan
 {
 }
 
-void Billboard_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared_ptr<Render_Object>>>& renderObj, const CamParam* camParam, const LightParam* lightParam)
+void Billboard_Render_Pass_Handler::Update(const std::vector<std::vector<Render_Object>>& renderObj, const CamParam* camParam, const LightParam* lightParam)
 {
 	glViewport(0, 0, m_fboHandler->GetFBOWidth(), m_fboHandler->GetFBOHeight());
 
@@ -41,7 +41,7 @@ void Billboard_Render_Pass_Handler::Update(const std::vector<std::vector<std::sh
 		for (auto roIndex = 0; roIndex < renderObj[shaderIndex].size(); ++roIndex)
 		{
 			auto& ro = renderObj[shaderIndex][roIndex];
-			if(auto modelMatrix = ro->GetModelMatrix().lock())
+			if(auto modelMatrix = ro.GetModelMatrix())
 			{
 				glm::vec3 scale;
 				glm::quat rotation;
@@ -53,7 +53,7 @@ void Billboard_Render_Pass_Handler::Update(const std::vector<std::vector<std::sh
 				shader->SetVariable("BillboardPos", glm::vec3(0.0f, -2.0f, 0.0f));//translation);
 				shader->SetVariable("BillboardSize", glm::vec2(2.0f, 2.0f));//scale.x, scale.y));
 			}
-			ro->RenderObject(*shader, std::move(RenderObjectParams{ false, true }));
+			ro.RenderObject(*shader, std::move(RenderObjectParams{ false, true }));
 		}
 		shader->ValidateShaderObject();
 	}

@@ -15,7 +15,7 @@ Scene_Render_Pass_Handler::Scene_Render_Pass_Handler(Fbo_Handler* fboHandlr
 {
 }
 
-void Scene_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared_ptr<Render_Object>>>& renderObj, const CamParam* camParam, const LightParam* lightParam)
+void Scene_Render_Pass_Handler::Update(const std::vector<std::vector<Render_Object>>& renderObj, const CamParam* camParam, const LightParam* lightParam)
 {
 	glViewport(0, 0, m_fboHandler->GetFBOWidth(), m_fboHandler->GetFBOHeight());
 
@@ -95,7 +95,7 @@ void Scene_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared
 
 		for (auto roIndex = 0; roIndex < renderObj[shaderIndex].size(); ++roIndex)
 		{
-			renderObj[shaderIndex][roIndex]->RenderObject(*shader, std::move(RenderObjectParams{ true , true, &camParam->PrevProjView }));
+			renderObj[shaderIndex][roIndex].RenderObject(*shader, std::move(RenderObjectParams{ true , true, &camParam->PrevProjView }));
 		}
 	}
 

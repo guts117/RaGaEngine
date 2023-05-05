@@ -15,7 +15,7 @@ Bloom_Render_Pass_Handler::Bloom_Render_Pass_Handler(Fbo_Handler* fboHandlr
 {
 }
 
-void Bloom_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared_ptr<Render_Object>>>& renderObj, const CamParam* camParam, const LightParam* lightParam)
+void Bloom_Render_Pass_Handler::Update(const std::vector<std::vector<Render_Object>>& renderObj, const CamParam* camParam, const LightParam* lightParam)
 {
 	int amount = 10;
 
@@ -53,7 +53,7 @@ void Bloom_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared
 
 			for (auto roIndex = 0; roIndex < renderObj[shaderIndex].size(); ++roIndex)
 			{
-				renderObj[shaderIndex][roIndex]->RenderObject(*shader, std::move(RenderObjectParams{ }));
+				renderObj[shaderIndex][roIndex].RenderObject(*shader, std::move(RenderObjectParams{ }));
 			}
 
 			isHorizontalFbo = !isHorizontalFbo;

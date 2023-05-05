@@ -14,7 +14,7 @@ PreZ_Render_Pass_Handler::PreZ_Render_Pass_Handler(Fbo_Handler* fboHandlr
 {
 }
 
-void PreZ_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared_ptr<Render_Object>>>& renderObj, const CamParam* camParam, const LightParam* lightParam)
+void PreZ_Render_Pass_Handler::Update(const std::vector<std::vector<Render_Object>>& renderObj, const CamParam* camParam, const LightParam* lightParam)
 {
 	glViewport(0, 0, m_fboHandler->GetFBOWidth(), m_fboHandler->GetFBOHeight());
 
@@ -37,14 +37,14 @@ void PreZ_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared_
 		for (auto roIndex = 0; roIndex < renderObj[shaderIndex].size(); ++roIndex)
 		{
 			auto& ro = renderObj[shaderIndex][roIndex];
-			if (ro->IsTesselated())
+			if (ro.IsTesselated())
 			{
 				shader->SetVariable("eyePosition", camParam->Position);
-				ro->RenderObject(*shader, std::move(RenderObjectParams{ true, true }));
+				ro.RenderObject(*shader, std::move(RenderObjectParams{ true, true }));
 			}
 			else
 			{
-				ro->RenderObject(*shader, std::move(RenderObjectParams{ true }));
+				ro.RenderObject(*shader, std::move(RenderObjectParams{ true }));
 			}
 		}
 		shader->ValidateShaderObject();

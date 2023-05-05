@@ -39,7 +39,7 @@ void SetLightTransform(const Shader_Object* shader, const int& lightIndex, const
 	}
 }
 
-void Omni_Directional_Shadow_Map_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared_ptr<Render_Object>>>& renderObj, const CamParam* camParam, const LightParam* lightParam)
+void Omni_Directional_Shadow_Map_Render_Pass_Handler::Update(const std::vector<std::vector<Render_Object>>& renderObj, const CamParam* camParam, const LightParam* lightParam)
 {
 	for (auto lightIndex = 0; lightIndex < lightParam->Count; ++lightIndex)
 	{
@@ -63,14 +63,14 @@ void Omni_Directional_Shadow_Map_Render_Pass_Handler::Update(const std::vector<s
 			for (auto roIndex = 0; roIndex < renderObj[shaderIndex].size(); ++roIndex)
 			{
 				auto& ro = renderObj[shaderIndex][roIndex];
-				if (ro->IsTesselated())
+				if (ro.IsTesselated())
 				{
 					shader->SetVariable("eyePosition", camParam->Position);
-					ro->RenderObject(*shader, std::move(RenderObjectParams{ true, true }));
+					ro.RenderObject(*shader, std::move(RenderObjectParams{ true, true }));
 				}
 				else
 				{
-					ro->RenderObject(*shader, std::move(RenderObjectParams{ true }));
+					ro.RenderObject(*shader, std::move(RenderObjectParams{ true }));
 				}
 			}
 		}

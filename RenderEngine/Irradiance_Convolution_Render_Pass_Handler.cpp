@@ -14,7 +14,7 @@ Irradiance_Convolution_Render_Pass_Handler::Irradiance_Convolution_Render_Pass_H
 {
 }
 
-void Irradiance_Convolution_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared_ptr<Render_Object>>>& renderObj, const CamParam* camParam, const LightParam* lightParam)
+void Irradiance_Convolution_Render_Pass_Handler::Update(const std::vector<std::vector<Render_Object>>& renderObj, const CamParam* camParam, const LightParam* lightParam)
 {
 	auto captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
 
@@ -57,7 +57,7 @@ void Irradiance_Convolution_Render_Pass_Handler::Update(const std::vector<std::v
 			shader->ResetTextureUnit(0);
 			for (auto roIndex = 0; roIndex < renderObj[shaderIndex].size(); ++roIndex)
 			{
-				renderObj[shaderIndex][roIndex]->RenderObject(*shader, std::move(RenderObjectParams{}));
+				renderObj[shaderIndex][roIndex].RenderObject(*shader, std::move(RenderObjectParams{}));
 			}
 		}
 	}

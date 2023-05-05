@@ -14,7 +14,7 @@ Brdf_Render_Pass_Handler::Brdf_Render_Pass_Handler(Fbo_Handler* fboHandlr
 {
 }
 
-void Brdf_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared_ptr<Render_Object>>>& renderObj, const CamParam* camParam, const LightParam* lightParam)
+void Brdf_Render_Pass_Handler::Update(const std::vector<std::vector<Render_Object>>& renderObj, const CamParam* camParam, const LightParam* lightParam)
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, m_fboHandler->GetFBOWidth(), m_fboHandler->GetFBOHeight());
@@ -33,7 +33,7 @@ void Brdf_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared_
 
 		for (auto roIndex = 0; roIndex < renderObj[shaderIndex].size(); ++roIndex)
 		{
-			renderObj[shaderIndex][roIndex]->RenderObject(*shader, std::move(RenderObjectParams{}));
+			renderObj[shaderIndex][roIndex].RenderObject(*shader, std::move(RenderObjectParams{}));
 		}
 		shader->ValidateShaderObject();
 	}

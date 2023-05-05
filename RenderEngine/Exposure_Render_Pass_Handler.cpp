@@ -15,7 +15,7 @@ Exposure_Render_Pass_Handler::Exposure_Render_Pass_Handler(Fbo_Handler* fboHandl
 {
 }
 
-void Exposure_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared_ptr<Render_Object>>>& renderObj, const CamParam* camParam, const LightParam* lightParam)
+void Exposure_Render_Pass_Handler::Update(const std::vector<std::vector<Render_Object>>& renderObj, const CamParam* camParam, const LightParam* lightParam)
 {
 	glViewport(0, 0, m_fboHandler->GetFBOWidth(), m_fboHandler->GetFBOHeight());
 
@@ -47,7 +47,7 @@ void Exposure_Render_Pass_Handler::Update(const std::vector<std::vector<std::sha
 
 		for (auto roIndex = 0; roIndex < renderObj[shaderIndex].size(); ++roIndex)
 		{
-			renderObj[shaderIndex][roIndex]->RenderObject(*shader, std::move(RenderObjectParams{ }));
+			renderObj[shaderIndex][roIndex].RenderObject(*shader, std::move(RenderObjectParams{ }));
 		}
 		shader->ValidateShaderObject();
 	}

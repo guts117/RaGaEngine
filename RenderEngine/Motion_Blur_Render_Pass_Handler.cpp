@@ -15,7 +15,7 @@ Motion_Blur_Render_Pass_Handler::Motion_Blur_Render_Pass_Handler(Fbo_Handler* fb
 {
 }
 
-void Motion_Blur_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared_ptr<Render_Object>>>& renderObj, const CamParam* camParam, const LightParam* lightParam)
+void Motion_Blur_Render_Pass_Handler::Update(const std::vector<std::vector<Render_Object>>& renderObj, const CamParam* camParam, const LightParam* lightParam)
 {
 	glViewport(0, 0, m_fboHandler->GetFBOWidth(), m_fboHandler->GetFBOHeight());
 
@@ -44,7 +44,7 @@ void Motion_Blur_Render_Pass_Handler::Update(const std::vector<std::vector<std::
 
 		for (auto roIndex = 0; roIndex < renderObj[shaderIndex].size(); ++roIndex)
 		{
-			renderObj[shaderIndex][roIndex]->RenderObject(*shader, std::move(RenderObjectParams{ }));
+			renderObj[shaderIndex][roIndex].RenderObject(*shader, std::move(RenderObjectParams{ }));
 		}
 		shader->ValidateShaderObject();
 	}
