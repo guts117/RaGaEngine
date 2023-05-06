@@ -31,6 +31,12 @@ namespace NarakaRenderEngine
 			explicit RenderEngineMain() = delete;
 			explicit RenderEngineMain(const glm::ivec2& screenDims);
 
+			RenderEngineMain(RenderEngineMain&& rhs) noexcept = delete;
+			RenderEngineMain& operator=(RenderEngineMain&& rhs) noexcept = delete;
+
+			RenderEngineMain(const RenderEngineMain& rhs) noexcept = delete;
+			RenderEngineMain& operator=(const RenderEngineMain& rhs) noexcept = delete;
+
 			void Update(const glm::ivec2& screenDims, const bool& isUpdateBuffers);
 			void EndUpdate();
 
@@ -40,12 +46,6 @@ namespace NarakaRenderEngine
 			//static std::unique_ptr<std::map<TexType, std::vector<std::weak_ptr<Texture>>>> CreateTextureMap(std::vector<TexMapData>&& texMapData);
 
 			~RenderEngineMain() noexcept;
-
-			RenderEngineMain(RenderEngineMain&& rhs) noexcept;
-			RenderEngineMain& operator=(RenderEngineMain&& rhs) noexcept;
-
-			RenderEngineMain(const RenderEngineMain& rhs) noexcept = delete;
-			RenderEngineMain& operator=(const RenderEngineMain& rhs) noexcept = delete;
 		private:
 			struct Impl;
 

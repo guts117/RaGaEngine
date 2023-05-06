@@ -50,11 +50,11 @@ struct RenderEngineMain::Impl
 {
 	Impl() = default;
 
-	Impl(Impl&& rhs) = default;
-	Impl& operator=(Impl&& rhs) = default;
+	Impl(Impl&& rhs) noexcept = delete;
+	Impl& operator=(Impl&& rhs) noexcept = delete;
 
-	Impl(const Impl& rhs) = delete;
-	Impl& operator=(const Impl& rhs) = delete;
+	Impl(const Impl& rhs) noexcept = delete;
+	Impl& operator=(const Impl& rhs) noexcept = delete;
 
 	bool drawFluidSim = false;
 	bool drawSmokeSim = false;
@@ -1791,7 +1791,7 @@ struct RenderEngineMain::Impl
 	//	ccw_cube->RenderCCWCube();
 	//}
 
-	~Impl()
+	~Impl() noexcept
 	{
 		if (AABBvolumeGridSSBO != 0)
 		{
@@ -1827,9 +1827,6 @@ struct RenderEngineMain::Impl
 };
 
 RenderEngineMain::RenderEngineMain(const glm::ivec2& screenDims) : m_pImpl{ std::make_unique<Impl>() } { Pimpl()->Init(screenDims); };
-
-RenderEngineMain::RenderEngineMain(RenderEngineMain&& rhs) noexcept = default;
-RenderEngineMain& RenderEngineMain::operator=(RenderEngineMain&& rhs) noexcept = default;
 
 void RenderEngineMain::Update(const glm::ivec2& screenDims, const bool& isUpdateBuffers)
 {	

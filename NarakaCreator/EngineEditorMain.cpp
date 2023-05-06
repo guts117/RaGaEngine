@@ -18,7 +18,7 @@ struct EngineEditorMain::Impl
 	bool isEditorViewSelected;
 	bool isGameViewSelected;
 		
-	Impl()
+	Impl() noexcept
 		: engineUI { true, "#version 460" }
 		, m_renderer2Viewers{ RendererToViewer { "Final_Output_Pass", "EditorView", Editor, 0, 0 } , RendererToViewer { "CameraPass0", "GameView", InGame, 0, 0 } }
 		, isEditorViewSelected { false }
@@ -26,11 +26,11 @@ struct EngineEditorMain::Impl
 	{
 	}
 
-	Impl(Impl&& rhs) = delete;
-	Impl& operator=(Impl&& rhs) = delete;
+	Impl(Impl&& rhs) noexcept = delete;
+	Impl& operator=(Impl&& rhs) noexcept = delete;
 
-	Impl(const Impl& rhs) = delete;
-	Impl& operator=(const Impl& rhs) = delete;
+	Impl(const Impl& rhs) noexcept = delete;
+	Impl& operator=(const Impl& rhs) noexcept = delete;
 
 	void Update(const glm::ivec2& screenDims)
 	{
@@ -85,10 +85,10 @@ struct EngineEditorMain::Impl
 		}
 	}
 
-	~Impl() = default;
+	~Impl() noexcept = default;
 };
 
-EngineEditorMain::EngineEditorMain()
+EngineEditorMain::EngineEditorMain() noexcept
 	: m_pImpl{ std::make_unique<Impl>()}
 {
 }
@@ -122,4 +122,4 @@ void EngineEditorMain::AddSceneViewers(const RenderEngineMain* renderEngineMain)
 	Pimpl()->AddSceneViewers(renderEngineMain);
 }
 
-EngineEditorMain::~EngineEditorMain() = default;
+EngineEditorMain::~EngineEditorMain() noexcept = default;

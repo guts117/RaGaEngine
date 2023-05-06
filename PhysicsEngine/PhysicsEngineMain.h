@@ -28,7 +28,7 @@ namespace NarakaPhysicsEngine
 			void AddStaticPlane(float x, float y, float z, float mass, glm::vec3 normal, glm::mat4* model);
 			void AddSphere(float rad, float x, float y, float z, float mass, glm::mat4* model);
 
-			~PhysicsEngineMain();
+			~PhysicsEngineMain() noexcept;
 
 		private:
 			struct Impl;

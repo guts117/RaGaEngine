@@ -286,11 +286,9 @@ struct EngineUIMain::Impl
     SimpleNodeEditorExample nodeEditorEg;
     BasicInteractionNodeEditorExample interactionNodeEditorEg;
     
-    
+	Impl() noexcept = delete;
 
-	Impl() = delete;
-
-	Impl(const bool installCallbacks, const std::string version)
+	Impl(const bool installCallbacks, const std::string version) noexcept
 		: m_sceneList{ std::vector<SceneViewer>() }
 		, mainWindow{ std::make_unique<Window>() }
 	{		
@@ -314,11 +312,11 @@ struct EngineUIMain::Impl
         interactionNodeEditorEg.Init();
 	}
 
-	Impl(Impl&& rhs) = delete;
-	Impl& operator=(Impl&& rhs) = delete;
+	Impl(Impl&& rhs) noexcept = delete;
+	Impl& operator=(Impl&& rhs) noexcept = delete;
 
-	Impl(const Impl& rhs) = delete;
-	Impl& operator=(const Impl& rhs) = delete;
+	Impl(const Impl& rhs) noexcept = delete;
+	Impl& operator=(const Impl& rhs) noexcept = delete;
 
 	void Update(const glm::ivec2& screenDims)
 	{
@@ -417,7 +415,7 @@ struct EngineUIMain::Impl
 		m_sceneList.emplace_back(std::move(scene));
 	}
 
-	~Impl()
+	~Impl() noexcept
 	{
         nodeEditorEg.End();
         interactionNodeEditorEg.End();
@@ -427,7 +425,7 @@ struct EngineUIMain::Impl
 	}
 };
 
-EngineUIMain::EngineUIMain(const bool installCallbacks, const std::string version)
+EngineUIMain::EngineUIMain(const bool installCallbacks, const std::string version) noexcept
 	: m_pImpl{ new Impl(installCallbacks, version) }
 {
 }
@@ -501,4 +499,4 @@ bool EngineUIMain::IsEnd()
 	return Pimpl()->mainWindow->getShouldClose();
 }
 
-EngineUIMain::~EngineUIMain() = default;
+EngineUIMain::~EngineUIMain() noexcept = default;

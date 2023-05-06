@@ -8,7 +8,7 @@ namespace NarakaKarEngine
 	class EngineSimulatorMainMain
 	{
 	public:
-		explicit EngineSimulatorMainMain() = delete;
+		explicit EngineSimulatorMainMain() noexcept = delete;
 		//explicit EngineSimulatorMainMain(const glm::ivec2& screenDims);
 
 		void Update(const glm::ivec2& screenDims);
@@ -22,7 +22,7 @@ namespace NarakaKarEngine
 
 		void AddToUpdateStack(std::function<void(glm::ivec2)> updateFunc);
 
-		~EngineSimulatorMainMain();
+		~EngineSimulatorMainMain() noexcept;
 	private:
 		struct Impl;
 

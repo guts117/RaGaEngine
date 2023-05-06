@@ -24,8 +24,8 @@ namespace NarakaCreator
 		class NARAKA_CREATOR_API EngineUIMain
 		{
 		public:
-			explicit EngineUIMain() = delete;
-			explicit EngineUIMain(const bool installCallbacks, const std::string version);
+			explicit EngineUIMain() noexcept = delete;
+			explicit EngineUIMain(const bool installCallbacks, const std::string version) noexcept;
 
 			EngineUIMain(EngineUIMain&& rhs) noexcept = delete;
 			EngineUIMain& operator=(EngineUIMain&& rhs) noexcept = delete;
@@ -47,7 +47,7 @@ namespace NarakaCreator
 
 			bool IsEnd();
 
-			~EngineUIMain();
+			~EngineUIMain() noexcept;
 		private:
 			struct Impl;
 			struct SimpleNodeEditorExample;
