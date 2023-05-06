@@ -488,6 +488,9 @@ struct RenderEngineMain::Impl
 			std::vector<GLfloat>{  1.0f,  1.0f, 0.0f,		 1.0f, 1.0f },
 		};
 
+		auto quadIndicesSsao = quadIndices;
+		auto quadVerticesSsao = quadVertices;
+
 		auto qMesh = Mesh(0, std::move(quadVertices), std::move(quadIndices), std::move(MeshGenParams()));	
 		quad.push_back(AddToMeshPool(std::move(qMesh)));
 		auto quadInVec = std::vector<Render_Object>();
@@ -496,7 +499,7 @@ struct RenderEngineMain::Impl
 		quadRO.emplace_back(std::move(quadInVec));
 		quad.clear();
 
-		qMesh = Mesh(0, std::move(quadVertices), std::move(quadIndices), std::move(MeshGenParams()));
+		qMesh = Mesh(0, std::move(quadVerticesSsao), std::move(quadIndicesSsao), std::move(MeshGenParams()));
 		quad.push_back(AddToMeshPool(std::move(qMesh)));
 		quadInVec = std::vector<Render_Object>();
 		quadInVec.emplace_back(Render_Object(std::move(quad)));
