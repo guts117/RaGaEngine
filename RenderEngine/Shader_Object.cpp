@@ -9,7 +9,7 @@
 using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
-struct Shader_Object::Impl
+struct alignas(alignof(void*)) Shader_Object::Impl
 {	
 	struct ShaderCodeType
 	{
@@ -59,23 +59,46 @@ struct Shader_Object::Impl
 		std::any VarData;
 	};
 
-	std::unique_ptr<std::vector<std::string>> m_ShaderLocs;
+	std::vector<std::string> m_ShaderLocs;
+	std::vector<ShaderInputVariable> m_ShaderInputs;
 	GLuint m_ShaderProgramID;
-	std::unique_ptr<std::vector<ShaderInputVariable>> m_ShaderInputs;
 	GLenum m_ShaderType;
 	GLint m_TextureUnit;
 
-	Impl(const std::vector<std::string>& shaderLocs)
-		: m_ShaderLocs { std::make_unique<std::vector<std::string>>(shaderLocs) }
-		, m_ShaderProgramID { 0 }
-		, m_ShaderInputs{ std::make_unique<std::vector<ShaderInputVariable>>()}
+	Impl() = delete;
+
+	Impl(Impl&& rhs) noexcept 
+		: m_ShaderLocs {std::move(rhs.m_ShaderLocs)}
+		, m_ShaderInputs {std::move(rhs.m_ShaderInputs)}
+		, m_ShaderProgramID {std::exchange(rhs.m_ShaderProgramID, 0)}
+		, m_ShaderType {std::exchange(rhs.m_ShaderType, 0)}
+		, m_TextureUnit {std::exchange(rhs.m_TextureUnit, 0)}
+	{
+	};
+	Impl& operator=(Impl&& rhs) noexcept 
+	{
+		m_ShaderLocs = std::move(rhs.m_ShaderLocs);
+		m_ShaderInputs = std::move(rhs.m_ShaderInputs);
+		m_ShaderProgramID = std::exchange(rhs.m_ShaderProgramID, 0);
+		m_ShaderType = std::exchange(rhs.m_ShaderType, 0);
+		m_TextureUnit = std::exchange(rhs.m_TextureUnit, 0);
+		return *this;
+	};
+
+	Impl(const Impl& rhs) noexcept = delete; 
+	Impl& operator=(const Impl& rhs) noexcept = delete;
+
+	Impl(std::vector<std::string>&& shaderLocs)
+		: m_ShaderLocs { std::move(shaderLocs) }
+		, m_ShaderInputs{ std::vector<ShaderInputVariable>() }
+		, m_ShaderProgramID{ 0 }
 		, m_ShaderType { 0 }
 		, m_TextureUnit { 0 }
 	{
 		std::vector<ShaderCodeType> shaderCodes;
-		for(auto locIndex = 0; locIndex < shaderLocs.size(); ++locIndex)
+		for(auto locIndex = 0; locIndex < m_ShaderLocs.size(); ++locIndex)
 		{
-			shaderCodes.push_back(ReadFile(shaderLocs[locIndex]));
+			shaderCodes.push_back(ReadFile(m_ShaderLocs[locIndex]));
 		}
 		
 		CompileShader(shaderCodes);
@@ -428,7 +451,7 @@ struct Shader_Object::Impl
 							snprintf(locBuff, sizeof(locBuff), (varName + "[%zd]").c_str(), i);
 							vecArr.push_back(glGetUniformLocation(m_ShaderProgramID, locBuff));
 						}
-						m_ShaderInputs->push_back(ShaderInputVariable{ type, varName, SLDataTypeArr{vecArr} });
+						m_ShaderInputs.push_back(ShaderInputVariable{ type, varName, SLDataTypeArr{vecArr} });
 					}
 					else
 					{
@@ -445,14 +468,14 @@ struct Shader_Object::Impl
 							}
 							vecArr.push_back(SLStruct{ vec });
 						}
-						m_ShaderInputs->push_back(ShaderInputVariable{ type, varName, SLStructTypeArr{vecArr} });
+						m_ShaderInputs.push_back(ShaderInputVariable{ type, varName, SLStructTypeArr{vecArr} });
 					}
 				}
 				else
 				{
 					if (structTMaps.find(type) == structTMaps.end())
 					{
-						m_ShaderInputs->push_back(ShaderInputVariable{ type, fullVarName, glGetUniformLocation(m_ShaderProgramID, fullVarName.c_str()) });
+						m_ShaderInputs.push_back(ShaderInputVariable{ type, fullVarName, glGetUniformLocation(m_ShaderProgramID, fullVarName.c_str()) });
 					}
 					else
 					{
@@ -461,7 +484,7 @@ struct Shader_Object::Impl
 						{
 							vec.push_back(SLStructMember{ structTMaps[type][i].type,structTMaps[type][i].memberName, glGetUniformLocation(m_ShaderProgramID, (fullVarName + "." + structTMaps[type][i].memberName).c_str()) });
 						}
-						m_ShaderInputs->push_back(ShaderInputVariable{ type, fullVarName, SLStruct{vec} });
+						m_ShaderInputs.push_back(ShaderInputVariable{ type, fullVarName, SLStruct{vec} });
 					}
 				}
 			}
@@ -483,9 +506,16 @@ struct Shader_Object::Impl
 	}
 
 	template <typename T>
-	const T* CheckInputDataType(const std::any& data) const
+	auto CheckInputDataType(const std::any& data) const noexcept
 	{
-		return std::any_cast<T>(&data);
+		if constexpr (std::is_pointer_v<T>)
+		{
+			return std::any_cast<T>(data);
+		}
+		else
+		{
+			return std::any_cast<T>(&data);
+		}
 	}
 
 	void SetShaderData(const std::string& type, const GLint& location, const std::any& value) const
@@ -621,9 +651,9 @@ struct Shader_Object::Impl
 
 	void SetVariable(std::string&& varName, const std::any& value, const GLuint& index = 0, std::string&& memName = "") const
 	{
-		auto it = std::find_if(m_ShaderInputs->begin(), m_ShaderInputs->end(), [&](ShaderInputVariable& var) {return var.VarName == varName; });
+		auto it = std::find_if(m_ShaderInputs.begin(), m_ShaderInputs.end(), [&](const ShaderInputVariable& var) {return var.VarName == varName; });
 
-		if (it != m_ShaderInputs->end())
+		if (it != m_ShaderInputs.end())
 		{
 			if (auto data = CheckInputDataType<GLint>(it->VarData))
 			{			
@@ -674,61 +704,65 @@ struct Shader_Object::Impl
 		}
 	}
 
-	~Impl() 
+	~Impl() noexcept 
 	{
-		if (m_ShaderProgramID!= 0) {
+		if (m_ShaderProgramID != 0)
+		{
 			glDeleteProgram(m_ShaderProgramID);
 			m_ShaderProgramID = 0;
 		}
-	}
+	};
 };
 
-Shader_Object::Shader_Object(const std::vector<std::string>& shaders) : m_pImpl{new Impl(shaders)} 
+Shader_Object::Shader_Object(std::vector<std::string>&& shaders) : m_pImpl{ Impl(std::move(shaders)) } 
 {
 }
 
+Shader_Object::Shader_Object(Shader_Object&& rhs) noexcept = default;
+Shader_Object& Shader_Object::operator=(Shader_Object&& rhs) noexcept = default;
+
 void Shader_Object::ValidateShaderObject() const
 {
-	Pimpl()->Validate();
+	Pimpl().Validate();
 }
 
 const GLuint& Shader_Object::GetShaderObjectProgramID() const
 {
-	return Pimpl()->m_ShaderProgramID;
+	return Pimpl().m_ShaderProgramID;
 }
 
 const GLuint Shader_Object::SetTextureUnit(std::string&& textureName)
 {
-	GLint& texUnit = Pimpl()->m_TextureUnit;
+	GLint& texUnit = Pimpl().m_TextureUnit;
 	SetVariable(std::move(textureName), texUnit);
 	return texUnit++;
 }
 
 const GLuint Shader_Object::SetTextureUnit(std::string&& varName, const GLuint& index, std::string&& texName)
 {
-	GLint& texUnit = Pimpl()->m_TextureUnit;
+	GLint& texUnit = Pimpl().m_TextureUnit;
 	SetVariable(std::move(varName), texUnit, index, std::move(texName));
 	return texUnit++;
 }
 
 const GLuint Shader_Object::GetTextureUnit() const
 {
-	return Pimpl()->m_TextureUnit;
+	return Pimpl().m_TextureUnit;
 }
 
 const void Shader_Object::ResetTextureUnit(GLuint&& resetToUnit)
 {
-	Pimpl()->m_TextureUnit = resetToUnit;
+	Pimpl().m_TextureUnit = resetToUnit;
 }
 
 void Shader_Object::UseShaderObject() const
 {
-	glUseProgram(Pimpl()->m_ShaderProgramID);
+	glUseProgram(Pimpl().m_ShaderProgramID);
 }
 
 void Shader_Object::DispatchShaderObject(const glm::uvec3& threadGroupCnt) const
 {
-	if (Pimpl()->m_ShaderType == GL_COMPUTE_SHADER) 
+	if (Pimpl().m_ShaderType == GL_COMPUTE_SHADER) 
 	{
 		glDispatchCompute(threadGroupCnt.x, threadGroupCnt.y, threadGroupCnt.z);
 		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
@@ -737,7 +771,7 @@ void Shader_Object::DispatchShaderObject(const glm::uvec3& threadGroupCnt) const
 
 void Shader_Object::SetVariable(std::string&& varName, const std::any& value, const GLuint& index, std::string&& memName) const
 {
-	Pimpl()->SetVariable(std::move(varName), value, index, std::move(memName));
+	Pimpl().SetVariable(std::move(varName), value, index, std::move(memName));
 }
 
-Shader_Object::~Shader_Object() = default;
+Shader_Object::~Shader_Object() noexcept = default;

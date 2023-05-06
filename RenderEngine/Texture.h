@@ -2,7 +2,6 @@
 #define TEXTURE
 
 #include "render_pch.h"
-#include <ForwardDeclaredPimpl.h>
 
 namespace NarakaRenderEngine
 {
@@ -20,6 +19,7 @@ namespace NarakaRenderEngine
 			Displacement,
 			Blend,
 			Noise,
+			HDR,
 			Max
 		};
 
@@ -27,10 +27,10 @@ namespace NarakaRenderEngine
 		{
 		public:
 			explicit Texture();
-			explicit Texture(std::string fileLoc, bool isSRGB = false);
+			explicit Texture(std::string&& fileLoc, bool isSRGB = false);
 
-			Texture(Texture&& rhs) noexcept = default;
-			Texture& operator=(Texture&& rhs) noexcept = default;
+			Texture(Texture&& rhs) noexcept;
+			Texture& operator=(Texture&& rhs) noexcept;
 
 			Texture(const Texture& rhs) noexcept = delete;
 			Texture& operator=(const Texture& rhs) noexcept = delete;
@@ -63,7 +63,7 @@ namespace NarakaRenderEngine
 			const int GetBitDepth();
 			const GLuint GetTextureID();
 
-			~Texture();
+			~Texture() noexcept;
 
 		private:
 			struct Impl;
@@ -71,7 +71,7 @@ namespace NarakaRenderEngine
 			const Impl& Pimpl() const { return m_pImpl.Get(); }
 			Impl& Pimpl() { return m_pImpl.Get(); }
 
-#ifdef NDEBUG //size of string is different between debug and release
+#ifdef NDEBUG //size of string is different between debug(40) and release(32)
 			ForwardDeclaredPimpl<Impl, alignof(std::string) * 7, alignof(std::string)> m_pImpl;
 #else
 			ForwardDeclaredPimpl<Impl, alignof(std::string) * 8, alignof(std::string)> m_pImpl;

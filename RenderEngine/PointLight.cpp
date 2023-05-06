@@ -14,7 +14,7 @@ PointLight::PointLight(GLuint shadowWidth, GLuint shadowHeight,
 						GLfloat near, GLfloat far, 
 						GLfloat red, GLfloat green, GLfloat blue,
 						GLfloat xPos, GLfloat yPos, GLfloat zPos,
-						std::shared_ptr<Scene_Fbo_Handler_Manager> sceneFboHndlrMgr)
+						Scene_Fbo_Handler_Manager* sceneFboHndlrMgr)
 {
 	position = glm::vec3(xPos, yPos, zPos);
 	color = glm::vec3(red, green, blue);

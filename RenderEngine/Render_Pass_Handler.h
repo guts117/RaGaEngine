@@ -45,18 +45,12 @@ namespace NarakaRenderEngine
 			std::shared_ptr<std::vector<std::any>> shaderInputs;
 		};
 
-		template<class T>
-		struct is_shared_ptr : std::false_type {};
-
-		template<class T>
-		struct is_shared_ptr<std::shared_ptr<T>> : std::true_type {};
-
 		class Render_Pass_Handler
 		{
 		public:
 			explicit Render_Pass_Handler() = delete;
-			explicit Render_Pass_Handler(std::shared_ptr<Fbo_Handler> fboHandlr
-												, const std::vector<std::shared_ptr<Shader_Object>>& shaderVec
+			explicit Render_Pass_Handler(Fbo_Handler* fboHandlr
+												, std::vector<Shader_Object*>&& shaderVec
 												, std::shared_ptr<std::vector<std::shared_ptr<std::any>>> inputs = nullptr);
 
 			Render_Pass_Handler(Render_Pass_Handler&& rhs) noexcept = default;
@@ -66,20 +60,27 @@ namespace NarakaRenderEngine
 			Render_Pass_Handler& operator=(const Render_Pass_Handler& rhs) noexcept = delete;
 	
 			virtual void Init();
-			virtual void Update(const std::vector<std::vector<std::shared_ptr<Render_Object>>>& renderObj, const CamParam* camParam = nullptr, const LightParam* lightParam = nullptr) = 0;
+			virtual void Update(const std::vector<std::vector<Render_Object>>& renderObj, const CamParam* camParam = nullptr, const LightParam* lightParam = nullptr) = 0;
 
 			virtual ~Render_Pass_Handler() = 0;
 
 		protected:
 
 			template <typename T>
-			const T* CheckInputDataType(const std::any& data) noexcept
+			auto CheckInputDataType(const std::any& data) const noexcept
 			{
-				return std::any_cast<T>(&data);
+				if constexpr (std::is_pointer_v<T>) 
+				{
+					return std::any_cast<T>(data);
+				}
+				else
+				{
+					return std::any_cast<T>(&data);
+				}
 			}
 
-			std::shared_ptr<Fbo_Handler> m_fboHandler;
-			std::unique_ptr<std::vector<std::shared_ptr<Shader_Object>>> m_shaderVec;
+			Fbo_Handler* m_fboHandler;
+			std::vector<Shader_Object*> m_shaderVec;
 			std::shared_ptr<std::vector<std::shared_ptr<std::any>>> m_inputs;
 			std::shared_ptr<std::vector<std::shared_ptr<GLint>>> m_outputs;
 		};

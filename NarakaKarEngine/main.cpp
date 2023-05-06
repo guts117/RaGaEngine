@@ -13,19 +13,19 @@ using namespace PhysicsEngine;
 
 int main()
 {
-	auto physicsEngine = std::make_unique<PhysicsEngineMain>();
+	auto physicsEngine = PhysicsEngineMain();
 	auto creator = EngineEditorMain();
 	glm::ivec2 screenDims = glm::ivec2(creator.GetScreenDimensions());
-	std::unique_ptr<RenderEngineMain> renderEngine = std::make_unique<RenderEngineMain>(screenDims);
-	creator.AddSceneViewers(renderEngine.get());
+	auto renderEngine = RenderEngineMain(screenDims);
+	creator.AddSceneViewers(&renderEngine);
 
 	do 
 	{
 		screenDims = glm::ivec2(creator.GetScreenDimensions());
-		physicsEngine->Update(0.016f);
-		renderEngine->Update(screenDims, creator.IsUpdateBufferSize());
+		physicsEngine.Update(0.016f);
+		renderEngine.Update(screenDims, creator.IsUpdateBufferSize());
 		creator.Update(screenDims);
-		renderEngine->EndUpdate();
+		renderEngine.EndUpdate();
 		creator.EndUpdate();
 	} while (!creator.IsEnd());
 

@@ -6,52 +6,51 @@
 using namespace NarakaCreator;
 using namespace EngineUI;
 
-struct SceneViewer::Impl
+struct alignas(alignof(void*)) SceneViewer::Impl
 {
-	GLuint m_textureID;
-	std::string m_viewerName;
-	SceneViewerType m_viewerType = SceneViewerType::Empty;
 	std::function<void(bool)> m_SelectSceneCallback;
+	std::string m_viewerName;
+	GLuint m_textureID;
+	SceneViewerType m_viewerType = SceneViewerType::Empty;
 
 	Impl() = delete;
 
 	Impl(GLuint sceneTex, std::string sceneName, SceneViewerType viewerType, std::function<void(bool)> selectCallback)
-		: m_textureID{ sceneTex }
+		: m_SelectSceneCallback{ selectCallback }	
 		, m_viewerName{ sceneName }
+		, m_textureID{ sceneTex }
 		, m_viewerType{ viewerType }
-		, m_SelectSceneCallback{ selectCallback }
 	{
 	}
 
-	Impl(Impl&& rhs) = delete;
-	Impl& operator=(Impl&& rhs) = delete;
+	Impl(Impl&& rhs) noexcept = default;
+	Impl& operator=(Impl&& rhs) noexcept = default;
 
-	Impl(const Impl& rhs) = delete;
-	Impl& operator=(const Impl& rhs) = delete;
+	Impl(const Impl& rhs) noexcept = delete;
+	Impl& operator=(const Impl& rhs) noexcept = delete;
 
 	GLuint GetTextureId() { return m_textureID; }
 	std::string GetViewerName() { return m_viewerName; }
 	SceneViewerType GetViewerType() { return m_viewerType; }
 	void InvokeSelectCallback(bool isSelected) { m_SelectSceneCallback(isSelected); }
 
-	~Impl() = default;
+	~Impl() noexcept = default;
 };
 
-
-
-SceneViewer::SceneViewer() = default;
-
 SceneViewer::SceneViewer(GLuint sceneTex, std::string sceneName, SceneViewerType viewerType, std::function<void(bool)> selectCallback)
-	: m_pImpl{ std::make_unique<Impl>(sceneTex, sceneName, viewerType, selectCallback) }
+	: m_pImpl{ Impl(sceneTex, sceneName, viewerType, selectCallback) }
 {
 }
 
-GLuint SceneViewer::GetTextureId() { return Pimpl()->GetTextureId(); }
+SceneViewer::SceneViewer(SceneViewer&& rhs) noexcept = default;
+SceneViewer& SceneViewer::operator=(SceneViewer&& rhs) noexcept = default;
 
-std::string SceneViewer::GetViewerName() { return Pimpl()->GetViewerName(); }
+GLuint SceneViewer::GetTextureId() { return Pimpl().GetTextureId(); }
 
-SceneViewerType SceneViewer::GetViewerType() { return Pimpl()->GetViewerType(); }
+std::string SceneViewer::GetViewerName() { return Pimpl().GetViewerName(); }
 
-void SceneViewer::InvokeSelectCallback(bool isSelected) { Pimpl()->InvokeSelectCallback(isSelected); }
+SceneViewerType SceneViewer::GetViewerType() { return Pimpl().GetViewerType(); }
 
-SceneViewer::~SceneViewer() = default;
+void SceneViewer::InvokeSelectCallback(bool isSelected) { Pimpl().InvokeSelectCallback(isSelected); }
+
+SceneViewer::~SceneViewer() noexcept = default;

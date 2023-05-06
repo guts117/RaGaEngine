@@ -8,7 +8,13 @@ using namespace PhysicsEngine;
 struct PhysicsEngineMain::Impl 
 {
 public:
-	Impl()
+	Impl(Impl&& rhs) noexcept = delete;
+	Impl& operator=(Impl&& rhs) noexcept = delete;
+
+	Impl(const Impl& rhs) noexcept = delete;
+	Impl& operator=(const Impl& rhs) noexcept = delete;
+
+	Impl() noexcept
 		: collisionConfig{ new btDefaultCollisionConfiguration() }
 		, dispatcher{ new btCollisionDispatcher(collisionConfig) }
 		, broadPhase{ new btDbvtBroadphase() }
@@ -63,7 +69,7 @@ public:
 		bodies->push_back(std::make_tuple(model, body));
 	}
 
-	~Impl()
+	~Impl() noexcept
 	{
 		for (int i = 0; i < bodies->size(); ++i)
 		{
@@ -109,4 +115,4 @@ void PhysicsEngineMain::AddSphere(float rad, float x, float y, float z, float ma
 	Pimpl()->AddSphere(rad, x, y, z, mass, model);
 }
 
-PhysicsEngineMain::~PhysicsEngineMain() = default;
+PhysicsEngineMain::~PhysicsEngineMain() noexcept = default;

@@ -50,11 +50,11 @@ struct RenderEngineMain::Impl
 {
 	Impl() = default;
 
-	Impl(Impl&& rhs) = delete;
-	Impl& operator=(Impl&& rhs) = delete;
+	Impl(Impl&& rhs) noexcept = delete;
+	Impl& operator=(Impl&& rhs) noexcept = delete;
 
-	Impl(const Impl& rhs) = delete;
-	Impl& operator=(const Impl& rhs) = delete;
+	Impl(const Impl& rhs) noexcept = delete;
+	Impl& operator=(const Impl& rhs) noexcept = delete;
 
 	bool drawFluidSim = false;
 	bool drawSmokeSim = false;
@@ -90,47 +90,47 @@ struct RenderEngineMain::Impl
 	std::unique_ptr<Compute_Shader> pressureProjectionCompShader3D = std::make_unique <Compute_Shader>();
 	std::unique_ptr <Model_Shader> fluidFragShader3D = std::make_unique<Model_Shader>();*/
 
-	std::shared_ptr<Scene_Fbo_Handler_Manager> m_SceneFboHandlerMgr;
+	std::unique_ptr<Scene_Fbo_Handler_Manager> m_SceneFboHandlerMgr;
 
-	std::shared_ptr <Shader_Object> environmentMapShader;
-	std::shared_ptr <Shader_Object> irradianceConvolutionShader;
-	std::shared_ptr <Shader_Object> prefilterShader;
-	std::shared_ptr <Shader_Object> brdfShader;
-	std::shared_ptr <Shader_Object> preZShader;
-	std::shared_ptr <Shader_Object> animPreZShader;
-	std::shared_ptr <Shader_Object> terrPreZShader;
-	std::shared_ptr <Shader_Object> ssaoShader;
-	std::shared_ptr <Shader_Object> ssaoBlurShader;
-	std::shared_ptr <Shader_Object> omniShadowShader;
-	std::shared_ptr <Shader_Object> dirShadowShader;
-	std::shared_ptr <Shader_Object> animOmniShadowShader;
-	std::shared_ptr <Shader_Object> animDirShadowShader;
-	std::shared_ptr <Shader_Object> terrOmniShadowShader;
-	std::shared_ptr <Shader_Object> terrDirShadowShader;
-	std::shared_ptr <Shader_Object> unrigShader;
-	std::shared_ptr <Shader_Object> rigShader;
-	std::shared_ptr <Shader_Object> terrShader;
-	std::shared_ptr <Shader_Object> bloomShader;
-	std::shared_ptr <Shader_Object> motionBlurShader;
-	std::shared_ptr <Shader_Object> exposureShader;
-	std::shared_ptr <Shader_Object> skyboxShader;
-	std::shared_ptr <Shader_Object> billboardShader;
-	std::shared_ptr <Shader_Object> particleShader;
+	Shader_Object* environmentMapShader;
+	Shader_Object* irradianceConvolutionShader;
+	Shader_Object* prefilterShader;
+	Shader_Object* brdfShader;
+	Shader_Object* preZShader;
+	Shader_Object* animPreZShader;
+	Shader_Object* terrPreZShader;
+	Shader_Object* ssaoShader;
+	Shader_Object* ssaoBlurShader;
+	Shader_Object* omniShadowShader;
+	Shader_Object* dirShadowShader;
+	Shader_Object* animOmniShadowShader;
+	Shader_Object* animDirShadowShader;
+	Shader_Object* terrOmniShadowShader;
+	Shader_Object* terrDirShadowShader;
+	Shader_Object* unrigShader;
+	Shader_Object* rigShader;
+	Shader_Object* terrShader;
+	Shader_Object* bloomShader;
+	Shader_Object* motionBlurShader;
+	Shader_Object* exposureShader;
+	Shader_Object* skyboxShader;
+	Shader_Object* billboardShader;
+	Shader_Object* particleShader;
 
-	std::shared_ptr <Fbo_Handler> environmentMap;
-	std::shared_ptr <Fbo_Handler> irradianceMap;
-	std::shared_ptr <Fbo_Handler> prefilterMap;
-	std::shared_ptr <Fbo_Handler> brdfMap;
-	std::shared_ptr <Fbo_Handler> depthMap;
-	std::shared_ptr <Fbo_Handler> ssaoFbo;
-	std::shared_ptr <Fbo_Handler> ssaoBlurFbo;
-	std::shared_ptr <Fbo_Handler> sceneFbo;
-	std::shared_ptr <Fbo_Handler> motionBlurFbo;
-	std::shared_ptr <Fbo_Handler> bloomFbo;
-	std::shared_ptr <Fbo_Handler> exposureFbo;
+	Fbo_Handler* environmentMap;
+	Fbo_Handler* irradianceMap;
+	Fbo_Handler* prefilterMap;
+	Fbo_Handler* brdfMap;
+	Fbo_Handler* depthMap;
+	Fbo_Handler* ssaoFbo;
+	Fbo_Handler* ssaoBlurFbo;
+	Fbo_Handler* sceneFbo;
+	Fbo_Handler* motionBlurFbo;
+	Fbo_Handler* bloomFbo;
+	Fbo_Handler* exposureFbo;
 
-	std::shared_ptr <Fbo_Handler> omniShadowMaps;
-	std::shared_ptr <Fbo_Handler> cameraBlitFbo;
+	Fbo_Handler* omniShadowMaps;
+	Fbo_Handler* cameraBlitFbo;
 
 	//ToDo: #62
 	//ToDo: To whomever it may concern. Probably me -_-
@@ -157,49 +157,71 @@ struct RenderEngineMain::Impl
 
 	//ToDo: Write everything with the above design in mind.
 
-	std::shared_ptr<std::vector<std::shared_ptr<Texture>>> texturePool;
-	std::shared_ptr<std::vector<std::shared_ptr<Mesh>>> meshPool;
-	std::shared_ptr<std::vector<std::shared_ptr<glm::mat4>>> modelMatrixPool;
-	std::shared_ptr<std::vector<std::shared_ptr<glm::mat4>>> prevModelMatrixPool;
-	std::shared_ptr<std::vector<std::vector<std::shared_ptr<Render_Object>>>> quadRO;
-	std::shared_ptr<std::vector<std::vector<std::shared_ptr<Render_Object>>>> cwCubeRO;
-	std::shared_ptr<std::vector<std::vector<std::shared_ptr<Render_Object>>>> sceneObjRO;
-	std::shared_ptr<std::vector<std::vector<std::shared_ptr<Render_Object>>>> billboardRO;
+	std::vector<Texture> texturePool;
+	std::vector<Mesh> meshPool;
+	std::vector<glm::mat4> modelMatrixPool;
+	std::vector<glm::mat4> prevModelMatrixPool;
+	std::vector<std::vector<Render_Object>> ssaoQuadRO;
+	std::vector<std::vector<Render_Object>> quadRO;
+	std::vector<std::vector<Render_Object>> cwCubeRO;
+	std::vector<std::vector<Render_Object>> sceneObjRO;
+	std::vector<std::vector<Render_Object>> billboardRO;
+	std::vector<Shader_Object> shaderObjPool;
 
-	void AddToMeshPool(std::shared_ptr<Mesh>&& mesh)
+	Mesh* AddToMeshPool(Mesh&& mesh)
 	{
-		meshPool->push_back(std::move(mesh));
+		meshPool.emplace_back(std::move(mesh));
+		return &meshPool.back();
 	}
-	void AddToModelMatrixPool(std::shared_ptr<glm::mat4>&& mat)
+	glm::mat4* AddToModelMatrixPool(glm::mat4&& mat)
 	{
-		modelMatrixPool->push_back(std::move(mat));
+		modelMatrixPool.emplace_back(std::move(mat));
+		return &modelMatrixPool.back();
 	}
-	void AddToPrevModelMatrixPool(std::shared_ptr<glm::mat4>&& mat)
+	glm::mat4* AddToPrevModelMatrixPool(glm::mat4&& mat)
 	{
-		prevModelMatrixPool->push_back(std::move(mat));
+		prevModelMatrixPool.emplace_back(std::move(mat));
+		return &prevModelMatrixPool.back();
 	}
 
-	std::unique_ptr<std::map<TexType, std::vector<std::weak_ptr<Texture>>>> CreateTextureMap(std::vector<TexMapData>&& texMapData)
+	std::map<TexType, std::vector<Texture*>> CreateTextureMap(std::vector<TexMapData>&& texMapData, const std::vector<glm::vec3>& color = std::vector<glm::vec3>())
 	{
-		auto textureMap = std::make_unique<std::map<TexType, std::vector<std::weak_ptr<Texture>>>>();
+		auto textureMap = std::map<TexType, std::vector<Texture*>>();
 
 		for(auto i = 0; i< texMapData.size(); ++i)
 		{
 			TexMapData& dat = texMapData[i];
-			auto texture = std::make_shared<Texture>(dat.path, dat.type == TexType::Albedo || TexType::Default);
-			auto wTexPtr = std::weak_ptr<Texture>(texture);
-			texturePool->push_back(texture);
-			if(texture->LoadTexture2D())
+			auto hasLoaded = false;
+			auto texture = Texture();
+			switch (dat.type)
 			{
-				if (textureMap->contains(dat.type))
+				case TexType::HDR:
+					texture = Texture(std::move(dat.path));
+					hasLoaded = texture.LoadTextureHDR();
+					break;
+				case TexType::Noise:
+					hasLoaded = texture.LoadNativeTexture(color);
+					break;
+				default:
+					texture = Texture(std::move(dat.path), dat.type == TexType::Albedo || TexType::Default);
+					hasLoaded = texture.LoadTexture2D();
+					break;
+			}
+
+			texturePool.emplace_back(std::move(texture));
+			auto* texPtr = &texturePool.back();
+
+			if(hasLoaded)
+			{
+				if (textureMap.contains(dat.type))
 				{
-					textureMap->at(dat.type).push_back(texture);
+					textureMap.at(dat.type).emplace_back(texPtr);
 				}
 				else
 				{
-					auto vec = std::vector<std::weak_ptr<Texture>>();
-					vec.push_back(wTexPtr);
-					textureMap->emplace(dat.type, vec);
+					auto vec = std::vector<Texture*>();
+					vec.emplace_back(texPtr);
+					textureMap.emplace(dat.type, vec);
 				}
 			}
 		}
@@ -207,11 +229,17 @@ struct RenderEngineMain::Impl
 		return textureMap;
 	}
 
+	Shader_Object* AddToShaderObjectPool(Shader_Object&& shaderObj)
+	{
+		shaderObjPool.emplace_back(std::move(shaderObj));
+		return &shaderObjPool.back();
+	}
+
 	std::vector< std::shared_ptr < ParticleSystem>> particleList;
 
-	std::unique_ptr<std::vector<std::weak_ptr<Mesh>>> quad;
-	std::unique_ptr<std::vector<std::weak_ptr<Mesh>>> cwCube;
-	std::shared_ptr < Mesh> ccw_cube;
+	//std::vector<Mesh*> quad;
+	//std::vector<Mesh*> cwCube;
+	//Mesh ccw_cube;
 
 	std::vector<std::shared_ptr<Camera>> cameras;
 
@@ -243,22 +271,22 @@ struct RenderEngineMain::Impl
 	//std::unique_ptr<Texture> div3D;
 	//std::unique_ptr<Texture> pressure3D;
  
-	std::shared_ptr < Texture> environmentTexture;
-	std::shared_ptr < Texture> SSAONoiseTexture;
-	std::unique_ptr < Texture> plainTexture;
+	//Texture environmentTexture;
+	//Texture SSAONoiseTexture;
+	//Texture plainTexture;
 
-	std::shared_ptr <Render_Object> pyramid1;
-	std::shared_ptr <Render_Object> pyramid2;
-	std::shared_ptr <Render_Object> rectangle1;
-	std::shared_ptr <Render_Object> rectangle2;
+	//Render_Object pyramid1;
+	//Render_Object pyramid2;
+	//Render_Object rectangle1;
+	//Render_Object rectangle2;
 
-	std::shared_ptr <Render_Object> sniper;
-	std::shared_ptr <Render_Object> gun;
-	std::shared_ptr <Render_Object> anymodel;
-	std::shared_ptr <Render_Object> cube;
-	std::shared_ptr <Render_Object> sphere;
-	std::shared_ptr <Render_Object> bulbWhite;
-	std::shared_ptr <Render_Object> bulbRed;
+	//Render_Object sniper;
+	//Render_Object gun;
+	//Render_Object anymodel;
+	//Render_Object cube;
+	//Render_Object sphere;
+	//Render_Object bulbWhite;
+	//Render_Object bulbRed;
 
 	std::shared_ptr<Brdf_Render_Pass_Handler> brdfRPHandler;
 	std::shared_ptr<Prefilter_Render_Pass_Handler> prefilterRPHandler;
@@ -351,22 +379,23 @@ struct RenderEngineMain::Impl
 	{
 		glEnable(GL_TEXTURE_3D);
 		lastFrameTime = static_cast<GLfloat>(glfwGetTime());
-		CreateBillboard();
+		//CreateBillboard();
 		//CreateParticles();
 
-		texturePool = std::make_shared<std::vector<std::shared_ptr<Texture>>>();
-		meshPool = std::make_shared<std::vector<std::shared_ptr<Mesh>>>();
-		modelMatrixPool = std::make_shared<std::vector<std::shared_ptr<glm::mat4>>>();
-		prevModelMatrixPool = std::make_shared<std::vector<std::shared_ptr<glm::mat4>>>();
-		sceneObjRO = std::make_shared<std::vector<std::vector<std::shared_ptr<Render_Object>>>>();
-		billboardRO = std::make_shared<std::vector<std::vector<std::shared_ptr<Render_Object>>>>();
+		texturePool = std::vector<Texture>();
+		meshPool = std::vector<Mesh>();
+		modelMatrixPool = std::vector<glm::mat4>();
+		prevModelMatrixPool = std::vector<glm::mat4>();
+		sceneObjRO = std::vector<std::vector<Render_Object>>();
+		billboardRO = std::vector<std::vector<Render_Object>>();
 
-		texturePool->reserve(100);
-		meshPool->reserve(100);
-		modelMatrixPool->reserve(100);
-		prevModelMatrixPool->reserve(100);
-		sceneObjRO->reserve(100);
-		billboardRO->reserve(100);
+		texturePool.reserve(100);
+		meshPool.reserve(100);
+		modelMatrixPool.reserve(100);
+		prevModelMatrixPool.reserve(100);
+		sceneObjRO.reserve(100);
+		billboardRO.reserve(100);
+		shaderObjPool.reserve(100);
 
 		//ToDo: Expand This on a dedicated issue #61
 		//CreateTerrain();
@@ -377,12 +406,6 @@ struct RenderEngineMain::Impl
 		cameras.push_back(gameCamera);
 		auto editorCamera = std::make_shared<Camera>(glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f, 50.0f, 0.2f, true);
 		cameras.push_back(editorCamera);
-
-		environmentTexture = std::make_shared<Texture>("Textures/HDR/syferfontein_0d_clear_puresky_4k.hdr");
-		environmentTexture->LoadTextureHDR();
-
-		plainTexture = std::make_unique <Texture>("Textures/plain.png", true);
-		plainTexture->LoadTexture2D();
 
 		//ToDo: #20 simulation manager class
 		/*velocitiesTexture = std::make_unique <Texture>();
@@ -433,7 +456,7 @@ struct RenderEngineMain::Impl
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-		m_SceneFboHandlerMgr = std::make_shared<Scene_Fbo_Handler_Manager>("InGame", screenDims);
+		m_SceneFboHandlerMgr = std::make_unique<Scene_Fbo_Handler_Manager>("InGame", screenDims);
 
 		environmentMap = m_SceneFboHandlerMgr->FindFboHandler("Environment_Map_Pass");
 		irradianceMap = m_SceneFboHandlerMgr->FindFboHandler("Irradiance_Map_Pass");
@@ -450,7 +473,7 @@ struct RenderEngineMain::Impl
 
 		cameraBlitFbo = m_SceneFboHandlerMgr->AddGameCameraFboHandlers(0, screenDims);
 
-		quad = std::make_unique <std::vector<std::weak_ptr<Mesh>>>();
+		auto quad = std::vector<Mesh*>();
 
 		std::vector<GLuint> quadIndices = {
 			0, 1, 2,
@@ -465,14 +488,25 @@ struct RenderEngineMain::Impl
 			std::vector<GLfloat>{  1.0f,  1.0f, 0.0f,		 1.0f, 1.0f },
 		};
 
-		auto qMesh = std::make_shared<Mesh>(0, std::move(quadVertices), std::move(quadIndices), std::move(MeshGenParams()));
-		quad->push_back(qMesh);
-		AddToMeshPool(std::move(qMesh));
-		quadRO = std::make_shared<std::vector<std::vector<std::shared_ptr<Render_Object>>>>();
-		auto qro = std::make_shared<Render_Object>(std::move(quad));
-		quadRO->push_back(std::vector<std::shared_ptr<Render_Object>>{qro});
+		auto quadIndicesSsao = quadIndices;
+		auto quadVerticesSsao = quadVertices;
 
-		cwCube = std::make_unique<std::vector<std::weak_ptr<Mesh>>>();
+		auto qMesh = Mesh(0, std::move(quadVertices), std::move(quadIndices), std::move(MeshGenParams()));	
+		quad.push_back(AddToMeshPool(std::move(qMesh)));
+		auto quadInVec = std::vector<Render_Object>();
+		quadInVec.emplace_back(Render_Object(std::move(quad)));
+		quadRO = std::vector<std::vector<Render_Object>>();
+		quadRO.emplace_back(std::move(quadInVec));
+		quad.clear();
+
+		qMesh = Mesh(0, std::move(quadVerticesSsao), std::move(quadIndicesSsao), std::move(MeshGenParams()));
+		quad.push_back(AddToMeshPool(std::move(qMesh)));
+		quadInVec = std::vector<Render_Object>();
+		quadInVec.emplace_back(Render_Object(std::move(quad)));
+		ssaoQuadRO = std::vector<std::vector<Render_Object>>();
+		ssaoQuadRO.emplace_back(std::move(quadInVec));
+
+		auto cwCube = std::vector<Mesh*>();
 		std::vector<GLuint> cwCubeIndices = {
 			//front
 			0,1,2,
@@ -507,12 +541,12 @@ struct RenderEngineMain::Impl
 
 		};
 
-		auto cwMesh = std::make_shared<Mesh>(0, std::move(cwCubeVertices), std::move(cwCubeIndices), std::move(MeshGenParams()));
-		cwCube->push_back(cwMesh);
-		AddToMeshPool(std::move(cwMesh));
-		cwCubeRO = std::make_shared<std::vector<std::vector<std::shared_ptr<Render_Object>>>>();
-		auto cro = std::make_shared<Render_Object>(std::move(cwCube));
-		cwCubeRO->push_back(std::vector<std::shared_ptr<Render_Object>>{cro});
+		auto cwMesh = Mesh(0, std::move(cwCubeVertices), std::move(cwCubeIndices), std::move(MeshGenParams()));
+		cwCube.push_back(AddToMeshPool(std::move(cwMesh)));
+		auto cwCubeInVec = std::vector<Render_Object>();
+		cwCubeInVec.emplace_back(Render_Object(std::move(cwCube)));
+		cwCubeRO = std::vector<std::vector<Render_Object>>();
+		cwCubeRO.emplace_back(std::move(cwCubeInVec));
 
 		//CW=======================================================================
 /*
@@ -639,18 +673,18 @@ struct RenderEngineMain::Impl
 		-0.5f, 0.5f, 0.5f, 0.0f, 0.0f, // bottom-left
 
 \*/
-		ccw_cube = std::make_shared <Mesh>(0, std::move(ccwCubeVertices), std::move(ccwCubeIndices), std::move(MeshGenParams()));
+		//ccw_cube = Mesh(0, std::move(ccwCubeVertices), std::move(ccwCubeIndices), std::move(MeshGenParams()));
 
 		mainLight = std::make_unique < DirectionalLight>(1024, 1024,
 			0.5f, 0.5f, 0.5f,
 			5500.0f, -5500.0f, -10000.0f,
-			m_SceneFboHandlerMgr);
+			m_SceneFboHandlerMgr.get());
 
 		pointLights[0] = std::make_unique < PointLight>(512, 512,
 			0.1f, 100.0f,
 			0.0f, 0.0f, 3.0f,
 			12.0f, 5.0f, 10.0f,
-			m_SceneFboHandlerMgr);
+			m_SceneFboHandlerMgr.get());
 
 		pointLightCount++;
 
@@ -658,7 +692,7 @@ struct RenderEngineMain::Impl
 			0.1f, 100.0f,
 			3.0f, 0.0f, 0.0f,
 			-12.0f, 5.0f, 10.0f,
-			m_SceneFboHandlerMgr);
+			m_SceneFboHandlerMgr.get());
 
 		pointLightCount++;
 
@@ -667,7 +701,7 @@ struct RenderEngineMain::Impl
 			10.0f, 10.0f, 10.0f,
 			0.0f, 0.0f, 0.0f,
 			0.0f, -1.0f, 0.0f,
-			10.0f, m_SceneFboHandlerMgr);
+			10.0f, m_SceneFboHandlerMgr.get());
 
 		spotLightCount++;
 
@@ -700,82 +734,87 @@ struct RenderEngineMain::Impl
 		InitSSBOs(screenDims);
 		CreateClusters();
 
-		auto envMapShaders = std::vector<std::shared_ptr<Shader_Object>>{ environmentMapShader };
-		envMapRPHandler = std::make_shared<Environment_Map_Render_Pass_Handler>(environmentMap, envMapShaders);
-		auto envMapTexData = std::map<TexType, std::vector<std::weak_ptr<Texture>>>();
-		envMapTexData.emplace(Default, std::vector<std::weak_ptr<Texture>>{environmentTexture});
-		cwCubeRO->at(0)[0]->SetTextures(std::move(envMapTexData));
-		envMapRPHandler->Update(*cwCubeRO);
-		cwCubeRO->at(0)[0]->ResetTextures();
+		//texMapDatas = std::vector<TexMapData>();
+		//texMapDatas.push_back(TexMapData{ TexType::Default,		"Textures/plain.png" });
+		//CreateTextureMap(std::move(texMapDatas));
 
-		auto irrConvShaders = std::vector<std::shared_ptr<Shader_Object>>{ irradianceConvolutionShader };
+		auto envMapShaders = std::vector<Shader_Object*>{ environmentMapShader };
+		envMapRPHandler = std::make_shared<Environment_Map_Render_Pass_Handler>(environmentMap, std::move(envMapShaders));
+		auto texMapDatas = std::vector<TexMapData>();
+		texMapDatas.push_back(TexMapData{ TexType::HDR,		"Textures/HDR/syferfontein_0d_clear_puresky_4k.hdr" });	
+		auto envMapTexData = CreateTextureMap(std::move(texMapDatas));
+		cwCubeRO[0][0].SetTextures(std::move(envMapTexData));
+		envMapRPHandler->Update(cwCubeRO);
+		cwCubeRO[0][0].ResetTextures();
+
+		auto irrConvShaders = std::vector<Shader_Object*>{ irradianceConvolutionShader };
 		auto inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
-		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(environmentMap)));
-		irrConvRPHandler = std::make_shared<Irradiance_Convolution_Render_Pass_Handler>(irradianceMap, irrConvShaders, inputs);
-		irrConvRPHandler->Update(*cwCubeRO);
+		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(environmentMap)));
+		irrConvRPHandler = std::make_shared<Irradiance_Convolution_Render_Pass_Handler>(irradianceMap, std::move(irrConvShaders), inputs);
+		irrConvRPHandler->Update(cwCubeRO);
 
-		auto prefilterShaders = std::vector<std::shared_ptr<Shader_Object>>{ prefilterShader };
-		prefilterRPHandler = std::make_shared<Prefilter_Render_Pass_Handler>(prefilterMap, prefilterShaders, inputs);
-		prefilterRPHandler->Update(*cwCubeRO);
+		auto prefilterShaders = std::vector<Shader_Object*>{ prefilterShader };
+		prefilterRPHandler = std::make_shared<Prefilter_Render_Pass_Handler>(prefilterMap, std::move(prefilterShaders), inputs);
+		prefilterRPHandler->Update(cwCubeRO);
 
-		auto brdfShaders = std::vector<std::shared_ptr<Shader_Object>>{ brdfShader };
-		brdfRPHandler = std::make_shared<Brdf_Render_Pass_Handler>(brdfMap, brdfShaders);
-		brdfRPHandler->Update(*quadRO);
+		auto brdfShaders = std::vector<Shader_Object*>{ brdfShader };
+		brdfRPHandler = std::make_shared<Brdf_Render_Pass_Handler>(brdfMap, std::move(brdfShaders));
+		brdfRPHandler->Update(quadRO);
 
-		auto dirShadowShaders = std::vector<std::shared_ptr<Shader_Object>>{ dirShadowShader, animDirShadowShader, terrDirShadowShader };
-		dirShadowRPHandler = std::make_shared<Directional_Shadow_Map_Render_Pass_Handler>(mainLight->GetShadowMap(), dirShadowShaders);
+		auto dirShadowShaders = std::vector<Shader_Object*>{ dirShadowShader, animDirShadowShader, terrDirShadowShader };
+		dirShadowRPHandler = std::make_shared<Directional_Shadow_Map_Render_Pass_Handler>(mainLight->GetShadowMap(), std::move(dirShadowShaders));
 
-		auto ommiShadowShaders = std::vector<std::shared_ptr<Shader_Object>>{ omniShadowShader, animOmniShadowShader };
-		omniShadowRPHandler = std::make_shared<Omni_Directional_Shadow_Map_Render_Pass_Handler>(omniShadowMaps, ommiShadowShaders);
+		auto ommiShadowShaders = std::vector<Shader_Object*>{ omniShadowShader, animOmniShadowShader };
+		omniShadowRPHandler = std::make_shared<Omni_Directional_Shadow_Map_Render_Pass_Handler>(omniShadowMaps, std::move(ommiShadowShaders));
 
-		auto prezShaders = std::vector<std::shared_ptr<Shader_Object>>{ preZShader, animPreZShader, terrPreZShader};
-		preZRPHandler = std::make_shared<PreZ_Render_Pass_Handler>(depthMap, prezShaders);
+		auto prezShaders = std::vector<Shader_Object*>{ preZShader, animPreZShader, terrPreZShader};
+		preZRPHandler = std::make_shared<PreZ_Render_Pass_Handler>(depthMap, std::move(prezShaders));
 
-		auto ssaoShaders = std::vector<std::shared_ptr<Shader_Object>>{ ssaoShader };
+		auto ssaoShaders = std::vector<Shader_Object*>{ ssaoShader };
 		inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
-		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(depthMap)));
-		ssaoRPHandler = std::make_shared<Ssao_Render_Pass_Handler>(ssaoFbo, ssaoShaders, inputs);
+		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(depthMap)));
+		ssaoRPHandler = std::make_shared<Ssao_Render_Pass_Handler>(ssaoFbo, std::move(ssaoShaders), inputs);
 		InitSSAO();
 
-		auto ssaoBlurShaders = std::vector<std::shared_ptr<Shader_Object>>{ ssaoBlurShader };
+		auto ssaoBlurShaders = std::vector<Shader_Object*>{ ssaoBlurShader };
 		inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
-		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(ssaoFbo)));
-		ssaoBlurRPHandler = std::make_shared<Ssao_Blur_Render_Pass_Handler>(ssaoBlurFbo, ssaoBlurShaders, inputs);
+		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(ssaoFbo)));
+		ssaoBlurRPHandler = std::make_shared<Ssao_Blur_Render_Pass_Handler>(ssaoBlurFbo, std::move(ssaoBlurShaders), inputs);
 
-		auto sceneShaders = std::vector<std::shared_ptr<Shader_Object>>{ unrigShader, rigShader, terrShader};
+		auto sceneShaders = std::vector<Shader_Object*>{ unrigShader, rigShader, terrShader};
 		inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
-		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(mainLight->GetShadowMap())));
-		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(omniShadowMaps)));
-		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(irradianceMap)));
-		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(prefilterMap)));
-		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(brdfMap)));
-		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(ssaoBlurFbo)));
-		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(depthMap)));
-		sceneRPHandler = std::make_shared<Scene_Render_Pass_Handler>(sceneFbo, sceneShaders, inputs);
+		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(mainLight->GetShadowMap())));
+		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(omniShadowMaps)));
+		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(irradianceMap)));
+		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(prefilterMap)));
+		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(brdfMap)));
+		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(ssaoBlurFbo)));
+		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(depthMap)));
+		sceneRPHandler = std::make_shared<Scene_Render_Pass_Handler>(sceneFbo, std::move(sceneShaders), inputs);
 
-		auto bloomShaders = std::vector<std::shared_ptr<Shader_Object>>{ bloomShader };
+		auto bloomShaders = std::vector<Shader_Object*>{ bloomShader };
 		inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
-		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(sceneFbo)));
-		bloomRPHandler = std::make_shared<Bloom_Render_Pass_Handler>(bloomFbo, bloomShaders, inputs);
+		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(sceneFbo)));
+		bloomRPHandler = std::make_shared<Bloom_Render_Pass_Handler>(bloomFbo, std::move(bloomShaders), inputs);
 
-		auto motionBlurShaders = std::vector<std::shared_ptr<Shader_Object>>{ motionBlurShader };
+		auto motionBlurShaders = std::vector<Shader_Object*>{ motionBlurShader };
 		inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
-		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(sceneFbo)));
-		motionBlurRPHandler = std::make_shared<Motion_Blur_Render_Pass_Handler>(motionBlurFbo, motionBlurShaders, inputs);
+		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(sceneFbo)));
+		motionBlurRPHandler = std::make_shared<Motion_Blur_Render_Pass_Handler>(motionBlurFbo, std::move(motionBlurShaders), inputs);
 
-		auto exosureShaders = std::vector<std::shared_ptr<Shader_Object>>{ exposureShader };
+		auto exosureShaders = std::vector<Shader_Object*>{ exposureShader };
 		inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
-		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(bloomFbo)));
-		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(motionBlurFbo)));
-		exposureRPHandler = std::make_shared<Exposure_Render_Pass_Handler>(exposureFbo, exosureShaders, inputs);
+		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(bloomFbo)));
+		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(motionBlurFbo)));
+		exposureRPHandler = std::make_shared<Exposure_Render_Pass_Handler>(exposureFbo, std::move(exosureShaders), inputs);
 
-		auto skyboxShaders = std::vector<std::shared_ptr<Shader_Object>>{ skyboxShader };
+		auto skyboxShaders = std::vector<Shader_Object*>{ skyboxShader };
 		inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
-		inputs->push_back(std::make_shared<std::any>(std::make_any<std::shared_ptr<Fbo_Handler>>(environmentMap)));
-		skyboxRPHandler = std::make_shared<Skybox_Render_Pass_Handler>(sceneFbo, skyboxShaders, inputs);
+		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(environmentMap)));
+		skyboxRPHandler = std::make_shared<Skybox_Render_Pass_Handler>(sceneFbo, std::move(skyboxShaders), inputs);
 
-		auto billboardShaders = std::vector<std::shared_ptr<Shader_Object>>{ billboardShader };
-		billBoardRPHandler = std::make_shared<Billboard_Render_Pass_Handler>(sceneFbo, billboardShaders);
+		auto billboardShaders = std::vector<Shader_Object*>{ billboardShader };
+		billBoardRPHandler = std::make_shared<Billboard_Render_Pass_Handler>(sceneFbo, std::move(billboardShaders));
 	}
 
 	void InitSSAO() 
@@ -791,8 +830,11 @@ struct RenderEngineMain::Impl
 				0.0f);
 			ssaoNoiseData[i] = noise;
 		}
-		SSAONoiseTexture = std::make_shared<Texture>();
-		SSAONoiseTexture->LoadNativeTexture(ssaoNoiseData);
+
+		auto texMapDatas = std::vector<TexMapData>();
+		texMapDatas.push_back(TexMapData{ TexType::Noise, "" });
+		auto ssaoTexData = CreateTextureMap(std::move(texMapDatas), ssaoNoiseData);
+		ssaoQuadRO[0][0].SetTextures(std::move(ssaoTexData));
 	}
 	
 	void UpdateAtFrameBufferResize(const glm::ivec2& screenDims)
@@ -848,11 +890,11 @@ struct RenderEngineMain::Impl
 				RenderPass(camParam, mainLight.get(), pointLights, spotLights);
 				Bloom();
 				MotionBlurPass(camParam);
-				exposureRPHandler->Update(*quadRO);
+				exposureRPHandler->Update(quadRO);
 
 				if (!camera->isEditor)
 				{
-					exposureFbo->Blit(0, *cameraBlitFbo, 0);
+					exposureFbo->Blit(0, cameraBlitFbo, 0);
 					auto lowerLight = camParam.Position;
 					lowerLight.y -= 0.1f;
 					spotLights[0]->SetFlash(lowerLight, camera->getCameraDirection());
@@ -980,7 +1022,7 @@ struct RenderEngineMain::Impl
 		buildAABBGridCompShader->DispatchShaderObject(glm::uvec3(1, 1, gridSizeZ));
 	}
 
-	std::shared_ptr<Mesh> CreateBillboard() 
+	Mesh CreateBillboard() 
 	{
 		//Show the front face to the camera
 		std::vector<GLuint> billboardIndices = {
@@ -995,7 +1037,7 @@ struct RenderEngineMain::Impl
 			std::vector<GLfloat>{	-0.5f, 0.5f, 0.0f,		},
 			std::vector<GLfloat>{	0.5f, 0.5f, 0.0f,		}
 		};
-		return std::make_shared<Mesh>(0, std::move(billboardVertices), std::move(billboardIndices), std::move(MeshGenParams{ }));
+		return Mesh(0, std::move(billboardVertices), std::move(billboardIndices), std::move(MeshGenParams{ }));
 	}
 
 	void CreateParticles()
@@ -1044,7 +1086,7 @@ struct RenderEngineMain::Impl
 		//terrainList->push_back(obj);
 	}
 
-	std::shared_ptr<Mesh> CreatePrism()
+	Mesh CreatePrism()
 	{
 		std::vector<GLuint> indices = {
 			1,3,0,
@@ -1064,10 +1106,10 @@ struct RenderEngineMain::Impl
 		MathUtil::CalcAverageNormals(indices, vertices, 5);
 		MathUtil::CalcAverageTangents(indices, vertices, 8);
 
-		return std::make_shared<Mesh>(0, std::move(vertices), std::move(indices), std::move(MeshGenParams{true, true}));
+		return Mesh(0, std::move(vertices), std::move(indices), std::move(MeshGenParams{ true, true }));
 	}
 
-	std::shared_ptr<Mesh> CreatePlane()
+	Mesh CreatePlane()
 	{
 		std::vector<GLuint> indices = {
 			0, 2, 1,
@@ -1084,12 +1126,12 @@ struct RenderEngineMain::Impl
 		MathUtil::CalcAverageNormals(indices, vertices, 5);
 		MathUtil::CalcAverageTangents(indices, vertices, 8);
 
-		return std::make_shared<Mesh>(0, std::move(vertices), std::move(indices), std::move(MeshGenParams{ true, true }));
+		return Mesh(0, std::move(vertices), std::move(indices), std::move(MeshGenParams{ true, true }));
 	}
 
 	void CreateObject() 
 	{	
-		std::vector<std::shared_ptr<Render_Object>> unrigStuff;
+		auto unrigStuff = std::vector<Render_Object>();
 
 		auto mesh0 = CreatePrism();
 		auto texMapDatas = std::vector<TexMapData>();
@@ -1099,20 +1141,15 @@ struct RenderEngineMain::Impl
 		texMapDatas.push_back(TexMapData{ TexType::Normal,		"Textures/Normal/rustediron2.png" });				//Textures/Normal/small_metal_debris.jpg
 		texMapDatas.push_back(TexMapData{ TexType::Parallax,	"Textures/Parallax/rustediron2.png" });				//Textures/Parallax/small_metal_debris.jpg
 		texMapDatas.push_back(TexMapData{ TexType::Glow,		"Textures/Glow/rock.jpg" });						//Textures/Glow/small_metal_debris.jpg
-		auto modelMatrix = std::make_shared<glm::mat4>(1.0f);
-		auto prevModelMatrix = std::make_shared<glm::mat4>(1.0f);
+		auto modelMatrix = glm::mat4(1.0f);
+		auto prevModelMatrix = glm::mat4(1.0f);
 
 		auto texMap = CreateTextureMap(std::move(texMapDatas));
 
-		std::unique_ptr<std::vector<std::weak_ptr<Mesh>>> mesh = std::make_unique<std::vector<std::weak_ptr<Mesh>>>();
-		mesh->push_back(mesh0);
-		AddToMeshPool(std::move(mesh0));
-		
-		auto mro = std::make_shared<Render_Object>(std::move(mesh), std::move(texMap), modelMatrix, prevModelMatrix);
-
-		AddToModelMatrixPool(std::move(modelMatrix));
-		AddToPrevModelMatrixPool(std::move(prevModelMatrix));
-		unrigStuff.push_back(std::move(mro));
+		std::vector<Mesh*> mesh = std::vector<Mesh*>();
+		mesh.push_back(AddToMeshPool(std::move(mesh0)));
+		auto mro = Render_Object(std::move(mesh), std::move(texMap), AddToModelMatrixPool(std::move(modelMatrix)), AddToPrevModelMatrixPool(std::move(prevModelMatrix)));
+		unrigStuff.emplace_back(std::move(mro));
 
 		mesh0 = CreatePlane();
 		texMapDatas = std::vector<TexMapData>();
@@ -1122,47 +1159,37 @@ struct RenderEngineMain::Impl
 		texMapDatas.push_back(TexMapData{ TexType::Normal,		"Textures/Normal/brick_floor.png" });				//Textures/Normal/brick.jpg
 		texMapDatas.push_back(TexMapData{ TexType::Parallax,	"Textures/Parallax/brick_floor.png" });				//Textures/Parallax/brick.jpg
 		texMapDatas.push_back(TexMapData{ TexType::Glow,		"Textures/Glow/brick_floor.png" });					//Textures/Glow/brick.jpg
-		modelMatrix = std::make_shared<glm::mat4>(1.0f);
-		prevModelMatrix = std::make_shared<glm::mat4>(1.0f);
+		modelMatrix = glm::mat4(1.0f);
+		prevModelMatrix = glm::mat4(1.0f);
+		modelMatrix = glm::translate(modelMatrix, glm::vec3(0.0f, -4.0f, 0.0f));
 
 		texMap = CreateTextureMap(std::move(texMapDatas));
-
-		mesh = std::make_unique<std::vector<std::weak_ptr<Mesh>>>();
-		mesh->push_back(mesh0);
-		AddToMeshPool(std::move(mesh0));
-
-		mro = std::make_shared<Render_Object>(std::move(mesh), std::move(texMap), modelMatrix, prevModelMatrix);
-
-		*modelMatrix = glm::translate(*modelMatrix, glm::vec3(0.0f, -4.0f, 0.0f));
-		AddToModelMatrixPool(std::move(modelMatrix));
-		AddToPrevModelMatrixPool(std::move(prevModelMatrix));
+		
+		mesh = std::vector<Mesh*>();
+		mesh.push_back(AddToMeshPool(std::move(mesh0)));
+		mro = Render_Object(std::move(mesh), std::move(texMap), AddToModelMatrixPool(std::move(modelMatrix)), AddToPrevModelMatrixPool(std::move(prevModelMatrix)));
 		unrigStuff.push_back(std::move(mro));
 
-		sceneObjRO->push_back(unrigStuff);
+		sceneObjRO.push_back(std::move(unrigStuff));
 
-		std::vector<std::shared_ptr<Render_Object>> billboardStuff;
+		auto billboardStuff = std::vector<Render_Object>();
 
 		mesh0 = CreateBillboard();
 		texMapDatas = std::vector<TexMapData>();
 		texMapDatas.push_back(TexMapData{ TexType::Default,		"Textures/grass.png" });
-		modelMatrix = std::make_shared<glm::mat4>(1.0f);
-		prevModelMatrix = std::make_shared<glm::mat4>(1.0f);
+		modelMatrix = glm::mat4(1.0f);
+		prevModelMatrix = glm::mat4(1.0f);
+		modelMatrix = glm::translate(modelMatrix, glm::vec3(0.0f, -3.5f, 0.0f));
+		modelMatrix = glm::scale(modelMatrix, glm::vec3(2.0f, 2.0f, 0.0f));
 
 		texMap = CreateTextureMap(std::move(texMapDatas));
-
-		mesh = std::make_unique<std::vector<std::weak_ptr<Mesh>>>();
-		mesh->push_back(mesh0);
-		AddToMeshPool(std::move(mesh0));
-
-		mro = std::make_shared<Render_Object>(std::move(mesh), std::move(texMap), modelMatrix, prevModelMatrix);
-
-		*modelMatrix = glm::translate(*modelMatrix, glm::vec3(0.0f, -3.5f, 0.0f));
-		*modelMatrix = glm::scale(*modelMatrix, glm::vec3(2.0f, 2.0f, 0.0f));
-		AddToModelMatrixPool(std::move(modelMatrix));
-		AddToPrevModelMatrixPool(std::move(prevModelMatrix));
+		
+		mesh = std::vector<Mesh*>();
+		mesh.push_back(AddToMeshPool(std::move(mesh0)));
+		mro = Render_Object(std::move(mesh), std::move(texMap), AddToModelMatrixPool(std::move(modelMatrix)), AddToPrevModelMatrixPool(std::move(prevModelMatrix)));
 		billboardStuff.push_back(std::move(mro));
 
-		billboardRO->push_back(billboardStuff);
+		billboardRO.push_back(std::move(billboardStuff));
 	}
 
 	void CreateShaders() {
@@ -1192,31 +1219,31 @@ struct RenderEngineMain::Impl
 		//jacobiCompShader3D->CreateFromFiles("Shaders/3DFluid/jacobi.comp");
 		//pressureProjectionCompShader3D->CreateFromFiles("Shaders/3DFluid/pressureProjection.comp");
 
-		environmentMapShader 		= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/cubemap.vert", "Shaders/equirectangular_to_cubemap.frag"});
-		irradianceConvolutionShader = std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/cubemap.vert", "Shaders/irradiance_covolution.frag"});
-		prefilterShader 			= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/cubemap.vert", "Shaders/prefilter.frag"});
-		brdfShader 					= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/brdf.frag"});
-		dirShadowShader				= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/directional_shadow_map.vert", "Shaders/directional_shadow_map.frag"});
-		animDirShadowShader			= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/anim_directional_shadow_map.vert", "Shaders/directional_shadow_map.frag"});
-		terrDirShadowShader			= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain_directional_shadow_map.tesse", "Shaders/directional_shadow_map.frag"});
-		omniShadowShader			= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/omni_shadow_map.vert", "Shaders/omni_shadow_map.geom", "Shaders/omni_shadow_map.frag"});
-		animOmniShadowShader		= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/anim_omni_shadow_map.vert", "Shaders/omni_shadow_map.geom", "Shaders/omni_shadow_map.frag"});
+		environmentMapShader		= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/cubemap.vert", "Shaders/equirectangular_to_cubemap.frag"}));
+		irradianceConvolutionShader = AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/cubemap.vert", "Shaders/irradiance_covolution.frag"}));
+		prefilterShader 			= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/cubemap.vert", "Shaders/prefilter.frag"}));
+		brdfShader 					= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/brdf.frag"}));
+		dirShadowShader				= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/directional_shadow_map.vert", "Shaders/directional_shadow_map.frag"}));
+		animDirShadowShader			= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/anim_directional_shadow_map.vert", "Shaders/directional_shadow_map.frag"}));
+		terrDirShadowShader			= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain_directional_shadow_map.tesse", "Shaders/directional_shadow_map.frag"}));
+		omniShadowShader			= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/omni_shadow_map.vert", "Shaders/omni_shadow_map.geom", "Shaders/omni_shadow_map.frag"}));
+		animOmniShadowShader		= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/anim_omni_shadow_map.vert", "Shaders/omni_shadow_map.geom", "Shaders/omni_shadow_map.frag"}));
 		//terrOmniShadowShader.CreateFromFiles("Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain_omni_directional_shadow_map.tesse", "Shaders/omni_shadow_map.geom", "Shaders/directional_shadow_map.frag");
-		preZShader					= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/depth_framebuffer.vert", "Shaders/depth_framebuffer.frag"});
-		animPreZShader				= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/anim_depth_framebuffer.vert", "Shaders/depth_framebuffer.frag"}); 
-		terrPreZShader				= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain_depth_framebuffer.tesse", "Shaders/depth_framebuffer.frag"});
-		ssaoShader					= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/ssao_framebuffer.vert", "Shaders/ssao_framebuffer.frag"});
-		ssaoBlurShader				= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/ssao_blur_framebuffer.frag"});
-		unrigShader					= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/shader.vert", "Shaders/shader.frag"});
-		rigShader					= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/animated_shader.vert", "Shaders/shader.frag"});
-		terrShader					= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain.tesse", "Shaders/terrain.frag"});
-		bloomShader					= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/blur_framebuffer.frag"});
-		motionBlurShader			= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/motionBlur_framebuffer.frag"});
-		exposureShader				= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/hdr_framebuffer.frag"});
-		skyboxShader				= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/skybox.vert", "Shaders/skybox.frag"});
+		preZShader					= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/depth_framebuffer.vert", "Shaders/depth_framebuffer.frag"}));
+		animPreZShader				= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/anim_depth_framebuffer.vert", "Shaders/depth_framebuffer.frag"}));
+		terrPreZShader				= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain_depth_framebuffer.tesse", "Shaders/depth_framebuffer.frag"}));
+		ssaoShader					= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/ssao_framebuffer.vert", "Shaders/ssao_framebuffer.frag"}));
+		ssaoBlurShader				= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/ssao_blur_framebuffer.frag"}));
+		unrigShader					= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/shader.vert", "Shaders/shader.frag"}));
+		rigShader					= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/animated_shader.vert", "Shaders/shader.frag"}));
+		terrShader					= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain.tesse", "Shaders/terrain.frag"}));
+		bloomShader					= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/blur_framebuffer.frag"}));
+		motionBlurShader			= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/motionBlur_framebuffer.frag"}));
+		exposureShader				= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/hdr_framebuffer.frag"}));
+		skyboxShader				= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/skybox.vert", "Shaders/skybox.frag"}));
 		
-		billboardShader				= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/billboard.vert", "Shaders/billboard.frag"});
-		particleShader				= std::make_shared<Shader_Object>(std::vector<std::string>{"Shaders/particles.vert", "Shaders/particles.frag"});
+		billboardShader				= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/billboard.vert", "Shaders/billboard.frag"}));
+		particleShader				= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/particles.vert", "Shaders/particles.frag"}));
 
 		//ToDo: #20 simulation manager class
 		//fluidFragShader->CreateFromFiles("Shaders/framebuffer.vert", "Shaders/2DFluid/fluid.frag");
@@ -1248,7 +1275,7 @@ struct RenderEngineMain::Impl
 		}
 
 		auto lightParam = LightParam{ nullptr, proj, vView };
-		dirShadowRPHandler->Update(*sceneObjRO, &camParam, &lightParam);
+		dirShadowRPHandler->Update(sceneObjRO, &camParam, &lightParam);
 	}
 
 	void OmniShadowMapPass(const std::vector<std::shared_ptr<PointLight>>& lights, const CamParam& camParam) 
@@ -1265,7 +1292,7 @@ struct RenderEngineMain::Impl
 		}
 
 		auto lightParam = LightParam(&positions[0], &projections[0], nullptr, nullptr, &farplanes[0], nullptr, lights.size());
-		omniShadowRPHandler->Update(*sceneObjRO, &camParam, &lightParam);
+		omniShadowRPHandler->Update(sceneObjRO, &camParam, &lightParam);
 	}
 
 	void CullLight(const CamParam& camParam, const glm::ivec2& screenDims)
@@ -1303,21 +1330,17 @@ struct RenderEngineMain::Impl
 
 	void PreZPass(const CamParam& camParam)
 	{
-		preZRPHandler->Update(*sceneObjRO, &camParam);
+		preZRPHandler->Update(sceneObjRO, &camParam);
 	}
 
 	void SSAOPass(const CamParam& camParam)
 	{
-		auto ssaoTexData = std::map<TexType, std::vector<std::weak_ptr<Texture>>>();
-		ssaoTexData.emplace(Noise, std::vector<std::weak_ptr<Texture>>{SSAONoiseTexture});
-		quadRO->at(0)[0]->SetTextures(std::move(ssaoTexData));
-		ssaoRPHandler->Update(*quadRO, &camParam);
-		quadRO->at(0)[0]->ResetTextures();
+		ssaoRPHandler->Update(ssaoQuadRO, &camParam);
 	}
 
 	void SSAOBlurPass(const CamParam& camParam)
 	{
-		ssaoBlurRPHandler->Update(*quadRO, &camParam);
+		ssaoBlurRPHandler->Update(quadRO, &camParam);
 	}
 
 	struct LightData
@@ -1378,20 +1401,20 @@ struct RenderEngineMain::Impl
 
 		lightParam = LightParam(&lightData->positions[0], &lightData->projections[0], nullptr, &lightData->directions[0], &lightData->farplanes[0], &lightData->edges[0], spotLightCount, &lightData->colors[0]);
 		lightParamList.push_back(std::move(lightParam));
-		sceneRPHandler->Update(*sceneObjRO, &camParam, &lightParamList[0]);
+		sceneRPHandler->Update(sceneObjRO, &camParam, &lightParamList[0]);
 		//Note: **Important** skybox being after transparent mesh causes blending issues
-		skyboxRPHandler->Update(*cwCubeRO, &camParam);		
-		billBoardRPHandler->Update(*billboardRO, &camParam);
+		skyboxRPHandler->Update(cwCubeRO, &camParam);		
+		billBoardRPHandler->Update(billboardRO, &camParam);
 	}
 
 	void Bloom()
 	{
-		bloomRPHandler->Update(*quadRO);
+		bloomRPHandler->Update(quadRO);
 	}
 
 	void MotionBlurPass(const CamParam& camParam)
 	{
-		motionBlurRPHandler->Update(*quadRO, &camParam);
+		motionBlurRPHandler->Update(quadRO, &camParam);
 	}
 
 	//ToDo: #20 simulation manager class
@@ -1768,7 +1791,7 @@ struct RenderEngineMain::Impl
 	//	ccw_cube->RenderCCWCube();
 	//}
 
-	~Impl()
+	~Impl() noexcept
 	{
 		if (AABBvolumeGridSSBO != 0)
 		{

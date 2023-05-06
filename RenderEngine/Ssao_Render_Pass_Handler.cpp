@@ -8,10 +8,10 @@
 using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
-Ssao_Render_Pass_Handler::Ssao_Render_Pass_Handler(std::shared_ptr<Fbo_Handler> fboHandlr
-	, const std::vector<std::shared_ptr<Shader_Object>>& shaderVec
+Ssao_Render_Pass_Handler::Ssao_Render_Pass_Handler(Fbo_Handler* fboHandlr
+	, std::vector<Shader_Object*>&& shaderVec
 	, std::shared_ptr<std::vector<std::shared_ptr<std::any>>> inputs)
-	: Render_Pass_Handler(fboHandlr, shaderVec, inputs)
+	: Render_Pass_Handler(fboHandlr, std::move(shaderVec), inputs)
 {
 }
 
@@ -32,9 +32,9 @@ void Ssao_Render_Pass_Handler::Init()
 		kernel[i] = v;
 	}
 
-	for (auto shaderIndex = 0; shaderIndex < m_shaderVec->size(); ++shaderIndex)
+	for (auto shaderIndex = 0; shaderIndex < m_shaderVec.size(); ++shaderIndex)
 	{
-		auto shader = m_shaderVec->at(shaderIndex);
+		auto shader = m_shaderVec[shaderIndex];
 
 		shader->UseShaderObject();
 		shader->SetVariable("Kernel", std::make_tuple(KERNEL_SIZE, kernel));
@@ -42,7 +42,7 @@ void Ssao_Render_Pass_Handler::Init()
 	}
 }
 
-void Ssao_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared_ptr<Render_Object>>>& renderObj, const CamParam* camParam, const LightParam* lightParam)
+void Ssao_Render_Pass_Handler::Update(const std::vector<std::vector<Render_Object>>& renderObj, const CamParam* camParam, const LightParam* lightParam)
 {
 	glViewport(0, 0, m_fboHandler->GetFBOWidth(), m_fboHandler->GetFBOHeight());
 
@@ -50,18 +50,18 @@ void Ssao_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared_
 	//clear color buffer
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	for (auto shaderIndex = 0; shaderIndex < m_shaderVec->size(); ++shaderIndex)
+	for (auto shaderIndex = 0; shaderIndex < m_shaderVec.size(); ++shaderIndex)
 	{
 		if (shaderIndex >= renderObj.size()) { break; }
 
-		auto& shader = m_shaderVec->at(shaderIndex);
+		auto& shader = m_shaderVec[shaderIndex];
 
 		shader->ResetTextureUnit(0);
 		shader->UseShaderObject();
 
-		if (auto val = CheckInputDataType<std::shared_ptr<Fbo_Handler>>(*m_inputs->at(0)))
+		if (auto val = CheckInputDataType<Fbo_Handler*>(*m_inputs->at(0)))
 		{
-			val->get()->AttachFBOToTextureUnit(0, shader->SetTextureUnit("theTexture"), 0, 0);
+			val->AttachFBOToTextureUnit(0, shader->SetTextureUnit("theTexture"), 0, 0);
 		}
 
 		shader->SetVariable("SampleRad", 0.1f);
@@ -69,7 +69,7 @@ void Ssao_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared_
 
 		for (auto roIndex = 0; roIndex < renderObj[shaderIndex].size(); ++roIndex)
 		{
-			renderObj[shaderIndex][roIndex]->RenderObject(*shader, std::move(RenderObjectParams{ false, true}));
+			renderObj[shaderIndex][roIndex].RenderObject(*shader, std::move(RenderObjectParams{ false, true}));
 		}
 		shader->ValidateShaderObject();
 	}

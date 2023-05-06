@@ -8,14 +8,14 @@
 using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
-Scene_Render_Pass_Handler::Scene_Render_Pass_Handler(std::shared_ptr<Fbo_Handler> fboHandlr
-	, const std::vector<std::shared_ptr<Shader_Object>>& shaderVec
+Scene_Render_Pass_Handler::Scene_Render_Pass_Handler(Fbo_Handler* fboHandlr
+	, std::vector<Shader_Object*>&& shaderVec
 	, std::shared_ptr<std::vector<std::shared_ptr<std::any>>> inputs)
-	: Render_Pass_Handler(fboHandlr, shaderVec, inputs)
+	: Render_Pass_Handler(fboHandlr, std::move(shaderVec), inputs)
 {
 }
 
-void Scene_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared_ptr<Render_Object>>>& renderObj, const CamParam* camParam, const LightParam* lightParam)
+void Scene_Render_Pass_Handler::Update(const std::vector<std::vector<Render_Object>>& renderObj, const CamParam* camParam, const LightParam* lightParam)
 {
 	glViewport(0, 0, m_fboHandler->GetFBOWidth(), m_fboHandler->GetFBOHeight());
 
@@ -25,11 +25,11 @@ void Scene_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared
 
 	auto inputTexBuffs = std::vector<std::string>{ "irradianceMap" , "prefilterMap", "brdfLUT", "AOMap", "depthMap" };
 
-	for (auto shaderIndex = 0; shaderIndex < m_shaderVec->size(); ++shaderIndex)
+	for (auto shaderIndex = 0; shaderIndex < m_shaderVec.size(); ++shaderIndex)
 	{
 		if (shaderIndex >= renderObj.size()) { break; }
 
-		auto& shader = m_shaderVec->at(shaderIndex);
+		auto& shader = m_shaderVec[shaderIndex];
 
 		shader->ResetTextureUnit(0);
 		shader->UseShaderObject();
@@ -41,21 +41,21 @@ void Scene_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared
 
 		auto inputOffset = 0;
 
-		if (auto val = CheckInputDataType<std::shared_ptr<Fbo_Handler>>(*m_inputs->at(inputOffset)))
+		if (auto val = CheckInputDataType<Fbo_Handler*>(*m_inputs->at(inputOffset)))
 		{
 			shader->SetVariable("directionalLight", *lightParam[0].Color, 0, "color");
 			shader->SetVariable("directionalLight", *lightParam[0].Direction, 0, "direction");
 
 			for (auto cascId = 0; cascId < NUM_CASCADES; ++cascId)
 			{
-				val->get()->AttachFBOToTextureUnit(0, shader->SetTextureUnit("directionalShadowMaps", cascId, "shadowMap"), 0, cascId);
+				val->AttachFBOToTextureUnit(0, shader->SetTextureUnit("directionalShadowMaps", cascId, "shadowMap"), 0, cascId);
 				shader->SetVariable("DirectionalLightTransforms", lightParam[0].Projection[cascId] * lightParam[0].View[cascId], cascId);
 				shader->SetVariable("CascadeEndClipSpace", lightParam[0].Edge[cascId], cascId);
 			}
 		}
 		++inputOffset;
 
-		if (auto val = CheckInputDataType<std::shared_ptr<Fbo_Handler>>(*m_inputs->at(inputOffset)))
+		if (auto val = CheckInputDataType<Fbo_Handler*>(*m_inputs->at(inputOffset)))
 		{
 			shader->SetVariable("PointLightCount", lightParam[1].Count);
 			shader->SetVariable("SpotLightCount", lightParam[2].Count);
@@ -64,7 +64,7 @@ void Scene_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared
 
 			for (auto omniLightIndex = 0; omniLightIndex < pointLightsCnt; ++omniLightIndex)
 			{
-				val->get()->AttachFBOToTextureUnit(omniLightIndex, shader->SetTextureUnit("omniShadowMaps", omniLightIndex, "shadowMap"), 0, 0);
+				val->AttachFBOToTextureUnit(omniLightIndex, shader->SetTextureUnit("omniShadowMaps", omniLightIndex, "shadowMap"), 0, 0);
 
 				if (omniLightIndex < lightParam[1].Count)
 				{
@@ -85,9 +85,9 @@ void Scene_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared
 
 		for(auto inputIndex = inputOffset; inputIndex < m_inputs->size(); ++inputIndex)
 		{
-			if (auto val = CheckInputDataType<std::shared_ptr<Fbo_Handler>>(*m_inputs->at(inputIndex)))
+			if (auto val = CheckInputDataType<Fbo_Handler*>(*m_inputs->at(inputIndex)))
 			{
-				val->get()->AttachFBOToTextureUnit(0, shader->SetTextureUnit(std::move(inputTexBuffs[inputIndex - inputOffset])), 0, 0);
+				val->AttachFBOToTextureUnit(0, shader->SetTextureUnit(std::move(inputTexBuffs[inputIndex - inputOffset])), 0, 0);
 			}
 		}
 
@@ -95,7 +95,7 @@ void Scene_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared
 
 		for (auto roIndex = 0; roIndex < renderObj[shaderIndex].size(); ++roIndex)
 		{
-			renderObj[shaderIndex][roIndex]->RenderObject(*shader, std::move(RenderObjectParams{ true , true, &camParam->PrevProjView }));
+			renderObj[shaderIndex][roIndex].RenderObject(*shader, std::move(RenderObjectParams{ true , true, &camParam->PrevProjView }));
 		}
 	}
 

@@ -8,14 +8,14 @@
 using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
-Bloom_Render_Pass_Handler::Bloom_Render_Pass_Handler(std::shared_ptr<Fbo_Handler> fboHandlr
-	, const std::vector<std::shared_ptr<Shader_Object>>& shaderVec
+Bloom_Render_Pass_Handler::Bloom_Render_Pass_Handler(Fbo_Handler* fboHandlr
+	, std::vector<Shader_Object*>&& shaderVec
 	, std::shared_ptr<std::vector<std::shared_ptr<std::any>>> inputs)
-	: Render_Pass_Handler(fboHandlr, shaderVec, inputs)
+	: Render_Pass_Handler(fboHandlr, std::move(shaderVec), inputs)
 {
 }
 
-void Bloom_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared_ptr<Render_Object>>>& renderObj, const CamParam* camParam, const LightParam* lightParam)
+void Bloom_Render_Pass_Handler::Update(const std::vector<std::vector<Render_Object>>& renderObj, const CamParam* camParam, const LightParam* lightParam)
 {
 	int amount = 10;
 
@@ -23,19 +23,19 @@ void Bloom_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	for (auto shaderIndex = 0; shaderIndex < m_shaderVec->size(); ++shaderIndex)
+	for (auto shaderIndex = 0; shaderIndex < m_shaderVec.size(); ++shaderIndex)
 	{
 		if (shaderIndex >= renderObj.size()) { break; }
 
 		auto isHorizontalFbo = true;
 
-		auto& shader = m_shaderVec->at(shaderIndex);
+		auto& shader = m_shaderVec[shaderIndex];
 		shader->ResetTextureUnit(0);
 		shader->UseShaderObject();
 
-		if (auto val = CheckInputDataType<std::shared_ptr<Fbo_Handler>>(*m_inputs->at(0)))
+		if (auto val = CheckInputDataType<Fbo_Handler*>(*m_inputs->at(0)))
 		{
-			val->get()->AttachFBOToTextureUnit(0, shader->SetTextureUnit("theTexture"), 0, 1);
+			val->AttachFBOToTextureUnit(0, shader->SetTextureUnit("theTexture"), 0, 1);
 		}
 
 		for (int i = 0; i < amount; ++i)
@@ -53,7 +53,7 @@ void Bloom_Render_Pass_Handler::Update(const std::vector<std::vector<std::shared
 
 			for (auto roIndex = 0; roIndex < renderObj[shaderIndex].size(); ++roIndex)
 			{
-				renderObj[shaderIndex][roIndex]->RenderObject(*shader, std::move(RenderObjectParams{ }));
+				renderObj[shaderIndex][roIndex].RenderObject(*shader, std::move(RenderObjectParams{ }));
 			}
 
 			isHorizontalFbo = !isHorizontalFbo;

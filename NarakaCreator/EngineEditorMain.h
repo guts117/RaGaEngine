@@ -34,7 +34,7 @@ namespace NarakaCreator
 	class NARAKA_CREATOR_API EngineEditorMain
 	{
 	public:
-		explicit EngineEditorMain();
+		explicit EngineEditorMain() noexcept;
 
 		EngineEditorMain(EngineEditorMain&& rhs) noexcept = delete;
 		EngineEditorMain& operator=(EngineEditorMain&& rhs) noexcept = delete;
@@ -51,7 +51,7 @@ namespace NarakaCreator
 
 		void AddSceneViewers(const NarakaRenderEngine::RenderEngine::RenderEngineMain* renderEngineMain);
 
-		~EngineEditorMain();
+		~EngineEditorMain() noexcept;
 	private:
 		struct Impl;
 

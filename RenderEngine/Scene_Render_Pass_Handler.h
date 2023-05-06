@@ -16,11 +16,11 @@ namespace NarakaRenderEngine
 		{
 		public:
 			explicit Scene_Render_Pass_Handler() = delete;
-			explicit Scene_Render_Pass_Handler(std::shared_ptr<Fbo_Handler> fboHandlr
-				, const std::vector<std::shared_ptr<Shader_Object>>& shaderVec
+			explicit Scene_Render_Pass_Handler(Fbo_Handler* fboHandlr
+				, std::vector<Shader_Object*>&& shaderVec
 				, std::shared_ptr<std::vector<std::shared_ptr<std::any>>> inputs = nullptr);
 
-			virtual void Update(const std::vector<std::vector<std::shared_ptr<Render_Object>>>& renderObj, const CamParam* camParam = nullptr, const LightParam* lightParam = nullptr) override;
+			virtual void Update(const std::vector<std::vector<Render_Object>>& renderObj, const CamParam* camParam = nullptr, const LightParam* lightParam = nullptr) override;
 
 			Scene_Render_Pass_Handler(Scene_Render_Pass_Handler&& rhs) noexcept = default;
 			Scene_Render_Pass_Handler& operator=(Scene_Render_Pass_Handler&& rhs) noexcept = default;

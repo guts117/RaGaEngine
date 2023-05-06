@@ -19,13 +19,13 @@ struct EngineSimulatorMainMain::Impl
 	std::vector<std::function<void()>> endUpdateFuncPool;
 	std::vector<std::function<void()>> endFuncPool;
 
-	Impl() = delete;
+	Impl() noexcept = delete;
 
-	Impl(Impl&& rhs) = delete;
-	Impl& operator=(Impl&& rhs) = delete;
+	Impl(Impl&& rhs) noexcept = delete;
+	Impl& operator=(Impl&& rhs) noexcept = delete;
 
-	Impl(const Impl& rhs) = delete;
-	Impl& operator=(const Impl& rhs) = delete;
+	Impl(const Impl& rhs) noexcept = delete;
+	Impl& operator=(const Impl& rhs) noexcept = delete;
 
 	void UpdateObjectTransforms()
 	{
@@ -43,7 +43,7 @@ struct EngineSimulatorMainMain::Impl
 	{
 	}
 
-	~Impl() = default;
+	~Impl() noexcept = default;
 };
 
 
@@ -55,10 +55,8 @@ void EngineSimulatorMainMain::EndUpdate()
 {
 }
 
-void NarakaKarEngine::EngineSimulatorMainMain::AddToUpdateStack(std::function<void(glm::ivec2)>)
+void EngineSimulatorMainMain::AddToUpdateStack(std::function<void(glm::ivec2)>)
 {
 }
 
-EngineSimulatorMainMain::~EngineSimulatorMainMain()
-{
-}
+EngineSimulatorMainMain::~EngineSimulatorMainMain() noexcept = default;

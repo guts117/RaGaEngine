@@ -51,11 +51,11 @@ namespace NarakaRenderEngine
 		class FrameBufferObject
 		{
 		public:
-			FrameBufferObject() = delete;
-			explicit FrameBufferObject(std::shared_ptr<FBOParams> fboParams);
+			explicit FrameBufferObject() = delete;
+			explicit FrameBufferObject(FBOParams&& fboParams);
 
-			FrameBufferObject(FrameBufferObject&& rhs) noexcept = default;
-			FrameBufferObject& operator=(FrameBufferObject&& rhs) noexcept = default;
+			FrameBufferObject(FrameBufferObject&& rhs) noexcept;
+			FrameBufferObject& operator=(FrameBufferObject&& rhs) noexcept;
 
 			FrameBufferObject(const FrameBufferObject& rhs) noexcept = delete;
 			FrameBufferObject& operator=(const FrameBufferObject& rhs) noexcept = delete;
@@ -65,22 +65,26 @@ namespace NarakaRenderEngine
 			void AttachColorBufferToTexture(const GLenum& textureUnit, const GLuint& texGenParamIndex, const GLuint& bufferIndex) const;
 			void CreateMipMap(const GLuint& texParamIndex, const GLuint& bufferIndex) const;
 			void ResizeBuffers(int width, int height);
-			void Blit(const GLuint& to_fboID);
+			void Blit(const GLuint& to_fboID) const;
 
 			const GLuint& GetWidth() const;
 			const GLuint& GetHeight() const;
 			const GLuint& GetBuffer(const GLuint& bufferIndex) const;
 			const GLuint GetFboId() const;
 
-			~FrameBufferObject();
+			~FrameBufferObject() noexcept;
 
 		private:
 			struct Impl;
 
-			const Impl* Pimpl() const { return m_pImpl.get(); }
-			Impl* Pimpl() { return m_pImpl.get(); }
+			const Impl& Pimpl() const { return m_pImpl.Get(); }
+			Impl& Pimpl() { return m_pImpl.Get(); }
 
-			std::unique_ptr<Impl> m_pImpl;
+#ifdef NDEBUG //size of vector<> is different between debug(32) and release(24)
+			ForwardDeclaredPimpl<Impl, alignof(void*) * 16, alignof(void*)> m_pImpl;
+#else
+			ForwardDeclaredPimpl<Impl, alignof(void*) * 20, alignof(void*)> m_pImpl;
+#endif;
 		};
 	}
 }

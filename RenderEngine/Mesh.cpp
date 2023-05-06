@@ -5,21 +5,43 @@ using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
 //ToDo: Add Support for Render with Static and Dynamic Batching.
-struct Mesh::Impl
+struct alignas(alignof(GLuint)) Mesh::Impl
 {
 	GLuint m_MaterialIndex, m_IndexCnt, m_VAO, m_VBO, m_IBO, m_VBO_bones, m_InstanceCnt;
 	bool m_IsTesselated;
 
 	Impl() = delete;
 
-	Impl(Impl&& rhs) noexcept = default;
-	Impl& operator=(Impl&& rhs) noexcept = default;
+	Impl(Impl&& rhs) noexcept
+		: m_MaterialIndex{ std::exchange(rhs.m_MaterialIndex, 0) }
+		, m_IndexCnt{ std::exchange(rhs.m_IndexCnt, 0) }
+		, m_VAO{ std::exchange(rhs.m_VAO, 0) }
+		, m_VBO{ std::exchange(rhs.m_VBO, 0) }
+		, m_IBO{ std::exchange(rhs.m_IBO, 0) }
+		, m_VBO_bones{ std::exchange(rhs.m_VBO_bones, 0) }
+		, m_InstanceCnt{ std::exchange(rhs.m_InstanceCnt, 0) }
+		, m_IsTesselated{ std::exchange(rhs.m_IsTesselated, false) } 
+	{
+	};
+	Impl& operator=(Impl&& rhs) noexcept 
+	{
+		m_MaterialIndex = std::exchange(rhs.m_MaterialIndex, 0);
+		m_IndexCnt = std::exchange(rhs.m_IndexCnt, 0);
+		m_VAO = std::exchange(rhs.m_VAO, 0);
+		m_VBO = std::exchange(rhs.m_VBO, 0);
+		m_IBO = std::exchange(rhs.m_IBO, 0);
+		m_VBO_bones = std::exchange(rhs.m_VBO_bones, 0);
+		m_InstanceCnt = std::exchange(rhs.m_InstanceCnt, 0);
+		m_IsTesselated = std::exchange(rhs.m_IsTesselated, false);
+
+		return *this;
+	};
 
 	Impl(const Impl& rhs) noexcept = delete;
 	Impl& operator=(const Impl& rhs) noexcept = delete;
 
-	Impl(GLuint&& materialIndex, std::vector<std::vector<GLfloat>>&& vertices2D, std::vector<GLuint>&& indices, MeshGenParams&& meshGenParams)
-		: m_MaterialIndex{ std::move(materialIndex) }
+	Impl(GLuint materialIndex, std::vector<std::vector<GLfloat>>&& vertices2D, std::vector<GLuint>&& indices, MeshGenParams&& meshGenParams)
+		: m_MaterialIndex{ materialIndex }
 		, m_IndexCnt{ (GLuint) indices.size() }
 		, m_VAO { 0 }
 		, m_VBO { 0 }
@@ -114,7 +136,7 @@ struct Mesh::Impl
 		}
 	}
 
-	~Impl()
+	~Impl() noexcept
 	{
 		if (m_VBO != 0) {
 			glDeleteBuffers(1, &m_VBO);
@@ -129,32 +151,31 @@ struct Mesh::Impl
 		if (m_VBO_bones != 0) {
 			glDeleteBuffers(1, &m_VBO_bones);
 		}
-	}
+	};
 };
 
-Mesh::Mesh(GLuint&& materialIndex, std::vector<std::vector<GLfloat>>&& vertices, std::vector<GLuint>&& indices, MeshGenParams&& meshGenParams)
-	: m_pImpl { std::make_unique<Impl>(std::move(materialIndex),std::move(vertices),std::move(indices), std::move(meshGenParams))}
+Mesh::Mesh(GLuint materialIndex, std::vector<std::vector<GLfloat>>&& vertices, std::vector<GLuint>&& indices, MeshGenParams&& meshGenParams)
+	: m_pImpl { Impl(materialIndex,std::move(vertices), std::move(indices), std::move(meshGenParams)) }
 {
 }
 
-Mesh::Mesh(Mesh&& rhs) = default;
-Mesh& Mesh::operator= (Mesh&& rhs) = default;
+Mesh::Mesh(Mesh&& rhs) noexcept = default;
+Mesh& Mesh::operator= (Mesh&& rhs) noexcept = default;
 
 void Mesh::RenderMesh() 
 {
-	Pimpl()->RenderMesh();
+	Pimpl().RenderMesh();
 }
 
 const GLuint& Mesh::GetMaterialIndex() const
 {
-	return Pimpl()->m_MaterialIndex;
+	return Pimpl().m_MaterialIndex;
 }
 
 const bool& Mesh::IsTessellated() const
 {
-	return Pimpl()->m_IsTesselated;
+	return Pimpl().m_IsTesselated;
 }
 
 //ToDo: Add Support for Render with Static and Dynamic Batching.
-
-Mesh::~Mesh() = default;
+Mesh::~Mesh() noexcept = default;

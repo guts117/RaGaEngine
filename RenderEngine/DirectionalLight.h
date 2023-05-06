@@ -19,11 +19,11 @@ namespace NarakaRenderEngine
 			DirectionalLight(GLuint shadowWidth, GLuint shadowHeight,
 				GLfloat red, GLfloat green, GLfloat blue,
 				GLfloat xDir, GLfloat yDir, GLfloat zDir, 
-				std::shared_ptr<Scene_Fbo_Handler_Manager> sceneFboHndlrMgr);
+				Scene_Fbo_Handler_Manager* sceneFboHndlrMgr);
 
 			glm::mat4 CalculateLightTransform();
 			glm::mat4 CalculateCascadeLightTransform();
-			std::shared_ptr<Fbo_Handler> GetShadowMap() { return shadowMap; }
+			Fbo_Handler* GetShadowMap() { return shadowMap; }
 			float GetCascadeEnd(unsigned int i);
 			void CalcOrthProjs(const glm::mat4& Cam, const glm::mat4* vView, const float& angle, const glm::ivec2& screenDims);
 			glm::mat4 GetProjMat(glm::mat4& view, unsigned int index);
@@ -41,7 +41,7 @@ namespace NarakaRenderEngine
 			glm::mat4 shadowOrthoProjInfo[NUM_CASCADES];
 			glm::vec4 modeldFrusCorns[NUM_CASCADES][NUM_FRUSTUM_CORNERS];
 
-			std::shared_ptr<Fbo_Handler> shadowMap;
+			Fbo_Handler* shadowMap;
 		};
 	}
 }

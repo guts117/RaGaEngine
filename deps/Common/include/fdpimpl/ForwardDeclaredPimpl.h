@@ -91,7 +91,7 @@ struct ForwardDeclaredPimpl
     }
 
 private:
-    alignas(Alignment) unsigned char m_pImplBuff[Size];
+    alignas(Alignment) std::byte m_pImplBuff[Size];
 };
 
 #endif // ! FORWARD_DECLARED_PIMPL
