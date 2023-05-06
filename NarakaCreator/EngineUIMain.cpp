@@ -280,7 +280,7 @@ struct EngineUIMain::Impl
 {
 	int hideWindowIndex;
 	std::unique_ptr<Window> mainWindow;
-	std::unique_ptr<std::vector<std::shared_ptr<SceneViewer>>> m_sceneList;
+	std::vector<SceneViewer> m_sceneList;
 
     //ToDo: Start doing Node/Graph Editor Stuff
     SimpleNodeEditorExample nodeEditorEg;
@@ -291,7 +291,7 @@ struct EngineUIMain::Impl
 	Impl() = delete;
 
 	Impl(const bool installCallbacks, const std::string version)
-		: m_sceneList{ std::make_unique<std::vector<std::shared_ptr<SceneViewer>>>() }
+		: m_sceneList{ std::vector<SceneViewer>() }
 		, mainWindow{ std::make_unique<Window>() }
 	{		
 		mainWindow->Initialise();
@@ -331,11 +331,11 @@ struct EngineUIMain::Impl
 ;
 		auto isHoveredCnt = 0; 
 
-		for (int i = 0; i < m_sceneList->size(); ++i)
+		for (int i = 0; i < m_sceneList.size(); ++i)
 		{
-			ImGui::Begin(m_sceneList->at(i)->GetViewerName().c_str(), nullptr, ImGuiWindowFlags_NoFocusOnAppearing);
+			ImGui::Begin(m_sceneList[i].GetViewerName().c_str(), nullptr, ImGuiWindowFlags_NoFocusOnAppearing);
 			ImGui::SetWindowSize(ImVec2(screenDims.x / 2, screenDims.y / 2));
-			ImGui::Image((ImTextureID)m_sceneList->at(i)->GetTextureId(), ImGui::GetWindowSize(), ImVec2(0, 1), ImVec2(1, 0));
+			ImGui::Image((ImTextureID)m_sceneList[i].GetTextureId(), ImGui::GetWindowSize(), ImVec2(0, 1), ImVec2(1, 0));
 
 			auto isSelected = false;
 			auto isDragging = ImGui::IsMouseDragging(ImGuiMouseButton_Left);
@@ -348,28 +348,28 @@ struct EngineUIMain::Impl
 				auto isHovered = ImGui::IsMouseHoveringRect(pos, ImVec2(maxx, maxy));
 				auto isFocused = ImGui::IsWindowDocked() ? ImGui::IsWindowFocused() : true;
 
-				if (m_sceneList->at(i)->GetViewerType() == Editor && hideWindowIndex < 0)
+				if (m_sceneList[i].GetViewerType() == Editor && hideWindowIndex < 0)
 				{
 					isSelected = isHovered && isFocused;
 					if (isSelected)
 					{
-						ImGui::SetWindowFocus(m_sceneList->at(i)->GetViewerName().c_str());
+						ImGui::SetWindowFocus(m_sceneList[i].GetViewerName().c_str());
 					}
 				}
-				else if(m_sceneList->at(i)->GetViewerType() == InGame && hideWindowIndex == i || hideWindowIndex < 0)
+				else if(m_sceneList[i].GetViewerType() == InGame && hideWindowIndex == i || hideWindowIndex < 0)
 				{
 					isSelected = isHovered && isFocused;
 					if (isSelected) 
 					{
 						++isHoveredCnt;
 						hideWindowIndex = i;
-						ImGui::SetWindowFocus(m_sceneList->at(i)->GetViewerName().c_str());
+						ImGui::SetWindowFocus(m_sceneList[i].GetViewerName().c_str());
 						ImGui::GetIO().WantCaptureMouse = false;
 					}
 				}
 			}
 
-			m_sceneList->at(i)->InvokeSelectCallback(isSelected);
+			m_sceneList[i].InvokeSelectCallback(isSelected);
 
 			ImGui::End();
 		}
@@ -413,8 +413,8 @@ struct EngineUIMain::Impl
 
 	void AddSceneViewers(GLuint sceneTex, std::string sceneName, SceneViewerType viewerType, std::function<void(bool)> selectCallback)
 	{
-		auto scene = std::make_shared<SceneViewer>(sceneTex, sceneName, viewerType, selectCallback);
-		m_sceneList->push_back(scene);
+		auto scene = SceneViewer(sceneTex, sceneName, viewerType, selectCallback);
+		m_sceneList.emplace_back(std::move(scene));
 	}
 
 	~Impl()
