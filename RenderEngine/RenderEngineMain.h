@@ -34,7 +34,7 @@ namespace NarakaRenderEngine
 			void Update(const glm::ivec2& screenDims, const bool& isUpdateBuffers);
 			void EndUpdate();
 
-			const GLuint GetFboBuffer(const std::string& fboHandlerName, const GLuint& fboIndex, const GLuint& bufferIndex)  const;
+			const GLuint GetFboBuffer(const std::string& fboHandlerName, const GLuint& fboIndex, const GLuint& bufferIndex) const;
 
 			//ToDo:
 			//static std::unique_ptr<std::map<TexType, std::vector<std::weak_ptr<Texture>>>> CreateTextureMap(std::vector<TexMapData>&& texMapData);

@@ -17,7 +17,7 @@ SpotLight::SpotLight(GLuint shadowWidth, GLuint shadowHeight,
 					GLfloat red, GLfloat green, GLfloat blue,
 				    GLfloat xPos, GLfloat yPos, GLfloat zPos, 
 					GLfloat xDir, GLfloat yDir, GLfloat zDir, 
-					GLfloat edg, std::shared_ptr<Scene_Fbo_Handler_Manager> sceneFboHndlrMgr)
+					GLfloat edg, Scene_Fbo_Handler_Manager* sceneFboHndlrMgr)
 				    : PointLight(shadowWidth, shadowHeight, near, far, red, green, blue, xPos, yPos, zPos, sceneFboHndlrMgr){
 
 	direction = glm::normalize(glm::vec3(xDir, yDir, zDir));

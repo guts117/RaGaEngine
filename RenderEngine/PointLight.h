@@ -18,7 +18,7 @@ namespace NarakaRenderEngine
 				GLfloat near, GLfloat far,
 				GLfloat red, GLfloat green, GLfloat blue,
 				GLfloat xPos, GLfloat yPos, GLfloat zPos,
-				std::shared_ptr<Scene_Fbo_Handler_Manager> sceneFboHndlrMgr);
+				Scene_Fbo_Handler_Manager* sceneFboHndlrMgr);
 
 			glm::vec3 position;
 			GLfloat farPlane{ 0.0f };

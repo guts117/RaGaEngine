@@ -90,7 +90,7 @@ struct RenderEngineMain::Impl
 	std::unique_ptr<Compute_Shader> pressureProjectionCompShader3D = std::make_unique <Compute_Shader>();
 	std::unique_ptr <Model_Shader> fluidFragShader3D = std::make_unique<Model_Shader>();*/
 
-	std::shared_ptr<Scene_Fbo_Handler_Manager> m_SceneFboHandlerMgr;
+	std::unique_ptr<Scene_Fbo_Handler_Manager> m_SceneFboHandlerMgr;
 
 	Shader_Object* environmentMapShader;
 	Shader_Object* irradianceConvolutionShader;
@@ -456,7 +456,7 @@ struct RenderEngineMain::Impl
 
 //--------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-		m_SceneFboHandlerMgr = std::make_shared<Scene_Fbo_Handler_Manager>("InGame", screenDims);
+		m_SceneFboHandlerMgr = std::make_unique<Scene_Fbo_Handler_Manager>("InGame", screenDims);
 
 		environmentMap = m_SceneFboHandlerMgr->FindFboHandler("Environment_Map_Pass");
 		irradianceMap = m_SceneFboHandlerMgr->FindFboHandler("Irradiance_Map_Pass");
@@ -675,13 +675,13 @@ struct RenderEngineMain::Impl
 		mainLight = std::make_unique < DirectionalLight>(1024, 1024,
 			0.5f, 0.5f, 0.5f,
 			5500.0f, -5500.0f, -10000.0f,
-			m_SceneFboHandlerMgr);
+			m_SceneFboHandlerMgr.get());
 
 		pointLights[0] = std::make_unique < PointLight>(512, 512,
 			0.1f, 100.0f,
 			0.0f, 0.0f, 3.0f,
 			12.0f, 5.0f, 10.0f,
-			m_SceneFboHandlerMgr);
+			m_SceneFboHandlerMgr.get());
 
 		pointLightCount++;
 
@@ -689,7 +689,7 @@ struct RenderEngineMain::Impl
 			0.1f, 100.0f,
 			3.0f, 0.0f, 0.0f,
 			-12.0f, 5.0f, 10.0f,
-			m_SceneFboHandlerMgr);
+			m_SceneFboHandlerMgr.get());
 
 		pointLightCount++;
 
@@ -698,7 +698,7 @@ struct RenderEngineMain::Impl
 			10.0f, 10.0f, 10.0f,
 			0.0f, 0.0f, 0.0f,
 			0.0f, -1.0f, 0.0f,
-			10.0f, m_SceneFboHandlerMgr);
+			10.0f, m_SceneFboHandlerMgr.get());
 
 		spotLightCount++;
 

@@ -19,7 +19,7 @@ namespace NarakaRenderEngine
 			DirectionalLight(GLuint shadowWidth, GLuint shadowHeight,
 				GLfloat red, GLfloat green, GLfloat blue,
 				GLfloat xDir, GLfloat yDir, GLfloat zDir, 
-				std::shared_ptr<Scene_Fbo_Handler_Manager> sceneFboHndlrMgr);
+				Scene_Fbo_Handler_Manager* sceneFboHndlrMgr);
 
 			glm::mat4 CalculateLightTransform();
 			glm::mat4 CalculateCascadeLightTransform();
