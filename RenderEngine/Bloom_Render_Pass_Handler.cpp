@@ -9,9 +9,9 @@ using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
 Bloom_Render_Pass_Handler::Bloom_Render_Pass_Handler(Fbo_Handler* fboHandlr
-	, const std::vector<std::shared_ptr<Shader_Object>>& shaderVec
+	, std::vector<Shader_Object*>&& shaderVec
 	, std::shared_ptr<std::vector<std::shared_ptr<std::any>>> inputs)
-	: Render_Pass_Handler(fboHandlr, shaderVec, inputs)
+	: Render_Pass_Handler(fboHandlr, std::move(shaderVec), inputs)
 {
 }
 
@@ -23,13 +23,13 @@ void Bloom_Render_Pass_Handler::Update(const std::vector<std::vector<Render_Obje
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	for (auto shaderIndex = 0; shaderIndex < m_shaderVec->size(); ++shaderIndex)
+	for (auto shaderIndex = 0; shaderIndex < m_shaderVec.size(); ++shaderIndex)
 	{
 		if (shaderIndex >= renderObj.size()) { break; }
 
 		auto isHorizontalFbo = true;
 
-		auto& shader = m_shaderVec->at(shaderIndex);
+		auto& shader = m_shaderVec[shaderIndex];
 		shader->ResetTextureUnit(0);
 		shader->UseShaderObject();
 

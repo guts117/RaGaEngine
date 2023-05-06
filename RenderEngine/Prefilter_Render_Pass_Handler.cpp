@@ -8,9 +8,9 @@ using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
 Prefilter_Render_Pass_Handler::Prefilter_Render_Pass_Handler(Fbo_Handler* fboHandlr
-	, const std::vector<std::shared_ptr<Shader_Object>>& shaderVec
+	, std::vector<Shader_Object*>&& shaderVec
 	, std::shared_ptr<std::vector<std::shared_ptr<std::any>>> inputs)
-	: Render_Pass_Handler(fboHandlr, shaderVec, inputs)
+	: Render_Pass_Handler(fboHandlr, std::move(shaderVec), inputs)
 {
 }
 
@@ -31,11 +31,11 @@ void Prefilter_Render_Pass_Handler::Update(const std::vector<std::vector<Render_
 	m_fboHandler->BindFBO();
 	auto maxMipLevels = 5;
 
-	for (auto shaderIndex = 0; shaderIndex < m_shaderVec->size(); ++shaderIndex)
+	for (auto shaderIndex = 0; shaderIndex < m_shaderVec.size(); ++shaderIndex)
 	{
 		if (shaderIndex >= renderObj.size()) { break; }
 
-		auto& shader = m_shaderVec->at(shaderIndex);
+		auto& shader = m_shaderVec.at(shaderIndex);
 		shader->UseShaderObject();
 		shader->SetVariable("skybox", 0);
 		shader->SetVariable("Projection", captureProjection);
