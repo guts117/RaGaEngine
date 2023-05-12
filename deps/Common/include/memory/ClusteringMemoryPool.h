@@ -4,9 +4,9 @@
 template<class T>
 struct clustering_ptr
 {
-	std::vector<std::vector<T>>* poolHeadPtr = nullptr;
-	unsigned int clusterId = 0;
-	unsigned int index = 0;
+	std::vector<std::vector<T>>* poolHeadPtr = nullptr;				//size 8
+	unsigned int clusterId = 0;										//size 4
+	unsigned int index = 0;											//size 4
 
 	T* operator-> ()
 	{
