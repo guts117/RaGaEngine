@@ -9,13 +9,13 @@ using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
 Omni_Directional_Shadow_Map_Render_Pass_Handler::Omni_Directional_Shadow_Map_Render_Pass_Handler(Fbo_Handler* fboHandlr
-	, std::vector<Shader_Object*>&& shaderVec
+	, std::vector<clustering_ptr<Shader_Object>>&& shaderVec
 	, std::shared_ptr<std::vector<std::shared_ptr<std::any>>> inputs)
 	: Render_Pass_Handler(fboHandlr, std::move(shaderVec), inputs)
 {
 }
 
-void SetLightTransform(const Shader_Object* shader, const int& lightIndex, const LightParam* lightParam)
+void SetLightTransform(clustering_ptr<Shader_Object>& shader, const int& lightIndex, const LightParam* lightParam)
 {
 	auto& position = lightParam->Position[lightIndex];
 	auto& projection = lightParam->Projection[lightIndex];
@@ -39,7 +39,7 @@ void SetLightTransform(const Shader_Object* shader, const int& lightIndex, const
 	}
 }
 
-void Omni_Directional_Shadow_Map_Render_Pass_Handler::Update(const std::vector<std::vector<Render_Object>>& renderObj, const CamParam* camParam, const LightParam* lightParam)
+void Omni_Directional_Shadow_Map_Render_Pass_Handler::Update(std::vector<std::vector<Render_Object>>& renderObj, const CamParam* camParam, const LightParam* lightParam)
 {
 	for (auto lightIndex = 0; lightIndex < lightParam->Count; ++lightIndex)
 	{
@@ -66,11 +66,11 @@ void Omni_Directional_Shadow_Map_Render_Pass_Handler::Update(const std::vector<s
 				if (ro.IsTesselated())
 				{
 					shader->SetVariable("eyePosition", camParam->Position);
-					ro.RenderObject(*shader, std::move(RenderObjectParams{ true, true }));
+					ro.RenderObject(shader, std::move(RenderObjectParams{ true, true }));
 				}
 				else
 				{
-					ro.RenderObject(*shader, std::move(RenderObjectParams{ true }));
+					ro.RenderObject(shader, std::move(RenderObjectParams{ true }));
 				}
 			}
 		}

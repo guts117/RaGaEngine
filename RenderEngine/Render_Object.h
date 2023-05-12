@@ -30,16 +30,16 @@ namespace NarakaRenderEngine
 		public:
 			explicit Render_Object() = delete;
 
-			explicit Render_Object(std::vector<Mesh*>&& meshes
-								, std::map<TexType, std::vector<Texture*>>&& textureMap = std::map<TexType, std::vector<Texture*>>()
-								, glm::mat4* modelMatrix = nullptr
-								, glm::mat4* prevModelMatrix = nullptr
+			explicit Render_Object(std::vector<clustering_ptr<Mesh>>&& meshes
+								, std::map<TexType, std::vector<clustering_ptr<Texture>>>&& textureMap = std::map<TexType, std::vector<clustering_ptr<Texture>>>()
+								, clustering_ptr<glm::mat4>&& modelMatrix = clustering_ptr<glm::mat4>()
+								, clustering_ptr<glm::mat4>&& prevModelMatrix = clustering_ptr<glm::mat4>()
 								, std::vector<BoneTransform*>&& boneMatrices = std::vector<BoneTransform*>());
 
-			void SetTextures(std::map<TexType, std::vector<Texture*>>&& textureMap);
+			void SetTextures(std::map<TexType, std::vector<clustering_ptr<Texture>>>&& textureMap);
 
 			void ResetTextures();
-			const glm::mat4* GetModelMatrix() const ;
+			const clustering_ptr<glm::mat4> GetModelMatrix() const ;
 
 			Render_Object(Render_Object&& rhs) noexcept;
 			Render_Object& operator=(Render_Object&& rhs) noexcept;
@@ -47,9 +47,9 @@ namespace NarakaRenderEngine
 			Render_Object(const Render_Object& rhs) noexcept = delete;
 			Render_Object& operator=(const Render_Object& rhs) noexcept = delete;
 
-			void RenderObject(Shader_Object& shader, RenderObjectParams&& params) const;
+			void RenderObject(clustering_ptr<Shader_Object>& shader, RenderObjectParams&& params);
 
-			const bool IsTesselated() const;
+			bool IsTesselated();
 
 			~Render_Object() noexcept;
 		private:
@@ -59,9 +59,9 @@ namespace NarakaRenderEngine
 			Impl& Pimpl() { return m_pImpl.Get(); }
 
 #ifdef NDEBUG //size of map debug(24), release(16) and size of vector debug(32), release(24)
-			ForwardDeclaredPimpl<Impl, alignof(void*) * 10, alignof(void*)> m_pImpl;
+			ForwardDeclaredPimpl<Impl, alignof(void*) * 12, alignof(void*)> m_pImpl;
 #else
-			ForwardDeclaredPimpl<Impl, alignof(void*) * 13, alignof(void*)> m_pImpl;
+			ForwardDeclaredPimpl<Impl, alignof(void*) * 15, alignof(void*)> m_pImpl;
 #endif;
 		};
 	}

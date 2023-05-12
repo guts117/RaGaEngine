@@ -17,10 +17,10 @@ namespace NarakaRenderEngine
         public:
             explicit Prefilter_Render_Pass_Handler() = delete;
             explicit Prefilter_Render_Pass_Handler(Fbo_Handler* fboHandlr
-                , std::vector<Shader_Object*>&& shaderVec
+                , std::vector<clustering_ptr<Shader_Object>>&& shaderVec
                 , std::shared_ptr<std::vector<std::shared_ptr<std::any>>> inputs = nullptr);
 
-            virtual void Update(const std::vector<std::vector<Render_Object>>& renderObj, const CamParam* camParam = nullptr, const LightParam* lightParam = nullptr) override;
+            virtual void Update(std::vector<std::vector<Render_Object>>& renderObj, const CamParam* camParam = nullptr, const LightParam* lightParam = nullptr) override;
 
             Prefilter_Render_Pass_Handler(Prefilter_Render_Pass_Handler&& rhs) noexcept = default;
             Prefilter_Render_Pass_Handler& operator=(Prefilter_Render_Pass_Handler&& rhs) noexcept = default;

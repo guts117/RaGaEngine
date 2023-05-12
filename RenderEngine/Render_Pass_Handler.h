@@ -50,7 +50,7 @@ namespace NarakaRenderEngine
 		public:
 			explicit Render_Pass_Handler() = delete;
 			explicit Render_Pass_Handler(Fbo_Handler* fboHandlr
-												, std::vector<Shader_Object*>&& shaderVec
+												, std::vector<clustering_ptr<Shader_Object>>&& shaderVec
 												, std::shared_ptr<std::vector<std::shared_ptr<std::any>>> inputs = nullptr);
 
 			Render_Pass_Handler(Render_Pass_Handler&& rhs) noexcept = default;
@@ -60,7 +60,7 @@ namespace NarakaRenderEngine
 			Render_Pass_Handler& operator=(const Render_Pass_Handler& rhs) noexcept = delete;
 	
 			virtual void Init();
-			virtual void Update(const std::vector<std::vector<Render_Object>>& renderObj, const CamParam* camParam = nullptr, const LightParam* lightParam = nullptr) = 0;
+			virtual void Update(std::vector<std::vector<Render_Object>>& renderObj, const CamParam* camParam = nullptr, const LightParam* lightParam = nullptr) = 0;
 
 			virtual ~Render_Pass_Handler() = 0;
 
@@ -80,7 +80,7 @@ namespace NarakaRenderEngine
 			}
 
 			Fbo_Handler* m_fboHandler;
-			std::vector<Shader_Object*> m_shaderVec;
+			std::vector<clustering_ptr<Shader_Object>> m_shaderVec;
 			std::shared_ptr<std::vector<std::shared_ptr<std::any>>> m_inputs;
 			std::shared_ptr<std::vector<std::shared_ptr<GLint>>> m_outputs;
 		};

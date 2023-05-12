@@ -47,7 +47,7 @@ namespace NarakaRenderEngine
 
 			bool CreateTexture(const glm::vec2& resolution);
 
-			void UseTextureTemp(GLuint i);
+			void UseTextureTemp(GLuint i) const;
 
 			void UseTexture(GLuint i);
 			void UseTextureArray(GLuint i);

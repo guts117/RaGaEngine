@@ -34,3 +34,4 @@
 #include <assimp/postprocess.h>
 
 #include <ForwardDeclaredPimpl.h>
+#include <ClusteringMemoryPool.h>

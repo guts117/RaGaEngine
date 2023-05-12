@@ -277,7 +277,8 @@ struct alignas(alignof(std::string)) Texture::Impl
 		return true;
 	}
 
-	void UseTextureTemp(GLuint i) {
+	void UseTextureTemp(GLuint i) const
+	{
 		glActiveTexture(GL_TEXTURE0 + i);
 		glBindTexture(GL_TEXTURE_2D, m_textureID);
 	}
@@ -370,7 +371,8 @@ bool Texture::CreateTexture(const glm::vec2& resolution)
 	return Pimpl().CreateTexture(resolution);
 }
 
-void Texture::UseTextureTemp(GLuint i) {
+void Texture::UseTextureTemp(GLuint i) const
+{
 	Pimpl().UseTextureTemp(i);
 }
 
