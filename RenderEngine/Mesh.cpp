@@ -108,7 +108,7 @@ struct alignas(alignof(GLuint)) Mesh::Impl
 		glBindVertexArray(0);
 	}
 
-	void RenderMesh()
+	void RenderMesh() const
 	{
 		if (m_IsTesselated)
 		{
@@ -162,7 +162,7 @@ Mesh::Mesh(GLuint materialIndex, std::vector<std::vector<GLfloat>>&& vertices, s
 Mesh::Mesh(Mesh&& rhs) noexcept = default;
 Mesh& Mesh::operator= (Mesh&& rhs) noexcept = default;
 
-void Mesh::RenderMesh() 
+void Mesh::RenderMesh() const
 {
 	Pimpl().RenderMesh();
 }

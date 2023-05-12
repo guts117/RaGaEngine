@@ -30,7 +30,7 @@ namespace NarakaRenderEngine
 			Mesh(const Mesh& rhs) = delete;
 			Mesh& operator= (const Mesh& rhs) = delete;
 
-			void RenderMesh();
+			void RenderMesh() const;
 			const GLuint& GetMaterialIndex() const;
 			const bool& IsTessellated() const;
 

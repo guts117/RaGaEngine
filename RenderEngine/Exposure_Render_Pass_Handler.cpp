@@ -9,13 +9,13 @@ using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
 Exposure_Render_Pass_Handler::Exposure_Render_Pass_Handler(Fbo_Handler* fboHandlr
-	, std::vector<Shader_Object*>&& shaderVec
+	, std::vector<clustering_ptr<Shader_Object>>&& shaderVec
 	, std::shared_ptr<std::vector<std::shared_ptr<std::any>>> inputs)
 	: Render_Pass_Handler(fboHandlr, std::move(shaderVec), inputs)
 {
 }
 
-void Exposure_Render_Pass_Handler::Update(const std::vector<std::vector<Render_Object>>& renderObj, const CamParam* camParam, const LightParam* lightParam)
+void Exposure_Render_Pass_Handler::Update(std::vector<std::vector<Render_Object>>& renderObj, const CamParam* camParam, const LightParam* lightParam)
 {
 	glViewport(0, 0, m_fboHandler->GetFBOWidth(), m_fboHandler->GetFBOHeight());
 
@@ -47,7 +47,7 @@ void Exposure_Render_Pass_Handler::Update(const std::vector<std::vector<Render_O
 
 		for (auto roIndex = 0; roIndex < renderObj[shaderIndex].size(); ++roIndex)
 		{
-			renderObj[shaderIndex][roIndex].RenderObject(*shader, std::move(RenderObjectParams{ }));
+			renderObj[shaderIndex][roIndex].RenderObject(shader, std::move(RenderObjectParams{ }));
 		}
 		shader->ValidateShaderObject();
 	}

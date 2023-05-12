@@ -11,13 +11,13 @@ using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
 Billboard_Render_Pass_Handler::Billboard_Render_Pass_Handler(Fbo_Handler* fboHandlr
-	, std::vector<Shader_Object*>&& shaderVec
+	, std::vector<clustering_ptr<Shader_Object>>&& shaderVec
 	, std::shared_ptr<std::vector<std::shared_ptr<std::any>>> inputs)
 	: Render_Pass_Handler(fboHandlr, std::move(shaderVec), inputs)
 {
 }
 
-void Billboard_Render_Pass_Handler::Update(const std::vector<std::vector<Render_Object>>& renderObj, const CamParam* camParam, const LightParam* lightParam)
+void Billboard_Render_Pass_Handler::Update(std::vector<std::vector<Render_Object>>& renderObj, const CamParam* camParam, const LightParam* lightParam)
 {
 	glViewport(0, 0, m_fboHandler->GetFBOWidth(), m_fboHandler->GetFBOHeight());
 
@@ -41,7 +41,7 @@ void Billboard_Render_Pass_Handler::Update(const std::vector<std::vector<Render_
 		for (auto roIndex = 0; roIndex < renderObj[shaderIndex].size(); ++roIndex)
 		{
 			auto& ro = renderObj[shaderIndex][roIndex];
-			if(auto modelMatrix = ro.GetModelMatrix())
+			if(auto modelMatrix = ro.GetModelMatrix().get())
 			{
 				glm::vec3 scale;
 				glm::quat rotation;
@@ -53,7 +53,7 @@ void Billboard_Render_Pass_Handler::Update(const std::vector<std::vector<Render_
 				shader->SetVariable("BillboardPos", glm::vec3(0.0f, -2.0f, 0.0f));//translation);
 				shader->SetVariable("BillboardSize", glm::vec2(2.0f, 2.0f));//scale.x, scale.y));
 			}
-			ro.RenderObject(*shader, std::move(RenderObjectParams{ false, true }));
+			ro.RenderObject(shader, std::move(RenderObjectParams{ false, true }));
 		}
 		shader->ValidateShaderObject();
 	}
