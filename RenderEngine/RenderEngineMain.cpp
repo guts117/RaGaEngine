@@ -92,31 +92,6 @@ struct RenderEngineMain::Impl
 
 	std::unique_ptr<Scene_Fbo_Handler_Manager> m_SceneFboHandlerMgr;
 
-	clustering_ptr<Shader_Object> environmentMapShader;
-	clustering_ptr<Shader_Object> irradianceConvolutionShader;
-	clustering_ptr<Shader_Object> prefilterShader;
-	clustering_ptr<Shader_Object> brdfShader;
-	clustering_ptr<Shader_Object> preZShader;
-	clustering_ptr<Shader_Object> animPreZShader;
-	clustering_ptr<Shader_Object> terrPreZShader;
-	clustering_ptr<Shader_Object> ssaoShader;
-	clustering_ptr<Shader_Object> ssaoBlurShader;
-	clustering_ptr<Shader_Object> omniShadowShader;
-	clustering_ptr<Shader_Object> dirShadowShader;
-	clustering_ptr<Shader_Object> animOmniShadowShader;
-	clustering_ptr<Shader_Object> animDirShadowShader;
-	clustering_ptr<Shader_Object> terrOmniShadowShader;
-	clustering_ptr<Shader_Object> terrDirShadowShader;
-	clustering_ptr<Shader_Object> unrigShader;
-	clustering_ptr<Shader_Object> rigShader;
-	clustering_ptr<Shader_Object> terrShader;
-	clustering_ptr<Shader_Object> bloomShader;
-	clustering_ptr<Shader_Object> motionBlurShader;
-	clustering_ptr<Shader_Object> exposureShader;
-	clustering_ptr<Shader_Object> skyboxShader;
-	clustering_ptr<Shader_Object> billboardShader;
-	clustering_ptr<Shader_Object> particleShader;
-
 	Fbo_Handler* environmentMap;
 	Fbo_Handler* irradianceMap;
 	Fbo_Handler* prefilterMap;
@@ -388,6 +363,31 @@ struct RenderEngineMain::Impl
 		//CreateTerrain();
 		CreateObject();
 		CreateShaders();
+
+		auto environmentMapShader = AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/cubemap.vert", "Shaders/equirectangular_to_cubemap.frag"}));
+		auto irradianceConvolutionShader = AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/cubemap.vert", "Shaders/irradiance_covolution.frag"}));
+		auto prefilterShader = AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/cubemap.vert", "Shaders/prefilter.frag"}));
+		auto brdfShader = AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/brdf.frag"}));
+		auto dirShadowShader = AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/directional_shadow_map.vert", "Shaders/directional_shadow_map.frag"}));
+		auto animDirShadowShader = AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/anim_directional_shadow_map.vert", "Shaders/directional_shadow_map.frag"}));
+		auto terrDirShadowShader = AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain_directional_shadow_map.tesse", "Shaders/directional_shadow_map.frag"}));
+		auto omniShadowShader = AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/omni_shadow_map.vert", "Shaders/omni_shadow_map.geom", "Shaders/omni_shadow_map.frag"}));
+		auto animOmniShadowShader = AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/anim_omni_shadow_map.vert", "Shaders/omni_shadow_map.geom", "Shaders/omni_shadow_map.frag"}));
+		//terrOmniShadowShader.CreateFromFiles("Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain_omni_directional_shadow_map.tesse", "Shaders/omni_shadow_map.geom", "Shaders/directional_shadow_map.frag");
+		auto preZShader = AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/depth_framebuffer.vert", "Shaders/depth_framebuffer.frag"}));
+		auto animPreZShader = AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/anim_depth_framebuffer.vert", "Shaders/depth_framebuffer.frag"}));
+		auto terrPreZShader = AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain_depth_framebuffer.tesse", "Shaders/depth_framebuffer.frag"}));
+		auto ssaoShader = AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/ssao_framebuffer.vert", "Shaders/ssao_framebuffer.frag"}));
+		auto ssaoBlurShader = AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/ssao_blur_framebuffer.frag"}));
+		auto unrigShader = AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/shader.vert", "Shaders/shader.frag"}));
+		auto rigShader = AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/animated_shader.vert", "Shaders/shader.frag"}));
+		auto terrShader = AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain.tesse", "Shaders/terrain.frag"}));
+		auto bloomShader = AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/blur_framebuffer.frag"}));
+		auto motionBlurShader = AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/motionBlur_framebuffer.frag"}));
+		auto exposureShader = AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/hdr_framebuffer.frag"}));
+		auto skyboxShader = AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/skybox.vert", "Shaders/skybox.frag"}));
+		auto billboardShader = AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/billboard.vert", "Shaders/billboard.frag"}));
+		auto particleShader = AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/particles.vert", "Shaders/particles.frag"}));
 
 		auto gameCamera = std::make_shared<Camera>(glm::vec3(0.0f, 0.0f, -10.0f), glm::vec3(0.0f, 1.0f, 0.0f), 90.0f, 0.0f, 50.0f, 0.2f);
 		cameras.push_back(gameCamera);
@@ -1205,32 +1205,6 @@ struct RenderEngineMain::Impl
 		//divCompShader3D->CreateFromFiles("Shaders/3DFluid/div.comp");
 		//jacobiCompShader3D->CreateFromFiles("Shaders/3DFluid/jacobi.comp");
 		//pressureProjectionCompShader3D->CreateFromFiles("Shaders/3DFluid/pressureProjection.comp");
-
-		environmentMapShader		= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/cubemap.vert", "Shaders/equirectangular_to_cubemap.frag"}));
-		irradianceConvolutionShader = AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/cubemap.vert", "Shaders/irradiance_covolution.frag"}));
-		prefilterShader 			= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/cubemap.vert", "Shaders/prefilter.frag"}));
-		brdfShader 					= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/brdf.frag"}));
-		dirShadowShader				= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/directional_shadow_map.vert", "Shaders/directional_shadow_map.frag"}));
-		animDirShadowShader			= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/anim_directional_shadow_map.vert", "Shaders/directional_shadow_map.frag"}));
-		terrDirShadowShader			= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain_directional_shadow_map.tesse", "Shaders/directional_shadow_map.frag"}));
-		omniShadowShader			= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/omni_shadow_map.vert", "Shaders/omni_shadow_map.geom", "Shaders/omni_shadow_map.frag"}));
-		animOmniShadowShader		= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/anim_omni_shadow_map.vert", "Shaders/omni_shadow_map.geom", "Shaders/omni_shadow_map.frag"}));
-		//terrOmniShadowShader.CreateFromFiles("Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain_omni_directional_shadow_map.tesse", "Shaders/omni_shadow_map.geom", "Shaders/directional_shadow_map.frag");
-		preZShader					= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/depth_framebuffer.vert", "Shaders/depth_framebuffer.frag"}));
-		animPreZShader				= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/anim_depth_framebuffer.vert", "Shaders/depth_framebuffer.frag"}));
-		terrPreZShader				= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain_depth_framebuffer.tesse", "Shaders/depth_framebuffer.frag"}));
-		ssaoShader					= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/ssao_framebuffer.vert", "Shaders/ssao_framebuffer.frag"}));
-		ssaoBlurShader				= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/ssao_blur_framebuffer.frag"}));
-		unrigShader					= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/shader.vert", "Shaders/shader.frag"}));
-		rigShader					= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/animated_shader.vert", "Shaders/shader.frag"}));
-		terrShader					= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/terrain.vert", "Shaders/terrain.tessc", "Shaders/terrain.tesse", "Shaders/terrain.frag"}));
-		bloomShader					= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/blur_framebuffer.frag"}));
-		motionBlurShader			= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/motionBlur_framebuffer.frag"}));
-		exposureShader				= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/framebuffer.vert", "Shaders/hdr_framebuffer.frag"}));
-		skyboxShader				= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/skybox.vert", "Shaders/skybox.frag"}));
-		
-		billboardShader				= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/billboard.vert", "Shaders/billboard.frag"}));
-		particleShader				= AddToShaderObjectPool(Shader_Object(std::vector<std::string>{"Shaders/particles.vert", "Shaders/particles.frag"}));
 
 		//ToDo: #20 simulation manager class
 		//fluidFragShader->CreateFromFiles("Shaders/framebuffer.vert", "Shaders/2DFluid/fluid.frag");
