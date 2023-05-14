@@ -91,20 +91,8 @@ struct RenderEngineMain::Impl
 	std::unique_ptr <Model_Shader> fluidFragShader3D = std::make_unique<Model_Shader>();*/
 
 	std::unique_ptr<Scene_Fbo_Handler_Manager> m_SceneFboHandlerMgr;
-
-	Fbo_Handler* environmentMap;
-	Fbo_Handler* irradianceMap;
-	Fbo_Handler* prefilterMap;
-	Fbo_Handler* brdfMap;
 	Fbo_Handler* depthMap;
-	Fbo_Handler* ssaoFbo;
-	Fbo_Handler* ssaoBlurFbo;
-	Fbo_Handler* sceneFbo;
-	Fbo_Handler* motionBlurFbo;
-	Fbo_Handler* bloomFbo;
 	Fbo_Handler* exposureFbo;
-
-	Fbo_Handler* omniShadowMaps;
 	Fbo_Handler* cameraBlitFbo;
 
 	//ToDo: #62
@@ -459,18 +447,18 @@ struct RenderEngineMain::Impl
 
 		m_SceneFboHandlerMgr = std::make_unique<Scene_Fbo_Handler_Manager>("InGame", screenDims);
 
-		environmentMap = m_SceneFboHandlerMgr->FindFboHandler("Environment_Map_Pass");
-		irradianceMap = m_SceneFboHandlerMgr->FindFboHandler("Irradiance_Map_Pass");
-		prefilterMap = m_SceneFboHandlerMgr->FindFboHandler("Pre_Filter_Pass");
-		brdfMap = m_SceneFboHandlerMgr->FindFboHandler("Brdf_Pass");
+		auto environmentMap = m_SceneFboHandlerMgr->FindFboHandler("Environment_Map_Pass");
+		auto irradianceMap = m_SceneFboHandlerMgr->FindFboHandler("Irradiance_Map_Pass");
+		auto prefilterMap = m_SceneFboHandlerMgr->FindFboHandler("Pre_Filter_Pass");
+		auto brdfMap = m_SceneFboHandlerMgr->FindFboHandler("Brdf_Pass");
 		depthMap = m_SceneFboHandlerMgr->FindFboHandler("Depth_Pass");
-		ssaoFbo = m_SceneFboHandlerMgr->FindFboHandler("Ssao_Pass");
-		ssaoBlurFbo = m_SceneFboHandlerMgr->FindFboHandler("Ssao_Blur_Pass");
-		sceneFbo = m_SceneFboHandlerMgr->FindFboHandler("Shading_Pass");
-		motionBlurFbo = m_SceneFboHandlerMgr->FindFboHandler("Motion_Blur_Pass");
-		bloomFbo = m_SceneFboHandlerMgr->FindFboHandler("Bloom_Pass");
+		auto ssaoFbo = m_SceneFboHandlerMgr->FindFboHandler("Ssao_Pass");
+		auto ssaoBlurFbo = m_SceneFboHandlerMgr->FindFboHandler("Ssao_Blur_Pass");
+		auto sceneFbo = m_SceneFboHandlerMgr->FindFboHandler("Shading_Pass");
+		auto motionBlurFbo = m_SceneFboHandlerMgr->FindFboHandler("Motion_Blur_Pass");
+		auto bloomFbo = m_SceneFboHandlerMgr->FindFboHandler("Bloom_Pass");
 		exposureFbo = m_SceneFboHandlerMgr->FindFboHandler("Final_Output_Pass");
-		omniShadowMaps = m_SceneFboHandlerMgr->FindFboHandler("Omni_Shadow_Map_Pass");
+		auto omniShadowMaps = m_SceneFboHandlerMgr->FindFboHandler("Omni_Shadow_Map_Pass");
 
 		cameraBlitFbo = m_SceneFboHandlerMgr->AddGameCameraFboHandlers(0, screenDims);
 
@@ -906,6 +894,12 @@ struct RenderEngineMain::Impl
 		}
 
 		glUseProgram(0);
+
+		modelMatrixPool.ExecuteClusteredTasks();
+		prevModelMatrixPool.ExecuteClusteredTasks();
+		texturePool.ExecuteClusteredTasks();
+		shaderObjPool.ExecuteClusteredTasks();
+		meshPool.ExecuteClusteredTasks();
 	}
 
 	void EndUpdate() 

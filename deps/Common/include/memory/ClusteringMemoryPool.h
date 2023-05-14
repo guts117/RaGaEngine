@@ -96,7 +96,7 @@ public:
 	void write(memfn&& func, Args&&... args)
 	{
 		auto defferedWrite = [&]() {func(*ptr.get(), std::forward<Args>(args)...); };
-		(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(defferedWrite);
+		(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(std::move(defferedWrite));
 	}
 };
 
@@ -137,6 +137,18 @@ public:
 		}
 	}
 	
+	void ExecuteClusteredTasks()
+	{
+		for (auto& a : m_memory_pool) 
+		{
+			for (auto b : a.taskQueue) 
+			{
+				b();
+			}
+			a.taskQueue.clear();
+		}
+	}
+
 	~ClusteringMemoryPool() = default;
 private:
 	std::vector<DataTaskBlockPair<T>> m_memory_pool;
