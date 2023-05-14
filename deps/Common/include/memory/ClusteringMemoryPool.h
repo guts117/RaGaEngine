@@ -9,82 +9,88 @@ struct DataTaskBlockPair
 };
 
 template<class T>
+struct r_clustering_ptr;
+template<class T>
+struct w_clustering_ptr;
+template<class T>
+struct rw_clustering_ptr;
+
+template<class T>
 struct clustering_ptr
 {
+private:
+	T* operator->()		{ return &((*poolHeadPtr)[clusterId].dataBlock[index]); }
+	T* get()			{ return &((*poolHeadPtr)[clusterId].dataBlock[index]); }
+
 public:
 	friend class w_clustering_ptr<T>;
+	friend class rw_clustering_ptr<T>;
 
-	const T* operator-> ()
-	{
-		return &((*poolHeadPtr)[clusterId].dataBlock[index]);
-	}
-
-	const T* get() const
-	{
-		return &((*poolHeadPtr)[clusterId].dataBlock[index]);
-	}
-
-private:
 	std::vector<DataTaskBlockPair<T>>* poolHeadPtr = nullptr;		//size 8
 	unsigned int clusterId = 0;										//size 4
 	unsigned int index = 0;											//size 4
 
-	T* operator-> ()
-	{
-		return &((*poolHeadPtr)[clusterId].dataBlock[index]);
-	}
-
-	T* get()
-	{
-		return &((*poolHeadPtr)[clusterId].dataBlock[index]);
-	}
+	T const* const operator-> () const	{ return &((*poolHeadPtr)[clusterId].dataBlock[index]); }
+	T const* const get() const			{ return &((*poolHeadPtr)[clusterId].dataBlock[index]); }
 };
 template<class T>
 struct r_clustering_ptr 
 {
-	const T* operator-> ()
-	{
-		return ptr.get();
-	}
-
-	const T* get()
-	{
-		return ptr.get();
-	}
-
 private:
 	clustering_ptr<T> ptr;
+
+public:
+	T const* const operator-> () const	{ return ptr.get(); }
+	T const* const get() const			{ return ptr.get(); }
+	bool isValid()		const			{ return ptr->poolHeadPtr != nullptr; }
 };
 
 template<class T>
 struct w_clustering_ptr
 {
 private:
-	T* operator-> ()
-	{
-		return ptr.get();
-	}
+	clustering_ptr<T> ptr;
 
-	T* get()
-	{
-		return ptr.get();
-	}
 public:
+	bool isValid()	const				{ return ptr->poolHeadPtr != nullptr; }
+
 	void write(T&& other)
 	{
-		auto defferedWrite = [&](T&& other) { *get() = std::move(other); };	
-		(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(defferedWrite);;
+		auto defferedWrite = [&](T&& other) { *ptr.get() = std::move(other); };
+		(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(defferedWrite);
 	}
 
-	#define DefferedWrite(func, args...) (w).write((w)->func(args...))
-
-	void write()
+	template<typename memfn, typename... Args>
+	void write(memfn&& func, Args&&... args)
 	{
-		DefferedWrite();
-		(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(defferedWrite);;
+		auto defferedWrite = [&]() {func(*ptr.get(), std::forward<Args>(args)...); };
+		(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(defferedWrite);
 	}
+};
+
+template<class T>
+struct rw_clustering_ptr
+{
 private:
 	clustering_ptr<T> ptr;
+
+public:
+	T const* const operator-> () const	{ return ptr.get(); }
+	T const* const get() const			{ return ptr.get(); }
+	bool isValid() const				{ return ptr->poolHeadPtr != nullptr; }
+
+	void write(T&& other)
+	{
+		auto defferedWrite = [&](T&& other) { *ptr.get() = std::move(other); };
+		(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(defferedWrite);
+	}
+
+	template<typename memfn, typename... Args>
+	void write(memfn&& func, Args&&... args)
+	{
+		auto defferedWrite = [&]() {func(*ptr.get(), std::forward<Args>(args)...); };
+		(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(defferedWrite);
+	}
 };
 
 template<class T>
