@@ -26,6 +26,8 @@ public:
 	friend class w_clustering_ptr<T>;
 	friend class rw_clustering_ptr<T>;
 
+	//ToDo: Write proper constructors
+
 	std::vector<DataTaskBlockPair<T>>* poolHeadPtr = nullptr;		//size 8
 	unsigned int clusterId = 0;										//size 4
 	unsigned int index = 0;											//size 4
@@ -40,9 +42,10 @@ private:
 	clustering_ptr<T> ptr;
 
 public:
+	//ToDo: Write proper constructors
 	T const* const operator-> () const	{ return ptr.get(); }
 	T const* const get() const			{ return ptr.get(); }
-	bool isValid()		const			{ return ptr->poolHeadPtr != nullptr; }
+	bool isValid()		const			{ return ptr.poolHeadPtr != nullptr; }
 };
 
 template<class T>
@@ -52,7 +55,8 @@ private:
 	clustering_ptr<T> ptr;
 
 public:
-	bool isValid()	const				{ return ptr->poolHeadPtr != nullptr; }
+	//ToDo: Write proper constructors
+	bool isValid()	const				{ return ptr.poolHeadPtr != nullptr; }
 
 	void write(T&& other)
 	{
@@ -75,9 +79,12 @@ private:
 	clustering_ptr<T> ptr;
 
 public:
+	//ToDo: Write proper constructors
+	void SetPtr(clustering_ptr<T> cl_ptr) { ptr = cl_ptr; }
+
 	T const* const operator-> () const	{ return ptr.get(); }
 	T const* const get() const			{ return ptr.get(); }
-	bool isValid() const				{ return ptr->poolHeadPtr != nullptr; }
+	bool isValid() const				{ return ptr.poolHeadPtr != nullptr; }
 
 	void write(T&& other)
 	{

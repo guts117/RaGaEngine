@@ -9,7 +9,7 @@ using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
 Ssao_Render_Pass_Handler::Ssao_Render_Pass_Handler(Fbo_Handler* fboHandlr
-	, std::vector<clustering_ptr<Shader_Object>>&& shaderVec
+	, std::vector<rw_clustering_ptr<Shader_Object>>&& shaderVec
 	, std::shared_ptr<std::vector<std::shared_ptr<std::any>>> inputs)
 	: Render_Pass_Handler(fboHandlr, std::move(shaderVec), inputs)
 {
@@ -56,12 +56,13 @@ void Ssao_Render_Pass_Handler::Update(std::vector<std::vector<Render_Object>>& r
 
 		auto& shader = m_shaderVec[shaderIndex];
 
-		shader->ResetTextureUnit(0);
+		shader.write(std::mem_fn(&Shader_Object::ResetTextureUnit), 0);
 		shader->UseShaderObject();
 
 		if (auto val = CheckInputDataType<Fbo_Handler*>(*m_inputs->at(0)))
 		{
-			val->AttachFBOToTextureUnit(0, shader->SetTextureUnit("theTexture"), 0, 0);
+			shader.write(std::mem_fn<void(std::string&&)>(&Shader_Object::SetTextureUnit), "theTexture");
+			val->AttachFBOToTextureUnit(0, shader->GetTextureUnit(), 0, 0);
 		}
 
 		shader->SetVariable("SampleRad", 0.1f);

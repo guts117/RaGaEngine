@@ -134,8 +134,8 @@ struct RenderEngineMain::Impl
 
 	ClusteringMemoryPool<Texture> texturePool = ClusteringMemoryPool<Texture>(5);
 	ClusteringMemoryPool<Mesh> meshPool = ClusteringMemoryPool<Mesh>(5);
-	ClusteringMemoryPool<glm::mat4> modelMatrixPool = ClusteringMemoryPool<glm::mat4>(5);
-	ClusteringMemoryPool<glm::mat4> prevModelMatrixPool = ClusteringMemoryPool<glm::mat4>(5);
+	ClusteringMemoryPool<Transform> modelMatrixPool = ClusteringMemoryPool<Transform>(5);
+	ClusteringMemoryPool<Transform> prevModelMatrixPool = ClusteringMemoryPool<Transform>(5);
 	ClusteringMemoryPool<Shader_Object> shaderObjPool = ClusteringMemoryPool<Shader_Object>(5);
 
 	std::vector<std::vector<Render_Object>> ssaoQuadRO;
@@ -144,22 +144,32 @@ struct RenderEngineMain::Impl
 	std::vector<std::vector<Render_Object>> sceneObjRO;
 	std::vector<std::vector<Render_Object>> billboardRO;
 
-	clustering_ptr<Mesh> AddToMeshPool(Mesh&& mesh)
+	rw_clustering_ptr<Mesh> AddToMeshPool(Mesh&& mesh)
 	{
-		return meshPool.AddToPool(std::move(mesh));
+		auto ptr = rw_clustering_ptr<Mesh>();
+		ptr.SetPtr(meshPool.AddToPool(std::move(mesh)));
+		return ptr;
 	}
-	clustering_ptr<glm::mat4> AddToModelMatrixPool(glm::mat4&& mat)
+	rw_clustering_ptr<Transform> AddToModelMatrixPool(glm::mat4&& mat)
 	{
-		return modelMatrixPool.AddToPool(std::move(mat));
+		auto ptr = rw_clustering_ptr<Transform>();
+		auto trns = Transform();
+		trns.SetModelMatrtix(mat);
+		ptr.SetPtr(modelMatrixPool.AddToPool(std::move(trns)));
+		return ptr;
 	}
-	clustering_ptr<glm::mat4> AddToPrevModelMatrixPool(glm::mat4&& mat)
+	rw_clustering_ptr<Transform> AddToPrevModelMatrixPool(glm::mat4&& mat)
 	{
-		return prevModelMatrixPool.AddToPool(std::move(mat));
+		auto ptr = rw_clustering_ptr<Transform>();
+		auto trns = Transform();
+		trns.SetModelMatrtix(mat);
+		ptr.SetPtr(prevModelMatrixPool.AddToPool(std::move(trns)));
+		return ptr;
 	}
 
-	std::map<TexType, std::vector<clustering_ptr<Texture>>> CreateTextureMap(std::vector<TexMapData>&& texMapData, const std::vector<glm::vec3>& color = std::vector<glm::vec3>())
+	std::map<TexType, std::vector<rw_clustering_ptr<Texture>>> CreateTextureMap(std::vector<TexMapData>&& texMapData, const std::vector<glm::vec3>& color = std::vector<glm::vec3>())
 	{
-		auto textureMap = std::map<TexType, std::vector<clustering_ptr<Texture>>>();
+		auto textureMap = std::map<TexType, std::vector<rw_clustering_ptr<Texture>>>();
 
 		for(auto i = 0; i< texMapData.size(); ++i)
 		{
@@ -182,17 +192,19 @@ struct RenderEngineMain::Impl
 			}
 
 			auto texPtr = texturePool.AddToPool(std::move(texture));
+			auto rwTexPtr = rw_clustering_ptr<Texture>();
+			rwTexPtr.SetPtr(texPtr);
 
 			if(hasLoaded)
 			{
 				if (textureMap.contains(dat.type))
 				{
-					textureMap.at(dat.type).emplace_back(texPtr);
+					textureMap.at(dat.type).emplace_back(rwTexPtr);
 				}
 				else
 				{
-					auto vec = std::vector<clustering_ptr<Texture>>();
-					vec.emplace_back(texPtr);
+					auto vec = std::vector<rw_clustering_ptr<Texture>>();
+					vec.emplace_back(rwTexPtr);
 					textureMap.emplace(dat.type, vec);
 				}
 			}
@@ -201,9 +213,11 @@ struct RenderEngineMain::Impl
 		return textureMap;
 	}
 
-	clustering_ptr<Shader_Object> AddToShaderObjectPool(Shader_Object&& shaderObj)
+	rw_clustering_ptr<Shader_Object> AddToShaderObjectPool(Shader_Object&& shaderObj)
 	{	
-		return shaderObjPool.AddToPool(std::move(shaderObj));
+		auto ptr = rw_clustering_ptr<Shader_Object>();
+		ptr.SetPtr(shaderObjPool.AddToPool(std::move(shaderObj)));
+		return ptr;
 	}
 
 	std::vector< std::shared_ptr < ParticleSystem>> particleList;
@@ -460,7 +474,7 @@ struct RenderEngineMain::Impl
 
 		cameraBlitFbo = m_SceneFboHandlerMgr->AddGameCameraFboHandlers(0, screenDims);
 
-		auto quad = std::vector<clustering_ptr<Mesh>>();
+		auto quad = std::vector<rw_clustering_ptr<Mesh>>();
 
 		std::vector<GLuint> quadIndices = {
 			0, 1, 2,
@@ -493,7 +507,7 @@ struct RenderEngineMain::Impl
 		ssaoQuadRO = std::vector<std::vector<Render_Object>>();
 		ssaoQuadRO.emplace_back(std::move(quadInVec));
 
-		auto cwCube = std::vector<clustering_ptr<Mesh>>();
+		auto cwCube = std::vector<rw_clustering_ptr<Mesh>>();
 		std::vector<GLuint> cwCubeIndices = {
 			//front
 			0,1,2,
@@ -725,7 +739,7 @@ struct RenderEngineMain::Impl
 		//texMapDatas.push_back(TexMapData{ TexType::Default,		"Textures/plain.png" });
 		//CreateTextureMap(std::move(texMapDatas));
 
-		auto envMapShaders = std::vector<clustering_ptr<Shader_Object>>{ environmentMapShader };
+		auto envMapShaders = std::vector<rw_clustering_ptr<Shader_Object>>{ environmentMapShader };
 		envMapRPHandler = std::make_shared<Environment_Map_Render_Pass_Handler>(environmentMap, std::move(envMapShaders));
 		auto texMapDatas = std::vector<TexMapData>();
 		texMapDatas.push_back(TexMapData{ TexType::HDR,		"Textures/HDR/syferfontein_0d_clear_puresky_4k.hdr" });	
@@ -734,41 +748,41 @@ struct RenderEngineMain::Impl
 		envMapRPHandler->Update(cwCubeRO);
 		cwCubeRO[0][0].ResetTextures();
 
-		auto irrConvShaders = std::vector<clustering_ptr<Shader_Object>>{ irradianceConvolutionShader };
+		auto irrConvShaders = std::vector<rw_clustering_ptr<Shader_Object>>{ irradianceConvolutionShader };
 		auto inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
 		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(environmentMap)));
 		irrConvRPHandler = std::make_shared<Irradiance_Convolution_Render_Pass_Handler>(irradianceMap, std::move(irrConvShaders), inputs);
 		irrConvRPHandler->Update(cwCubeRO);
 
-		auto prefilterShaders = std::vector<clustering_ptr<Shader_Object>>{ prefilterShader };
+		auto prefilterShaders = std::vector<rw_clustering_ptr<Shader_Object>>{ prefilterShader };
 		prefilterRPHandler = std::make_shared<Prefilter_Render_Pass_Handler>(prefilterMap, std::move(prefilterShaders), inputs);
 		prefilterRPHandler->Update(cwCubeRO);
 
-		auto brdfShaders = std::vector<clustering_ptr<Shader_Object>>{ brdfShader };
+		auto brdfShaders = std::vector<rw_clustering_ptr<Shader_Object>>{ brdfShader };
 		brdfRPHandler = std::make_shared<Brdf_Render_Pass_Handler>(brdfMap, std::move(brdfShaders));
 		brdfRPHandler->Update(quadRO);
 
-		auto dirShadowShaders = std::vector<clustering_ptr<Shader_Object>>{ dirShadowShader, animDirShadowShader, terrDirShadowShader };
+		auto dirShadowShaders = std::vector<rw_clustering_ptr<Shader_Object>>{ dirShadowShader, animDirShadowShader, terrDirShadowShader };
 		dirShadowRPHandler = std::make_shared<Directional_Shadow_Map_Render_Pass_Handler>(mainLight->GetShadowMap(), std::move(dirShadowShaders));
 
-		auto ommiShadowShaders = std::vector<clustering_ptr<Shader_Object>>{ omniShadowShader, animOmniShadowShader };
+		auto ommiShadowShaders = std::vector<rw_clustering_ptr<Shader_Object>>{ omniShadowShader, animOmniShadowShader };
 		omniShadowRPHandler = std::make_shared<Omni_Directional_Shadow_Map_Render_Pass_Handler>(omniShadowMaps, std::move(ommiShadowShaders));
 
-		auto prezShaders = std::vector<clustering_ptr<Shader_Object>>{ preZShader, animPreZShader, terrPreZShader};
+		auto prezShaders = std::vector<rw_clustering_ptr<Shader_Object>>{ preZShader, animPreZShader, terrPreZShader};
 		preZRPHandler = std::make_shared<PreZ_Render_Pass_Handler>(depthMap, std::move(prezShaders));
 
-		auto ssaoShaders = std::vector<clustering_ptr<Shader_Object>>{ ssaoShader };
+		auto ssaoShaders = std::vector<rw_clustering_ptr<Shader_Object>>{ ssaoShader };
 		inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
 		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(depthMap)));
 		ssaoRPHandler = std::make_shared<Ssao_Render_Pass_Handler>(ssaoFbo, std::move(ssaoShaders), inputs);
 		InitSSAO();
 
-		auto ssaoBlurShaders = std::vector<clustering_ptr<Shader_Object>>{ ssaoBlurShader };
+		auto ssaoBlurShaders = std::vector<rw_clustering_ptr<Shader_Object>>{ ssaoBlurShader };
 		inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
 		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(ssaoFbo)));
 		ssaoBlurRPHandler = std::make_shared<Ssao_Blur_Render_Pass_Handler>(ssaoBlurFbo, std::move(ssaoBlurShaders), inputs);
 
-		auto sceneShaders = std::vector<clustering_ptr<Shader_Object>>{ unrigShader, rigShader, terrShader};
+		auto sceneShaders = std::vector<rw_clustering_ptr<Shader_Object>>{ unrigShader, rigShader, terrShader};
 		inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
 		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(mainLight->GetShadowMap())));
 		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(omniShadowMaps)));
@@ -779,28 +793,28 @@ struct RenderEngineMain::Impl
 		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(depthMap)));
 		sceneRPHandler = std::make_shared<Scene_Render_Pass_Handler>(sceneFbo, std::move(sceneShaders), inputs);
 
-		auto bloomShaders = std::vector<clustering_ptr<Shader_Object>>{ bloomShader };
+		auto bloomShaders = std::vector<rw_clustering_ptr<Shader_Object>>{ bloomShader };
 		inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
 		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(sceneFbo)));
 		bloomRPHandler = std::make_shared<Bloom_Render_Pass_Handler>(bloomFbo, std::move(bloomShaders), inputs);
 
-		auto motionBlurShaders = std::vector<clustering_ptr<Shader_Object>>{ motionBlurShader };
+		auto motionBlurShaders = std::vector<rw_clustering_ptr<Shader_Object>>{ motionBlurShader };
 		inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
 		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(sceneFbo)));
 		motionBlurRPHandler = std::make_shared<Motion_Blur_Render_Pass_Handler>(motionBlurFbo, std::move(motionBlurShaders), inputs);
 
-		auto exosureShaders = std::vector<clustering_ptr<Shader_Object>>{ exposureShader };
+		auto exosureShaders = std::vector<rw_clustering_ptr<Shader_Object>>{ exposureShader };
 		inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
 		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(bloomFbo)));
 		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(motionBlurFbo)));
 		exposureRPHandler = std::make_shared<Exposure_Render_Pass_Handler>(exposureFbo, std::move(exosureShaders), inputs);
 
-		auto skyboxShaders = std::vector<clustering_ptr<Shader_Object>>{ skyboxShader };
+		auto skyboxShaders = std::vector<rw_clustering_ptr<Shader_Object>>{ skyboxShader };
 		inputs = std::make_shared<std::vector<std::shared_ptr<std::any>>>();
 		inputs->push_back(std::make_shared<std::any>(std::make_any<Fbo_Handler*>(environmentMap)));
 		skyboxRPHandler = std::make_shared<Skybox_Render_Pass_Handler>(sceneFbo, std::move(skyboxShaders), inputs);
 
-		auto billboardShaders = std::vector<clustering_ptr<Shader_Object>>{ billboardShader };
+		auto billboardShaders = std::vector<rw_clustering_ptr<Shader_Object>>{ billboardShader };
 		billBoardRPHandler = std::make_shared<Billboard_Render_Pass_Handler>(sceneFbo, std::move(billboardShaders));
 	}
 
@@ -1133,7 +1147,7 @@ struct RenderEngineMain::Impl
 
 		auto texMap = CreateTextureMap(std::move(texMapDatas));
 
-		std::vector<clustering_ptr<Mesh>> mesh = std::vector<clustering_ptr<Mesh>>();
+		std::vector<rw_clustering_ptr<Mesh>> mesh = std::vector<rw_clustering_ptr<Mesh>>();
 		mesh.push_back(AddToMeshPool(std::move(mesh0)));
 		auto mro = Render_Object(std::move(mesh), std::move(texMap), AddToModelMatrixPool(std::move(modelMatrix)), AddToPrevModelMatrixPool(std::move(prevModelMatrix)));
 		unrigStuff.emplace_back(std::move(mro));
@@ -1152,7 +1166,7 @@ struct RenderEngineMain::Impl
 
 		texMap = CreateTextureMap(std::move(texMapDatas));
 		
-		mesh = std::vector<clustering_ptr<Mesh>>();
+		mesh = std::vector<rw_clustering_ptr<Mesh>>();
 		mesh.push_back(AddToMeshPool(std::move(mesh0)));
 		mro = Render_Object(std::move(mesh), std::move(texMap), AddToModelMatrixPool(std::move(modelMatrix)), AddToPrevModelMatrixPool(std::move(prevModelMatrix)));
 		unrigStuff.push_back(std::move(mro));
@@ -1171,7 +1185,7 @@ struct RenderEngineMain::Impl
 
 		texMap = CreateTextureMap(std::move(texMapDatas));
 		
-		mesh = std::vector<clustering_ptr<Mesh>>();
+		mesh = std::vector<rw_clustering_ptr<Mesh>>();
 		mesh.push_back(AddToMeshPool(std::move(mesh0)));
 		mro = Render_Object(std::move(mesh), std::move(texMap), AddToModelMatrixPool(std::move(modelMatrix)), AddToPrevModelMatrixPool(std::move(prevModelMatrix)));
 		billboardStuff.push_back(std::move(mro));

@@ -12,6 +12,16 @@ namespace NarakaRenderEngine
 		class Texture;
 		class Shader_Object;
 
+		struct Transform
+		{
+		private:
+			glm::mat4 modelMatrix;
+		
+		public:
+			void SetModelMatrtix(glm::mat4 modelMat)	{ modelMatrix = modelMat; }
+			glm::mat4 GetModelMatrix() const			{ return modelMatrix; }
+		};
+
 		struct RenderObjectParams
 		{
 			const bool&& useWorldSpaceTransform = false;
@@ -30,16 +40,16 @@ namespace NarakaRenderEngine
 		public:
 			explicit Render_Object() = delete;
 
-			explicit Render_Object(std::vector<clustering_ptr<Mesh>>&& meshes
-								, std::map<TexType, std::vector<clustering_ptr<Texture>>>&& textureMap = std::map<TexType, std::vector<clustering_ptr<Texture>>>()
-								, clustering_ptr<glm::mat4>&& modelMatrix = clustering_ptr<glm::mat4>()
-								, clustering_ptr<glm::mat4>&& prevModelMatrix = clustering_ptr<glm::mat4>()
+			explicit Render_Object(std::vector<rw_clustering_ptr<Mesh>>&& meshes
+								, std::map<TexType, std::vector<rw_clustering_ptr<Texture>>>&& textureMap = std::map<TexType, std::vector<rw_clustering_ptr<Texture>>>()
+								, rw_clustering_ptr<Transform>&& modelMatrix = rw_clustering_ptr<Transform>()
+								, rw_clustering_ptr<Transform>&& prevModelMatrix = rw_clustering_ptr<Transform>()
 								, std::vector<BoneTransform*>&& boneMatrices = std::vector<BoneTransform*>());
 
-			void SetTextures(std::map<TexType, std::vector<clustering_ptr<Texture>>>&& textureMap);
+			void SetTextures(std::map<TexType, std::vector<rw_clustering_ptr<Texture>>>&& textureMap);
 
 			void ResetTextures();
-			const clustering_ptr<glm::mat4> GetModelMatrix() const ;
+			glm::mat4 GetModelMatrix() const;
 
 			Render_Object(Render_Object&& rhs) noexcept;
 			Render_Object& operator=(Render_Object&& rhs) noexcept;
@@ -47,7 +57,7 @@ namespace NarakaRenderEngine
 			Render_Object(const Render_Object& rhs) noexcept = delete;
 			Render_Object& operator=(const Render_Object& rhs) noexcept = delete;
 
-			void RenderObject(clustering_ptr<Shader_Object>& shader, RenderObjectParams&& params);
+			void RenderObject(rw_clustering_ptr<Shader_Object>& shader, RenderObjectParams&& params);
 
 			bool IsTesselated();
 

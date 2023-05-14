@@ -8,7 +8,7 @@ using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
 Environment_Map_Render_Pass_Handler::Environment_Map_Render_Pass_Handler(Fbo_Handler* fboHandlr
-	, std::vector<clustering_ptr<Shader_Object>>&& shaderVec
+	, std::vector<rw_clustering_ptr<Shader_Object>>&& shaderVec
 	, std::shared_ptr<std::vector<std::shared_ptr<std::any>>> inputs)
 	: Render_Pass_Handler(fboHandlr, std::move(shaderVec), inputs)
 {
@@ -37,7 +37,7 @@ void Environment_Map_Render_Pass_Handler::Update(std::vector<std::vector<Render_
 
 		auto& shader = m_shaderVec[shaderIndex];
 
-		shader->ResetTextureUnit(0);
+		shader.write(std::mem_fn(&Shader_Object::ResetTextureUnit), 0);
 		shader->UseShaderObject();
 		shader->SetVariable("Projection", captureProjection);
 
@@ -48,7 +48,7 @@ void Environment_Map_Render_Pass_Handler::Update(std::vector<std::vector<Render_
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			shader->ValidateShaderObject();
 
-			shader->ResetTextureUnit(0);
+			shader.write(std::mem_fn(&Shader_Object::ResetTextureUnit), 0);
 			for (auto roIndex = 0; roIndex < renderObj[shaderIndex].size(); ++roIndex)
 			{
 				renderObj[shaderIndex][roIndex].RenderObject(shader, std::move(RenderObjectParams{false, true}));

@@ -9,13 +9,13 @@ using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
 Omni_Directional_Shadow_Map_Render_Pass_Handler::Omni_Directional_Shadow_Map_Render_Pass_Handler(Fbo_Handler* fboHandlr
-	, std::vector<clustering_ptr<Shader_Object>>&& shaderVec
+	, std::vector<rw_clustering_ptr<Shader_Object>>&& shaderVec
 	, std::shared_ptr<std::vector<std::shared_ptr<std::any>>> inputs)
 	: Render_Pass_Handler(fboHandlr, std::move(shaderVec), inputs)
 {
 }
 
-void SetLightTransform(clustering_ptr<Shader_Object>& shader, const int& lightIndex, const LightParam* lightParam)
+void SetLightTransform(rw_clustering_ptr<Shader_Object>& shader, const int& lightIndex, const LightParam* lightParam)
 {
 	auto& position = lightParam->Position[lightIndex];
 	auto& projection = lightParam->Projection[lightIndex];
@@ -53,7 +53,7 @@ void Omni_Directional_Shadow_Map_Render_Pass_Handler::Update(std::vector<std::ve
 
 			auto& shader = m_shaderVec[shaderIndex];
 
-			shader->ResetTextureUnit(0);
+			shader.write(std::mem_fn(&Shader_Object::ResetTextureUnit), 0);
 			shader->UseShaderObject();
 			shader->SetVariable("lightPos", lightParam->Position[lightIndex]);
 			shader->SetVariable("farPlane", lightParam->FarPlane[lightIndex]);

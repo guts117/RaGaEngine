@@ -9,7 +9,7 @@ using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
 Scene_Render_Pass_Handler::Scene_Render_Pass_Handler(Fbo_Handler* fboHandlr
-	, std::vector<clustering_ptr<Shader_Object>>&& shaderVec
+	, std::vector<rw_clustering_ptr<Shader_Object>>&& shaderVec
 	, std::shared_ptr<std::vector<std::shared_ptr<std::any>>> inputs)
 	: Render_Pass_Handler(fboHandlr, std::move(shaderVec), inputs)
 {
@@ -31,7 +31,7 @@ void Scene_Render_Pass_Handler::Update(std::vector<std::vector<Render_Object>>& 
 
 		auto& shader = m_shaderVec[shaderIndex];
 
-		shader->ResetTextureUnit(0);
+		shader.write(std::mem_fn(&Shader_Object::ResetTextureUnit), 0);
 		shader->UseShaderObject();
 
 		shader->SetVariable("Projection", camParam->Projection);
@@ -48,7 +48,8 @@ void Scene_Render_Pass_Handler::Update(std::vector<std::vector<Render_Object>>& 
 
 			for (auto cascId = 0; cascId < NUM_CASCADES; ++cascId)
 			{
-				val->AttachFBOToTextureUnit(0, shader->SetTextureUnit("directionalShadowMaps", cascId, "shadowMap"), 0, cascId);
+				shader.write(std::mem_fn<void(std::string&&, const GLuint&, std::string&&)>(&Shader_Object::SetTextureUnit), "directionalShadowMaps", cascId, "shadowMap");
+				val->AttachFBOToTextureUnit(0, shader->GetTextureUnit(), 0, cascId);
 				shader->SetVariable("DirectionalLightTransforms", lightParam[0].Projection[cascId] * lightParam[0].View[cascId], cascId);
 				shader->SetVariable("CascadeEndClipSpace", lightParam[0].Edge[cascId], cascId);
 			}
@@ -64,7 +65,8 @@ void Scene_Render_Pass_Handler::Update(std::vector<std::vector<Render_Object>>& 
 
 			for (auto omniLightIndex = 0; omniLightIndex < pointLightsCnt; ++omniLightIndex)
 			{
-				val->AttachFBOToTextureUnit(omniLightIndex, shader->SetTextureUnit("omniShadowMaps", omniLightIndex, "shadowMap"), 0, 0);
+				shader.write(std::mem_fn<void(std::string&&, const GLuint&, std::string&&)>(&Shader_Object::SetTextureUnit), "omniShadowMaps", omniLightIndex, "shadowMap");
+				val->AttachFBOToTextureUnit(omniLightIndex, shader->GetTextureUnit(), 0, 0);
 
 				if (omniLightIndex < lightParam[1].Count)
 				{
@@ -87,7 +89,8 @@ void Scene_Render_Pass_Handler::Update(std::vector<std::vector<Render_Object>>& 
 		{
 			if (auto val = CheckInputDataType<Fbo_Handler*>(*m_inputs->at(inputIndex)))
 			{
-				val->AttachFBOToTextureUnit(0, shader->SetTextureUnit(std::move(inputTexBuffs[inputIndex - inputOffset])), 0, 0);
+				shader.write(std::mem_fn<void(std::string&&)>(&Shader_Object::SetTextureUnit), std::move(inputTexBuffs[inputIndex - inputOffset]));
+				val->AttachFBOToTextureUnit(0, shader->GetTextureUnit(), 0, 0);
 			}
 		}
 

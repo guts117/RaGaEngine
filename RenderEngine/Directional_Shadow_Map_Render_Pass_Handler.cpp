@@ -9,7 +9,7 @@ using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
 Directional_Shadow_Map_Render_Pass_Handler::Directional_Shadow_Map_Render_Pass_Handler(Fbo_Handler* fboHandlr
-	, std::vector<clustering_ptr<Shader_Object>>&& shaderVec
+	, std::vector<rw_clustering_ptr<Shader_Object>>&& shaderVec
 	, std::shared_ptr<std::vector<std::shared_ptr<std::any>>> inputs)
 	: Render_Pass_Handler(fboHandlr, std::move(shaderVec), inputs)
 {
@@ -31,7 +31,7 @@ void Directional_Shadow_Map_Render_Pass_Handler::Update(std::vector<std::vector<
 
 			auto& shader = m_shaderVec[shaderIndex];
 
-			shader->ResetTextureUnit(0);
+			shader.write(std::mem_fn(&Shader_Object::ResetTextureUnit), 0);
 			shader->UseShaderObject();	
 			shader->SetVariable("DirectionalLightTransform", lightParam->Projection[cascadeId] * lightParam->View[cascadeId]);
 			shader->ValidateShaderObject();

@@ -9,7 +9,7 @@ using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
 Exposure_Render_Pass_Handler::Exposure_Render_Pass_Handler(Fbo_Handler* fboHandlr
-	, std::vector<clustering_ptr<Shader_Object>>&& shaderVec
+	, std::vector<rw_clustering_ptr<Shader_Object>>&& shaderVec
 	, std::shared_ptr<std::vector<std::shared_ptr<std::any>>> inputs)
 	: Render_Pass_Handler(fboHandlr, std::move(shaderVec), inputs)
 {
@@ -29,7 +29,7 @@ void Exposure_Render_Pass_Handler::Update(std::vector<std::vector<Render_Object>
 
 		auto& shader = m_shaderVec[shaderIndex];
 
-		shader->ResetTextureUnit(0);
+		shader.write(std::mem_fn(&Shader_Object::ResetTextureUnit), 0);
 		shader->UseShaderObject();
 
 		shader->SetVariable("hdr", 1);
@@ -37,12 +37,14 @@ void Exposure_Render_Pass_Handler::Update(std::vector<std::vector<Render_Object>
 
 		if (auto val = CheckInputDataType<Fbo_Handler*>(*m_inputs->at(0)))
 		{
-			val->AttachFBOToTextureUnit(1, shader->SetTextureUnit("blurTexture"), 0, 0);
+			shader.write(std::mem_fn<void(std::string&&)>(&Shader_Object::SetTextureUnit), "blurTexture");
+			val->AttachFBOToTextureUnit(1, shader->GetTextureUnit(), 0, 0);
 		}
 
 		if (auto val = CheckInputDataType<Fbo_Handler*>(*m_inputs->at(1)))
 		{
-			val->AttachFBOToTextureUnit(0, shader->SetTextureUnit("theTexture"), 0, 0);
+			shader.write(std::mem_fn<void(std::string&&)>(&Shader_Object::SetTextureUnit), "theTexture");
+			val->AttachFBOToTextureUnit(0, shader->GetTextureUnit(), 0, 0);
 		}
 
 		for (auto roIndex = 0; roIndex < renderObj[shaderIndex].size(); ++roIndex)

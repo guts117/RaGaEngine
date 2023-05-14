@@ -9,7 +9,7 @@ using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
 Skybox_Render_Pass_Handler::Skybox_Render_Pass_Handler(Fbo_Handler* fboHandlr
-	, std::vector<clustering_ptr<Shader_Object>>&& shaderVec
+	, std::vector<rw_clustering_ptr<Shader_Object>>&& shaderVec
 	, std::shared_ptr<std::vector<std::shared_ptr<std::any>>> inputs)
 	: Render_Pass_Handler(fboHandlr, std::move(shaderVec), inputs)
 {
@@ -29,7 +29,7 @@ void Skybox_Render_Pass_Handler::Update(std::vector<std::vector<Render_Object>>&
 		auto viewMatrix = glm::mat4(glm::mat3(camParam->View));
 		auto prevPV = camParam->PrevProj * glm::mat4(glm::mat3(camParam->PrevView));
 
-		shader->ResetTextureUnit(0);	
+		shader.write(std::mem_fn(&Shader_Object::ResetTextureUnit), 0);
 		glDepthFunc(GL_LEQUAL); //so that skybox doesn't render on top
 		shader->UseShaderObject();
 
@@ -39,7 +39,8 @@ void Skybox_Render_Pass_Handler::Update(std::vector<std::vector<Render_Object>>&
 
 		if (auto val = CheckInputDataType<Fbo_Handler*>(*m_inputs->at(0)))
 		{
-			val->AttachFBOToTextureUnit(0, shader->SetTextureUnit("skybox"), 0, 0);
+			shader.write(std::mem_fn<void(std::string&&)>(&Shader_Object::SetTextureUnit), "skybox");
+			val->AttachFBOToTextureUnit(0, shader->GetTextureUnit(), 0, 0);
 		}
 
 		for (auto roIndex = 0; roIndex < renderObj[shaderIndex].size(); ++roIndex)

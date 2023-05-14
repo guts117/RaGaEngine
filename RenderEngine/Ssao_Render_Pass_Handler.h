@@ -17,7 +17,7 @@ namespace NarakaRenderEngine
 		public:
 			explicit Ssao_Render_Pass_Handler() = delete;
 			explicit Ssao_Render_Pass_Handler(Fbo_Handler* fboHandlr
-				, std::vector<clustering_ptr<Shader_Object>>&& shaderVec
+				, std::vector<rw_clustering_ptr<Shader_Object>>&& shaderVec
 				, std::shared_ptr<std::vector<std::shared_ptr<std::any>>> inputs = nullptr);
 
 			virtual void Init() override;
