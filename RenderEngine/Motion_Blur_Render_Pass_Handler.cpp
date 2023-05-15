@@ -38,9 +38,9 @@ void Motion_Blur_Render_Pass_Handler::Update(std::vector<std::vector<Render_Obje
 
 		if (val)
 		{
-			shader.write(std::mem_fn<void(std::string&&)>(&Shader_Object::SetTextureUnit), "theTexture");
+			shader.write(std::mem_fn(&Shader_Object::SetTextureUnit), "theTexture");
 			val->AttachFBOToTextureUnit(0, shader->GetTextureUnit(), 0, 0);
-			shader.write(std::mem_fn<void(std::string&&)>(&Shader_Object::SetTextureUnit), "motionTexture");
+			shader.write(std::mem_fn(&Shader_Object::SetTextureUnit), "motionTexture");
 			val->AttachFBOToTextureUnit(0, shader->GetTextureUnit(), 1, 2);
 		}
 

@@ -37,13 +37,13 @@ void Exposure_Render_Pass_Handler::Update(std::vector<std::vector<Render_Object>
 
 		if (auto val = CheckInputDataType<Fbo_Handler*>(*m_inputs->at(0)))
 		{
-			shader.write(std::mem_fn<void(std::string&&)>(&Shader_Object::SetTextureUnit), "blurTexture");
+			shader.write(std::mem_fn(&Shader_Object::SetTextureUnit), "blurTexture");
 			val->AttachFBOToTextureUnit(1, shader->GetTextureUnit(), 0, 0);
 		}
 
 		if (auto val = CheckInputDataType<Fbo_Handler*>(*m_inputs->at(1)))
 		{
-			shader.write(std::mem_fn<void(std::string&&)>(&Shader_Object::SetTextureUnit), "theTexture");
+			shader.write(std::mem_fn(&Shader_Object::SetTextureUnit), "theTexture");
 			val->AttachFBOToTextureUnit(0, shader->GetTextureUnit(), 0, 0);
 		}
 

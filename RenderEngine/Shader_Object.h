@@ -25,7 +25,7 @@ namespace NarakaRenderEngine
 			void DispatchShaderObject(const glm::uvec3& threadGroupCnt) const;
 			const GLuint& GetShaderObjectProgramID() const;
 			void SetTextureUnit(std::string&& textureName);
-			void SetTextureUnit(std::string&& varName, const GLuint& index, std::string&& texName);
+			void SetTextureUnitStructArr(std::string&& varName, const GLuint& index, std::string&& texName);
 			const GLuint GetTextureUnit() const;
 			void ResetTextureUnit(GLuint resetToUnit);
 

@@ -56,7 +56,7 @@ struct alignas(alignof(void*)) Render_Object::Impl
 	{
 		if (params.useWorldSpaceTransform && m_ModelMatrix.isValid())
 		{
-			shader->SetVariable("Model", *(m_ModelMatrix.get()));
+			shader->SetVariable("Model", m_ModelMatrix.get()->GetModelMatrix());
 
 			if (params.prevViewProjection != nullptr && m_PrevModelMatrix.isValid())
 			{
@@ -98,36 +98,36 @@ struct alignas(alignof(void*)) Render_Object::Impl
 								switch ((TexType)texType)
 								{
 								case Albedo:
-									shader.write(std::mem_fn<void(std::string&&, const GLuint&, std::string&&)>(&Shader_Object::SetTextureUnit), "material", 0, "albedoMap");
+									shader.write(std::mem_fn(&Shader_Object::SetTextureUnitStructArr), "material", 0, "albedoMap");
 									break;
 								case Metallic:
-									shader.write(std::mem_fn<void(std::string&&, const GLuint&, std::string&&)>(&Shader_Object::SetTextureUnit), "material", 0, "metallicMap");
+									shader.write(std::mem_fn(&Shader_Object::SetTextureUnitStructArr), "material", 0, "metallicMap");
 									break;
 								case Roughness:
-									shader.write(std::mem_fn<void(std::string&&, const GLuint&, std::string&&)>(&Shader_Object::SetTextureUnit), "material", 0, "roughnessMap");
+									shader.write(std::mem_fn(&Shader_Object::SetTextureUnitStructArr), "material", 0, "roughnessMap");
 									break;
 								case Normal:
-									shader.write(std::mem_fn<void(std::string&&, const GLuint&, std::string&&)>(&Shader_Object::SetTextureUnit), "material", 0, "normalMap");
+									shader.write(std::mem_fn(&Shader_Object::SetTextureUnitStructArr), "material", 0, "normalMap");
 									break;
 								case Parallax:
-									shader.write(std::mem_fn<void(std::string&&, const GLuint&, std::string&&)>(&Shader_Object::SetTextureUnit), "material", 0, "parallaxMap");
+									shader.write(std::mem_fn(&Shader_Object::SetTextureUnitStructArr), "material", 0, "parallaxMap");
 									break;
 								case Glow:
-									shader.write(std::mem_fn<void(std::string&&, const GLuint&, std::string&&)>(&Shader_Object::SetTextureUnit), "material", 0, "glowMap");
+									shader.write(std::mem_fn(&Shader_Object::SetTextureUnitStructArr), "material", 0, "glowMap");
 									break;
 								case Displacement:
-									shader.write(std::mem_fn<void(std::string&&)>(&Shader_Object::SetTextureUnit), "displacementMap");
+									shader.write(std::mem_fn(&Shader_Object::SetTextureUnit), "displacementMap");
 									//ToDo: Add dispFactor through material or something
 									shader->SetVariable("dispFactor", 0.2f);
 									break;
 								case Noise:
-									shader.write(std::mem_fn<void(std::string&&)>(&Shader_Object::SetTextureUnit), "noise");
+									shader.write(std::mem_fn(&Shader_Object::SetTextureUnit), "noise");
 									//ToDo: Add noiseFactor through material or something
 									//shader.SetVariable("noiseFactor", 0.2f);
 									break;
 								case HDR:
 								default:
-									shader.write(std::mem_fn<void(std::string&&)>(&Shader_Object::SetTextureUnit), "theTexture");
+									shader.write(std::mem_fn(&Shader_Object::SetTextureUnit), "theTexture");
 									break;
 								}
 

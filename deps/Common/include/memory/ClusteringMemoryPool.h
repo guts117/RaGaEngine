@@ -79,8 +79,8 @@ private:
 	clustering_ptr<T> ptr;
 
 public:
-	//ToDo: Write proper constructors
-	void SetPtr(clustering_ptr<T> cl_ptr) { ptr = cl_ptr; }
+	explicit rw_clustering_ptr() = default;
+	explicit rw_clustering_ptr(std::vector<DataTaskBlockPair<T>>* poolHeadPtr, unsigned int clusterId, unsigned int index) : ptr{ poolHeadPtr, clusterId, index} {}
 
 	T const* const operator-> () const	{ return ptr.get(); }
 	T const* const get() const			{ return ptr.get(); }
@@ -96,7 +96,8 @@ public:
 	void write(memfn&& func, Args&&... args)
 	{
 		auto defferedWrite = [&]() {func(*ptr.get(), std::forward<Args>(args)...); };
-		(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(std::move(defferedWrite));
+		defferedWrite();
+		//(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(std::move(defferedWrite));
 	}
 };
 
@@ -109,7 +110,7 @@ public:
 	{
 	}
 
-	clustering_ptr<T> AddToPool(T&& obj)
+	rw_clustering_ptr<T> AddToPool(T&& obj)
 	{
 		if(m_memory_pool.size() <= 0)
 		{
@@ -123,7 +124,7 @@ public:
 			auto& lastPool = m_memory_pool[m_memory_pool.size() - 1];
 			if (lastPool.dataBlock.size() < m_block_size)
 			{
-				auto ptr = clustering_ptr{ &m_memory_pool, static_cast<unsigned int>(m_memory_pool.size() - 1), static_cast<unsigned int>(lastPool.dataBlock.size()) };
+				auto ptr = rw_clustering_ptr{ &m_memory_pool, static_cast<unsigned int>(m_memory_pool.size() - 1), static_cast<unsigned int>(lastPool.dataBlock.size()) };
 				lastPool.dataBlock.emplace_back(std::move(obj));
 				return ptr;
 			}

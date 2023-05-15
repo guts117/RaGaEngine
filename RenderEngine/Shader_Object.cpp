@@ -733,16 +733,12 @@ const GLuint& Shader_Object::GetShaderObjectProgramID() const
 
 void Shader_Object::SetTextureUnit(std::string&& textureName)
 {
-	GLint& texUnit = Pimpl().m_TextureUnit;
-	SetVariable(std::move(textureName), texUnit);
-	texUnit++;
+	SetVariable(std::move(textureName), Pimpl().m_TextureUnit++);
 }
 
-void Shader_Object::SetTextureUnit(std::string&& varName, const GLuint& index, std::string&& texName)
+void Shader_Object::SetTextureUnitStructArr(std::string&& varName, const GLuint& index, std::string&& texName)
 {
-	GLint& texUnit = Pimpl().m_TextureUnit;
-	SetVariable(std::move(varName), texUnit, index, std::move(texName));
-	texUnit++;
+	SetVariable(std::move(varName), Pimpl().m_TextureUnit++, index, std::move(texName));
 }
 
 const GLuint Shader_Object::GetTextureUnit() const

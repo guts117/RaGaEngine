@@ -134,25 +134,19 @@ struct RenderEngineMain::Impl
 
 	rw_clustering_ptr<Mesh> AddToMeshPool(Mesh&& mesh)
 	{
-		auto ptr = rw_clustering_ptr<Mesh>();
-		ptr.SetPtr(meshPool.AddToPool(std::move(mesh)));
-		return ptr;
+		return meshPool.AddToPool(std::move(mesh));
 	}
 	rw_clustering_ptr<Transform> AddToModelMatrixPool(glm::mat4&& mat)
 	{
-		auto ptr = rw_clustering_ptr<Transform>();
 		auto trns = Transform();
 		trns.SetModelMatrtix(mat);
-		ptr.SetPtr(modelMatrixPool.AddToPool(std::move(trns)));
-		return ptr;
+		return modelMatrixPool.AddToPool(std::move(trns));
 	}
 	rw_clustering_ptr<Transform> AddToPrevModelMatrixPool(glm::mat4&& mat)
 	{
-		auto ptr = rw_clustering_ptr<Transform>();
 		auto trns = Transform();
 		trns.SetModelMatrtix(mat);
-		ptr.SetPtr(prevModelMatrixPool.AddToPool(std::move(trns)));
-		return ptr;
+		return prevModelMatrixPool.AddToPool(std::move(trns));
 	}
 
 	std::map<TexType, std::vector<rw_clustering_ptr<Texture>>> CreateTextureMap(std::vector<TexMapData>&& texMapData, const std::vector<glm::vec3>& color = std::vector<glm::vec3>())
@@ -180,19 +174,17 @@ struct RenderEngineMain::Impl
 			}
 
 			auto texPtr = texturePool.AddToPool(std::move(texture));
-			auto rwTexPtr = rw_clustering_ptr<Texture>();
-			rwTexPtr.SetPtr(texPtr);
 
 			if(hasLoaded)
 			{
 				if (textureMap.contains(dat.type))
 				{
-					textureMap.at(dat.type).emplace_back(rwTexPtr);
+					textureMap.at(dat.type).emplace_back(texPtr);
 				}
 				else
 				{
 					auto vec = std::vector<rw_clustering_ptr<Texture>>();
-					vec.emplace_back(rwTexPtr);
+					vec.emplace_back(texPtr);
 					textureMap.emplace(dat.type, vec);
 				}
 			}
@@ -203,9 +195,7 @@ struct RenderEngineMain::Impl
 
 	rw_clustering_ptr<Shader_Object> AddToShaderObjectPool(Shader_Object&& shaderObj)
 	{	
-		auto ptr = rw_clustering_ptr<Shader_Object>();
-		ptr.SetPtr(shaderObjPool.AddToPool(std::move(shaderObj)));
-		return ptr;
+		return shaderObjPool.AddToPool(std::move(shaderObj));
 	}
 
 	std::vector< std::shared_ptr < ParticleSystem>> particleList;
