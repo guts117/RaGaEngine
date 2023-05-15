@@ -743,7 +743,9 @@ void Shader_Object::SetTextureUnitStructArr(std::string&& varName, const GLuint&
 
 const GLuint Shader_Object::GetTextureUnit() const
 {
-	return Pimpl().m_TextureUnit;
+	auto temp = Pimpl().m_TextureUnit;
+	if (--temp < 0) { temp = 0; }
+	return temp;
 }
 
 void Shader_Object::ResetTextureUnit(GLuint resetToUnit)

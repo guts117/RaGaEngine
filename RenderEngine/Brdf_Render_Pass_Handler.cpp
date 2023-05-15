@@ -28,6 +28,7 @@ void Brdf_Render_Pass_Handler::Update(std::vector<std::vector<Render_Object>>& r
 		if (shaderIndex >= renderObj.size()) { break; }
 
 		auto& shader = m_shaderVec[shaderIndex];
+		//shader->ResetTextureUnit(0);
 		shader.write(std::mem_fn(&Shader_Object::ResetTextureUnit), 0);
 		shader->UseShaderObject();
 

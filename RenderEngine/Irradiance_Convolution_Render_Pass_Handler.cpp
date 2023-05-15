@@ -37,6 +37,7 @@ void Irradiance_Convolution_Render_Pass_Handler::Update(std::vector<std::vector<
 
 		auto& shader = m_shaderVec[shaderIndex];
 
+		//shader->ResetTextureUnit(0);
 		shader.write(std::mem_fn(&Shader_Object::ResetTextureUnit), 0);
 		shader->UseShaderObject();
 		shader->SetVariable("skybox", 0);
@@ -51,10 +52,12 @@ void Irradiance_Convolution_Render_Pass_Handler::Update(std::vector<std::vector<
 
 			if (auto val = CheckInputDataType<Fbo_Handler*>(*m_inputs->at(0)))
 			{
+				//shader->SetTextureUnit("skybox");
 				shader.write(std::mem_fn(&Shader_Object::SetTextureUnit), "skybox");
 				val->AttachFBOToTextureUnit(0, shader->GetTextureUnit(), 0, 0);
 			}
 			
+			//shader->ResetTextureUnit(0);
 			shader.write(std::mem_fn(&Shader_Object::ResetTextureUnit), 0);
 			for (auto roIndex = 0; roIndex < renderObj[shaderIndex].size(); ++roIndex)
 			{

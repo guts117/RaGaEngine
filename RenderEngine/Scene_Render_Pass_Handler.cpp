@@ -31,6 +31,7 @@ void Scene_Render_Pass_Handler::Update(std::vector<std::vector<Render_Object>>& 
 
 		auto& shader = m_shaderVec[shaderIndex];
 
+		//shader->ResetTextureUnit(0);
 		shader.write(std::mem_fn(&Shader_Object::ResetTextureUnit), 0);
 		shader->UseShaderObject();
 
@@ -48,6 +49,7 @@ void Scene_Render_Pass_Handler::Update(std::vector<std::vector<Render_Object>>& 
 
 			for (auto cascId = 0; cascId < NUM_CASCADES; ++cascId)
 			{
+				//shader->SetTextureUnitStructArr("directionalShadowMaps", cascId, "shadowMap");
 				shader.write(std::mem_fn(&Shader_Object::SetTextureUnitStructArr), "directionalShadowMaps", cascId, "shadowMap");
 				val->AttachFBOToTextureUnit(0, shader->GetTextureUnit(), 0, cascId);
 				shader->SetVariable("DirectionalLightTransforms", lightParam[0].Projection[cascId] * lightParam[0].View[cascId], cascId);
@@ -65,6 +67,7 @@ void Scene_Render_Pass_Handler::Update(std::vector<std::vector<Render_Object>>& 
 
 			for (auto omniLightIndex = 0; omniLightIndex < pointLightsCnt; ++omniLightIndex)
 			{
+				//shader->SetTextureUnitStructArr("omniShadowMaps", omniLightIndex, "shadowMap");
 				shader.write(std::mem_fn(&Shader_Object::SetTextureUnitStructArr), "omniShadowMaps", omniLightIndex, "shadowMap");
 				val->AttachFBOToTextureUnit(omniLightIndex, shader->GetTextureUnit(), 0, 0);
 
@@ -89,6 +92,7 @@ void Scene_Render_Pass_Handler::Update(std::vector<std::vector<Render_Object>>& 
 		{
 			if (auto val = CheckInputDataType<Fbo_Handler*>(*m_inputs->at(inputIndex)))
 			{
+				//shader->SetTextureUnit(std::move(inputTexBuffs[inputIndex - inputOffset]));
 				shader.write(std::mem_fn(&Shader_Object::SetTextureUnit), std::move(inputTexBuffs[inputIndex - inputOffset]));
 				val->AttachFBOToTextureUnit(0, shader->GetTextureUnit(), 0, 0);
 			}

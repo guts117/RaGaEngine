@@ -37,6 +37,7 @@ void Environment_Map_Render_Pass_Handler::Update(std::vector<std::vector<Render_
 
 		auto& shader = m_shaderVec[shaderIndex];
 
+		//shader->ResetTextureUnit(0);
 		shader.write(std::mem_fn(&Shader_Object::ResetTextureUnit), 0);
 		shader->UseShaderObject();
 		shader->SetVariable("Projection", captureProjection);
@@ -48,6 +49,7 @@ void Environment_Map_Render_Pass_Handler::Update(std::vector<std::vector<Render_
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			shader->ValidateShaderObject();
 
+			//shader->ResetTextureUnit(0);
 			shader.write(std::mem_fn(&Shader_Object::ResetTextureUnit), 0);
 			for (auto roIndex = 0; roIndex < renderObj[shaderIndex].size(); ++roIndex)
 			{
