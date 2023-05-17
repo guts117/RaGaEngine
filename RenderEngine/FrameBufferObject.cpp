@@ -84,13 +84,13 @@ struct alignas(alignof(void*)) FrameBufferObject::Impl
 
 		if (has_Color_Attachment)
 		{
-			std::unique_ptr<GLenum[]> attachments = std::make_unique<GLenum[]>(m_ReadWriteBuffers.size());
+			std::vector<GLenum> attachments = std::vector<GLenum>(m_ReadWriteBuffers.size());
 			for (int i = 0; i < m_ReadWriteBuffers.size(); ++i)
 			{
 				attachments[i] = m_FboParam.Attachment + i;
 			}
 
-			glDrawBuffers(m_ReadWriteBuffers.size(), attachments.get());
+			glDrawBuffers(m_ReadWriteBuffers.size(), &attachments[0]);
 		}
 
 		for(auto rboParamIndex = 0; rboParamIndex < m_FboParam.FBORenderBufferParams.size(); ++rboParamIndex)
