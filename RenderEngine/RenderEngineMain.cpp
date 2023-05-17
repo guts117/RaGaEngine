@@ -794,6 +794,12 @@ struct RenderEngineMain::Impl
 
 		auto billboardShaders = std::vector<rw_clustering_ptr<Shader_Object>>{ billboardShader };
 		billBoardRPHandler = std::make_shared<Billboard_Render_Pass_Handler>(sceneFbo, std::move(billboardShaders));
+	
+		modelMatrixPool.ExecuteClusteredTasks();
+		prevModelMatrixPool.ExecuteClusteredTasks();
+		texturePool.ExecuteClusteredTasks();
+		shaderObjPool.ExecuteClusteredTasks();
+		meshPool.ExecuteClusteredTasks();
 	}
 
 	void InitSSAO() 

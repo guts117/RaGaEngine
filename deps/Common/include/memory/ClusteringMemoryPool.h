@@ -92,13 +92,16 @@ public:
 		(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(defferedWrite);
 	}
 
+//https://stackoverflow.com/questions/2821223/how-would-one-call-stdforward-on-all-arguments-in-a-variadic-function
+//https://vittorioromeo.info/index/blog/capturing_perfectly_forwarded_objects_in_lambdas.html
+
 	template<typename memfn, typename... Args>
 	void write(memfn&& func, Args&&... args)
 	{
-		auto defferedWrite = [&]() {func(*ptr.get(), std::forward<Args>(args)...); };
-		defferedWrite();
+		auto defferedWrite = [=, &args...]() {func(*ptr.get(), std::forward<Args>(args)...); };
+		//defferedWrite();
 		//ToDo:Commented out for test
-		//(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(std::move(defferedWrite));
+		(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(std::move(defferedWrite));
 	}
 };
 
@@ -141,7 +144,7 @@ public:
 	
 	void ExecuteClusteredTasks()
 	{
-		for (auto& a : m_memory_pool) 
+ 		for (auto& a : m_memory_pool) 
 		{
 			for (auto b : a.taskQueue) 
 			{
