@@ -736,7 +736,7 @@ void Shader_Object::SetTextureUnit(std::string&& textureName)
 	SetVariable(std::move(textureName), Pimpl().m_TextureUnit++);
 }
 
-void Shader_Object::SetTextureUnitCopy(std::string textureName)
+void Shader_Object::SetTextureUnitRef(std::string& textureName)
 {
 	SetVariable(std::move(textureName), Pimpl().m_TextureUnit++);
 }
