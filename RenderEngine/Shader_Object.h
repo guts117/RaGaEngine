@@ -24,7 +24,9 @@ namespace NarakaRenderEngine
 			void UseShaderObject() const;
 			void DispatchShaderObject(const glm::uvec3& threadGroupCnt) const;
 			const GLuint& GetShaderObjectProgramID() const;
-			void SetTextureUnit(std::string&& textureName);
+			void SetTextureUnit(std::string&& textureName);		
+			//How to use: Use if you get C2672 error ('invoke': no matching overloaded function found)
+			void SetTextureUnitCopy(std::string textureName);
 			void SetTextureUnitStructArr(std::string&& varName, const GLuint& index, std::string&& texName);
 			const GLuint GetTextureUnit() const;
 			void ResetTextureUnit(GLuint resetToUnit);

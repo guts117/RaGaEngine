@@ -93,7 +93,12 @@ void Scene_Render_Pass_Handler::Update(std::vector<std::vector<Render_Object>>& 
 			if (auto val = CheckInputDataType<Fbo_Handler*>(*m_inputs->at(inputIndex)))
 			{
 				//shader->SetTextureUnit(std::move(inputTexBuffs[inputIndex - inputOffset]));
-				shader.write(std::mem_fn(&Shader_Object::SetTextureUnit), std::move(inputTexBuffs[inputIndex - inputOffset]));
+				//ToDo: Why is causing this invoke error??? Is it deducing the wrong type?? Figure out why.....
+				//shader.write(std::mem_fn(&Shader_Object::SetTextureUnit), std::move(inputTexBuffs[inputIndex - inputOffset]));
+				
+				auto input = inputTexBuffs[inputIndex - inputOffset];
+				shader.write(std::mem_fn(&Shader_Object::SetTextureUnitCopy), std::move(input));
+				
 				val->AttachFBOToTextureUnit(0, shader->GetTextureUnit(), 0, 0);
 			}
 		}

@@ -1,6 +1,55 @@
 #ifndef CLUSTERING_MEMORY_POOL
 #define CLUSTERING_MEMORY_POOL
 
+#include <functional>
+
+//https://vittorioromeo.info/index/blog/capturing_perfectly_forwarded_objects_in_lambdas.html
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename... T>
+struct forwarder : public std::tuple<T...> {
+	using std::tuple<T...>::tuple;
+};
+
+template <typename T>
+struct forwarder<T> : public std::tuple<T> {
+	using std::tuple<T>::tuple;
+
+	auto& operator *() {
+		return std::get<0>(*this);
+	}
+
+	const auto& operator *() const {
+		return std::get<0>(*this);
+	}
+
+	auto* operator ->() {
+		return &std::get<0>(*this);
+	}
+
+	const auto* operator ->() const {
+		return &std::get<0>(*this);
+	}
+};
+
+namespace std {
+	template <typename... T>
+	struct tuple_size<forwarder<T...>> : tuple_size<tuple<T...>> {};
+}
+
+template <typename T>
+T forwarder_type(const T&);
+
+template <typename T>
+T& forwarder_type(T&);
+
+template <typename... T>
+forwarder(T&&... t) -> forwarder<decltype(forwarder_type(std::forward<T>(t)))...>;
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
 template<class T>
 struct DataTaskBlockPair
 {
@@ -23,8 +72,8 @@ private:
 	T* get()			{ return &((*poolHeadPtr)[clusterId].dataBlock[index]); }
 
 public:
-	friend class w_clustering_ptr<T>;
-	friend class rw_clustering_ptr<T>;
+	friend struct w_clustering_ptr<T>;
+	friend struct rw_clustering_ptr<T>;
 
 	//ToDo: Write proper constructors
 
@@ -93,14 +142,16 @@ public:
 	}
 
 //https://stackoverflow.com/questions/2821223/how-would-one-call-stdforward-on-all-arguments-in-a-variadic-function
-//https://vittorioromeo.info/index/blog/capturing_perfectly_forwarded_objects_in_lambdas.html
-
 	template<typename memfn, typename... Args>
 	void write(memfn&& func, Args&&... args)
 	{
-		auto defferedWrite = [=, &args...]() {func(*ptr.get(), std::forward<Args>(args)...); };
+		//std::apply(func, forwarder{ ptr.get(), args ... });
+		auto defferedWrite = [func = forwarder{ func }, args = forwarder{ ptr.get(), args ...}]() mutable
+		{
+			std::apply(*func, args);
+			//std::invoke(std::forward<memfn>(func._value), ptr.get(), std::forward<Args>(args._value)...);
+		};
 		//defferedWrite();
-		//ToDo:Commented out for test
 		(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(std::move(defferedWrite));
 	}
 };
