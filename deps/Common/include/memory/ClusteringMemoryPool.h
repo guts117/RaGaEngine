@@ -3,6 +3,7 @@
 
 #include <functional>
 
+//ToDo: Not used for now
 //https://vittorioromeo.info/index/blog/capturing_perfectly_forwarded_objects_in_lambdas.html
 //-----------------------------------------------------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------------------------------------
@@ -142,16 +143,15 @@ public:
 	}
 
 //https://stackoverflow.com/questions/2821223/how-would-one-call-stdforward-on-all-arguments-in-a-variadic-function
+//ToDo: Capture by move thingy https://marcoarena.wordpress.com/2012/11/01/learn-how-to-capture-by-move/
 	template<typename memfn, typename... Args>
 	void write(memfn&& func, Args&&... args)
 	{
-		//std::apply(func, forwarder{ ptr.get(), args ... });
-		auto defferedWrite = [func = forwarder{ func }, args = forwarder{ ptr.get(), args ...}]() mutable
+		auto defferedWrite = [=, this]() mutable
 		{
-			std::apply(*func, args);
-			//std::invoke(std::forward<memfn>(func._value), ptr.get(), std::forward<Args>(args._value)...);
+			std::invoke(std::forward<memfn>(func), ptr.get(), std::forward<Args>(args)...);
 		};
-		//defferedWrite();
+		//defferedWrite()
 		(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(std::move(defferedWrite));
 	}
 };
