@@ -3,7 +3,7 @@
 
 #include <functional>
 
-//ToDo: Not used for now
+//ToDo: Not used for now (definitely faster then reference capturing)
 //https://vittorioromeo.info/index/blog/capturing_perfectly_forwarded_objects_in_lambdas.html
 //-----------------------------------------------------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------------------------------------
@@ -143,13 +143,12 @@ public:
 	}
 
 //https://stackoverflow.com/questions/2821223/how-would-one-call-stdforward-on-all-arguments-in-a-variadic-function
-//ToDo: Capture by move thingy https://marcoarena.wordpress.com/2012/11/01/learn-how-to-capture-by-move/
 	template<typename memfn, typename... Args>
-	void write(memfn&& func, Args&&... args)
+	void shallowWrite(memfn&& func, Args&&... args)
 	{
 		//std::invoke(std::forward<memfn>(func), ptr.get(), std::forward<Args>(args)...);
 		
-		auto defferedWrite = [=, this]() mutable
+		auto defferedWrite = [func = std::move(func), args..., this]() mutable
 		{
 			std::invoke(std::forward<memfn>(func), ptr.get(), std::forward<Args>(args)...);
 		};
@@ -157,13 +156,19 @@ public:
 		(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(std::move(defferedWrite));
 	}
 
+//ToDo: Capture by move thingy https://marcoarena.wordpress.com/2012/11/01/learn-how-to-capture-by-move/
 	template<typename memfn, typename... Args>
-	void deepWrite(memfn&& func, Args&&... args)
+	void write(memfn&& func, Args&&... args)
 	{
-		//std::invoke(std::forward<memfn>(func), ptr.get(), std::forward<Args>(args)...);
-		auto defferedWrite = [=, this]() mutable
+		auto process = [] <typename packArg> (packArg&&) { static_assert(std::is_lvalue_reference<packArg>::value, "Has lvalue reference please change"); };
+
+		(process(std::forward<Args>(args)), ...);
+
+		//std::apply(func, forwarder{ ptr.get(), args ... });
+		auto defferedWrite = [func = std::move(func), args = forwarder{ ptr.get(), args ... }]() mutable
 		{
-			std::invoke(std::forward<memfn>(func), ptr.get(), std::forward<Args>(args)...);
+			std::apply(func, args);
+			//std::invoke(std::forward<memfn>(func._value), ptr.get(), std::forward<Args>(args._value)...);
 		};
 		//defferedWrite();
 		(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(std::move(defferedWrite));

@@ -21,9 +21,9 @@ struct NameLog
 
     void ChangeName(string _name, string _motherName, string _fatherName)
     {
-        name = _name;
-        motherName = _motherName;
-        fatherName = _fatherName;
+        name = std::move(_name);
+        motherName = std::move(_motherName);
+        fatherName = std::move(_fatherName);
     }
 };
 
@@ -64,8 +64,17 @@ struct PersonHandler
         for (auto& pL : personLogs)
         {
             auto id = g();
-            pL.nameLog.write(&NameLog::ChangeName, "rabin" + to_string(id), "rabin mom" + to_string(id), "rabin dad" + to_string(id));
-            pL.ageLog.write(&AgeLog::ChangeAge, 0 + id, 50 + id, 100 + id);
+            auto idStr = to_string(id);
+            auto name = "rabin" + idStr;
+            auto momName = "rabin mom" + idStr;
+            auto dadName = "rabin dad" + idStr;
+            pL.nameLog.write(&NameLog::ChangeName, name, momName, dadName);
+
+            auto age = 0 + id;
+            auto momAge = 50 + id;
+            auto dadAge = 100 + id;
+
+            pL.ageLog.write(&AgeLog::ChangeAge, age, momAge, dadAge);
         }
     }
 };
