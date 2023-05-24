@@ -65,13 +65,37 @@ struct PersonHandler
     }
 };
 
-int main()
+struct PersonLogNormal
+{
+    shared_ptr<NameLog> nameLog;
+    shared_ptr<AgeLog> ageLog;
+};
+
+struct PersonHandlerNormal
+{
+    vector<PersonLogNormal> personLogs;
+
+    void Update()
+    {
+        std::random_device rd;
+        std::mt19937 g(rd());
+
+        for (auto& pL : personLogs)
+        {
+            auto id = g();
+            pL.nameLog->ChangeName("rabin" + to_string(id), "rabin mom" + to_string(id), "rabin dad" + to_string(id));
+            pL.ageLog->ChangeAge(25 + id, 42 + id, 45 + id);
+        }
+    }
+};
+
+void TestClustering()
 {
     ClusteringMemoryPool<NameLog> nameLogPool = ClusteringMemoryPool<NameLog>(5);
     ClusteringMemoryPool<AgeLog> ageLogPool = ClusteringMemoryPool<AgeLog>(5);
     vector<PersonHandler> personHandlers = std::vector<PersonHandler>();
 
-    for(int a = 0; a < 10; ++a)
+    for (int a = 0; a < 10; ++a)
     {
         auto personHandlr = PersonHandler();
 
@@ -90,14 +114,14 @@ int main()
     std::mt19937 g(rd());
 
     std::shuffle(personHandlers.begin(), personHandlers.end(), g);
-    for(int i = 0; i < personHandlers.size(); ++i)
+    for (int i = 0; i < personHandlers.size(); ++i)
     {
         std::shuffle(personHandlers[i].personLogs.begin(), personHandlers[i].personLogs.end(), g);
     }
 
     auto start = chrono::high_resolution_clock::now();
 
-    for (auto& pH : personHandlers) 
+    for (auto& pH : personHandlers)
     {
         pH.Update();
     }
@@ -113,6 +137,60 @@ int main()
 
     cout << "Time taken by program is : " << fixed << time_taken << setprecision(9);
     cout << " sec" << endl;
+}
+
+void TestNormal()
+{
+    vector<shared_ptr<NameLog>> nameLogPool = vector< shared_ptr<NameLog>>();
+    vector<shared_ptr<AgeLog>> ageLogPool = vector<shared_ptr<AgeLog>>();
+    vector<PersonHandlerNormal> personHandlers = std::vector<PersonHandlerNormal>();
+
+    for (int a = 0; a < 10; ++a)
+    {
+        auto personHandlr = PersonHandlerNormal();
+
+        for (int i = 0; i < 1000; ++i)
+        {
+            auto id = to_string(i);
+            nameLogPool.push_back(std::make_shared<NameLog>(NameLog{ "rabin" + id,  "rabin mom" + id, "rabin dad" + id }));
+            ageLogPool.push_back(std::make_shared<AgeLog>(AgeLog{ 25 + i, 42 + i, 45 + i }));
+            auto personLog = PersonLogNormal{ nameLogPool.back(), ageLogPool.back()};
+            personHandlr.personLogs.push_back(std::move(personLog));
+        }
+
+        personHandlers.push_back(std::move(personHandlr));
+    }
+
+    std::random_device rd;
+    std::mt19937 g(rd());
+
+    std::shuffle(personHandlers.begin(), personHandlers.end(), g);
+    for (int i = 0; i < personHandlers.size(); ++i)
+    {
+        std::shuffle(personHandlers[i].personLogs.begin(), personHandlers[i].personLogs.end(), g);
+    }
+
+    auto start = chrono::high_resolution_clock::now();
+
+    for (auto& pH : personHandlers)
+    {
+        pH.Update();
+    }
+
+    auto end = chrono::high_resolution_clock::now();
+
+    // Calculating total time taken by the program.
+    double time_taken = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
+    time_taken *= 1e-9;
+
+    cout << "Time taken by program is : " << fixed << time_taken << setprecision(9);
+    cout << " sec" << endl;
+}
+
+int main()
+{
+    TestClustering();
+    TestNormal();
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
