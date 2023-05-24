@@ -65,16 +65,8 @@ struct PersonHandler
         {
             auto id = g();
             auto idStr = to_string(id);
-            auto name = "rabin" + idStr;
-            auto momName = "rabin mom" + idStr;
-            auto dadName = "rabin dad" + idStr;
-            pL.nameLog.write(&NameLog::ChangeName, name, momName, dadName);
-
-            auto age = 0 + id;
-            auto momAge = 50 + id;
-            auto dadAge = 100 + id;
-
-            pL.ageLog.write(&AgeLog::ChangeAge, age, momAge, dadAge);
+            pL.nameLog.write(&NameLog::ChangeName, "rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
+            pL.ageLog.write(&AgeLog::ChangeAge, 0 + id, 50 + id, 100 + id);
         }
     }
 };
@@ -134,7 +126,7 @@ void TestClustering()
 
     for (auto& pH : personHandlers)
     {
-        pH.write(&PersonHandler::Shuffle, g);
+        pH.write(&PersonHandler::Shuffle, std::move(g));
         pH.write(&PersonHandler::Update);
     }
 

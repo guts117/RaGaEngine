@@ -160,15 +160,14 @@ public:
 	template<typename memfn, typename... Args>
 	void write(memfn&& func, Args&&... args)
 	{
-		auto process = [] <typename packArg> (packArg&&) { static_assert(std::is_lvalue_reference<packArg>::value, "Has lvalue reference please change"); };
+		auto process = [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_lvalue_reference<packArg>::value, "Has lvalue reference please change"); };
 
 		(process(std::forward<Args>(args)), ...);
 
 		//std::apply(func, forwarder{ ptr.get(), args ... });
-		auto defferedWrite = [func = std::move(func), args = forwarder{ ptr.get(), args ... }]() mutable
+		auto defferedWrite = [func = std::move(func), args = std::move(forwarder{ ptr.get(), args... })]() mutable
 		{
-			std::apply(func, args);
-			//std::invoke(std::forward<memfn>(func._value), ptr.get(), std::forward<Args>(args._value)...);
+			std::apply(std::move(func), std::move(args));
 		};
 		//defferedWrite();
 		(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(std::move(defferedWrite));
