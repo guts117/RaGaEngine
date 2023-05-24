@@ -51,6 +51,11 @@ struct PersonHandler
 {
     vector<PersonLog> personLogs;
 
+    void Shuffle(std::mt19937 g)
+    {
+        std::shuffle(personLogs.begin(), personLogs.end(), g);
+    }
+
     void Update()
     {
         std::random_device rd;
@@ -93,7 +98,8 @@ void TestClustering()
 {
     ClusteringMemoryPool<NameLog> nameLogPool = ClusteringMemoryPool<NameLog>(100);
     ClusteringMemoryPool<AgeLog> ageLogPool = ClusteringMemoryPool<AgeLog>(100);
-    vector<PersonHandler> personHandlers = std::vector<PersonHandler>();
+    ClusteringMemoryPool<PersonHandler> personHandlerPool = ClusteringMemoryPool<PersonHandler>(100);
+    vector<rw_clustering_ptr<PersonHandler>> personHandlers = vector<rw_clustering_ptr<PersonHandler>>();
 
     for (int a = 0; a < 1000; ++a)
     {
@@ -107,25 +113,23 @@ void TestClustering()
             personHandlr.personLogs.push_back(std::move(personLog));
         }
 
-        personHandlers.push_back(std::move(personHandlr));
+        personHandlers.push_back(std::move(personHandlerPool.AddToPool(std::move(personHandlr))));
     }
 
     std::random_device rd;
     std::mt19937 g(rd());
 
-    std::shuffle(personHandlers.begin(), personHandlers.end(), g);
-    for (int i = 0; i < personHandlers.size(); ++i)
-    {
-        std::shuffle(personHandlers[i].personLogs.begin(), personHandlers[i].personLogs.end(), g);
-    }
-
     auto start = chrono::high_resolution_clock::now();
+
+    std::shuffle(personHandlers.begin(), personHandlers.end(), g);
 
     for (auto& pH : personHandlers)
     {
-        pH.Update();
+        pH.write(&PersonHandler::Shuffle, g);
+        pH.write(&PersonHandler::Update);
     }
 
+    personHandlerPool.ExecuteClusteredTasks();
     nameLogPool.ExecuteClusteredTasks();
     ageLogPool.ExecuteClusteredTasks();
 
@@ -143,11 +147,11 @@ void TestNormal()
 {
     vector<shared_ptr<NameLog>> nameLogPool = vector<shared_ptr<NameLog>>();
     vector<shared_ptr<AgeLog>> ageLogPool = vector<shared_ptr<AgeLog>>();
-    vector<PersonHandlerNormal> personHandlers = std::vector<PersonHandlerNormal>();
+    vector<shared_ptr<PersonHandlerNormal>> personHandlers = std::vector<shared_ptr<PersonHandlerNormal>>();
 
     for (int a = 0; a < 1000; ++a)
     {
-        auto personHandlr = PersonHandlerNormal();
+        auto personHandlr = std::make_shared<PersonHandlerNormal>(PersonHandlerNormal());
 
         for (int i = 0; i < 10000; ++i)
         {
@@ -155,7 +159,7 @@ void TestNormal()
             nameLogPool.push_back(std::make_shared<NameLog>(NameLog{ "rabin" + id,  "rabin mom" + id, "rabin dad" + id }));
             ageLogPool.push_back(std::make_shared<AgeLog>(AgeLog{ 0 + i, 50 + i, 100 + i }));
             auto personLog = PersonLogNormal{ nameLogPool.back(), ageLogPool.back()};
-            personHandlr.personLogs.push_back(std::move(personLog));
+            personHandlr->personLogs.push_back(std::move(personLog));
         }
 
         personHandlers.push_back(std::move(personHandlr));
@@ -164,17 +168,14 @@ void TestNormal()
     std::random_device rd;
     std::mt19937 g(rd());
 
-    std::shuffle(personHandlers.begin(), personHandlers.end(), g);
-    for (int i = 0; i < personHandlers.size(); ++i)
-    {
-        std::shuffle(personHandlers[i].personLogs.begin(), personHandlers[i].personLogs.end(), g);
-    }
-
     auto start = chrono::high_resolution_clock::now();
+
+    std::shuffle(personHandlers.begin(), personHandlers.end(), g);
 
     for (auto& pH : personHandlers)
     {
-        pH.Update();
+        std::shuffle(pH->personLogs.begin(), pH->personLogs.end(), g);
+        pH->Update();
     }
 
     auto end = chrono::high_resolution_clock::now();

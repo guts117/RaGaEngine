@@ -148,6 +148,19 @@ public:
 	void write(memfn&& func, Args&&... args)
 	{
 		//std::invoke(std::forward<memfn>(func), ptr.get(), std::forward<Args>(args)...);
+		
+		auto defferedWrite = [=, this]() mutable
+		{
+			std::invoke(std::forward<memfn>(func), ptr.get(), std::forward<Args>(args)...);
+		};
+		//defferedWrite();
+		(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(std::move(defferedWrite));
+	}
+
+	template<typename memfn, typename... Args>
+	void deepWrite(memfn&& func, Args&&... args)
+	{
+		//std::invoke(std::forward<memfn>(func), ptr.get(), std::forward<Args>(args)...);
 		auto defferedWrite = [=, this]() mutable
 		{
 			std::invoke(std::forward<memfn>(func), ptr.get(), std::forward<Args>(args)...);
