@@ -60,7 +60,7 @@ struct PersonHandler
         {
             auto id = g();
             pL.nameLog.write(&NameLog::ChangeName, "rabin" + to_string(id), "rabin mom" + to_string(id), "rabin dad" + to_string(id));
-            pL.ageLog.write(&AgeLog::ChangeAge, 25 + id, 42 + id, 45 + id);
+            pL.ageLog.write(&AgeLog::ChangeAge, 0 + id, 50 + id, 100 + id);
         }
     }
 };
@@ -84,26 +84,26 @@ struct PersonHandlerNormal
         {
             auto id = g();
             pL.nameLog->ChangeName("rabin" + to_string(id), "rabin mom" + to_string(id), "rabin dad" + to_string(id));
-            pL.ageLog->ChangeAge(25 + id, 42 + id, 45 + id);
+            pL.ageLog->ChangeAge(0 + id, 50 + id, 100 + id);
         }
     }
 };
 
 void TestClustering()
 {
-    ClusteringMemoryPool<NameLog> nameLogPool = ClusteringMemoryPool<NameLog>(5);
-    ClusteringMemoryPool<AgeLog> ageLogPool = ClusteringMemoryPool<AgeLog>(5);
+    ClusteringMemoryPool<NameLog> nameLogPool = ClusteringMemoryPool<NameLog>(100);
+    ClusteringMemoryPool<AgeLog> ageLogPool = ClusteringMemoryPool<AgeLog>(100);
     vector<PersonHandler> personHandlers = std::vector<PersonHandler>();
 
-    for (int a = 0; a < 10; ++a)
+    for (int a = 0; a < 1000; ++a)
     {
         auto personHandlr = PersonHandler();
 
-        for (int i = 0; i < 1000; ++i)
+        for (int i = 0; i < 10000; ++i)
         {
             auto id = to_string(i);
             auto personLog = PersonLog{ nameLogPool.AddToPool(NameLog{ "rabin" + id,  "rabin mom" + id, "rabin dad" + id })
-                                , ageLogPool.AddToPool(AgeLog{ 25 + i, 42 + i, 45 + i }) };
+                                , ageLogPool.AddToPool(AgeLog{ 0 + i, 50 + i, 100 + i }) };
             personHandlr.personLogs.push_back(std::move(personLog));
         }
 
@@ -141,19 +141,19 @@ void TestClustering()
 
 void TestNormal()
 {
-    vector<shared_ptr<NameLog>> nameLogPool = vector< shared_ptr<NameLog>>();
+    vector<shared_ptr<NameLog>> nameLogPool = vector<shared_ptr<NameLog>>();
     vector<shared_ptr<AgeLog>> ageLogPool = vector<shared_ptr<AgeLog>>();
     vector<PersonHandlerNormal> personHandlers = std::vector<PersonHandlerNormal>();
 
-    for (int a = 0; a < 10; ++a)
+    for (int a = 0; a < 1000; ++a)
     {
         auto personHandlr = PersonHandlerNormal();
 
-        for (int i = 0; i < 1000; ++i)
+        for (int i = 0; i < 10000; ++i)
         {
             auto id = to_string(i);
             nameLogPool.push_back(std::make_shared<NameLog>(NameLog{ "rabin" + id,  "rabin mom" + id, "rabin dad" + id }));
-            ageLogPool.push_back(std::make_shared<AgeLog>(AgeLog{ 25 + i, 42 + i, 45 + i }));
+            ageLogPool.push_back(std::make_shared<AgeLog>(AgeLog{ 0 + i, 50 + i, 100 + i }));
             auto personLog = PersonLogNormal{ nameLogPool.back(), ageLogPool.back()};
             personHandlr.personLogs.push_back(std::move(personLog));
         }

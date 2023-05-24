@@ -147,11 +147,12 @@ public:
 	template<typename memfn, typename... Args>
 	void write(memfn&& func, Args&&... args)
 	{
+		//std::invoke(std::forward<memfn>(func), ptr.get(), std::forward<Args>(args)...);
 		auto defferedWrite = [=, this]() mutable
 		{
 			std::invoke(std::forward<memfn>(func), ptr.get(), std::forward<Args>(args)...);
 		};
-		//defferedWrite()
+		//defferedWrite();
 		(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(std::move(defferedWrite));
 	}
 };
@@ -197,7 +198,7 @@ public:
 	{
  		for (auto& a : m_memory_pool) 
 		{
-			for (auto b : a.taskQueue) 
+			for (auto &b : a.taskQueue) 
 			{
 				b();
 			}
