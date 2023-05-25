@@ -1,6 +1,3 @@
-// ConsoleBasedTest.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
-
 #include <ClusteringMemoryPool.h>
 #include <iostream>
 #include <vector>
@@ -189,10 +186,22 @@ void TestNormal()
     cout << " sec" << endl;
 }
 
+void TestClusteringPoolWriteValidity()
+{
+    ClusteringMemoryPool<NameLog> nameLogPool = ClusteringMemoryPool<NameLog>(8);
+
+    auto rw_ptr = nameLogPool.AddToPool(NameLog{ "rabin",  "rabin mom", "rabin dad" });
+
+    rw_ptr.write(&NameLog::ChangeName, std::move("valid write"), std::move("valid write mom"), std::move("valid write dad"));
+    nameLogPool.ExecuteClusteredTasks();
+    cout << rw_ptr.get()->name << endl;
+}
+
 int main()
 {
     TestClustering();
     TestNormal();
+    TestClusteringPoolWriteValidity();
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
