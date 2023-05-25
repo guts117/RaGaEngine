@@ -19,5 +19,6 @@ Whenever you make a contribution to a repository containing notice of a license,
 
 Isn't this just how it works already? Yep. This is widely accepted as the norm in the open-source community; it's commonly referred to by the shorthand "inbound=outbound". We're just making it explicit.
 
+**Which means:**
 ***Private or not you guys hold the copyright to your changes and are licensing your contributions on the above license.***
 
