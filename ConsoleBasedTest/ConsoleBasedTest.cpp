@@ -192,9 +192,10 @@ void TestClusteringPoolWriteValidity()
 
     auto rw_ptr = nameLogPool.AddToPool(NameLog{ "rabin",  "rabin mom", "rabin dad" });
 
+    cout << "Before write: " << rw_ptr.get()->name << endl;
     rw_ptr.write(&NameLog::ChangeName, std::move("valid write"), std::move("valid write mom"), std::move("valid write dad"));
     nameLogPool.ExecuteClusteredTasks();
-    cout << rw_ptr.get()->name << endl;
+    cout << "After write: " << rw_ptr.get()->name << endl;
 }
 
 int main()
