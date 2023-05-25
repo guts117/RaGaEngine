@@ -11,7 +11,7 @@ using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
 Billboard_Render_Pass_Handler::Billboard_Render_Pass_Handler(Fbo_Handler* fboHandlr
-	, std::vector<clustering_ptr<Shader_Object>>&& shaderVec
+	, std::vector<rw_clustering_ptr<Shader_Object>>&& shaderVec
 	, std::shared_ptr<std::vector<std::shared_ptr<std::any>>> inputs)
 	: Render_Pass_Handler(fboHandlr, std::move(shaderVec), inputs)
 {
@@ -29,7 +29,8 @@ void Billboard_Render_Pass_Handler::Update(std::vector<std::vector<Render_Object
 
 		auto& shader = m_shaderVec[shaderIndex];
 
-		shader->ResetTextureUnit(0);
+		//shader->ResetTextureUnit(0);
+		shader.write(std::mem_fn(&Shader_Object::ResetTextureUnit), 0);
 		shader->UseShaderObject();
 
 		shader->SetVariable("Projection", camParam->Projection);
@@ -41,18 +42,16 @@ void Billboard_Render_Pass_Handler::Update(std::vector<std::vector<Render_Object
 		for (auto roIndex = 0; roIndex < renderObj[shaderIndex].size(); ++roIndex)
 		{
 			auto& ro = renderObj[shaderIndex][roIndex];
-			if(auto modelMatrix = ro.GetModelMatrix().get())
-			{
-				glm::vec3 scale;
-				glm::quat rotation;
-				glm::vec3 translation;
-				glm::vec3 skew;
-				glm::vec4 perspective;
-				glm::decompose(*modelMatrix, scale, rotation, translation, skew, perspective);
-				//rotation = glm::conjugate(rotation);
-				shader->SetVariable("BillboardPos", glm::vec3(0.0f, -2.0f, 0.0f));//translation);
-				shader->SetVariable("BillboardSize", glm::vec2(2.0f, 2.0f));//scale.x, scale.y));
-			}
+			auto modelMatrix = ro.GetModelMatrix();
+			glm::vec3 scale;
+			glm::quat rotation;
+			glm::vec3 translation;
+			glm::vec3 skew;
+			glm::vec4 perspective;
+			glm::decompose(modelMatrix, scale, rotation, translation, skew, perspective);
+			//rotation = glm::conjugate(rotation);
+			shader->SetVariable("BillboardPos", glm::vec3(0.0f, -2.0f, 0.0f));//translation);
+			shader->SetVariable("BillboardSize", glm::vec2(2.0f, 2.0f));//scale.x, scale.y));
 			ro.RenderObject(shader, std::move(RenderObjectParams{ false, true }));
 		}
 		shader->ValidateShaderObject();

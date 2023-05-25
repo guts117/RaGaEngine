@@ -6,7 +6,7 @@ using namespace NarakaRenderEngine;
 using namespace RenderEngine;
 
 Render_Pass_Handler::Render_Pass_Handler(Fbo_Handler* fboHandlr
-													, std::vector<clustering_ptr<Shader_Object>>&& shaderVec
+													, std::vector<rw_clustering_ptr<Shader_Object>>&& shaderVec
 													, std::shared_ptr<std::vector<std::shared_ptr<std::any>>> inputs)
 													: m_fboHandler{ fboHandlr }
 													, m_shaderVec{ std::move(shaderVec) }

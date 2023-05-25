@@ -192,7 +192,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>creator_pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(SolutionDir)RenderEngine</AdditionalIncludeDirectories>
@@ -213,7 +213,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>creator_pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(SolutionDir)RenderEngine</AdditionalIncludeDirectories>
@@ -237,7 +237,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <TranslateIncludes>true</TranslateIncludes>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>creator_pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(SolutionDir)RenderEngine</AdditionalIncludeDirectories>
@@ -262,7 +262,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>creator_pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(SolutionDir)RenderEngine</AdditionalIncludeDirectories>

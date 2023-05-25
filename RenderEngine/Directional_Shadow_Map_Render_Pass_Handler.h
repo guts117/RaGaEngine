@@ -13,7 +13,7 @@ namespace NarakaRenderEngine
         public:
             explicit Directional_Shadow_Map_Render_Pass_Handler() = delete;
             explicit Directional_Shadow_Map_Render_Pass_Handler(Fbo_Handler* fboHandlr
-                , std::vector<clustering_ptr<Shader_Object>>&& shaderVec
+                , std::vector<rw_clustering_ptr<Shader_Object>>&& shaderVec
                 , std::shared_ptr<std::vector<std::shared_ptr<std::any>>> inputs = nullptr);
 
             virtual void Update(std::vector<std::vector<Render_Object>>& renderObj, const CamParam* camParam = nullptr, const LightParam* lightParam = nullptr) override;

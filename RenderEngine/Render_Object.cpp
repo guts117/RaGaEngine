@@ -9,18 +9,18 @@ using namespace RenderEngine;
 
 struct alignas(alignof(void*)) Render_Object::Impl
 {
-	std::vector<clustering_ptr<Mesh>> m_Meshes;
+	std::vector<rw_clustering_ptr<Mesh>> m_Meshes;
 	std::vector<BoneTransform*> m_BoneMatrices;
-	std::map<TexType, std::vector<clustering_ptr<Texture>>> m_TextureMap;
-	clustering_ptr<glm::mat4> m_ModelMatrix;
-	clustering_ptr<glm::mat4> m_PrevModelMatrix;
+	std::map<TexType, std::vector<rw_clustering_ptr<Texture>>> m_TextureMap;
+	rw_clustering_ptr<Transform> m_ModelMatrix;
+	rw_clustering_ptr<Transform> m_PrevModelMatrix;
 
 	Impl() = delete;
 
-	Impl(std::vector<clustering_ptr<Mesh>>&& meshes
-		, std::map<TexType, std::vector<clustering_ptr<Texture>>>&& textureMap
-		, clustering_ptr<glm::mat4>&& modelMatrix
-		, clustering_ptr<glm::mat4>&& prevModelMatrix
+	Impl(std::vector<rw_clustering_ptr<Mesh>>&& meshes
+		, std::map<TexType, std::vector<rw_clustering_ptr<Texture>>>&& textureMap
+		, rw_clustering_ptr<Transform>&& modelMatrix
+		, rw_clustering_ptr<Transform>&& prevModelMatrix
 		, std::vector<BoneTransform*>&& boneMatrices)
 		: m_Meshes{ std::move(meshes) }
 		, m_BoneMatrices{ std::move(boneMatrices) }
@@ -34,8 +34,8 @@ struct alignas(alignof(void*)) Render_Object::Impl
 		: m_TextureMap{ std::move(rhs.m_TextureMap) }	
 		, m_Meshes {std::move(rhs.m_Meshes)}	
 		, m_BoneMatrices{ std::move(rhs.m_BoneMatrices) }
-		, m_ModelMatrix {std::exchange(rhs.m_ModelMatrix, clustering_ptr<glm::mat4>())}
-		, m_PrevModelMatrix {std::exchange(rhs.m_PrevModelMatrix, clustering_ptr<glm::mat4>())}
+		, m_ModelMatrix {std::exchange(rhs.m_ModelMatrix, rw_clustering_ptr<Transform>())}
+		, m_PrevModelMatrix {std::exchange(rhs.m_PrevModelMatrix, rw_clustering_ptr<Transform>())}
 	{
 	};
 	Impl& operator=(Impl&& rhs) noexcept
@@ -43,8 +43,8 @@ struct alignas(alignof(void*)) Render_Object::Impl
 		m_TextureMap = std::move(rhs.m_TextureMap);
 		m_Meshes = std::move(rhs.m_Meshes);
 		m_BoneMatrices = std::move(rhs.m_BoneMatrices);
-		m_ModelMatrix = std::exchange(rhs.m_ModelMatrix, clustering_ptr<glm::mat4>());
-		m_PrevModelMatrix = std::exchange(rhs.m_PrevModelMatrix, clustering_ptr<glm::mat4>());
+		m_ModelMatrix = std::exchange(rhs.m_ModelMatrix, rw_clustering_ptr<Transform>());
+		m_PrevModelMatrix = std::exchange(rhs.m_PrevModelMatrix, rw_clustering_ptr<Transform>());
 		
 		return *this;
 	};
@@ -52,16 +52,17 @@ struct alignas(alignof(void*)) Render_Object::Impl
 	Impl(const Impl& rhs) noexcept = delete;
 	Impl& operator=(const Impl& rhs) noexcept = delete;
 
-	void RenderObject(clustering_ptr<Shader_Object>& shader, RenderObjectParams&& params)
+	void RenderObject(rw_clustering_ptr<Shader_Object>& shader, RenderObjectParams&& params)
 	{
-		if (params.useWorldSpaceTransform && m_ModelMatrix.poolHeadPtr != nullptr)
+		if (params.useWorldSpaceTransform && m_ModelMatrix.isValid())
 		{
-			shader->SetVariable("Model", *(m_ModelMatrix.get()));
+			shader->SetVariable("Model", m_ModelMatrix.get()->GetModelMatrix());
 
-			if (params.prevViewProjection != nullptr && m_PrevModelMatrix.poolHeadPtr != nullptr)
+			if (params.prevViewProjection != nullptr && m_PrevModelMatrix.isValid())
 			{
-				shader->SetVariable("prevPVM", *params.prevViewProjection * *(m_PrevModelMatrix.get()));
-				*(m_PrevModelMatrix.get()) = *(m_ModelMatrix.get());
+				shader->SetVariable("prevPVM", *params.prevViewProjection * (m_PrevModelMatrix.get())->GetModelMatrix());
+				//m_PrevModelMatrix->SetModelMatrtix(m_ModelMatrix.get()->GetModelMatrix());
+				m_PrevModelMatrix.write(std::mem_fn(&Transform::SetModelMatrtix), m_ModelMatrix.get()->GetModelMatrix());
 			}
 		}
 
@@ -93,41 +94,54 @@ struct alignas(alignof(void*)) Render_Object::Impl
 
 							if (auto texMap = m_TextureMap.at((TexType)texType)[materialIndex].get()) 
 							{
+								//Very Important:
+								//ToDo: How do you handle thread accesing two different memory pools (here: Shader_Object.SetTexture && Texture.UseTextureTemp)
 								switch ((TexType)texType)
 								{
 								case Albedo:
-									texMap->UseTextureTemp(shader->SetTextureUnit("material", 0, "albedoMap"));
+									//shader->SetTextureUnitStructArr("material", 0, "albedoMap");
+									shader.write(std::mem_fn(&Shader_Object::SetTextureUnitStructArr), "material", 0, "albedoMap");
 									break;
 								case Metallic:
-									texMap->UseTextureTemp(shader->SetTextureUnit("material", 0, "metallicMap"));
+									//shader->SetTextureUnitStructArr("material", 0, "metallicMap");
+									shader.write(std::mem_fn(&Shader_Object::SetTextureUnitStructArr), "material", 0, "metallicMap");
 									break;
 								case Roughness:
-									texMap->UseTextureTemp(shader->SetTextureUnit("material", 0, "roughnessMap"));
+									//shader->SetTextureUnitStructArr("material", 0, "roughnessMap");
+									shader.write(std::mem_fn(&Shader_Object::SetTextureUnitStructArr), "material", 0, "roughnessMap");
 									break;
 								case Normal:
-									texMap->UseTextureTemp(shader->SetTextureUnit("material", 0, "normalMap"));
+									//shader->SetTextureUnitStructArr("material", 0, "normalMap");
+									shader.write(std::mem_fn(&Shader_Object::SetTextureUnitStructArr), "material", 0, "normalMap");
 									break;
 								case Parallax:
-									texMap->UseTextureTemp(shader->SetTextureUnit("material", 0, "parallaxMap"));
+									//shader->SetTextureUnitStructArr("material", 0, "parallaxMap");
+									shader.write(std::mem_fn(&Shader_Object::SetTextureUnitStructArr), "material", 0, "parallaxMap");
 									break;
 								case Glow:
-									texMap->UseTextureTemp(shader->SetTextureUnit("material", 0, "glowMap"));
+									//shader->SetTextureUnitStructArr("material", 0, "glowMap");
+									shader.write(std::mem_fn(&Shader_Object::SetTextureUnitStructArr), "material", 0, "glowMap");
 									break;
 								case Displacement:
-									texMap->UseTextureTemp(shader->SetTextureUnit("displacementMap"));
+									//shader->SetTextureUnit("displacementMap");
+									shader.write(std::mem_fn(&Shader_Object::SetTextureUnit), "displacementMap");
 									//ToDo: Add dispFactor through material or something
 									shader->SetVariable("dispFactor", 0.2f);
 									break;
 								case Noise:
-									texMap->UseTextureTemp(shader->SetTextureUnit("noise"));
+									//shader->SetTextureUnit("noise");
+									shader.write(std::mem_fn(&Shader_Object::SetTextureUnit), "noise");
 									//ToDo: Add noiseFactor through material or something
 									//shader.SetVariable("noiseFactor", 0.2f);
 									break;
 								case HDR:
 								default:
-									texMap->UseTextureTemp(shader->SetTextureUnit("theTexture"));
+									//shader->SetTextureUnit("theTexture");
+									shader.write(std::mem_fn(&Shader_Object::SetTextureUnit), "theTexture");
 									break;
 								}
+
+								texMap->UseTextureTemp(shader->GetTextureUnit());
 							}
 						}
 					}
@@ -136,12 +150,14 @@ struct alignas(alignof(void*)) Render_Object::Impl
 				mesh->RenderMesh();
 			}
 		}
-		shader->ResetTextureUnit(std::move(resetToTexUnit));
+		//ToDo: This should go in OnExitStage of RenderObject;
+		//shader->ResetTextureUnit(resetToTexUnit);
+		shader.write(std::mem_fn(&Shader_Object::ResetTextureUnit), resetToTexUnit);
 	}
 
 	bool IsTesselated()
 	{
-		auto check = [&](clustering_ptr<Mesh>& mesh)->bool 
+		auto check = [&](rw_clustering_ptr<Mesh>& mesh)->bool 
 		{
 			if (mesh.get())
 			{
@@ -155,18 +171,18 @@ struct alignas(alignof(void*)) Render_Object::Impl
 	~Impl() noexcept = default;
 };
 
-Render_Object::Render_Object(std::vector<clustering_ptr<Mesh>>&& meshes
-			, std::map<TexType, std::vector<clustering_ptr<Texture>>>&& textureMap
-			, clustering_ptr<glm::mat4>&& modelMatrix
-			, clustering_ptr<glm::mat4>&& prevModelMatrix
+Render_Object::Render_Object(std::vector<rw_clustering_ptr<Mesh>>&& meshes
+			, std::map<TexType, std::vector<rw_clustering_ptr<Texture>>>&& textureMap
+			, rw_clustering_ptr<Transform>&& modelMatrix
+			, rw_clustering_ptr<Transform>&& prevModelMatrix
 			, std::vector<BoneTransform*>&& boneMatrices)
 			: m_pImpl{Impl(std::move(meshes), std::move(textureMap), std::move(modelMatrix), std::move(prevModelMatrix), std::move(boneMatrices))}
 {
 }
 
-void Render_Object::SetTextures(std::map<TexType, std::vector<clustering_ptr<Texture>>>&& textureMap)
+void Render_Object::SetTextures(std::map<TexType, std::vector<rw_clustering_ptr<Texture>>>&& textureMap)
 {
-	Pimpl().m_TextureMap = std::map<TexType, std::vector<clustering_ptr<Texture>>>(std::move(textureMap));
+	Pimpl().m_TextureMap = std::map<TexType, std::vector<rw_clustering_ptr<Texture>>>(std::move(textureMap));
 }
 
 void Render_Object::ResetTextures()
@@ -174,15 +190,15 @@ void Render_Object::ResetTextures()
 	Pimpl().m_TextureMap.clear();
 }
 
-const clustering_ptr<glm::mat4> Render_Object::GetModelMatrix() const
+glm::mat4 Render_Object::GetModelMatrix() const
 {
-	return Pimpl().m_ModelMatrix;
+	return Pimpl().m_ModelMatrix.get()->GetModelMatrix();
 }
 
 Render_Object::Render_Object(Render_Object&& rhs) noexcept = default;
 Render_Object& Render_Object::operator=(Render_Object&& rhs) noexcept = default;
 
-void Render_Object::RenderObject(clustering_ptr<Shader_Object>& shader, RenderObjectParams&& params)
+void Render_Object::RenderObject(rw_clustering_ptr<Shader_Object>& shader, RenderObjectParams&& params)
 {
 	Pimpl().RenderObject(shader, std::move(params));
 }
