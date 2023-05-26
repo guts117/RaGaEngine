@@ -2,7 +2,8 @@
 #define CLUSTERING_MEMORY_POOL
 
 #include <functional>
-#include <any>
+#include <memory>
+#include <iostream>
 
 namespace detail
 {
@@ -149,14 +150,15 @@ forwarder(T&&... t) -> forwarder<decltype(forwarder_type(std::forward<T>(t)))...
 //-----------------------------------------------------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-struct funcBase;
+
+template <typename T>
+class function;
 
 template<class T>
 struct DataTaskBlockPair
 {
 	std::vector<T> dataBlock;
-	std::vector<funcBase*> taskQueue;
-	std::vector<std::any> taskObj;
+	std::vector<function<void()>> taskQueue;
 };
 
 template<class T>
@@ -223,39 +225,87 @@ public:
 	}
 };
 
-struct funcBase
+template <typename R, typename... Args>
+class function<R(Args...)>
 {
-	virtual void Execute() {};
-	alignas(alignof(void*)) std::byte buffer[alignof(void*) * 5];
-};
+	// function pointer types for the type-erasure behaviors
+	// all these char* parameters are actually casted from some functor type
+	typedef R(*invoke_fn_t)(char*, Args&&...);
+	typedef void (*construct_fn_t)(char*, char*);
+	typedef void (*destroy_fn_t)(char*);
 
-template<typename memfn, typename forwarderArgs>
-class funcWrapper : public funcBase
-{
-private:
-	struct Impl
+	// type-aware generic functions for invoking
+	// the specialization of these functions won't be capable with
+	//   the above function pointer types, so we need some cast
+	template <typename Functor>
+	static R invoke_fn(Functor* fn, Args&&... args)
 	{
-		memfn&& func;
-		forwarderArgs&& args;
-
-		void Execute()
-		{
-			std::apply(std::forward<memfn>(func), std::forward<forwarderArgs>(args));
-		}
-	};
-
-	const Impl* Pimpl() const { return buf; }
-	Impl* Pimpl() { return buf; }
-
-	Impl* buf;
-public:
-	funcWrapper(memfn&& func, forwarderArgs&& args) : buf { new (&buffer) Impl{ std::forward<memfn>(func), std::forward<forwarderArgs>(args) } }
-	{
+		return (*fn)(std::forward<Args>(args)...);
 	}
 
-	virtual void Execute() override
+	template <typename Functor>
+	static void construct_fn(Functor* construct_dst, Functor* construct_src)
 	{
-		Pimpl()->Execute();
+		// the functor type must be copy-constructible
+		new (construct_dst) Functor(*construct_src);
+	}
+
+	template <typename Functor>
+	static void destroy_fn(Functor* f)
+	{
+		f->~Functor();
+	}
+
+	// these pointers are storing behaviors
+	invoke_fn_t invoke_f;
+	construct_fn_t construct_f;
+	destroy_fn_t destroy_f;
+
+	// erase the type of any functor and store it into a char*
+	// so the storage size should be obtained as well
+	mutable alignas(8) char data_ptr[8*14];
+public:
+	function()
+		: invoke_f(nullptr)
+		, construct_f(nullptr)
+		, destroy_f(nullptr)
+	{}
+
+	// construct from any functor type
+	template <typename Functor>
+	function(Functor f)
+		// specialize functions and erase their type info by casting
+		: invoke_f(reinterpret_cast<invoke_fn_t>(invoke_fn<Functor>))
+		, construct_f(reinterpret_cast<construct_fn_t>(construct_fn<Functor>))
+		, destroy_f(reinterpret_cast<destroy_fn_t>(destroy_fn<Functor>))
+	{
+		// copy the functor to internal storage
+		this->construct_f(this->data_ptr, reinterpret_cast<char*>(&f));
+	}
+
+	// copy constructor
+	function(function const& rhs)
+		: invoke_f(rhs.invoke_f)
+		, construct_f(rhs.construct_f)
+		, destroy_f(rhs.destroy_f)
+	{
+		if (this->invoke_f) {
+			this->construct_f(this->data_ptr, rhs.data_ptr);
+		}
+	}
+
+	~function()
+	{
+		if (data_ptr != nullptr) {
+			this->destroy_f(this->data_ptr);
+		}
+	}
+
+	// other constructors, from nullptr, from function pointers
+
+	R operator()(Args&&... args)
+	{
+		return this->invoke_f(this->data_ptr, std::forward<Args>(args)...);
 	}
 };
 
@@ -301,17 +351,21 @@ public:
 
 		(staticCheckForLvalue(std::forward<Args>(args)), ...);
 
-		//std::apply(func, forwarder{ ptr.get(), std::forward<Args>(args)... });
-		auto forwarderArgs = std::move(forwarder{ ptr.get(), std::forward<Args>(args)... });
-		auto defferedWrite = std::move(funcWrapper<decltype(func), decltype(forwarderArgs)>{ std::move(func), std::move(forwarderArgs) });
-		//defferedWrite.Execute();
-		//(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.push_back(std::mem_fn(&(decltype(defferedWrite)::Execute)));
-		auto any = std::make_any<decltype(defferedWrite)>(std::move(defferedWrite));
-		(*ptr.poolHeadPtr)[ptr.clusterId].taskObj.emplace_back(std::move(any));
-		auto yes = std::any_cast<funcWrapper<decltype(func), decltype(forwarderArgs)>>(((*ptr.poolHeadPtr)[ptr.clusterId].taskObj.back()));
-		yes.Execute();
-		//(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(yes);
-		//(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(&(*ptr.poolHeadPtr)[ptr.clusterId].taskObjects.back());
+		////std::apply(func, forwarder{ ptr.get(), std::forward<Args>(args)... });
+		//auto defferedWrite = [func = std::move(func), args = std::move(forwarder{ ptr.get(), std::forward<Args>(args)... })]() mutable
+		//{
+		//	std::apply(std::move(func), std::move(args));
+		//};
+		////defferedWrite();
+		//(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(std::move(defferedWrite));
+
+		//std::apply(func, forwarder{ ptr.get(), args ... });
+		auto defferedWrite = [func = std::move(func), args = std::move(forwarder{ ptr.get(), args... })]() mutable
+		{
+			std::apply(std::move(func), std::move(args));
+		};
+		//defferedWrite();
+		(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(std::move(defferedWrite));
 	}
 };
 
@@ -358,7 +412,7 @@ public:
 		{
 			for (auto& b : a.taskQueue) 
 			{
-				b->Execute();
+				b();
 			}
 			a.taskQueue.clear();
 		}

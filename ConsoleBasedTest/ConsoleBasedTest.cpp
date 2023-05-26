@@ -121,11 +121,11 @@ void TestClustering()
     ClusteringMemoryPool<PersonHandler> personHandlerPool = ClusteringMemoryPool<PersonHandler>(100);
     vector<rw_clustering_ptr<PersonHandler>> personHandlers = vector<rw_clustering_ptr<PersonHandler>>();
 
-    for (int a = 0; a < 1000; ++a)
+    for (int a = 0; a < 100; ++a)
     {
         auto personHandlr = PersonHandler();
 
-        for (int i = 0; i < 10000; ++i)
+        for (int i = 0; i < 1000; ++i)
         {
             auto id = to_string(i);
             auto personLog = PersonLog{ nameLogPool.AddToPool(NameLog{ "rabin" + id,  "rabin mom" + id, "rabin dad" + id })
@@ -145,7 +145,7 @@ void TestClustering()
 
     for (auto& pH : personHandlers)
     {
-        pH.write(&PersonHandler::Shuffle, std::move(g));
+        //pH.write(&PersonHandler::Shuffle, g);
         pH.write(&PersonHandler::Update);
     }
 
@@ -169,11 +169,11 @@ void TestNormal()
     vector<shared_ptr<AgeLog>> ageLogPool = vector<shared_ptr<AgeLog>>();
     vector<shared_ptr<PersonHandlerNormal>> personHandlers = std::vector<shared_ptr<PersonHandlerNormal>>();
 
-    for (int a = 0; a < 1000; ++a)
+    for (int a = 0; a < 100; ++a)
     {
         auto personHandlr = std::make_shared<PersonHandlerNormal>(PersonHandlerNormal());
 
-        for (int i = 0; i < 10000; ++i)
+        for (int i = 0; i < 1000; ++i)
         {
             auto id = to_string(i);
             nameLogPool.push_back(std::make_shared<NameLog>(NameLog{ "rabin" + id,  "rabin mom" + id, "rabin dad" + id }));
@@ -194,7 +194,7 @@ void TestNormal()
 
     for (auto& pH : personHandlers)
     {
-        std::shuffle(pH->personLogs.begin(), pH->personLogs.end(), g);
+        //std::shuffle(pH->personLogs.begin(), pH->personLogs.end(), g);
         pH->Update();
     }
 
@@ -222,8 +222,8 @@ void TestClusteringPoolWriteValidity()
 
 int main()
 {
-    //TestNormal();
-    //TestClustering();
+    TestNormal();
+    TestClustering();
     TestClusteringPoolWriteValidity();
 }
 
