@@ -63,7 +63,7 @@ template<class T>
 struct DataTaskBlockPair
 {
 	std::vector<T> dataBlock;
-	std::vector<std::function<void()>> taskQueue;
+	std::vector<void (*)()> taskQueue;
 };
 
 template<class T>
@@ -172,8 +172,8 @@ public:
 
 		(staticCheckForLvalue(std::forward<Args>(args)), ...);
 
-		//std::apply(func, forwarder{ ptr.get(), args ... });
-		auto defferedWrite = [func = std::move(func), args = std::move(forwarder{ ptr.get(), args... })]() mutable
+		//std::apply(func, forwarder{ ptr.get(), std::forward<Args>(args)... });
+		auto defferedWrite = [func = std::move(func), args = std::move(forwarder{ ptr.get(), std::forward<Args>(args)... })]() mutable
 		{
 			std::apply(std::move(func), std::move(args));
 		};
@@ -223,7 +223,7 @@ public:
 	{
  		for (auto& a : m_memory_pool) 
 		{
-			for (auto &b : a.taskQueue) 
+			for (auto& b : a.taskQueue) 
 			{
 				b();
 			}

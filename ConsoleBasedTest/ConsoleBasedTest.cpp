@@ -7,6 +7,7 @@
 #include <iterator>
 #include <iostream>
 #include <chrono>
+#include <thread>
 
 using namespace std;
 
@@ -64,6 +65,16 @@ struct PersonHandler
             auto idStr = to_string(id);
             pL.nameLog.write(&NameLog::ChangeName, "rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
             pL.ageLog.write(&AgeLog::ChangeAge, 0 + id, 50 + id, 100 + id);
+            pL.nameLog.write(&NameLog::ChangeName, "rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
+            pL.ageLog.write(&AgeLog::ChangeAge, 0 + id, 50 + id, 100 + id);
+            pL.nameLog.write(&NameLog::ChangeName, "rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
+            pL.ageLog.write(&AgeLog::ChangeAge, 0 + id, 50 + id, 100 + id);
+            pL.nameLog.write(&NameLog::ChangeName, "rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
+            pL.ageLog.write(&AgeLog::ChangeAge, 0 + id, 50 + id, 100 + id);
+            pL.nameLog.write(&NameLog::ChangeName, "rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
+            pL.ageLog.write(&AgeLog::ChangeAge, 0 + id, 50 + id, 100 + id);
+            pL.nameLog.write(&NameLog::ChangeName, "rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
+            pL.ageLog.write(&AgeLog::ChangeAge, 0 + id, 50 + id, 100 + id);
         }
     }
 };
@@ -86,7 +97,18 @@ struct PersonHandlerNormal
         for (auto& pL : personLogs)
         {
             auto id = g();
-            pL.nameLog->ChangeName("rabin" + to_string(id), "rabin mom" + to_string(id), "rabin dad" + to_string(id));
+            auto idStr = to_string(id);
+            pL.nameLog->ChangeName("rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
+            pL.ageLog->ChangeAge(0 + id, 50 + id, 100 + id);
+            pL.nameLog->ChangeName("rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
+            pL.ageLog->ChangeAge(0 + id, 50 + id, 100 + id);
+            pL.nameLog->ChangeName("rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
+            pL.ageLog->ChangeAge(0 + id, 50 + id, 100 + id);
+            pL.nameLog->ChangeName("rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
+            pL.ageLog->ChangeAge(0 + id, 50 + id, 100 + id);
+            pL.nameLog->ChangeName("rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
+            pL.ageLog->ChangeAge(0 + id, 50 + id, 100 + id);
+            pL.nameLog->ChangeName("rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
             pL.ageLog->ChangeAge(0 + id, 50 + id, 100 + id);
         }
     }
@@ -200,8 +222,8 @@ void TestClusteringPoolWriteValidity()
 
 int main()
 {
-    TestClustering();
     TestNormal();
+    TestClustering();
     TestClusteringPoolWriteValidity();
 }
 
