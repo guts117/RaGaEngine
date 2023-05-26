@@ -159,7 +159,7 @@ void TestClustering()
     double time_taken = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
     time_taken *= 1e-9;
 
-    cout << "Time taken by program is : " << fixed << time_taken << setprecision(9);
+    cout << "Time taken by clustering memory pool is : " << fixed << time_taken << setprecision(9);
     cout << " sec" << endl;
 }
 
@@ -204,7 +204,7 @@ void TestNormal()
     double time_taken = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
     time_taken *= 1e-9;
 
-    cout << "Time taken by program is : " << fixed << time_taken << setprecision(9);
+    cout << "Time taken by vector of pointers is : " << fixed << time_taken << setprecision(9);
     cout << " sec" << endl;
 }
 
