@@ -2,6 +2,7 @@
 #define CLUSTERING_MEMORY_POOL
 
 #include <functional>
+#include <any>
 
 namespace detail
 {
@@ -154,7 +155,8 @@ template<class T>
 struct DataTaskBlockPair
 {
 	std::vector<T> dataBlock;
-	std::vector<funcBase> taskQueue;
+	std::vector<funcBase*> taskQueue;
+	std::vector<std::any> taskObj;
 };
 
 template<class T>
@@ -304,7 +306,11 @@ public:
 		auto defferedWrite = std::move(funcWrapper<decltype(func), decltype(forwarderArgs)>{ std::move(func), std::move(forwarderArgs) });
 		//defferedWrite.Execute();
 		//(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.push_back(std::mem_fn(&(decltype(defferedWrite)::Execute)));
-		(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(std::move(defferedWrite));
+		auto any = std::make_any<decltype(defferedWrite)>(std::move(defferedWrite));
+		(*ptr.poolHeadPtr)[ptr.clusterId].taskObj.emplace_back(std::move(any));
+		auto yes = std::any_cast<funcWrapper<decltype(func), decltype(forwarderArgs)>>(((*ptr.poolHeadPtr)[ptr.clusterId].taskObj.back()));
+		yes.Execute();
+		//(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(yes);
 		//(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(&(*ptr.poolHeadPtr)[ptr.clusterId].taskObjects.back());
 	}
 };
@@ -352,7 +358,7 @@ public:
 		{
 			for (auto& b : a.taskQueue) 
 			{
-				b.Execute();
+				b->Execute();
 			}
 			a.taskQueue.clear();
 		}
