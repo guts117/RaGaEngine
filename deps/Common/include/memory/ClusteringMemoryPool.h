@@ -258,9 +258,9 @@ public:
 	template<typename memfn, typename... Args>
 	void write(memfn&& func, Args&&... args)
 	{
-		auto staticCheckForLvalue = [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_lvalue_reference<packArg>::value, "Has lvalue reference please change"); };
+		//auto staticCheckForLvalue = [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_lvalue_reference<packArg>::value, "Has lvalue reference please change"); };
 
-		(staticCheckForLvalue(std::forward<Args>(args)), ...);
+		//(staticCheckForLvalue(std::forward<Args>(args)), ...);
 
 		////std::apply(func, forwarder{ ptr.get(), std::forward<Args>(args)... });
 		//auto defferedWrite = [func = std::move(func), args = std::move(forwarder{ ptr.get(), std::forward<Args>(args)... })]() mutable
@@ -271,9 +271,9 @@ public:
 		//(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(std::move(defferedWrite));
 
 		//std::apply(func, forwarder{ ptr.get(), args ... });
-		auto defferedWrite = [func = std::move(func), args = forwarder{ ptr.get(), args... }]() mutable
+		auto defferedWrite = [func = std::move(func), args = std::move(forwarder{ ptr.get(), args... })]() mutable
 		{
-			std::apply(std::move(func), std::move(args));
+			std::apply(func, args);
 		};
 		//defferedWrite();
 		(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(defferedWrite);

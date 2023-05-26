@@ -89,6 +89,11 @@ struct PersonHandlerNormal
 {
     vector<PersonLogNormal> personLogs;
 
+    void Shuffle(std::mt19937 g)
+    {
+        std::shuffle(personLogs.begin(), personLogs.end(), g);
+    }
+
     void Update()
     {
         std::random_device rd;
@@ -145,7 +150,7 @@ void TestClustering()
 
     for (auto& pH : personHandlers)
     {
-        //pH.write(&PersonHandler::Shuffle, g);
+        pH.write(&PersonHandler::Shuffle, g);
         pH.write(&PersonHandler::Update);
     }
 
@@ -194,7 +199,7 @@ void TestNormal()
 
     for (auto& pH : personHandlers)
     {
-        //std::shuffle(pH->personLogs.begin(), pH->personLogs.end(), g);
+        pH->Shuffle(g);
         pH->Update();
     }
 
