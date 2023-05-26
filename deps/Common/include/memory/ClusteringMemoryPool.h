@@ -360,7 +360,7 @@ public:
 		//(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(std::move(defferedWrite));
 
 		//std::apply(func, forwarder{ ptr.get(), args ... });
-		auto defferedWrite = [func = std::move(func), args = std::move(forwarder{ ptr.get(), args... })]() mutable
+		auto defferedWrite = [func = std::move(func), args = forwarder{ ptr.get(), args... }]() mutable
 		{
 			std::apply(std::move(func), std::move(args));
 		};
