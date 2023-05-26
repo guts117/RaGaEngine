@@ -178,7 +178,7 @@ public:
 			std::apply(std::move(func), std::move(args));
 		};
 		//defferedWrite();
-		(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(defferedWrite);
+		(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(std::move(defferedWrite));
 	}
 };
 
@@ -197,7 +197,7 @@ public:
 		{
 			auto vec = std::vector<T>();
 			vec.reserve(m_block_size);
-			m_memory_pool.emplace_back(std::move(vec));
+			m_memory_pool.emplace_back(DataTaskBlockPair<T>{std::move(vec)});
 			return AddToPool(std::move(obj));
 		}
 		else
@@ -213,7 +213,7 @@ public:
 			{
 				auto vec = std::vector<T>();
 				vec.reserve(m_block_size);
-				m_memory_pool.emplace_back(std::move(vec));
+				m_memory_pool.emplace_back(DataTaskBlockPair<T>{std::move(vec)});
 				return AddToPool(std::move(obj));
 			}
 		}
