@@ -3,6 +3,95 @@
 
 #include <functional>
 
+namespace detail
+{
+	template<size_t ExpectedSize, size_t ActualSize, size_t ExpectedAlignment, size_t ActualAlignment>
+	inline void compare_size()
+	{
+		static_assert(ExpectedSize >= ActualSize, "The size for the ForwardDeclaredPimpl is wrong");
+		static_assert(ExpectedAlignment >= ActualAlignment, "The alignment for the ForwardDeclaredPimpl is wrong");
+	}
+	template<size_t ExpectedSize, size_t ActualSize, size_t ExpectedAlignment, size_t ActualAlignment>
+	struct size_comparer
+	{
+		inline size_comparer()
+		{
+			// going through one additional layer to get good error messages
+			// if I put the assert down one more template layer, gcc will show the
+			// sizes in the error message
+			compare_size<ExpectedSize, ActualSize, ExpectedAlignment, ActualAlignment>();
+		}
+	};
+}
+
+struct forwarding_constructor {};
+
+template<typename T, size_t Size, size_t Alignment = 16>
+struct ForwardDeclaredPimpl
+{
+	ForwardDeclaredPimpl()
+	{
+		new (&Get()) T();
+	}
+	template<typename... Args>
+	ForwardDeclaredPimpl(forwarding_constructor, Args &&... args)
+	{
+		new (&Get()) T(std::forward<Args>(args)...);
+	}
+	ForwardDeclaredPimpl(const ForwardDeclaredPimpl& other)
+	{
+		new (&Get()) T(other.Get());
+	}
+	ForwardDeclaredPimpl(const T& other)
+	{
+		new (&Get()) T(other);
+	}
+	ForwardDeclaredPimpl(ForwardDeclaredPimpl&& other)
+	{
+		new (&Get()) T(std::move(other.Get()));
+	}
+	ForwardDeclaredPimpl(T&& other)
+	{
+		new (&Get()) T(std::move(other));
+	}
+	ForwardDeclaredPimpl& operator=(const ForwardDeclaredPimpl& other)
+	{
+		Get() = other.Get();
+		return *this;
+	}
+	ForwardDeclaredPimpl& operator=(const T& other)
+	{
+		Get() = other;
+		return *this;
+	}
+	ForwardDeclaredPimpl& operator=(ForwardDeclaredPimpl&& other)
+	{
+		Get() = std::move(other.Get());
+		return *this;
+	}
+	ForwardDeclaredPimpl& operator=(T&& other)
+	{
+		Get() = std::move(other);
+		return *this;
+	}
+	~ForwardDeclaredPimpl()
+	{
+		detail::size_comparer<Size, sizeof(T), Alignment, alignof(T)> compare_size{};
+		Get().~T();
+	}
+	T& Get()
+	{
+		return reinterpret_cast<T&>(*this);
+	}
+	const T& Get() const
+	{
+		return reinterpret_cast<const T&>(*this);
+	}
+
+private:
+	alignas(Alignment) std::byte m_pImplBuff[Size];
+};
+
 //https://vittorioromeo.info/index/blog/capturing_perfectly_forwarded_objects_in_lambdas.html
 //https://stackoverflow.com/questions/26831382/capturing-perfectly-forwarded-variable-in-lambda
 //-----------------------------------------------------------------------------------------------------------------------------------------
@@ -130,6 +219,36 @@ public:
 	}
 };
 
+template<typename memfn, typename forwarderArgs>
+struct funcWrapper
+{
+	struct Impl
+	{
+		memfn&& func;
+		forwarderArgs&& args;
+
+		void Execute()
+		{
+			std::apply(std::forward<memfn>(func), std::forward<forwarderArgs>(args));
+		}
+	};
+
+public:
+
+	funcWrapper(memfn&& func, forwarderArgs&& args) : data{ Impl(std::forward<memfn>(func), std::forward<forwarderArgs>(args))}
+	{
+	}
+
+	const Impl& Pimpl() const { return data.Get(); }
+	Impl& Pimpl() { return data.Get(); }
+
+	ForwardDeclaredPimpl<Impl, alignof(void*) * 5, alignof(void*)> data;
+	void Execute()
+	{
+		Pimpl().Execute();
+	}
+};
+
 template<class T>
 struct rw_clustering_ptr
 {
@@ -173,12 +292,10 @@ public:
 		(staticCheckForLvalue(std::forward<Args>(args)), ...);
 
 		//std::apply(func, forwarder{ ptr.get(), std::forward<Args>(args)... });
-		auto defferedWrite = [func = std::move(func), args = std::move(forwarder{ ptr.get(), std::forward<Args>(args)... })]() mutable
-		{
-			std::apply(std::move(func), std::move(args));
-		};
-		//defferedWrite();
-		(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(std::move(defferedWrite));
+		auto forwarderArgs = std::move(forwarder{ ptr.get(), std::forward<Args>(args)... });
+		auto defferedWrite = std::move(funcWrapper<decltype(func), decltype(forwarderArgs)>{ std::move(func), std::move(forwarderArgs) });
+		defferedWrite.Execute();
+		//(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.push_back(std::mem_fn(&(decltype(defferedWrite)::Execute)));
 	}
 };
 
@@ -221,14 +338,14 @@ public:
 	
 	void ExecuteClusteredTasks()
 	{
- 		for (auto& a : m_memory_pool) 
-		{
-			for (auto& b : a.taskQueue) 
-			{
-				b();
-			}
-			a.taskQueue.clear();
-		}
+ 	//	for (auto& a : m_memory_pool) 
+		//{
+		//	for (auto& b : a.taskQueue) 
+		//	{
+		//		b();
+		//	}
+		//	a.taskQueue.clear();
+		//}
 	}
 
 	~ClusteringMemoryPool() = default;
