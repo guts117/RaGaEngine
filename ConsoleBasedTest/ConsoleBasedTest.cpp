@@ -222,8 +222,8 @@ void TestClusteringPoolWriteValidity()
 
 int main()
 {
-    TestNormal();
-    TestClustering();
+    //TestNormal();
+    //TestClustering();
     TestClusteringPoolWriteValidity();
 }
 

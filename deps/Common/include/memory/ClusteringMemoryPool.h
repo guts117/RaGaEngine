@@ -148,11 +148,13 @@ forwarder(T&&... t) -> forwarder<decltype(forwarder_type(std::forward<T>(t)))...
 //-----------------------------------------------------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
+struct funcBase;
+
 template<class T>
 struct DataTaskBlockPair
 {
 	std::vector<T> dataBlock;
-	std::vector<std::function<void()>> taskQueue;
+	std::vector<funcBase> taskQueue;
 };
 
 template<class T>
@@ -219,9 +221,16 @@ public:
 	}
 };
 
-template<typename memfn, typename forwarderArgs>
-struct funcWrapper
+struct funcBase
 {
+	virtual void Execute() {};
+	alignas(alignof(void*)) std::byte buffer[alignof(void*) * 5];
+};
+
+template<typename memfn, typename forwarderArgs>
+class funcWrapper : public funcBase
+{
+private:
 	struct Impl
 	{
 		memfn&& func;
@@ -233,19 +242,18 @@ struct funcWrapper
 		}
 	};
 
-public:
+	const Impl* Pimpl() const { return buf; }
+	Impl* Pimpl() { return buf; }
 
-	funcWrapper(memfn&& func, forwarderArgs&& args) : data{ Impl(std::forward<memfn>(func), std::forward<forwarderArgs>(args))}
+	Impl* buf;
+public:
+	funcWrapper(memfn&& func, forwarderArgs&& args) : buf { new (&buffer) Impl{ std::forward<memfn>(func), std::forward<forwarderArgs>(args) } }
 	{
 	}
 
-	const Impl& Pimpl() const { return data.Get(); }
-	Impl& Pimpl() { return data.Get(); }
-
-	ForwardDeclaredPimpl<Impl, alignof(void*) * 5, alignof(void*)> data;
-	void Execute()
+	virtual void Execute() override
 	{
-		Pimpl().Execute();
+		Pimpl()->Execute();
 	}
 };
 
@@ -294,8 +302,10 @@ public:
 		//std::apply(func, forwarder{ ptr.get(), std::forward<Args>(args)... });
 		auto forwarderArgs = std::move(forwarder{ ptr.get(), std::forward<Args>(args)... });
 		auto defferedWrite = std::move(funcWrapper<decltype(func), decltype(forwarderArgs)>{ std::move(func), std::move(forwarderArgs) });
-		defferedWrite.Execute();
+		//defferedWrite.Execute();
 		//(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.push_back(std::mem_fn(&(decltype(defferedWrite)::Execute)));
+		(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(std::move(defferedWrite));
+		//(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(&(*ptr.poolHeadPtr)[ptr.clusterId].taskObjects.back());
 	}
 };
 
@@ -338,14 +348,14 @@ public:
 	
 	void ExecuteClusteredTasks()
 	{
- 	//	for (auto& a : m_memory_pool) 
-		//{
-		//	for (auto& b : a.taskQueue) 
-		//	{
-		//		b();
-		//	}
-		//	a.taskQueue.clear();
-		//}
+ 		for (auto& a : m_memory_pool) 
+		{
+			for (auto& b : a.taskQueue) 
+			{
+				b.Execute();
+			}
+			a.taskQueue.clear();
+		}
 	}
 
 	~ClusteringMemoryPool() = default;
