@@ -63,7 +63,7 @@ template<class T>
 struct DataTaskBlockPair
 {
 	std::vector<T> dataBlock;
-	std::vector<void (*)()> taskQueue;
+	std::vector<std::function<void()>> taskQueue;
 };
 
 template<class T>
@@ -178,7 +178,7 @@ public:
 			std::apply(std::move(func), std::move(args));
 		};
 		//defferedWrite();
-		(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(std::move(defferedWrite));
+		(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(defferedWrite);
 	}
 };
 
