@@ -173,7 +173,7 @@ template<class T>
 struct DataTaskBlockPair
 {
 	std::vector<T> dataBlock;
-	std::vector<std::function<void()>> taskQueue;
+	std::vector<std::move_only_function<void()>> taskQueue;
 };
 
 template<class T>
