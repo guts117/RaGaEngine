@@ -17,7 +17,7 @@ struct NameLog
     string motherName;
     string fatherName;
 
-    void ChangeName(string _name, string _motherName, string _fatherName)
+    void ChangeName(string& _name, string& _motherName, string& _fatherName)
     {
         name = std::move(_name);
         motherName = std::move(_motherName);
@@ -31,7 +31,7 @@ struct AgeLog
     int motherAge;
     int fatherAge;
 
-    void ChangeAge(int _age, int _motherAge, int _fatherAge)
+    void ChangeAge(int& _age, int& _motherAge, int& _fatherAge)
     {
         age = _age;
         motherAge = _motherAge;
@@ -43,13 +43,47 @@ struct PersonLog
 {
     rw_clustering_ptr<NameLog> nameLog;
     rw_clustering_ptr<AgeLog> ageLog;
+
+    void Update(unsigned int& id, string& idStr)
+    {
+        string name = "rabin" + idStr;
+        string momname = "rabin mom" + idStr;
+        string dadname = "rabin dad" + idStr;
+        nameLog.write(&NameLog::ChangeName, name, momname, dadname);
+        //nameLog.write(&NameLog::ChangeName, name, momname, dadname);
+        //nameLog.write(&NameLog::ChangeName, name, momname, dadname);
+        //nameLog.write(&NameLog::ChangeName, name, momname, dadname);
+        //nameLog.write(&NameLog::ChangeName, name, momname, dadname);
+        //nameLog.write(&NameLog::ChangeName, name, momname, dadname);
+
+        int age = 0 + id;
+        int momage = 50 + id;
+        int dadage = 100 + id;
+        ageLog.write(&AgeLog::ChangeAge, age, momage, dadage);
+        //ageLog.write(&AgeLog::ChangeAge, age, momage, dadage);
+        //ageLog.write(&AgeLog::ChangeAge, age, momage, dadage);
+        //ageLog.write(&AgeLog::ChangeAge, age, momage, dadage);
+        //ageLog.write(&AgeLog::ChangeAge, age, momage, dadage);
+        //ageLog.write(&AgeLog::ChangeAge, age, momage, dadage);
+        
+        //nameLog.write(&NameLog::ChangeName, "rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
+        //ageLog.write(&AgeLog::ChangeAge, 0 + id, 50 + id, 100 + id);
+        //nameLog.write(&NameLog::ChangeName, "rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
+        //ageLog.write(&AgeLog::ChangeAge, 0 + id, 50 + id, 100 + id);
+        //nameLog.write(&NameLog::ChangeName, "rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
+        //ageLog.write(&AgeLog::ChangeAge, 0 + id, 50 + id, 100 + id);
+        //nameLog.write(&NameLog::ChangeName, "rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
+        //ageLog.write(&AgeLog::ChangeAge, 0 + id, 50 + id, 100 + id);
+        //nameLog.write(&NameLog::ChangeName, "rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
+        //ageLog.write(&AgeLog::ChangeAge, 0 + id, 50 + id, 100 + id);
+    }
 };
 
 struct PersonHandler
 {
     vector<PersonLog> personLogs;
 
-    void Shuffle(std::mt19937 g)
+    void Shuffle(std::mt19937& g)
     {
         std::shuffle(personLogs.begin(), personLogs.end(), g);
     }
@@ -63,18 +97,7 @@ struct PersonHandler
         {
             auto id = g();
             auto idStr = to_string(id);
-            pL.nameLog.write(&NameLog::ChangeName, "rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
-            pL.ageLog.write(&AgeLog::ChangeAge, 0 + id, 50 + id, 100 + id);
-            //pL.nameLog.write(&NameLog::ChangeName, "rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
-            //pL.ageLog.write(&AgeLog::ChangeAge, 0 + id, 50 + id, 100 + id);
-            //pL.nameLog.write(&NameLog::ChangeName, "rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
-            //pL.ageLog.write(&AgeLog::ChangeAge, 0 + id, 50 + id, 100 + id);
-            //pL.nameLog.write(&NameLog::ChangeName, "rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
-            //pL.ageLog.write(&AgeLog::ChangeAge, 0 + id, 50 + id, 100 + id);
-            //pL.nameLog.write(&NameLog::ChangeName, "rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
-            //pL.ageLog.write(&AgeLog::ChangeAge, 0 + id, 50 + id, 100 + id);
-            //pL.nameLog.write(&NameLog::ChangeName, "rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
-            //pL.ageLog.write(&AgeLog::ChangeAge, 0 + id, 50 + id, 100 + id);
+            pL.Update(id, idStr);
         }
     }
 };
@@ -83,13 +106,46 @@ struct PersonLogNormal
 {
     shared_ptr<NameLog> nameLog;
     shared_ptr<AgeLog> ageLog;
+
+    void Update(unsigned int& id, string& idStr)
+    {
+        auto name = "rabin" + idStr;
+        auto momname = "rabin mom" + idStr;
+        auto dadname = "rabin dad" + idStr;
+
+        nameLog->ChangeName(name, momname, dadname);
+        //pL.nameLog->ChangeName(name, momname, dadname);
+        //pL.nameLog->ChangeName(name, momname, dadname);
+        //pL.nameLog->ChangeName(name, momname, dadname);
+        //pL.nameLog->ChangeName(name, momname, dadname);
+        //pL.nameLog->ChangeName(name, momname, dadname);
+        int age = 0 + id;
+        int momage = 50 + id;
+        int dadage = 100 + id;
+        ageLog->ChangeAge(age, momage, dadage);
+        //pL.ageLog->ChangeAge(age, momage, dadage);
+        //pL.ageLog->ChangeAge(age, momage, dadage);
+        //pL.ageLog->ChangeAge(age, momage, dadage);
+        //pL.ageLog->ChangeAge(age, momage, dadage);
+        //pL.ageLog->ChangeAge(age, momage, dadage);
+        //pL.nameLog->ChangeName("rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
+        //pL.ageLog->ChangeAge(0 + id, 50 + id, 100 + id);
+        //pL.nameLog->ChangeName("rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
+        //pL.ageLog->ChangeAge(0 + id, 50 + id, 100 + id);
+        //pL.nameLog->ChangeName("rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
+        //pL.ageLog->ChangeAge(0 + id, 50 + id, 100 + id);
+        //pL.nameLog->ChangeName("rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
+        //pL.ageLog->ChangeAge(0 + id, 50 + id, 100 + id);
+        //pL.nameLog->ChangeName("rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
+        //pL.ageLog->ChangeAge(0 + id, 50 + id, 100 + id);
+    }
 };
 
 struct PersonHandlerNormal
 {
     vector<PersonLogNormal> personLogs;
 
-    void Shuffle(std::mt19937 g)
+    void Shuffle(std::mt19937& g)
     {
         std::shuffle(personLogs.begin(), personLogs.end(), g);
     }
@@ -103,18 +159,8 @@ struct PersonHandlerNormal
         {
             auto id = g();
             auto idStr = to_string(id);
-            pL.nameLog->ChangeName("rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
-            pL.ageLog->ChangeAge(0 + id, 50 + id, 100 + id);
-            //pL.nameLog->ChangeName("rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
-            //pL.ageLog->ChangeAge(0 + id, 50 + id, 100 + id);
-            //pL.nameLog->ChangeName("rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
-            //pL.ageLog->ChangeAge(0 + id, 50 + id, 100 + id);
-            //pL.nameLog->ChangeName("rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
-            //pL.ageLog->ChangeAge(0 + id, 50 + id, 100 + id);
-            //pL.nameLog->ChangeName("rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
-            //pL.ageLog->ChangeAge(0 + id, 50 + id, 100 + id);
-            //pL.nameLog->ChangeName("rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
-            //pL.ageLog->ChangeAge(0 + id, 50 + id, 100 + id);
+
+            pL.Update(id, idStr);
         }
     }
 };
@@ -123,8 +169,7 @@ void TestClustering()
 {
     ClusteringMemoryPool<NameLog> nameLogPool = ClusteringMemoryPool<NameLog>(100);
     ClusteringMemoryPool<AgeLog> ageLogPool = ClusteringMemoryPool<AgeLog>(100);
-    ClusteringMemoryPool<PersonHandler> personHandlerPool = ClusteringMemoryPool<PersonHandler>(100);
-    vector<rw_clustering_ptr<PersonHandler>> personHandlers = vector<rw_clustering_ptr<PersonHandler>>();
+    vector<PersonHandler> personHandlers = vector<PersonHandler>();
 
     for (int a = 0; a < 1000; ++a)
     {
@@ -132,13 +177,14 @@ void TestClustering()
 
         for (int i = 0; i < 10000; ++i)
         {
-            auto id = to_string(i);
+            auto iid = i + a;
+            auto id = to_string(iid);
             auto personLog = PersonLog{ nameLogPool.AddToPool(NameLog{ "rabin" + id,  "rabin mom" + id, "rabin dad" + id })
-                                , ageLogPool.AddToPool(AgeLog{ 0 + i, 50 + i, 100 + i }) };
+                                , ageLogPool.AddToPool(AgeLog{ 0 + iid, 50 + iid, 100 + iid }) };
             personHandlr.personLogs.push_back(std::move(personLog));
         }
 
-        personHandlers.push_back(std::move(personHandlerPool.AddToPool(std::move(personHandlr))));
+        personHandlers.push_back(std::move(personHandlr));
     }
 
     std::random_device rd;
@@ -150,12 +196,10 @@ void TestClustering()
 
     for (auto& pH : personHandlers)
     {
-        auto gtemp = g;
-        pH.write(&PersonHandler::Shuffle, std::move(gtemp));
-        pH.write(&PersonHandler::Update);
+        pH.Shuffle(g);
+        pH.Update();
     }
 
-    personHandlerPool.ExecuteClusteredTasks();
     nameLogPool.ExecuteClusteredTasks();
     ageLogPool.ExecuteClusteredTasks();
 
@@ -221,7 +265,12 @@ void TestClusteringPoolWriteValidity()
     auto rw_ptr = nameLogPool.AddToPool(NameLog{ "rabin",  "rabin mom", "rabin dad" });
 
     cout << "Before write: " << rw_ptr.get()->name << endl;
-    rw_ptr.write(&NameLog::ChangeName, std::move("valid write"), std::move("valid write mom"), std::move("valid write dad"));
+
+    {
+        string name = "valid write";
+        rw_ptr.write(&NameLog::ChangeName, name, std::string("valid write mom"), std::string("valid write dad"));
+    }
+
     nameLogPool.ExecuteClusteredTasks();
     cout << "After write: " << rw_ptr.get()->name << endl;
 }

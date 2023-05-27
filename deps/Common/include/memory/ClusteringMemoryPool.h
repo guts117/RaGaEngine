@@ -1,6 +1,7 @@
 #ifndef CLUSTERING_MEMORY_POOL
 #define CLUSTERING_MEMORY_POOL
 
+#include <functional>
 #include <memory>
 #include <iostream>
 #include <vector>
@@ -58,112 +59,112 @@ T& forwarder_type(T&);
 template <typename... T>
 forwarder(T&&... t) -> forwarder<decltype(forwarder_type(std::forward<T>(t)))...>;
 
-//-----------------------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------------------
+////-----------------------------------------------------------------------------------------------------------------------------------------
+////-----------------------------------------------------------------------------------------------------------------------------------------
 
-template <typename T>
-class function;
-
-//https://stackoverflow.com/questions/18453145/how-is-stdfunction-implemented
-template <typename R, typename... Args>
-class function<R(Args...)>
-{
-	// function pointer types for the type-erasure behaviors
-	// all these std::byte* parameters are actually casted from some functor type
-	typedef R(*invoke_fn_t)(std::byte*, Args&&...);
-	typedef void (*construct_fn_t)(std::byte*, std::byte*);
-	typedef void (*destroy_fn_t)(std::byte*);
-
-	// type-aware generic functions for invoking
-	// the specialization of these functions won't be capable with
-	//   the above function pointer types, so we need some cast
-	template <typename Functor>
-	static R invoke_fn(Functor* fn, Args&&... args)
-	{
-		return (*fn)(std::forward<Args>(args)...);
-	}
-
-	template <typename Functor>
-	static void construct_fn(Functor* construct_dst, Functor* construct_src)
-	{
-		// the functor type must be copy-constructible
-		new (construct_dst) Functor(*construct_src);
-	}
-
-	template <typename Functor>
-	static void destroy_fn(Functor* f)
-	{
-		f->~Functor();
-	}
-
-	// these pointers are storing behaviors
-	invoke_fn_t invoke_f;
-	construct_fn_t construct_f;
-	destroy_fn_t destroy_f;
-
-	// erase the type of any functor and store it into a std::byte*
-	// so the storage size should be obtained as well
-	mutable alignas(8) std::byte data_ptr[8 * 14];
-public:
-	function()
-		: invoke_f(nullptr)
-		, construct_f(nullptr)
-		, destroy_f(nullptr)
-	{}
-
-	// construct from any functor type
-	template <typename Functor>
-	function(Functor f) noexcept
-		// specialize functions and erase their type info by casting
-		: invoke_f(reinterpret_cast<invoke_fn_t>(invoke_fn<Functor>))
-		, construct_f(reinterpret_cast<construct_fn_t>(construct_fn<Functor>))
-		, destroy_f(reinterpret_cast<destroy_fn_t>(destroy_fn<Functor>))
-	{
-		// copy the functor to internal storage
-		this->construct_f(this->data_ptr, reinterpret_cast<std::byte*>(&f));
-	}
-
-	function(function const& rhs) noexcept = delete;
-	function& operator= (function const& rhs) = delete;
-
-	function(function&& rhs) noexcept
-		: invoke_f(std::exchange(rhs.invoke_f, nullptr))
-		, construct_f(std::exchange(rhs.construct_f, nullptr))
-		, destroy_f(std::exchange(rhs.destroy_f, nullptr))
-	{
-		if (this->invoke_f) {
-			std::memcpy(this->data_ptr, rhs.data_ptr, 8 * 14);
-			std::memset(rhs.data_ptr, 0x00, 8 * 14);
-		}
-	}
-
-	function& operator=(function&& rhs) noexcept
-	{
-		invoke_f = std::exchange(rhs.invoke_f, nullptr);
-		construct_f = std::exchange(rhs.construct_f, nullptr);
-		destroy_f = std::exchange(rhs.destroy_f, nullptr);
-
-		if (this->invoke_f) {
-			std::memcpy(this->data_ptr, rhs.data_ptr, 8 * 14);
-			std::memset(rhs.data_ptr, 0x00, 8 * 14);
-		}
-		return *this;
-	};
-
-	~function() noexcept
-	{
-		if (destroy_f != nullptr) {
-			this->destroy_f(this->data_ptr);
-		}
-	}
-
-	// other constructors, from nullptr, from function pointers
-
-	R operator()(Args&&... args)
-	{
-		return this->invoke_f(this->data_ptr, std::forward<Args>(args)...);
-	}
-};
+//template <typename T>
+//class function;
+//
+////https://stackoverflow.com/questions/18453145/how-is-stdfunction-implemented
+//template <typename R, typename... Args>
+//class function<R(Args...)>
+//{
+//	// function pointer types for the type-erasure behaviors
+//	// all these std::byte* parameters are actually casted from some functor type
+//	typedef R(*invoke_fn_t)(std::byte*, Args&&...);
+//	typedef void (*construct_fn_t)(std::byte*, std::byte*);
+//	typedef void (*destroy_fn_t)(std::byte*);
+//
+//	// type-aware generic functions for invoking
+//	// the specialization of these functions won't be capable with
+//	//   the above function pointer types, so we need some cast
+//	template <typename Functor>
+//	static R invoke_fn(Functor* fn, Args&&... args)
+//	{
+//		return (*fn)(std::forward<Args>(args)...);
+//	}
+//
+//	template <typename Functor>
+//	static void construct_fn(Functor* construct_dst, Functor* construct_src)
+//	{
+//		// the functor type must be copy-constructible
+//		new (construct_dst) Functor(*construct_src);
+//	}
+//
+//	template <typename Functor>
+//	static void destroy_fn(Functor* f)
+//	{
+//		f->~Functor();
+//	}
+//
+//	// these pointers are storing behaviors
+//	invoke_fn_t invoke_f;
+//	construct_fn_t construct_f;
+//	destroy_fn_t destroy_f;
+//
+//	// erase the type of any functor and store it into a std::byte*
+//	// so the storage size should be obtained as well
+//	mutable alignas(8) std::byte data_ptr[8 * 14];
+//public:
+//	function()
+//		: invoke_f(nullptr)
+//		, construct_f(nullptr)
+//		, destroy_f(nullptr)
+//	{}
+//
+//	// construct from any functor type
+//	template <typename Functor>
+//	function(Functor f) noexcept
+//		// specialize functions and erase their type info by casting
+//		: invoke_f(reinterpret_cast<invoke_fn_t>(invoke_fn<Functor>))
+//		, construct_f(reinterpret_cast<construct_fn_t>(construct_fn<Functor>))
+//		, destroy_f(reinterpret_cast<destroy_fn_t>(destroy_fn<Functor>))
+//	{
+//		// copy the functor to internal storage
+//		this->construct_f(this->data_ptr, reinterpret_cast<std::byte*>(&f));
+//	}
+//
+//	function(function const& rhs) noexcept = delete;
+//	function& operator= (function const& rhs) = delete;
+//
+//	function(function&& rhs) noexcept
+//		: invoke_f(std::exchange(rhs.invoke_f, nullptr))
+//		, construct_f(std::exchange(rhs.construct_f, nullptr))
+//		, destroy_f(std::exchange(rhs.destroy_f, nullptr))
+//	{
+//		if (this->invoke_f) {
+//			std::memcpy(this->data_ptr, rhs.data_ptr, 8 * 14);
+//			std::memset(rhs.data_ptr, 0x00, 8 * 14);
+//		}
+//	}
+//
+//	function& operator=(function&& rhs) noexcept
+//	{
+//		invoke_f = std::exchange(rhs.invoke_f, nullptr);
+//		construct_f = std::exchange(rhs.construct_f, nullptr);
+//		destroy_f = std::exchange(rhs.destroy_f, nullptr);
+//
+//		if (this->invoke_f) {
+//			std::memcpy(this->data_ptr, rhs.data_ptr, 8 * 14);
+//			std::memset(rhs.data_ptr, 0x00, 8 * 14);
+//		}
+//		return *this;
+//	};
+//
+//	~function() noexcept
+//	{
+//		if (destroy_f != nullptr) {
+//			this->destroy_f(this->data_ptr);
+//		}
+//	}
+//
+//	// other constructors, from nullptr, from function pointers
+//
+//	R operator()(Args&&... args)
+//	{
+//		return this->invoke_f(this->data_ptr, std::forward<Args>(args)...);
+//	}
+//};
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------------------------------------
@@ -172,7 +173,7 @@ template<class T>
 struct DataTaskBlockPair
 {
 	std::vector<T> dataBlock;
-	std::vector<function<void()>> taskQueue;
+	std::vector<std::function<void()>> taskQueue;
 };
 
 template<class T>
@@ -265,12 +266,12 @@ public:
 	{
 		//std::invoke(std::forward<memfn>(func), ptr.get(), std::forward<Args>(args)...);
 		
-		auto defferedWrite = [func = std::move(func), args..., this]() mutable
+		auto defferedWrite = [func = std::move(func), args..., ptr = ptr.get()]() mutable
 		{
-			std::invoke(std::forward<memfn>(func), ptr.get(), std::forward<Args>(args)...);
+			std::invoke(std::forward<memfn>(func), ptr, std::forward<Args>(args)...);
 		};
 		//defferedWrite();
-		//(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(std::move(function<void()>(defferedWrite)));
+		(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(std::move(defferedWrite));
 	}
 
 	template<typename memfn, typename... Args>
@@ -281,13 +282,13 @@ public:
 		// 2. It works without this cuz forwwarder will copy everything,
 		//	  but my tests show that copying is faster due to compiler optimizations.
 		// 3. this function will be working mosting with aggregrate classes and primitive values
-		auto staticCheckForLvalue = [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_lvalue_reference<packArg>::value, "Has lvalue reference please change"); };
-		(staticCheckForLvalue(std::forward<Args>(args)), ...);
+		//auto staticCheckForLvalue = [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_lvalue_reference<packArg>::value, "Has lvalue reference please change"); };
+		//(staticCheckForLvalue(std::forward<Args>(args)), ...);
 
 		//std::apply(func, forwarder{ ptr.get(), std::forward<Args>(args)... });
-		auto defferedWrite = [func = std::move(func), args = std::move(forwarder{ ptr.get(), args... })]() mutable
+		auto defferedWrite = [func = std::move(func), args = std::move(forwarder{ptr.get(), args...})]() mutable
 		{
-			std::apply(func, args);
+			std::apply(std::move(func), std::move(args));
 		};
 		//defferedWrite();
 		//auto functor = function<void()>(defferedWrite);
