@@ -258,8 +258,8 @@ public:
 		auto defferedWrite = [&](T&& other) { *ptr.get() = std::move(other); };
 		(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(defferedWrite);
 	}
-
-//https://stackoverflow.com/questions/2821223/how-would-one-call-stdforward-on-all-arguments-in-a-variadic-function
+	
+	//ToDo: Get rid of this at some point cuz it's useless.
 	template<typename memfn, typename... Args>
 	void shallowWrite(memfn&& func, Args&&... args)
 	{
@@ -273,23 +273,18 @@ public:
 		//(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(std::move(function<void()>(defferedWrite)));
 	}
 
-//ToDo: Capture by move thingy https://marcoarena.wordpress.com/2012/11/01/learn-how-to-capture-by-move/
 	template<typename memfn, typename... Args>
 	void write(memfn&& func, Args&&... args)
 	{
-		//auto staticCheckForLvalue = [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_lvalue_reference<packArg>::value, "Has lvalue reference please change"); };
+		//This is here for two reasons:
+		// 1. To discourage people from using lvalue references.
+		// 2. It works without this cuz forwwarder will copy everything,
+		//	  but my tests show that copying is faster due to compiler optimizations.
+		// 3. this function will be working mosting with aggregrate classes and primitive values
+		auto staticCheckForLvalue = [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_lvalue_reference<packArg>::value, "Has lvalue reference please change"); };
+		(staticCheckForLvalue(std::forward<Args>(args)), ...);
 
-		//(staticCheckForLvalue(std::forward<Args>(args)), ...);
-
-		////std::apply(func, forwarder{ ptr.get(), std::forward<Args>(args)... });
-		//auto defferedWrite = [func = std::move(func), args = std::move(forwarder{ ptr.get(), std::forward<Args>(args)... })]() mutable
-		//{
-		//	std::apply(std::move(func), std::move(args));
-		//};
-		////defferedWrite();
-		//(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(std::move(defferedWrite));
-
-		//std::apply(func, forwarder{ ptr.get(), args ... });
+		//std::apply(func, forwarder{ ptr.get(), std::forward<Args>(args)... });
 		auto defferedWrite = [func = std::move(func), args = std::move(forwarder{ ptr.get(), args... })]() mutable
 		{
 			std::apply(func, args);
