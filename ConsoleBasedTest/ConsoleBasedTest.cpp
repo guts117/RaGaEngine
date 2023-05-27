@@ -150,7 +150,8 @@ void TestClustering()
 
     for (auto& pH : personHandlers)
     {
-        pH.write(&PersonHandler::Shuffle, g);
+        auto gtemp = g;
+        pH.write(&PersonHandler::Shuffle, std::move(gtemp));
         pH.write(&PersonHandler::Update);
     }
 
