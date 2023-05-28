@@ -296,33 +296,82 @@ struct functor {
 template<typename memfn, typename Args>
 struct funcWrapper
 {
-	funcWrapper(memfn&& func, Args&& args, int index) 
-		: func{ std::move(func) }
-		, args{ std::move(args) }
-		, clusterIndex{ index }
+private:
+	// these pointers are storing behaviors
+	memfn func;
+	std::byte* funcBuffer;
+
+public:
+	funcWrapper(std::byte* buffPtr, memfn&& fn, Args&& args) 
 	{
+		func = std::forward<memfn>(fn);
+		funcBuffer = buffPtr;
+		new (&Get()) Args(std::forward<Args>(args));
+	}
+
+	//funcWrapper(const funcWrapper& other)
+	//{
+	//	new (&Get()) Args(other.Get());
+	//}
+	//funcWrapper(const Args& other)
+	//{
+	//	new (&Get()) Args(other);
+	//}
+	//funcWrapper(funcWrapper&& other)
+	//{
+	//	new (&Get()) Args(std::move(other.Get()));
+	//}
+	//funcWrapper(Args&& other)
+	//{
+	//	new (&Get()) Args(std::move(other));
+	//}
+	//funcWrapper& operator=(const funcWrapper& other)
+	//{
+	//	Get() = other.Get();
+	//	return *this;
+	//}
+	//funcWrapper& operator=(const Args& other)
+	//{
+	//	Get() = other;
+	//	return *this;
+	//}
+	//funcWrapper& operator=(funcWrapper&& other)
+	//{
+	//	Get() = std::move(other.Get());
+	//	return *this;
+	//}
+	//funcWrapper& operator=(Args&& other)
+	//{
+	//	Get() = std::move(other);
+	//	return *this;
+	//}
+
+	~funcWrapper() noexcept
+	{
+		Get().~Args();
+	}
+
+	Args& Get()
+	{
+		return reinterpret_cast<Args&>(*funcBuffer);
+	}
+	const Args& Get() const
+	{
+		return reinterpret_cast<const Args&>(*funcBuffer);
 	}
 
 	void operator()() noexcept
 	{
-		if constexpr (std::is_rvalue_reference<decltype(std::get<1>(arguments(func)))>::value) //works for void(T) and void (T&&)
-		{
-			std::apply(std::move(func), std::move(args));		
-		}
-		else //works for void(T&)
-		{
-			std::apply(func, args);
-		}
+		std::apply(func, Get());
+		//if constexpr (std::is_rvalue_reference<decltype(std::get<1>(arguments(func)))>::value) //works for void(T) and void (T&&)
+		//{
+		//	std::apply(std::move(func), std::move(Get()));
+		//}
+		//else //works for void(T&)
+		//{
+		//	std::apply(func, Get());
+		//}
 	}
-
-	bool isSame(const memfn& fn, const int& index)
-	{
-		return func == fn && clusterIndex == index;
-	}
-private:
-	memfn func;
-	Args args;
-	int clusterIndex;
 };
 
 template<class T>
@@ -356,21 +405,21 @@ public:
 		//auto staticCheckForLvalue = [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_lvalue_reference<packArg>::value, "Has lvalue reference please change"); };
 		//(staticCheckForLvalue(std::forward<Args>(args)), ...);
 
-		auto& queue = (*ptr.poolHeadPtr)[ptr.clusterId].taskQueue;
+		//auto& queue = (*ptr.poolHeadPtr)[ptr.clusterId].taskQueue;
 
-		using type = funcWrapper<std::decay<memfn>::type, forwarder<std::decay<decltype(ptr.get())>::type, std::decay<Args>::type...>>;
+		//using type = funcWrapper<std::decay<memfn>::type, forwarder<std::decay<decltype(ptr.get())>::type, std::decay<Args>::type...>>;
 
-		auto ys = std::find_if(queue.begin(), queue.end(), [&](auto& fw) -> bool { return fw.target<type>()->isSame(func, ptr.index); });
-		if (ys != std::end(queue))
-		{
-			return;
-		}
-		else
-		{
-			auto defferedWrite = funcWrapper(std::move(func), std::move(forwarder{ ptr.get(), std::move(args)...}), ptr.index);
-			//defferedWrite();
-			queue.emplace_back(std::move(defferedWrite));
-		}
+		//auto ys = std::find_if(queue.begin(), queue.end(), [&](auto& fw) -> bool { return fw.target<type>()->isSame(func, ptr.index); });
+		//if (ys != std::end(queue))
+		//{
+		//	return;
+		//}
+		//else
+		//{
+		//	auto defferedWrite = funcWrapper(std::move(func), std::move(forwarder{ ptr.get(), std::move(args)...}), ptr.index);
+		//	//defferedWrite();
+		//	queue.emplace_back(std::move(defferedWrite));
+		//}
 	}
 
 	template<typename memfn, typename... Args>
@@ -384,26 +433,26 @@ public:
 		//auto staticCheckForLvalue = [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_lvalue_reference<packArg>::value, "Has lvalue reference please change"); };
 		//(staticCheckForLvalue(std::forward<Args>(args)), ...);
 
-		auto& queue = (*ptr.poolHeadPtr)[ptr.clusterId].taskQueue;
+		//auto& queue = (*ptr.poolHeadPtr)[ptr.clusterId].taskQueue;
 
-		using type = funcWrapper<std::decay<memfn>::type, forwarder<std::decay<decltype(ptr.get())>::type, std::decay<Args>::type...>>;
-		
-		auto ys = std::find_if(queue.begin(), queue.end(), [&](auto& fw) -> bool { return fw.target<type>()->isSame(func, ptr.index); });
-		if (ys != std::end(queue))
-		{
-			auto defferedWrite = funcWrapper(std::move(func), std::move(forwarder{ ptr.get(), std::move(args)... }), ptr.index);
-			*ys = std::move(defferedWrite);
-		}
-		else
-		{
-			auto defferedWrite = funcWrapper(std::move(func), std::move(forwarder{ ptr.get(), std::move(args)... }), ptr.index);
-			queue.emplace_back(std::move(defferedWrite));
-		}
+		//using type = funcWrapper<std::decay<memfn>::type, forwarder<std::decay<decltype(ptr.get())>::type, std::decay<Args>::type...>>;
+		//
+		//auto ys = std::find_if(queue.begin(), queue.end(), [&](auto& fw) -> bool { return fw.target<type>()->isSame(func, ptr.index); });
+		//if (ys != std::end(queue))
+		//{
+		//	auto defferedWrite = funcWrapper(std::move(func), std::move(forwarder{ ptr.get(), std::move(args)... }), ptr.index);
+		//	*ys = std::move(defferedWrite);
+		//}
+		//else
+		//{
+		//	auto defferedWrite = funcWrapper(std::move(func), std::move(forwarder{ ptr.get(), std::move(args)... }), ptr.index);
+		//	queue.emplace_back(std::move(defferedWrite));
+		//}
 	}
 
 	//Warning: Will cause running out of memory problem
 	template<typename memfn, typename... Args>
-	void stackingWrite(memfn func, Args&&... args)
+	void stackingWrite(memfn&& func, Args&&... args)
 	{
 		//This is here for two reasons:
 		// 1. To discourage people from using lvalue references.
@@ -414,9 +463,9 @@ public:
 		//(staticCheckForLvalue(std::forward<Args>(args)), ...);
 
 		auto& queue = (*ptr.poolHeadPtr)[ptr.clusterId].taskQueue;
-		auto defferedWrite = funcWrapper(std::move(func), std::move(forwarder{ ptr.get(), std::move(args)...}), ptr.index);	
-		//defferedWrite();
-		queue.emplace_back(std::move(defferedWrite));
+		auto defferedWrite = funcWrapper(ptr.get()->buffer, std::forward<memfn>(func), std::move(forwarder{ ptr.get(), std::move(args)... }));
+		defferedWrite();
+		//queue.emplace_back(std::move(defferedWrite));
 	}
 };
 

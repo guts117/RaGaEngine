@@ -19,9 +19,9 @@ struct NameLog
 
     void ChangeNameLvalue(string& _name, string& _motherName, string& _fatherName)
     {
-        name = std::move(_name);
-        motherName = std::move(_motherName);
-        fatherName = std::move(_fatherName);
+        name = _name;
+        motherName = _motherName;
+        fatherName = _fatherName;
     }
 
     void ChangeNameRvalue(string&& _name, string&& _motherName, string&& _fatherName)
@@ -30,6 +30,8 @@ struct NameLog
         motherName = std::move(_motherName);
         fatherName = std::move(_fatherName);
     }
+
+    alignas(alignof(std::string)) std::byte buffer[alignof(std::string) * 4];
 };
 
 struct AgeLog
@@ -44,6 +46,8 @@ struct AgeLog
         motherAge = _motherAge;
         fatherAge = _fatherAge;
     }
+
+    alignas(alignof(int)) std::byte buffer[alignof(int) * 5];
 };
 
 struct PersonLog
@@ -68,7 +72,7 @@ struct PersonLog
             string momname = "rabin mom" + idStr + addstr;
             string dadname = "rabin dad" + idStr + addstr;
 
-            nameLog.stackingWrite(&NameLog::ChangeNameRvalue, name, momname, dadname);
+            nameLog.stackingWrite(&NameLog::ChangeNameLvalue, name, momname, dadname);
             //nameLog.oneTimeWrite(&NameLog::ChangeNameRvalue, name, momname, dadname);
             //nameLog.oneTimeWrite(&NameLog::ChangeNameRvalue, name, momname, dadname);
             //nameLog.oneTimeWrite(&NameLog::ChangeNameRvalue, name, momname, dadname);
@@ -312,26 +316,38 @@ void TestNormal()
 
 void TestClusteringPoolWriteValidity()
 {
+    ClusteringMemoryPool<AgeLog> ageLogPool = ClusteringMemoryPool<AgeLog>(8);
     ClusteringMemoryPool<NameLog> nameLogPool = ClusteringMemoryPool<NameLog>(8);
 
-    auto rw_ptr = nameLogPool.AddToPool(NameLog{ "rabin",  "rabin mom", "rabin dad" });
+    auto rw_ptr1 = nameLogPool.AddToPool(NameLog{ "rabin",  "rabin mom", "rabin dad" });
+    auto rw_ptr2 = ageLogPool.AddToPool(AgeLog{ 200,  200, 200 });
 
-    cout << "Before write: " << rw_ptr.get()->name << endl;
+    cout << "Before write: " << rw_ptr1.get()->name << endl;
+    cout << "Before write: " << rw_ptr2.get()->age << endl;
 
     {
         string name = "valid write";
-        rw_ptr.stackingWrite(&NameLog::ChangeNameLvalue, name, std::string("valid write mom"), std::string("valid write dad"));
+        string momname = "valid write mom";
+        string dadname = "valid write dad";
+        rw_ptr1.stackingWrite(&NameLog::ChangeNameLvalue, name, momname, dadname);
+
+        int age = 0;
+        int momage = 50;
+        int dadage = 100;
+        rw_ptr2.stackingWrite(&AgeLog::ChangeAge, age, momage, dadage);
     }
     
     {
         nameLogPool.ExecuteClusteredTasks();
-        cout << "After write: " << rw_ptr.get()->name << endl;
+        ageLogPool.ExecuteClusteredTasks();
+        cout << "After write: " << rw_ptr1.get()->name << endl;
+        cout << "After write: " << rw_ptr2.get()->age << endl;
     }
 }
 
 int main()
 {
-    TestNormal();
+    //TestNormal();
     TestClustering();
     TestClusteringPoolWriteValidity();
 }
