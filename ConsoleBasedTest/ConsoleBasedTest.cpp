@@ -248,7 +248,7 @@ void TestClustering()
 
     auto start = chrono::high_resolution_clock::now();
 
-    std::shuffle(personHandlers.begin(), personHandlers.end(), g);
+    //std::shuffle(personHandlers.begin(), personHandlers.end(), g);
 
     for (auto& pH : personHandlers)
     {
@@ -296,11 +296,11 @@ void TestNormal()
 
     auto start = chrono::high_resolution_clock::now();
 
-    std::shuffle(personHandlers.begin(), personHandlers.end(), g);
+    //std::shuffle(personHandlers.begin(), personHandlers.end(), g);
 
     for (auto& pH : personHandlers)
     {
-        pH->Shuffle(g);
+        //pH->Shuffle(g);
         pH->Update();
     }
 
@@ -347,9 +347,9 @@ void TestClusteringPoolWriteValidity()
 
 int main()
 {
-    //TestNormal();
+    TestNormal();
     TestClustering();
-    TestClusteringPoolWriteValidity();
+    //TestClusteringPoolWriteValidity();
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
