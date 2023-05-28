@@ -299,41 +299,41 @@ struct funcWrapper
 	mutable memfn func;
 	mutable std::byte* funcBuffer;
 
-	funcWrapper(std::byte* buffPtr, memfn&& fn, Args&& args) noexcept
+	inline funcWrapper(std::byte* buffPtr, memfn&& fn, Args&& args) noexcept
 	{
 		func = std::forward<memfn>(fn);
 		funcBuffer = buffPtr;
 		new (&Get()) Args(std::forward<Args>(args));
 	}
 
-	funcWrapper(const funcWrapper& other) noexcept
+	inline funcWrapper(const funcWrapper& other) noexcept
 		: func{ std::exchange(other.func, nullptr) }
 		, funcBuffer{ std::exchange(other.funcBuffer, nullptr) }
 	{
 
 	}
 
-	funcWrapper(funcWrapper&& other) noexcept
+	inline funcWrapper(funcWrapper&& other) noexcept
 		: func{ std::exchange(other.func, nullptr) }
 		, funcBuffer{ std::exchange(other.funcBuffer, nullptr) }
 	{
 	}
 
-	funcWrapper& operator=(funcWrapper&& other)
+	inline funcWrapper& operator=(funcWrapper&& other) noexcept
 	{
 		func = std::exchange(other.func, nullptr);
 		funcBuffer = std::exchange(other.funcBuffer, nullptr);
 		return *this;
 	}
 
-	funcWrapper& operator=(const funcWrapper& other)
+	inline funcWrapper& operator=(const funcWrapper& other) noexcept
 	{
 		func = std::exchange(other.func, nullptr);
 		funcBuffer = std::exchange(other.funcBuffer, nullptr);
 		return *this;
 	}
 
-	~funcWrapper() noexcept
+	inline ~funcWrapper() noexcept
 	{
 		if(func != nullptr && funcBuffer != nullptr)
 		{
@@ -343,16 +343,16 @@ struct funcWrapper
 		}
 	}
 
-	Args& Get()
+	inline Args& Get() noexcept
 	{
 		return reinterpret_cast<Args&>(*funcBuffer);
 	}
-	const Args& Get() const
+	inline const Args& Get() const noexcept
 	{
 		return reinterpret_cast<const Args&>(*funcBuffer);
 	}
 
-	void operator()() noexcept
+	inline void operator()() noexcept
 	{
 		std::apply(func, Get());
 		//if constexpr (std::is_rvalue_reference<decltype(std::get<1>(arguments(func)))>::value) //works for void(T) and void (T&&)
@@ -480,7 +480,7 @@ public:
 		auto& queue = (*ptr.poolHeadPtr)[ptr.clusterId].taskQueue;
 		auto defferedWrite = funcWrapper(ptr.get()->buffer, std::forward<memfn>(func), std::move(forwarder{ ptr.get(), std::move(args)... }));
 		//defferedWrite();
-		queue.emplace_back(std::move(defferedWrite));
+		//queue.emplace_back(std::move(defferedWrite));
 	}
 };
 
