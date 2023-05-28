@@ -5,6 +5,10 @@
 #include <memory>
 #include <iostream>
 #include <vector>
+#include <algorithm>
+#include <tuple>
+
+using namespace std;
 
 //https://vittorioromeo.info/index/blog/capturing_perfectly_forwarded_objects_in_lambdas.html
 //https://stackoverflow.com/questions/26831382/capturing-perfectly-forwarded-variable-in-lambda
@@ -52,8 +56,8 @@ namespace std {
 template <typename T>
 T forwarder_type(const T&);
 
-template <typename T>
-T& forwarder_type(T&);
+//template <typename T>
+//T& forwarder_type(T&);
 
 // Here comes the deduction guide
 template <typename... T>
@@ -173,7 +177,7 @@ template<class T>
 struct DataTaskBlockPair
 {
 	std::vector<T> dataBlock;
-	std::vector<std::move_only_function<void()>> taskQueue;
+	std::vector<std::function<void()>> taskQueue;
 };
 
 template<class T>
@@ -240,6 +244,87 @@ public:
 	}
 };
 
+template<typename Sig>
+struct signature;
+template<typename Ret, typename...Args>
+struct signature<Ret(Args...)> {
+	using type = tuple<Args...>;
+};
+
+template<typename Ret, typename Obj, typename...Args>
+struct signature<Ret(Obj::*)(Args...)> {
+	using type = tuple<Args...>;
+};
+template<typename Ret, typename Obj, typename...Args>
+struct signature<Ret(Obj::*)(Args...)const> {
+	using type = tuple<Args...>;
+};
+template<typename Fun>
+concept is_fun = is_function_v<Fun>;
+
+template<typename Fun>
+concept is_mem_fun = is_member_function_pointer_v<decay_t<Fun>>;
+
+template<typename Fun>
+concept is_functor = is_class_v<decay_t<Fun>> && requires(Fun && t) {
+	&decay_t<Fun>::operator();
+};
+
+template<is_functor T>
+auto arguments(T&& t) -> signature<decltype(&decay_t<T>::operator())>::type;
+
+template<is_functor T>
+auto arguments(const T& t) -> signature<decltype(&decay_t<T>::operator())>::type;
+
+// template<is_fun T>
+// auto arguments(T&& t)->signature<T>::type;
+
+template<is_fun T>
+auto arguments(const T& t) -> signature<T>::type;
+
+template<is_mem_fun T>
+auto arguments(T&& t) -> signature<decay_t<T>>::type;
+
+template<is_mem_fun T>
+auto arguments(const T& t) -> signature<decay_t<T>>::type;
+struct functor {
+	int operator()(const string&, double) {
+		return 0;
+	}
+};
+
+template<typename memfn, typename Args>
+struct funcWrapper
+{
+	funcWrapper(memfn&& func, Args&& args, int index) 
+		: func{ std::move(func) }
+		, args{ std::move(args) }
+		, clusterIndex{ index }
+	{
+	}
+
+	void operator()() noexcept
+	{
+		if constexpr (std::is_rvalue_reference<decltype(std::get<1>(arguments(func)))>::value) //works for void(T) and void (T&&)
+		{
+			std::apply(std::move(func), std::move(args));		
+		}
+		else //works for void(T&)
+		{
+			std::apply(func, args);
+		}
+	}
+
+	bool isSame(const memfn& fn, const int& index)
+	{
+		return func == fn && clusterIndex == index;
+	}
+private:
+	memfn func;
+	Args args;
+	int clusterIndex;
+};
+
 template<class T>
 struct rw_clustering_ptr
 {
@@ -259,23 +344,9 @@ public:
 		auto defferedWrite = [&](T&& other) { *ptr.get() = std::move(other); };
 		(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(defferedWrite);
 	}
-	
-	//ToDo: Get rid of this at some point cuz it's useless.
-	template<typename memfn, typename... Args>
-	void shallowWrite(memfn&& func, Args&&... args)
-	{
-		//std::invoke(std::forward<memfn>(func), ptr.get(), std::forward<Args>(args)...);
-		
-		auto defferedWrite = [func = std::move(func), args..., ptr = ptr.get()]() mutable
-		{
-			std::invoke(std::forward<memfn>(func), ptr, std::forward<Args>(args)...);
-		};
-		//defferedWrite();
-		(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(std::move(defferedWrite));
-	}
 
 	template<typename memfn, typename... Args>
-	void write(memfn&& func, Args&&... args)
+	void oneTimeWrite(memfn&& func, Args&&... args)
 	{
 		//This is here for two reasons:
 		// 1. To discourage people from using lvalue references.
@@ -285,15 +356,67 @@ public:
 		//auto staticCheckForLvalue = [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_lvalue_reference<packArg>::value, "Has lvalue reference please change"); };
 		//(staticCheckForLvalue(std::forward<Args>(args)), ...);
 
-		//std::apply(func, forwarder{ ptr.get(), std::forward<Args>(args)... });
-		auto defferedWrite = [func = std::move(func), args = std::move(forwarder{ptr.get(), args...})]() mutable
+		auto& queue = (*ptr.poolHeadPtr)[ptr.clusterId].taskQueue;
+
+		using type = funcWrapper<std::decay<memfn>::type, forwarder<std::decay<decltype(ptr.get())>::type, std::decay<Args>::type...>>;
+
+		auto ys = std::find_if(queue.begin(), queue.end(), [&](auto& fw) -> bool { return fw.target<type>()->isSame(func, ptr.index); });
+		if (ys != std::end(queue))
 		{
-			std::apply(std::move(func), std::move(args));
-		};
+			return;
+		}
+		else
+		{
+			auto defferedWrite = funcWrapper(std::move(func), std::move(forwarder{ ptr.get(), std::move(args)...}), ptr.index);
+			//defferedWrite();
+			queue.emplace_back(std::move(defferedWrite));
+		}
+	}
+
+	template<typename memfn, typename... Args>
+	void updateWrite (memfn&& func, Args&&... args)
+	{
+		//This is here for two reasons:
+		// 1. To discourage people from using lvalue references.
+		// 2. It works without this cuz forwwarder will copy everything,
+		//	  but my tests show that copying is faster due to compiler optimizations.
+		// 3. this function will be working mosting with aggregrate classes and primitive values
+		//auto staticCheckForLvalue = [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_lvalue_reference<packArg>::value, "Has lvalue reference please change"); };
+		//(staticCheckForLvalue(std::forward<Args>(args)), ...);
+
+		auto& queue = (*ptr.poolHeadPtr)[ptr.clusterId].taskQueue;
+
+		using type = funcWrapper<std::decay<memfn>::type, forwarder<std::decay<decltype(ptr.get())>::type, std::decay<Args>::type...>>;
+		
+		auto ys = std::find_if(queue.begin(), queue.end(), [&](auto& fw) -> bool { return fw.target<type>()->isSame(func, ptr.index); });
+		if (ys != std::end(queue))
+		{
+			auto defferedWrite = funcWrapper(std::move(func), std::move(forwarder{ ptr.get(), std::move(args)... }), ptr.index);
+			*ys = std::move(defferedWrite);
+		}
+		else
+		{
+			auto defferedWrite = funcWrapper(std::move(func), std::move(forwarder{ ptr.get(), std::move(args)... }), ptr.index);
+			queue.emplace_back(std::move(defferedWrite));
+		}
+	}
+
+	//Warning: Will cause running out of memory problem
+	template<typename memfn, typename... Args>
+	void stackingWrite(memfn func, Args&&... args)
+	{
+		//This is here for two reasons:
+		// 1. To discourage people from using lvalue references.
+		// 2. It works without this cuz forwwarder will copy everything,
+		//	  but my tests show that copying is faster due to compiler optimizations.
+		// 3. this function will be working mosting with aggregrate classes and primitive values
+		//auto staticCheckForLvalue = [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_lvalue_reference<packArg>::value, "Has lvalue reference please change"); };
+		//(staticCheckForLvalue(std::forward<Args>(args)), ...);
+
+		auto& queue = (*ptr.poolHeadPtr)[ptr.clusterId].taskQueue;
+		auto defferedWrite = funcWrapper(std::move(func), std::move(forwarder{ ptr.get(), std::move(args)...}), ptr.index);	
 		//defferedWrite();
-		//auto functor = function<void()>(defferedWrite);
-		//functor();
-		(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(std::move(defferedWrite));
+		queue.emplace_back(std::move(defferedWrite));
 	}
 };
 
