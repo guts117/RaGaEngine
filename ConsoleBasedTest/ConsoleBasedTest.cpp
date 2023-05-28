@@ -68,7 +68,7 @@ struct PersonLog
             string momname = "rabin mom" + idStr + addstr;
             string dadname = "rabin dad" + idStr + addstr;
 
-            nameLog.stackingWrite(&NameLog::ChangeNameLvalue, name, momname, dadname);
+            nameLog.stackingWrite(&NameLog::ChangeNameRvalue, name, momname, dadname);
             //nameLog.oneTimeWrite(&NameLog::ChangeNameRvalue, name, momname, dadname);
             //nameLog.oneTimeWrite(&NameLog::ChangeNameRvalue, name, momname, dadname);
             //nameLog.oneTimeWrite(&NameLog::ChangeNameRvalue, name, momname, dadname);
@@ -312,19 +312,21 @@ void TestNormal()
 
 void TestClusteringPoolWriteValidity()
 {
-    //ClusteringMemoryPool<NameLog> nameLogPool = ClusteringMemoryPool<NameLog>(8);
+    ClusteringMemoryPool<NameLog> nameLogPool = ClusteringMemoryPool<NameLog>(8);
 
-    //auto rw_ptr = nameLogPool.AddToPool(NameLog{ "rabin",  "rabin mom", "rabin dad" });
+    auto rw_ptr = nameLogPool.AddToPool(NameLog{ "rabin",  "rabin mom", "rabin dad" });
 
-    //cout << "Before write: " << rw_ptr.get()->name << endl;
+    cout << "Before write: " << rw_ptr.get()->name << endl;
 
-    //{
-    //    string name = "valid write";
-    //    rw_ptr.write(&NameLog::ChangeName, name, std::string("valid write mom"), std::string("valid write dad"));
-    //}
-
-    //nameLogPool.ExecuteClusteredTasks();
-    //cout << "After write: " << rw_ptr.get()->name << endl;
+    {
+        string name = "valid write";
+        rw_ptr.stackingWrite(&NameLog::ChangeNameLvalue, name, std::string("valid write mom"), std::string("valid write dad"));
+    }
+    
+    {
+        nameLogPool.ExecuteClusteredTasks();
+        cout << "After write: " << rw_ptr.get()->name << endl;
+    }
 }
 
 int main()
