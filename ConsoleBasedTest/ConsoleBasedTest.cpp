@@ -19,9 +19,9 @@ struct NameLog
 
     void ChangeNameLvalue(string& _name, string& _motherName, string& _fatherName)
     {
-        name = _name;
-        motherName = _motherName;
-        fatherName = _fatherName;
+        name = std::move(_name);
+        motherName = std::move(_motherName);
+        fatherName = std::move(_fatherName);
     }
 
     void ChangeNameRvalue(string&& _name, string&& _motherName, string&& _fatherName)
@@ -221,12 +221,12 @@ struct PersonHandlerNormal
     }
 };
 
+ClusteringMemoryPool<NameLog> nameLogPool = ClusteringMemoryPool<NameLog>(100);
+ClusteringMemoryPool<AgeLog> ageLogPool = ClusteringMemoryPool<AgeLog>(100);
+vector<PersonHandler> personHandlers = vector<PersonHandler>();
+
 void TestClustering()
 {
-    ClusteringMemoryPool<NameLog> nameLogPool = ClusteringMemoryPool<NameLog>(100);
-    ClusteringMemoryPool<AgeLog> ageLogPool = ClusteringMemoryPool<AgeLog>(100);
-    vector<PersonHandler> personHandlers = vector<PersonHandler>();
-
     for (int a = 0; a < 1000; ++a)
     {
         auto personHandlr = PersonHandler();
@@ -252,7 +252,7 @@ void TestClustering()
 
     for (auto& pH : personHandlers)
     {
-        pH.Shuffle(g);
+        //2pH.Shuffle(g);        //This causes funcWrapper class to fuck up.
         pH.Update();
     }
 

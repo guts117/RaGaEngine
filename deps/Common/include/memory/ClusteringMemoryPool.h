@@ -296,59 +296,51 @@ struct functor {
 template<typename memfn, typename Args>
 struct funcWrapper
 {
-private:
-	// these pointers are storing behaviors
-	memfn func;
-	std::byte* funcBuffer;
+	mutable memfn func;
+	mutable std::byte* funcBuffer;
 
-public:
-	funcWrapper(std::byte* buffPtr, memfn&& fn, Args&& args) 
+	funcWrapper(std::byte* buffPtr, memfn&& fn, Args&& args) noexcept
 	{
 		func = std::forward<memfn>(fn);
 		funcBuffer = buffPtr;
 		new (&Get()) Args(std::forward<Args>(args));
 	}
 
-	//funcWrapper(const funcWrapper& other)
-	//{
-	//	new (&Get()) Args(other.Get());
-	//}
-	//funcWrapper(const Args& other)
-	//{
-	//	new (&Get()) Args(other);
-	//}
-	//funcWrapper(funcWrapper&& other)
-	//{
-	//	new (&Get()) Args(std::move(other.Get()));
-	//}
-	//funcWrapper(Args&& other)
-	//{
-	//	new (&Get()) Args(std::move(other));
-	//}
-	//funcWrapper& operator=(const funcWrapper& other)
-	//{
-	//	Get() = other.Get();
-	//	return *this;
-	//}
-	//funcWrapper& operator=(const Args& other)
-	//{
-	//	Get() = other;
-	//	return *this;
-	//}
-	//funcWrapper& operator=(funcWrapper&& other)
-	//{
-	//	Get() = std::move(other.Get());
-	//	return *this;
-	//}
-	//funcWrapper& operator=(Args&& other)
-	//{
-	//	Get() = std::move(other);
-	//	return *this;
-	//}
+	funcWrapper(const funcWrapper& other) noexcept
+		: func{ std::exchange(other.func, nullptr) }
+		, funcBuffer{ std::exchange(other.funcBuffer, nullptr) }
+	{
+
+	}
+
+	funcWrapper(funcWrapper&& other) noexcept
+		: func{ std::exchange(other.func, nullptr) }
+		, funcBuffer{ std::exchange(other.funcBuffer, nullptr) }
+	{
+	}
+
+	funcWrapper& operator=(funcWrapper&& other)
+	{
+		func = std::exchange(other.func, nullptr);
+		funcBuffer = std::exchange(other.funcBuffer, nullptr);
+		return *this;
+	}
+
+	funcWrapper& operator=(const funcWrapper& other)
+	{
+		func = std::exchange(other.func, nullptr);
+		funcBuffer = std::exchange(other.funcBuffer, nullptr);
+		return *this;
+	}
 
 	~funcWrapper() noexcept
 	{
-		Get().~Args();
+		if(func != nullptr && funcBuffer != nullptr)
+		{
+			Get().~Args();
+			func = nullptr;
+			funcBuffer = nullptr;
+		}
 	}
 
 	Args& Get()
@@ -372,6 +364,29 @@ public:
 		//	std::apply(func, Get());
 		//}
 	}
+
+	//ToDo: Get rid of if unnecessary
+	/*funcWrapper(const Args& other)
+	{
+		new (&Get()) Args(other);
+	}
+
+	funcWrapper(Args&& other)
+	{
+		new (&Get()) Args(std::move(other));
+	}
+
+	funcWrapper& operator=(const Args& other)
+	{
+		Get() = other;
+		return *this;
+	}
+
+	funcWrapper& operator=(Args&& other)
+	{
+		Get() = std::move(other);
+		return *this;
+	}*/
 };
 
 template<class T>
@@ -464,8 +479,8 @@ public:
 
 		auto& queue = (*ptr.poolHeadPtr)[ptr.clusterId].taskQueue;
 		auto defferedWrite = funcWrapper(ptr.get()->buffer, std::forward<memfn>(func), std::move(forwarder{ ptr.get(), std::move(args)... }));
-		defferedWrite();
-		//queue.emplace_back(std::move(defferedWrite));
+		//defferedWrite();
+		queue.emplace_back(std::move(defferedWrite));
 	}
 };
 
