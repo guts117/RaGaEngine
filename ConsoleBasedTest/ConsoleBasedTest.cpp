@@ -11,13 +11,16 @@
 
 using namespace std;
 
-struct NameLog
+struct alignas(alignof(std::string)) NameLog
 {
 private:
     string name;
     string motherName;
     string fatherName;
 public:
+    //ToDo: find a way to give compiler error when buffer size is not enough
+    alignas(alignof(std::string)) std::byte buffer[sizeof(std::string) * 3];
+
     NameLog(std::string _name, std::string _motherName, std::string _fatherName)
         : name{ _name }
         , motherName{ _motherName }
@@ -40,17 +43,18 @@ public:
     }
 
     std::string GetName() const { return name; }
-
-    alignas(alignof(std::string)) std::byte buffer[alignof(std::string) * 4];
 };
 
-struct AgeLog
+struct alignas(alignof(int)) AgeLog
 {
 private:
     int age;
     int motherAge;
     int fatherAge;
 public:
+    //ToDo: find a way to give compiler error when buffer size is not enough
+    alignas(alignof(int)) std::byte buffer[sizeof(int) * 3];
+
     AgeLog(int _age, int _motherAge, int _fatherAge)
         : age { _age}
         , motherAge { _motherAge}
@@ -66,8 +70,6 @@ public:
     }
 
     int GetAge() const { return age; }
-
-    alignas(alignof(int)) std::byte buffer[alignof(int) * 5];
 };
 
 struct PersonLog
@@ -94,11 +96,11 @@ struct PersonLog
 
             nameLog.stackingWrite(&NameLog::ChangeNameLvalue, name, momname, dadname);
 
-            //int age = 0 + id + i;
-            //int momage = 50 + id + i;
-            //int dadage = 100 + id + i;
+            int age = 0 + id + i;
+            int momage = 50 + id + i;
+            int dadage = 100 + id + i;
 
-            //ageLog.stackingWrite(&AgeLog::ChangeAge, age, momage, dadage);
+            ageLog.stackingWrite(&AgeLog::ChangeAge, age, momage, dadage);
         }
     }
 };
@@ -114,13 +116,13 @@ struct PersonHandler
 
     void Update()
     {
-        //std::random_device rd;
-        //std::mt19937 g(rd());
+        std::random_device rd;
+        std::mt19937 g(rd());
 
         for (auto& pL : personLogs)
         {
-            unsigned int id = 1;
-            string idStr = "yes";//to_string(id);
+            unsigned int id = g();
+            string idStr = to_string(id);
             pL.Update(id, idStr);
         }
     }
@@ -148,13 +150,13 @@ struct PersonLogNormal
             string momname = "rabin mom" + idStr + addstr;
             string dadname = "rabin dad" + idStr + addstr;
 
-            //nameLog->ChangeNameLvalue(name, momname, dadname);
+            nameLog->ChangeNameLvalue(name, momname, dadname);
 
-            //int age = 0 + id + i;
-            //int momage = 50 + id + i;
-            //int dadage = 100 + id + i;
+            int age = 0 + id + i;
+            int momage = 50 + id + i;
+            int dadage = 100 + id + i;
 
-            //ageLog->ChangeAge(age, momage, dadage);
+            ageLog->ChangeAge(age, momage, dadage);
         }
     }
 };
@@ -170,15 +172,14 @@ struct PersonHandlerNormal
 
     void Update()
     {
-        //std::random_device rd;
-        //std::mt19937 g(rd());
+        std::random_device rd;
+        std::mt19937 g(rd());
 
         for (auto& pL : personLogs)
         {
-            unsigned int id = 1;// g();
-            //auto idStr = to_string(id);
-            string idStr = "yes";
-            //pL.Update(id, idStr);
+            unsigned int id = g();
+            auto idStr = to_string(id);
+            pL.Update(id, idStr);
         }
     }
 };
@@ -189,11 +190,11 @@ void TestClustering()
     ClusteringMemoryPool<AgeLog> ageLogPool = ClusteringMemoryPool<AgeLog>(100);
     vector<PersonHandler> personHandlers = vector<PersonHandler>();
 
-    for (int a = 0; a < 1; ++a)
+    for (int a = 0; a < 1000; ++a)
     {
         auto personHandlr = PersonHandler();
 
-        for (int i = 0; i < 10; ++i)
+        for (int i = 0; i < 10000; ++i)
         {
             auto iid = i + a;
             auto id = to_string(iid);
@@ -236,11 +237,11 @@ void TestNormal()
     vector<shared_ptr<AgeLog>> ageLogPool = vector<shared_ptr<AgeLog>>();
     vector<shared_ptr<PersonHandlerNormal>> personHandlers = std::vector<shared_ptr<PersonHandlerNormal>>();
 
-    for (int a = 0; a < 1; ++a)
+    for (int a = 0; a < 1000; ++a)
     {
         auto personHandlr = std::make_shared<PersonHandlerNormal>(PersonHandlerNormal());
 
-        for (int i = 0; i < 10; ++i)
+        for (int i = 0; i < 10000; ++i)
         {
             auto id = to_string(i);
             nameLogPool.push_back(std::make_shared<NameLog>(NameLog{ "rabin" + id,  "rabin mom" + id, "rabin dad" + id }));
@@ -308,7 +309,7 @@ void TestClusteringPoolWriteValidity()
 
 int main()
 {
-    //TestNormal();
+    TestNormal();
     TestClustering();
     //TestClusteringPoolWriteValidity();
 }

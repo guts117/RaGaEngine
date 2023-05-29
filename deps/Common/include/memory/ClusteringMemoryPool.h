@@ -76,7 +76,7 @@ struct DataTaskBlockPair
 template<class T>
 struct rw_clustering_ptr;
 template<class T>
-struct funcWrapperBase;
+struct funcWrapperInterface;
 template<class T>
 struct ClusteringMemoryPool;
 
@@ -85,11 +85,14 @@ struct clustering_ptr
 {
 private:
 	inline T* operator->()		{ return &((*poolHeadPtr)[clusterId].dataBlock[index]); }
-	inline T* get()			{ return &((*poolHeadPtr)[clusterId].dataBlock[index]); }
+	inline T* get()			
+	{ 
+		return &((*poolHeadPtr)[clusterId].dataBlock[index]); 
+	}
 
 public:
 	friend struct rw_clustering_ptr<T>;
-	friend struct funcWrapperBase<T>;
+	friend struct funcWrapperInterface<T>;
 
 	inline clustering_ptr() = default;
 
@@ -183,29 +186,33 @@ struct functor {
 };
 
 template<class T>
-struct funcWrapperBase 
+struct funcWrapperInterface
 {
-virtual ~funcWrapperBase() noexcept = 0 {}
-
-protected:
-	std::byte* get(clustering_ptr<T>& ptr) { return ptr.get()->buffer; }
-	std::byte const* const get(const clustering_ptr<T>& ptr) const { return ptr.get()->buffer; }
+	std::byte* get(clustering_ptr<T>& ptr) 
+	{ 
+		return ptr.get()->buffer;
+	}
+	std::byte const* const get(const clustering_ptr<T>& ptr) const 
+	{ 
+		return ptr.get()->buffer;
+	}
 
 	T* getThis(clustering_ptr<T>& ptr) { return ptr.get(); }
 	T const* const getThis(const clustering_ptr<T>& ptr) const { return ptr.get(); }
 };
 
 template<class T, typename memfn, typename Args>
-struct funcWrapper final : public funcWrapperBase<T>
+struct funcWrapper final
 {
 	mutable clustering_ptr<T> clusterPtr;
 	mutable memfn func;
+	funcWrapperInterface<T> inter;
 
 	inline funcWrapper(clustering_ptr<T>& ptr, memfn&& fn, Args&& args) noexcept
 		: clusterPtr { ptr }
 		, func{ std::forward<memfn>(fn) }
 	{
-		new (&Get()) Args(std::forward<Args>(args));
+		new (Get()) Args(std::forward<Args>(args));
 	}
 
 	inline funcWrapper(const funcWrapper& other) noexcept
@@ -216,37 +223,45 @@ struct funcWrapper final : public funcWrapperBase<T>
 
 	inline funcWrapper& operator=(const funcWrapper& other) noexcept
 	{
-		funcWrapperBase<T>::operator=(other);
+		clusterPtr = other.clusterPtr;
 		func = std::exchange(other.func, nullptr);
 		return *this;
 	}
 
-	funcWrapper(funcWrapper&& other) noexcept = delete;
-	funcWrapper& operator=(funcWrapper&& other) = delete;
+	funcWrapper(funcWrapper&& other) noexcept 
+		: clusterPtr{ other.clusterPtr }
+		, func{ std::exchange(other.func, nullptr) }
+	{
+	}
+	funcWrapper& operator=(funcWrapper&& other)
+	{
+		clusterPtr = other.clusterPtr;
+		func = std::exchange(other.func, nullptr);
+		return *this;
+	}
 
 	inline ~funcWrapper() noexcept
 	{
 		if(func != nullptr)
 		{
-			Get().~Args();
-			func = nullptr;
+			Get()->~Args();
 		}
 	}
 
-	inline Args& Get() noexcept
+	inline Args* Get() noexcept
 	{
-		return reinterpret_cast<Args&>(*this->get(clusterPtr));
+		return reinterpret_cast<Args*>(inter.get(clusterPtr));
 	}
 
-	inline const Args& Get() const noexcept
+	inline const Args* Get() const noexcept
 	{
-		return reinterpret_cast<const Args&>(*this->get(clusterPtr));
+		return &reinterpret_cast<const Args*>(inter.get(clusterPtr));
 	}
 
 	inline void operator()() noexcept
 	{
-		auto args = std::make_tuple( this->getThis(clusterPtr) );
-		auto tupArgs = std::tuple_cat(args, std::move(Get()));
+		auto args = std::make_tuple(inter.getThis(clusterPtr) );
+		auto tupArgs = std::tuple_cat(args, std::move(*Get()));
 		//std::invoke(func, this->getThis(), Get());
 		std::apply(func, tupArgs);
 		//if constexpr (std::is_rvalue_reference<decltype(std::get<1>(arguments(func)))>::value) //works for void(T) and void (T&&)
@@ -351,7 +366,8 @@ public:
 		auto& queue = (*ptr.poolHeadPtr)[ptr.clusterId].taskQueue;
 		auto defferedWrite = funcWrapper(ptr, std::forward<memfn>(func), std::move(std::make_tuple(std::move(args)... )));
 		//defferedWrite();
-		queue.emplace_back(defferedWrite);
+		//auto d = defferedWrite;
+		queue.emplace_back(std::move(defferedWrite));
 	}
 };
 
