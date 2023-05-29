@@ -26,6 +26,8 @@ public:
         , motherName{ _motherName }
         , fatherName{ _fatherName }
     {
+        //ToDo: find a way to force people to do this each time a construct is called ? derive from a base class??
+        std::memset(buffer, 0, sizeof(buffer));
     }
 
     void ChangeNameLvalue(string& _name, string& _motherName, string& _fatherName)
@@ -60,6 +62,8 @@ public:
         , motherAge { _motherAge}
         , fatherAge { _fatherAge}
     {
+        //ToDo: find a way to force people to do this each time a construct is called ? derive from a base class??
+        std::memset(buffer, 0, sizeof(buffer));
     }
 
     void ChangeAge(int& _age, int& _motherAge, int& _fatherAge)
@@ -87,20 +91,20 @@ struct PersonLog
         int momage = 50 + id;
         int dadage = 100 + id;
 
-        //for(int i = 0; i< 1; ++i)
+        for(int i = 0; i< 100; ++i)
         {
             //auto addstr = to_string(i);
             //string name = "rabin" + idStr + addstr;
             //string momname = "rabin mom" + idStr + addstr;
             //string dadname = "rabin dad" + idStr + addstr;
 
-            nameLog.stackingWrite(&NameLog::ChangeNameLvalue, name, momname, dadname);
+            nameLog.oneTimeWrite(&NameLog::ChangeNameLvalue, name, momname, dadname);
 
             //int age = 0 + id + i;
             //int momage = 50 + id + i;
             //int dadage = 100 + id + i;
 
-            ageLog.stackingWrite(&AgeLog::ChangeAge, age, momage, dadage);
+            ageLog.oneTimeWrite(&AgeLog::ChangeAge, age, momage, dadage);
         }
     }
 };
@@ -143,7 +147,7 @@ struct PersonLogNormal
         int momage = 50 + id;
         int dadage = 100 + id;
 
-        //for (int i = 0; i < 1; ++i)
+        for (int i = 0; i < 100; ++i)
         {
             //auto addstr = to_string(i);
             //string name = "rabin" + idStr + addstr;
@@ -291,12 +295,12 @@ void TestClusteringPoolWriteValidity()
         string name = "valid write";
         string momname = "valid write mom";
         string dadname = "valid write dad";
-        rw_ptr1.stackingWrite(&NameLog::ChangeNameLvalue, name, momname, dadname);
+        rw_ptr1.oneTimeWrite(&NameLog::ChangeNameLvalue, name, momname, dadname);
 
         int age = 0;
         int momage = 50;
         int dadage = 100;
-        rw_ptr2.stackingWrite(&AgeLog::ChangeAge, age, momage, dadage);
+        rw_ptr2.oneTimeWrite(&AgeLog::ChangeAge, age, momage, dadage);
     }
     
     {
