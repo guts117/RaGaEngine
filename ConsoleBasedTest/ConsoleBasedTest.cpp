@@ -30,9 +30,9 @@ public:
 
     void ChangeNameLvalue(string& _name, string& _motherName, string& _fatherName)
     {
-        name = _name;
-        motherName = _motherName;
-        fatherName = _fatherName;
+        name = std::move(_name);
+        motherName = std::move(_motherName);
+        fatherName = std::move(_fatherName);
     }
 
     void ChangeNameRvalue(string&& _name, string&& _motherName, string&& _fatherName)
