@@ -22,7 +22,8 @@ public:
         : name{ _name }
         , motherName{ _motherName }
         , fatherName{ _fatherName }
-    {}
+    {
+    }
 
     void ChangeNameLvalue(string& _name, string& _motherName, string& _fatherName)
     {
@@ -54,7 +55,8 @@ public:
         : age { _age}
         , motherAge { _motherAge}
         , fatherAge { _fatherAge}
-    {}
+    {
+    }
 
     void ChangeAge(int& _age, int& _motherAge, int& _fatherAge)
     {
@@ -100,37 +102,12 @@ struct PersonLog
             //nameLog.write(&NameLog::ChangeNameRValue, name, momname, dadname);
             //nameLog.write(&NameLog::ChangeNameRvalue, name, momname, dadname);
 
-            //int age = 0 + id + i;
-            //int momage = 50 + id + i;
-            //int dadage = 100 + id + i;
+            int age = 0 + id + i;
+            int momage = 50 + id + i;
+            int dadage = 100 + id + i;
 
-            //ageLog.stackingWrite(&AgeLog::ChangeAge, age, momage, dadage);
+            ageLog.stackingWrite(&AgeLog::ChangeAge, age, momage, dadage);
         }
-        //nameLog.write(&NameLog::ChangeName, name, momname, dadname);
-        //nameLog.write(&NameLog::ChangeName, name, momname, dadname);
-        //nameLog.write(&NameLog::ChangeName, name, momname, dadname);
-        //nameLog.write(&NameLog::ChangeName, name, momname, dadname);
-        //nameLog.write(&NameLog::ChangeName, name, momname, dadname);
-        //nameLog.write(&NameLog::ChangeName, name, momname, dadname);
-
-
-        //ageLog.write(&AgeLog::ChangeAge, age, momage, dadage);
-        //ageLog.write(&AgeLog::ChangeAge, age, momage, dadage);
-        //ageLog.write(&AgeLog::ChangeAge, age, momage, dadage);
-        //ageLog.write(&AgeLog::ChangeAge, age, momage, dadage);
-        //ageLog.write(&AgeLog::ChangeAge, age, momage, dadage);
-        //ageLog.write(&AgeLog::ChangeAge, age, momage, dadage);
-        
-        //nameLog.write(&NameLog::ChangeName, "rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
-        //ageLog.write(&AgeLog::ChangeAge, 0 + id, 50 + id, 100 + id);
-        //nameLog.write(&NameLog::ChangeName, "rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
-        //ageLog.write(&AgeLog::ChangeAge, 0 + id, 50 + id, 100 + id);
-        //nameLog.write(&NameLog::ChangeName, "rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
-        //ageLog.write(&AgeLog::ChangeAge, 0 + id, 50 + id, 100 + id);
-        //nameLog.write(&NameLog::ChangeName, "rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
-        //ageLog.write(&AgeLog::ChangeAge, 0 + id, 50 + id, 100 + id);
-        //nameLog.write(&NameLog::ChangeName, "rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
-        //ageLog.write(&AgeLog::ChangeAge, 0 + id, 50 + id, 100 + id);
     }
 };
 
@@ -179,7 +156,7 @@ struct PersonLogNormal
             string momname = "rabin mom" + idStr + addstr;
             string dadname = "rabin dad" + idStr + addstr;
 
-            nameLog->ChangeNameLvalue(name, momname, dadname);
+            //nameLog->ChangeNameLvalue(name, momname, dadname);
 
             //int age = 0 + id + i;
             //int momage = 50 + id + i;
@@ -187,31 +164,6 @@ struct PersonLogNormal
 
             //ageLog->ChangeAge(age, momage, dadage);
         }
-
-        //nameLog->ChangeName(name, momname, dadname);
-        //nameLog->ChangeName(name, momname, dadname);
-        //nameLog->ChangeName(name, momname, dadname);
-        //nameLog->ChangeName(name, momname, dadname);
-        //nameLog->ChangeName(name, momname, dadname);
-        //nameLog->ChangeName(name, momname, dadname);
-        
-        //ageLog->ChangeAge(age, momage, dadage);
-        //ageLog->ChangeAge(age, momage, dadage);
-        //ageLog->ChangeAge(age, momage, dadage);
-        //ageLog->ChangeAge(age, momage, dadage);
-        //ageLog->ChangeAge(age, momage, dadage);
-        //ageLog->ChangeAge(age, momage, dadage);
-        // 
-        //pL.nameLog->ChangeName("rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
-        //pL.ageLog->ChangeAge(0 + id, 50 + id, 100 + id);
-        //pL.nameLog->ChangeName("rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
-        //pL.ageLog->ChangeAge(0 + id, 50 + id, 100 + id);
-        //pL.nameLog->ChangeName("rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
-        //pL.ageLog->ChangeAge(0 + id, 50 + id, 100 + id);
-        //pL.nameLog->ChangeName("rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
-        //pL.ageLog->ChangeAge(0 + id, 50 + id, 100 + id);
-        //pL.nameLog->ChangeName("rabin" + idStr, "rabin mom" + idStr, "rabin dad" + idStr);
-        //pL.ageLog->ChangeAge(0 + id, 50 + id, 100 + id);
     }
 };
 
@@ -234,7 +186,7 @@ struct PersonHandlerNormal
             unsigned int id = 1;// g();
             //auto idStr = to_string(id);
             string idStr = "yes";
-            pL.Update(id, idStr);
+            //pL.Update(id, idStr);
         }
     }
 };
@@ -270,7 +222,7 @@ void TestClustering()
     for (auto& pH : personHandlers)
     {
         //pH.Shuffle(g);        //ToDo: Figure out why this causes funcWrapper class to fuck up.
-        //pH.Update();
+        pH.Update();
     }
 
     nameLogPool.ExecuteClusteredTasks();

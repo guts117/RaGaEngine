@@ -110,23 +110,16 @@ public:
 
 	clustering_ptr& operator=(const clustering_ptr& rhs) noexcept
 	{
-		clustering_ptr temp(rhs);
-		temp.swap(*this);
-
+		poolHeadPtr = rhs.poolHeadPtr;
+		clusterId = rhs.clusterId;
+		index = rhs.index;
 		return *this;
-	}
-
-	void yes(clustering_ptr& second) noexcept
-	{
-		std::swap(poolHeadPtr, second.poolHeadPtr);
-		std::swap(clusterId, second.clusterId);
-		std::swap(index, second.index);
 	}
 
 	clustering_ptr(clustering_ptr&& rhs) noexcept
 		: poolHeadPtr{ std::exchange(rhs.poolHeadPtr, nullptr) }
 		, clusterId{ std::exchange(rhs.clusterId, 0) }
-		, index { std::exchange(rhs.index, 0) }
+		, index{ std::exchange(rhs.index, 0) }
 	{
 	}
 
@@ -213,30 +206,29 @@ struct funcWrapperBase
 	}
 
 	inline funcWrapperBase(const funcWrapperBase& other) noexcept
-		: clusterPtr{ std::exchange(other.clusterPtr, clustering_ptr<T>()) }
+		: clusterPtr{ other.clusterPtr }
 	{
 	}
 
 	inline funcWrapperBase(funcWrapperBase&& other) noexcept
-		: clusterPtr{ std::exchange(other.clusterPtr, clustering_ptr<T>()) }
+		: clusterPtr{ std::move(other.clusterPtr) }
 	{
 	}
 
 	inline funcWrapperBase& operator=(funcWrapperBase&& other) noexcept
 	{
-		clusterPtr = std::exchange(other.clusterPtr, clustering_ptr<T>());
+		clusterPtr = std::move(other.clusterPtr);
 		return *this;
 	}
 
 	inline funcWrapperBase& operator=(const funcWrapperBase& other) noexcept
 	{
-		clusterPtr = std::exchange(other.clusterPtr, clustering_ptr<T>());
+		clusterPtr = other.clusterPtr;
 		return *this;
 	}
 
 	virtual ~funcWrapperBase() noexcept = 0
 	{
-		clusterPtr = clustering_ptr<T>();
 	}
 
 protected:
@@ -256,7 +248,6 @@ struct funcWrapper : public funcWrapperBase<T>
 		: funcWrapperBase<T>(ptr)
 		, func{ std::forward<memfn>(fn) }
 	{
-		func = std::forward<memfn>(fn);
 		new (&Get()) Args(std::forward<Args>(args));
 	}
 
@@ -413,7 +404,7 @@ public:
 		auto& queue = (*ptr.poolHeadPtr)[ptr.clusterId].taskQueue;
 		auto defferedWrite = funcWrapper(ptr, std::forward<memfn>(func), std::move(std::make_tuple(std::move(args)... )));
 		//defferedWrite();
-		//queue.emplace_back(std::move(defferedWrite));
+		queue.emplace_back(std::move(defferedWrite));
 	}
 };
 
@@ -462,7 +453,7 @@ public:
 			{
 				b();
 			}
-			a.taskQueue.clear();
+			//a.taskQueue.clear();
 		}
 	}
 
