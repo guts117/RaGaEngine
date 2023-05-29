@@ -218,7 +218,7 @@ void TestClustering()
 
     for (auto& pH : personHandlers)
     {
-        //pH.Shuffle(g);        //ToDo: Figure out why this causes funcWrapper class to fuck up.
+        //pH.Shuffle(g);
         pH.Update();
     }
 
