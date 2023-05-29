@@ -311,7 +311,7 @@ int main()
 {
     TestNormal();
     TestClustering();
-    //TestClusteringPoolWriteValidity();
+    TestClusteringPoolWriteValidity();
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu

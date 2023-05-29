@@ -262,16 +262,17 @@ struct funcWrapper final
 	{
 		auto args = std::make_tuple(inter.getThis(clusterPtr) );
 		auto tupArgs = std::tuple_cat(args, std::move(*Get()));
-		//std::invoke(func, this->getThis(), Get());
-		std::apply(func, tupArgs);
-		//if constexpr (std::is_rvalue_reference<decltype(std::get<1>(arguments(func)))>::value) //works for void(T) and void (T&&)
-		//{
-		//	std::apply(std::move(func), std::move(Get()));
-		//}
-		//else //works for void(T&)
-		//{
-		//	std::apply(func, Get());
-		//}
+
+		//works for void(T) and void (T&&)
+		if constexpr (std::is_rvalue_reference<decltype(std::get<1>(arguments(func)))>::value) 
+		{
+			std::apply(std::move(func), std::move(tupArgs));
+		}
+		//works for void(T&)
+		else 
+		{
+			std::apply(func, tupArgs);
+		}
 	}
 };
 
