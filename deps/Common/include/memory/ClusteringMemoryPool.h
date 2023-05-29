@@ -206,7 +206,7 @@ struct funcWrapper final
 {
 	mutable clustering_ptr<T> clusterPtr;
 	mutable memfn func;
-	funcWrapperInterface<T> inter;
+	mutable funcWrapperInterface<T> inter;
 
 	inline funcWrapper(clustering_ptr<T>& ptr, memfn&& fn, Args&& args) noexcept
 		: clusterPtr { ptr }
@@ -365,6 +365,12 @@ public:
 
 		auto& queue = (*ptr.poolHeadPtr)[ptr.clusterId].taskQueue;
 		auto defferedWrite = funcWrapper(ptr, std::forward<memfn>(func), std::move(std::make_tuple(std::move(args)... )));
+		
+		//auto defferedWrite = [func = std::move(func), args = std::move(forwarder{ ptr.get(), std::move(args)... })]() mutable
+		//{
+		//	std::apply(func, args);
+		//};
+		
 		//defferedWrite();
 		//auto d = defferedWrite;
 		queue.emplace_back(std::move(defferedWrite));

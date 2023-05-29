@@ -79,26 +79,26 @@ struct PersonLog
 
     void Update(unsigned int& id, string& idStr)
     {
-        //string name = "rabin" + idStr;
-        //string momname = "rabin mom" + idStr;
-        //string dadname = "rabin dad" + idStr;
+        string name = "rabin" + idStr;
+        string momname = "rabin mom" + idStr;
+        string dadname = "rabin dad" + idStr;
 
-        //int age = 0 + id;
-        //int momage = 50 + id;
-        //int dadage = 100 + id;
+        int age = 0 + id;
+        int momage = 50 + id;
+        int dadage = 100 + id;
 
-        for(int i = 0; i< 1; ++i)
+        //for(int i = 0; i< 1; ++i)
         {
-            auto addstr = to_string(i);
-            string name = "rabin" + idStr + addstr;
-            string momname = "rabin mom" + idStr + addstr;
-            string dadname = "rabin dad" + idStr + addstr;
+            //auto addstr = to_string(i);
+            //string name = "rabin" + idStr + addstr;
+            //string momname = "rabin mom" + idStr + addstr;
+            //string dadname = "rabin dad" + idStr + addstr;
 
             nameLog.stackingWrite(&NameLog::ChangeNameLvalue, name, momname, dadname);
 
-            int age = 0 + id + i;
-            int momage = 50 + id + i;
-            int dadage = 100 + id + i;
+            //int age = 0 + id + i;
+            //int momage = 50 + id + i;
+            //int dadage = 100 + id + i;
 
             ageLog.stackingWrite(&AgeLog::ChangeAge, age, momage, dadage);
         }
@@ -135,26 +135,26 @@ struct PersonLogNormal
 
     void Update(unsigned int& id, string& idStr)
     {
-        //auto name = "rabin" + idStr;
-        //auto momname = "rabin mom" + idStr;
-        //auto dadname = "rabin dad" + idStr;
+        auto name = "rabin" + idStr;
+        auto momname = "rabin mom" + idStr;
+        auto dadname = "rabin dad" + idStr;
 
-        //int age = 0 + id;
-        //int momage = 50 + id;
-        //int dadage = 100 + id;
+        int age = 0 + id;
+        int momage = 50 + id;
+        int dadage = 100 + id;
 
-        for (int i = 0; i < 1; ++i)
+        //for (int i = 0; i < 1; ++i)
         {
-            auto addstr = to_string(i);
-            string name = "rabin" + idStr + addstr;
-            string momname = "rabin mom" + idStr + addstr;
-            string dadname = "rabin dad" + idStr + addstr;
+            //auto addstr = to_string(i);
+            //string name = "rabin" + idStr + addstr;
+            //string momname = "rabin mom" + idStr + addstr;
+            //string dadname = "rabin dad" + idStr + addstr;
 
             nameLog->ChangeNameLvalue(name, momname, dadname);
 
-            int age = 0 + id + i;
-            int momage = 50 + id + i;
-            int dadage = 100 + id + i;
+            //int age = 0 + id + i;
+            //int momage = 50 + id + i;
+            //int dadage = 100 + id + i;
 
             ageLog->ChangeAge(age, momage, dadage);
         }
