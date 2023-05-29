@@ -15,53 +15,53 @@ using namespace std;
 //-----------------------------------------------------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
-// This is the generic case
-template <typename... T>
-struct forwarder : public std::tuple<T...> {
-	using std::tuple<T...>::tuple;
-};
-
-// This is the case when just one variable is being captured.
-template <typename T>
-struct forwarder<T> : public std::tuple<T> {
-	using std::tuple<T>::tuple;
-
-	// Pointer-like accessors
-	auto& operator *() {
-		return std::get<0>(*this);
-	}
-
-	const auto& operator *() const {
-		return std::get<0>(*this);
-	}
-
-	auto* operator ->() {
-		return &std::get<0>(*this);
-	}
-
-	const auto* operator ->() const {
-		return &std::get<0>(*this);
-	}
-};
-
-// std::tuple_size needs to be specialized for our type, 
-// so that std::apply can be used.
-namespace std {
-	template <typename... T>
-	struct tuple_size<forwarder<T...>> : tuple_size<tuple<T...>> {};
-}
-
-// The below two functions declarations are used by the deduction guide
-// to determine whether to copy or reference the variable
-template <typename T>
-T forwarder_type(const T&);
-
+//// This is the generic case
+//template <typename... T>
+//struct forwarder : public std::tuple<T...> {
+//	using std::tuple<T...>::tuple;
+//};
+//
+//// This is the case when just one variable is being captured.
 //template <typename T>
-//T& forwarder_type(T&);
-
-// Here comes the deduction guide
-template <typename... T>
-forwarder(T&&... t) -> forwarder<decltype(forwarder_type(std::forward<T>(t)))...>;
+//struct forwarder<T> : public std::tuple<T> {
+//	using std::tuple<T>::tuple;
+//
+//	// Pointer-like accessors
+//	auto& operator *() {
+//		return std::get<0>(*this);
+//	}
+//
+//	const auto& operator *() const {
+//		return std::get<0>(*this);
+//	}
+//
+//	auto* operator ->() {
+//		return &std::get<0>(*this);
+//	}
+//
+//	const auto* operator ->() const {
+//		return &std::get<0>(*this);
+//	}
+//};
+//
+//// std::tuple_size needs to be specialized for our type, 
+//// so that std::apply can be used.
+//namespace std {
+//	template <typename... T>
+//	struct tuple_size<forwarder<T...>> : tuple_size<tuple<T...>> {};
+//}
+//
+//// The below two functions declarations are used by the deduction guide
+//// to determine whether to copy or reference the variable
+//template <typename T>
+//T forwarder_type(const T&);
+//
+////template <typename T>
+////T& forwarder_type(T&);
+//
+//// Here comes the deduction guide
+//template <typename... T>
+//forwarder(T&&... t) -> forwarder<decltype(forwarder_type(std::forward<T>(t)))...>;
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------------------------------------
