@@ -63,113 +63,6 @@ T forwarder_type(const T&);
 template <typename... T>
 forwarder(T&&... t) -> forwarder<decltype(forwarder_type(std::forward<T>(t)))...>;
 
-////-----------------------------------------------------------------------------------------------------------------------------------------
-////-----------------------------------------------------------------------------------------------------------------------------------------
-
-//template <typename T>
-//class function;
-//
-////https://stackoverflow.com/questions/18453145/how-is-stdfunction-implemented
-//template <typename R, typename... Args>
-//class function<R(Args...)>
-//{
-//	// function pointer types for the type-erasure behaviors
-//	// all these std::byte* parameters are actually casted from some functor type
-//	typedef R(*invoke_fn_t)(std::byte*, Args&&...);
-//	typedef void (*construct_fn_t)(std::byte*, std::byte*);
-//	typedef void (*destroy_fn_t)(std::byte*);
-//
-//	// type-aware generic functions for invoking
-//	// the specialization of these functions won't be capable with
-//	//   the above function pointer types, so we need some cast
-//	template <typename Functor>
-//	static R invoke_fn(Functor* fn, Args&&... args)
-//	{
-//		return (*fn)(std::forward<Args>(args)...);
-//	}
-//
-//	template <typename Functor>
-//	static void construct_fn(Functor* construct_dst, Functor* construct_src)
-//	{
-//		// the functor type must be copy-constructible
-//		new (construct_dst) Functor(*construct_src);
-//	}
-//
-//	template <typename Functor>
-//	static void destroy_fn(Functor* f)
-//	{
-//		f->~Functor();
-//	}
-//
-//	// these pointers are storing behaviors
-//	invoke_fn_t invoke_f;
-//	construct_fn_t construct_f;
-//	destroy_fn_t destroy_f;
-//
-//	// erase the type of any functor and store it into a std::byte*
-//	// so the storage size should be obtained as well
-//	mutable alignas(8) std::byte data_ptr[8 * 14];
-//public:
-//	function()
-//		: invoke_f(nullptr)
-//		, construct_f(nullptr)
-//		, destroy_f(nullptr)
-//	{}
-//
-//	// construct from any functor type
-//	template <typename Functor>
-//	function(Functor f) noexcept
-//		// specialize functions and erase their type info by casting
-//		: invoke_f(reinterpret_cast<invoke_fn_t>(invoke_fn<Functor>))
-//		, construct_f(reinterpret_cast<construct_fn_t>(construct_fn<Functor>))
-//		, destroy_f(reinterpret_cast<destroy_fn_t>(destroy_fn<Functor>))
-//	{
-//		// copy the functor to internal storage
-//		this->construct_f(this->data_ptr, reinterpret_cast<std::byte*>(&f));
-//	}
-//
-//	function(function const& rhs) noexcept = delete;
-//	function& operator= (function const& rhs) = delete;
-//
-//	function(function&& rhs) noexcept
-//		: invoke_f(std::exchange(rhs.invoke_f, nullptr))
-//		, construct_f(std::exchange(rhs.construct_f, nullptr))
-//		, destroy_f(std::exchange(rhs.destroy_f, nullptr))
-//	{
-//		if (this->invoke_f) {
-//			std::memcpy(this->data_ptr, rhs.data_ptr, 8 * 14);
-//			std::memset(rhs.data_ptr, 0x00, 8 * 14);
-//		}
-//	}
-//
-//	function& operator=(function&& rhs) noexcept
-//	{
-//		invoke_f = std::exchange(rhs.invoke_f, nullptr);
-//		construct_f = std::exchange(rhs.construct_f, nullptr);
-//		destroy_f = std::exchange(rhs.destroy_f, nullptr);
-//
-//		if (this->invoke_f) {
-//			std::memcpy(this->data_ptr, rhs.data_ptr, 8 * 14);
-//			std::memset(rhs.data_ptr, 0x00, 8 * 14);
-//		}
-//		return *this;
-//	};
-//
-//	~function() noexcept
-//	{
-//		if (destroy_f != nullptr) {
-//			this->destroy_f(this->data_ptr);
-//		}
-//	}
-//
-//	// other constructors, from nullptr, from function pointers
-//
-//	R operator()(Args&&... args)
-//	{
-//		return this->invoke_f(this->data_ptr, std::forward<Args>(args)...);
-//	}
-//};
-
 //-----------------------------------------------------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
@@ -181,11 +74,11 @@ struct DataTaskBlockPair
 };
 
 template<class T>
-struct r_clustering_ptr;
-template<class T>
-struct w_clustering_ptr;
-template<class T>
 struct rw_clustering_ptr;
+template<class T>
+struct funcWrapperBase;
+template<class T>
+struct ClusteringMemoryPool;
 
 template<class T>
 struct clustering_ptr
@@ -195,10 +88,63 @@ private:
 	T* get()			{ return &((*poolHeadPtr)[clusterId].dataBlock[index]); }
 
 public:
-	friend struct w_clustering_ptr<T>;
 	friend struct rw_clustering_ptr<T>;
+	friend struct funcWrapperBase<T>;
+
+	clustering_ptr() = default;
 
 	//ToDo: Write proper constructors
+	clustering_ptr(std::vector<DataTaskBlockPair<T>>* _poolHeadPtr, unsigned int _clusterId, unsigned int _index)
+		: poolHeadPtr { _poolHeadPtr }
+		, clusterId { _clusterId }
+		, index {_index}
+	{
+	}
+
+	clustering_ptr(const clustering_ptr& rhs) noexcept
+		: poolHeadPtr { rhs.poolHeadPtr }
+		, clusterId { rhs.clusterId }
+		, index { rhs.index }
+	{
+	}
+
+	clustering_ptr& operator=(const clustering_ptr& rhs) noexcept
+	{
+		clustering_ptr temp(rhs);
+		temp.swap(*this);
+
+		return *this;
+	}
+
+	void yes(clustering_ptr& second) noexcept
+	{
+		std::swap(poolHeadPtr, second.poolHeadPtr);
+		std::swap(clusterId, second.clusterId);
+		std::swap(index, second.index);
+	}
+
+	clustering_ptr(clustering_ptr&& rhs) noexcept
+		: poolHeadPtr{ std::exchange(rhs.poolHeadPtr, nullptr) }
+		, clusterId{ std::exchange(rhs.clusterId, 0) }
+		, index { std::exchange(rhs.index, 0) }
+	{
+	}
+
+	clustering_ptr& operator=(clustering_ptr&& rhs) noexcept
+	{
+		poolHeadPtr = std::exchange(rhs.poolHeadPtr, nullptr);
+		clusterId = std::exchange(rhs.clusterId, 0);
+		index = std::exchange(rhs.index, 0);
+
+		return *this;
+	}
+
+	~clustering_ptr() noexcept
+	{
+		poolHeadPtr = nullptr;
+		clusterId = 0;
+		index = 0;
+	}
 
 	std::vector<DataTaskBlockPair<T>>* poolHeadPtr = nullptr;		//size 8
 	unsigned int clusterId = 0;										//size 4
@@ -206,42 +152,6 @@ public:
 
 	T const* const operator-> () const	{ return &((*poolHeadPtr)[clusterId].dataBlock[index]); }
 	T const* const get() const			{ return &((*poolHeadPtr)[clusterId].dataBlock[index]); }
-};
-template<class T>
-struct r_clustering_ptr 
-{
-private:
-	clustering_ptr<T> ptr;
-
-public:
-	//ToDo: Write proper constructors
-	T const* const operator-> () const	{ return ptr.get(); }
-	T const* const get() const			{ return ptr.get(); }
-	bool isValid()		const			{ return ptr.poolHeadPtr != nullptr; }
-};
-
-template<class T>
-struct w_clustering_ptr
-{
-private:
-	clustering_ptr<T> ptr;
-
-public:
-	//ToDo: Write proper constructors
-	bool isValid()	const				{ return ptr.poolHeadPtr != nullptr; }
-
-	void write(T&& other)
-	{
-		auto defferedWrite = [&](T&& other) { *ptr.get() = std::move(other); };
-		(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(defferedWrite);
-	}
-
-	template<typename memfn, typename... Args>
-	void write(memfn&& func, Args&&... args)
-	{
-		auto defferedWrite = [&]() {func(*ptr.get(), std::forward<Args>(args)...); };
-		(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(defferedWrite);
-	}
 };
 
 template<typename Sig>
@@ -293,68 +203,114 @@ struct functor {
 	}
 };
 
-template<typename memfn, typename Args>
-struct funcWrapper
+template<class T>
+struct funcWrapperBase 
+{
+	mutable clustering_ptr<T> clusterPtr;
+
+	inline funcWrapperBase(clustering_ptr<T> ptr) : clusterPtr {ptr}
+	{
+	}
+
+	inline funcWrapperBase(const funcWrapperBase& other) noexcept
+		: clusterPtr{ std::exchange(other.clusterPtr, clustering_ptr<T>()) }
+	{
+	}
+
+	inline funcWrapperBase(funcWrapperBase&& other) noexcept
+		: clusterPtr{ std::exchange(other.clusterPtr, clustering_ptr<T>()) }
+	{
+	}
+
+	inline funcWrapperBase& operator=(funcWrapperBase&& other) noexcept
+	{
+		clusterPtr = std::exchange(other.clusterPtr, clustering_ptr<T>());
+		return *this;
+	}
+
+	inline funcWrapperBase& operator=(const funcWrapperBase& other) noexcept
+	{
+		clusterPtr = std::exchange(other.clusterPtr, clustering_ptr<T>());
+		return *this;
+	}
+
+	virtual ~funcWrapperBase() noexcept = 0
+	{
+		clusterPtr = clustering_ptr<T>();
+	}
+
+protected:
+	std::byte* get() { return clusterPtr.get()->buffer; }
+	std::byte const* const get() const { return clusterPtr.get()->buffer; }
+
+	T* getThis() { return clusterPtr.get(); }
+	T const* const getThis() const { return clusterPtr.get(); }
+};
+
+template<class T, typename memfn, typename Args>
+struct funcWrapper : public funcWrapperBase<T>
 {
 	mutable memfn func;
-	mutable std::byte* funcBuffer;
 
-	inline funcWrapper(std::byte* buffPtr, memfn&& fn, Args&& args) noexcept
+	inline funcWrapper(clustering_ptr<T> ptr, memfn&& fn, Args&& args) noexcept
+		: funcWrapperBase<T>(ptr)
+		, func{ std::forward<memfn>(fn) }
 	{
 		func = std::forward<memfn>(fn);
-		funcBuffer = buffPtr;
 		new (&Get()) Args(std::forward<Args>(args));
 	}
 
 	inline funcWrapper(const funcWrapper& other) noexcept
-		: func{ std::exchange(other.func, nullptr) }
-		, funcBuffer{ std::exchange(other.funcBuffer, nullptr) }
+		: funcWrapperBase<T>(other)
+		, func{ std::exchange(other.func, nullptr) }
 	{
-
 	}
 
 	inline funcWrapper(funcWrapper&& other) noexcept
-		: func{ std::exchange(other.func, nullptr) }
-		, funcBuffer{ std::exchange(other.funcBuffer, nullptr) }
+		: funcWrapperBase<T>(std::move(other))
+		, func{ std::exchange(other.func, nullptr) }
 	{
 	}
 
 	inline funcWrapper& operator=(funcWrapper&& other) noexcept
 	{
+		funcWrapperBase<T>::operator=(std::move(other));
 		func = std::exchange(other.func, nullptr);
-		funcBuffer = std::exchange(other.funcBuffer, nullptr);
 		return *this;
 	}
 
 	inline funcWrapper& operator=(const funcWrapper& other) noexcept
 	{
+		funcWrapperBase<T>::operator=(other);
 		func = std::exchange(other.func, nullptr);
-		funcBuffer = std::exchange(other.funcBuffer, nullptr);
 		return *this;
 	}
 
 	inline ~funcWrapper() noexcept
 	{
-		if(func != nullptr && funcBuffer != nullptr)
+		if(func != nullptr)
 		{
 			Get().~Args();
 			func = nullptr;
-			funcBuffer = nullptr;
 		}
 	}
 
 	inline Args& Get() noexcept
 	{
-		return reinterpret_cast<Args&>(*funcBuffer);
+		return reinterpret_cast<Args&>(*this->get());
 	}
+
 	inline const Args& Get() const noexcept
 	{
-		return reinterpret_cast<const Args&>(*funcBuffer);
+		return reinterpret_cast<const Args&>(*this->get());
 	}
 
 	inline void operator()() noexcept
 	{
-		std::apply(func, Get());
+		auto args = std::make_tuple( this->getThis() );
+		auto tupArgs = std::tuple_cat(args, std::move(Get()));
+		//std::invoke(func, this->getThis(), Get());
+		std::apply(func, tupArgs);
 		//if constexpr (std::is_rvalue_reference<decltype(std::get<1>(arguments(func)))>::value) //works for void(T) and void (T&&)
 		//{
 		//	std::apply(std::move(func), std::move(Get()));
@@ -364,29 +320,6 @@ struct funcWrapper
 		//	std::apply(func, Get());
 		//}
 	}
-
-	//ToDo: Get rid of if unnecessary
-	/*funcWrapper(const Args& other)
-	{
-		new (&Get()) Args(other);
-	}
-
-	funcWrapper(Args&& other)
-	{
-		new (&Get()) Args(std::move(other));
-	}
-
-	funcWrapper& operator=(const Args& other)
-	{
-		Get() = other;
-		return *this;
-	}
-
-	funcWrapper& operator=(Args&& other)
-	{
-		Get() = std::move(other);
-		return *this;
-	}*/
 };
 
 template<class T>
@@ -478,7 +411,7 @@ public:
 		//(staticCheckForLvalue(std::forward<Args>(args)), ...);
 
 		auto& queue = (*ptr.poolHeadPtr)[ptr.clusterId].taskQueue;
-		auto defferedWrite = funcWrapper(ptr.get()->buffer, std::forward<memfn>(func), std::move(forwarder{ ptr.get(), std::move(args)... }));
+		auto defferedWrite = funcWrapper(ptr, std::forward<memfn>(func), std::move(std::make_tuple(std::move(args)... )));
 		//defferedWrite();
 		//queue.emplace_back(std::move(defferedWrite));
 	}
@@ -534,8 +467,9 @@ public:
 	}
 
 	~ClusteringMemoryPool() = default;
-private:
+
 	std::vector<DataTaskBlockPair<T>> m_memory_pool;
+private:
 	unsigned int m_block_size;
 };
 

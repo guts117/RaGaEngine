@@ -13,15 +13,22 @@ using namespace std;
 
 struct NameLog
 {
+private:
     string name;
     string motherName;
     string fatherName;
+public:
+    NameLog(std::string _name, std::string _motherName, std::string _fatherName)
+        : name{ _name }
+        , motherName{ _motherName }
+        , fatherName{ _fatherName }
+    {}
 
     void ChangeNameLvalue(string& _name, string& _motherName, string& _fatherName)
     {
-        name = std::move(_name);
-        motherName = std::move(_motherName);
-        fatherName = std::move(_fatherName);
+        name = _name;
+        motherName = _motherName;
+        fatherName = _fatherName;
     }
 
     void ChangeNameRvalue(string&& _name, string&& _motherName, string&& _fatherName)
@@ -31,21 +38,32 @@ struct NameLog
         fatherName = std::move(_fatherName);
     }
 
+    std::string GetName() const { return name; }
+
     alignas(alignof(std::string)) std::byte buffer[alignof(std::string) * 4];
 };
 
 struct AgeLog
 {
+private:
     int age;
     int motherAge;
     int fatherAge;
+public:
+    AgeLog(int _age, int _motherAge, int _fatherAge)
+        : age { _age}
+        , motherAge { _motherAge}
+        , fatherAge { _fatherAge}
+    {}
 
-    void ChangeAge(int _age, int _motherAge, int _fatherAge)
+    void ChangeAge(int& _age, int& _motherAge, int& _fatherAge)
     {
         age = _age;
         motherAge = _motherAge;
         fatherAge = _fatherAge;
     }
+
+    int GetAge() const { return age; }
 
     alignas(alignof(int)) std::byte buffer[alignof(int) * 5];
 };
@@ -86,7 +104,7 @@ struct PersonLog
             //int momage = 50 + id + i;
             //int dadage = 100 + id + i;
 
-            //ageLog.write(&AgeLog::ChangeAge, age, momage, dadage);
+            //ageLog.stackingWrite(&AgeLog::ChangeAge, age, momage, dadage);
         }
         //nameLog.write(&NameLog::ChangeName, name, momname, dadname);
         //nameLog.write(&NameLog::ChangeName, name, momname, dadname);
@@ -127,13 +145,13 @@ struct PersonHandler
 
     void Update()
     {
-        std::random_device rd;
-        std::mt19937 g(rd());
+        //std::random_device rd;
+        //std::mt19937 g(rd());
 
         for (auto& pL : personLogs)
         {
-            auto id = g();
-            auto idStr = to_string(id);
+            unsigned int id = 1;
+            string idStr = "yes";//to_string(id);
             pL.Update(id, idStr);
         }
     }
@@ -208,35 +226,34 @@ struct PersonHandlerNormal
 
     void Update()
     {
-        std::random_device rd;
-        std::mt19937 g(rd());
+        //std::random_device rd;
+        //std::mt19937 g(rd());
 
         for (auto& pL : personLogs)
         {
-            auto id = g();
-            auto idStr = to_string(id);
-
+            unsigned int id = 1;// g();
+            //auto idStr = to_string(id);
+            string idStr = "yes";
             pL.Update(id, idStr);
         }
     }
 };
 
-ClusteringMemoryPool<NameLog> nameLogPool = ClusteringMemoryPool<NameLog>(100);
-ClusteringMemoryPool<AgeLog> ageLogPool = ClusteringMemoryPool<AgeLog>(100);
-vector<PersonHandler> personHandlers = vector<PersonHandler>();
-
 void TestClustering()
 {
-    for (int a = 0; a < 1000; ++a)
+    ClusteringMemoryPool<NameLog> nameLogPool = ClusteringMemoryPool<NameLog>(100);
+    ClusteringMemoryPool<AgeLog> ageLogPool = ClusteringMemoryPool<AgeLog>(100);
+    vector<PersonHandler> personHandlers = vector<PersonHandler>();
+
+    for (int a = 0; a < 1; ++a)
     {
         auto personHandlr = PersonHandler();
 
-        for (int i = 0; i < 10000; ++i)
+        for (int i = 0; i < 10; ++i)
         {
             auto iid = i + a;
             auto id = to_string(iid);
-            auto personLog = PersonLog{ nameLogPool.AddToPool(NameLog{ "rabin" + id,  "rabin mom" + id, "rabin dad" + id })
-                                , ageLogPool.AddToPool(AgeLog{ 0 + iid, 50 + iid, 100 + iid }) };
+            auto personLog = PersonLog{ nameLogPool.AddToPool(NameLog{ "rabin" + id,  "rabin mom" + id, "rabin dad" + id }), ageLogPool.AddToPool(AgeLog( 0 + iid, 50 + iid, 100 + iid )) };
             personHandlr.personLogs.push_back(std::move(personLog));
         }
 
@@ -253,7 +270,7 @@ void TestClustering()
     for (auto& pH : personHandlers)
     {
         //pH.Shuffle(g);        //ToDo: Figure out why this causes funcWrapper class to fuck up.
-        pH.Update();
+        //pH.Update();
     }
 
     nameLogPool.ExecuteClusteredTasks();
@@ -275,11 +292,11 @@ void TestNormal()
     vector<shared_ptr<AgeLog>> ageLogPool = vector<shared_ptr<AgeLog>>();
     vector<shared_ptr<PersonHandlerNormal>> personHandlers = std::vector<shared_ptr<PersonHandlerNormal>>();
 
-    for (int a = 0; a < 1000; ++a)
+    for (int a = 0; a < 1; ++a)
     {
         auto personHandlr = std::make_shared<PersonHandlerNormal>(PersonHandlerNormal());
 
-        for (int i = 0; i < 10000; ++i)
+        for (int i = 0; i < 10; ++i)
         {
             auto id = to_string(i);
             nameLogPool.push_back(std::make_shared<NameLog>(NameLog{ "rabin" + id,  "rabin mom" + id, "rabin dad" + id }));
@@ -322,8 +339,8 @@ void TestClusteringPoolWriteValidity()
     auto rw_ptr1 = nameLogPool.AddToPool(NameLog{ "rabin",  "rabin mom", "rabin dad" });
     auto rw_ptr2 = ageLogPool.AddToPool(AgeLog{ 200,  200, 200 });
 
-    cout << "Before write: " << rw_ptr1.get()->name << endl;
-    cout << "Before write: " << rw_ptr2.get()->age << endl;
+    cout << "Before write: " << rw_ptr1.get()->GetName() << endl;
+    cout << "Before write: " << rw_ptr2.get()->GetAge() << endl;
 
     {
         string name = "valid write";
@@ -340,14 +357,14 @@ void TestClusteringPoolWriteValidity()
     {
         nameLogPool.ExecuteClusteredTasks();
         ageLogPool.ExecuteClusteredTasks();
-        cout << "After write: " << rw_ptr1.get()->name << endl;
-        cout << "After write: " << rw_ptr2.get()->age << endl;
+        cout << "After write: " << rw_ptr1.get()->GetName() << endl;
+        cout << "After write: " << rw_ptr2.get()->GetAge() << endl;
     }
 }
 
 int main()
 {
-    TestNormal();
+    //TestNormal();
     TestClustering();
     //TestClusteringPoolWriteValidity();
 }
