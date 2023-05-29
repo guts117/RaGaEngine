@@ -93,20 +93,12 @@ struct PersonLog
             string dadname = "rabin dad" + idStr + addstr;
 
             nameLog.stackingWrite(&NameLog::ChangeNameLvalue, name, momname, dadname);
-            //nameLog.oneTimeWrite(&NameLog::ChangeNameRvalue, name, momname, dadname);
-            //nameLog.oneTimeWrite(&NameLog::ChangeNameRvalue, name, momname, dadname);
-            //nameLog.oneTimeWrite(&NameLog::ChangeNameRvalue, name, momname, dadname);
-            //nameLog.oneTimeWrite(&NameLog::ChangeNameRvalue, name, momname, dadname);
-            //nameLog.oneTimeWrite(&NameLog::ChangeNameRvalue, name, momname, dadname);
 
-            //nameLog.write(&NameLog::ChangeNameRValue, name, momname, dadname);
-            //nameLog.write(&NameLog::ChangeNameRvalue, name, momname, dadname);
+            //int age = 0 + id + i;
+            //int momage = 50 + id + i;
+            //int dadage = 100 + id + i;
 
-            int age = 0 + id + i;
-            int momage = 50 + id + i;
-            int dadage = 100 + id + i;
-
-            ageLog.stackingWrite(&AgeLog::ChangeAge, age, momage, dadage);
+            //ageLog.stackingWrite(&AgeLog::ChangeAge, age, momage, dadage);
         }
     }
 };
