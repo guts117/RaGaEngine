@@ -2,89 +2,131 @@
 #define CLUSTERING_MEMORY_POOL
 
 #include <functional>
+#include <memory>
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <tuple>
 
-//https://vittorioromeo.info/index/blog/capturing_perfectly_forwarded_objects_in_lambdas.html
-//https://stackoverflow.com/questions/26831382/capturing-perfectly-forwarded-variable-in-lambda
-//-----------------------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------------------
+using namespace std;
 
-// This is the generic case
-template <typename... T>
-struct forwarder : public std::tuple<T...> {
-	using std::tuple<T...>::tuple;
+//https://stackoverflow.com/questions/28509273/get-types-of-c-function-parameters
+//----------------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------
+
+template<typename Sig>
+struct signature;
+template<typename Ret, typename...Args>
+struct signature<Ret(Args...)> {
+	using type = tuple<Args...>;
 };
 
-// This is the case when just one variable is being captured.
-template <typename T>
-struct forwarder<T> : public std::tuple<T> {
-	using std::tuple<T>::tuple;
+template<typename Ret, typename Obj, typename...Args>
+struct signature<Ret(Obj::*)(Args...)> {
+	using type = tuple<Args...>;
+};
+template<typename Ret, typename Obj, typename...Args>
+struct signature<Ret(Obj::*)(Args...)const> {
+	using type = tuple<Args...>;
+};
+template<typename Fun>
+concept is_fun = is_function_v<Fun>;
 
-	// Pointer-like accessors
-	auto& operator *() {
-		return std::get<0>(*this);
-	}
+template<typename Fun>
+concept is_mem_fun = is_member_function_pointer_v<decay_t<Fun>>;
 
-	const auto& operator *() const {
-		return std::get<0>(*this);
-	}
+template<typename Fun>
+concept is_functor = is_class_v<decay_t<Fun>> && requires(Fun && t) {
+	&decay_t<Fun>::operator();
+};
 
-	auto* operator ->() {
-		return &std::get<0>(*this);
-	}
+template<is_functor T>
+auto arguments(T&& t) -> signature<decltype(&decay_t<T>::operator())>::type;
 
-	const auto* operator ->() const {
-		return &std::get<0>(*this);
+template<is_functor T>
+auto arguments(const T& t) -> signature<decltype(&decay_t<T>::operator())>::type;
+
+// template<is_fun T>
+// auto arguments(T&& t)->signature<T>::type;
+
+template<is_fun T>
+auto arguments(const T& t) -> signature<T>::type;
+
+template<is_mem_fun T>
+auto arguments(T&& t) -> signature<decay_t<T>>::type;
+
+template<is_mem_fun T>
+auto arguments(const T& t) -> signature<decay_t<T>>::type;
+struct functor {
+	int operator()(const string&, double) {
+		return 0;
 	}
 };
 
-// std::tuple_size needs to be specialized for our type, 
-// so that std::apply can be used.
-namespace std {
-	template <typename... T>
-	struct tuple_size<forwarder<T...>> : tuple_size<tuple<T...>> {};
-}
-
-// The below two functions declarations are used by the deduction guide
-// to determine whether to copy or reference the variable
-template <typename T>
-T forwarder_type(const T&);
-
-template <typename T>
-T& forwarder_type(T&);
-
-// Here comes the deduction guide
-template <typename... T>
-forwarder(T&&... t) -> forwarder<decltype(forwarder_type(std::forward<T>(t)))...>;
-
-//-----------------------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------
 
 template<class T>
 struct DataTaskBlockPair
 {
 	std::vector<T> dataBlock;
-	std::vector<std::function<void()>> taskQueue;
+	std::vector<std::move_only_function<void()>> taskQueue;
 };
 
 template<class T>
-struct r_clustering_ptr;
-template<class T>
-struct w_clustering_ptr;
-template<class T>
 struct rw_clustering_ptr;
+template<class T>
+struct funcWrapperToCluster;
+template<class T>
+struct ClusteringMemoryPool;
 
 template<class T>
 struct clustering_ptr
 {
 private:
-	T* operator->()		{ return &((*poolHeadPtr)[clusterId].dataBlock[index]); }
-	T* get()			{ return &((*poolHeadPtr)[clusterId].dataBlock[index]); }
+	inline T* operator->()		{ return &((*poolHeadPtr)[clusterId].dataBlock[index]); }
+	inline T* get()			
+	{ 
+		return &((*poolHeadPtr)[clusterId].dataBlock[index]); 
+	}
 
 public:
-	friend struct w_clustering_ptr<T>;
 	friend struct rw_clustering_ptr<T>;
+	friend struct funcWrapperToCluster<T>;
 
-	//ToDo: Write proper constructors
+	inline clustering_ptr() = default;
+
+	inline clustering_ptr(std::vector<DataTaskBlockPair<T>>* _poolHeadPtr, unsigned int _clusterId, unsigned int _index)
+		: poolHeadPtr { _poolHeadPtr }
+		, clusterId { _clusterId }
+		, index {_index}
+	{
+	}
+
+	inline clustering_ptr(const clustering_ptr& rhs) noexcept
+		: poolHeadPtr { rhs.poolHeadPtr }
+		, clusterId { rhs.clusterId }
+		, index { rhs.index }
+	{
+	}
+
+	inline clustering_ptr& operator=(const clustering_ptr& rhs) noexcept
+	{
+		poolHeadPtr = rhs.poolHeadPtr;
+		clusterId = rhs.clusterId;
+		index = rhs.index;
+		return *this;
+	}
+
+	clustering_ptr(clustering_ptr&& rhs) noexcept = delete;
+	clustering_ptr& operator=(clustering_ptr&& rhs) noexcept = delete;
+
+	inline ~clustering_ptr() noexcept
+	{
+		poolHeadPtr = nullptr;
+		clusterId = 0;
+		index = 0;
+	}
 
 	std::vector<DataTaskBlockPair<T>>* poolHeadPtr = nullptr;		//size 8
 	unsigned int clusterId = 0;										//size 4
@@ -93,45 +135,102 @@ public:
 	T const* const operator-> () const	{ return &((*poolHeadPtr)[clusterId].dataBlock[index]); }
 	T const* const get() const			{ return &((*poolHeadPtr)[clusterId].dataBlock[index]); }
 };
-template<class T>
-struct r_clustering_ptr 
-{
-private:
-	clustering_ptr<T> ptr;
 
-public:
-	//ToDo: Write proper constructors
-	T const* const operator-> () const	{ return ptr.get(); }
-	T const* const get() const			{ return ptr.get(); }
-	bool isValid()		const			{ return ptr.poolHeadPtr != nullptr; }
+template<class T>
+struct funcWrapperToCluster final
+{
+	std::byte* get(clustering_ptr<T>& ptr) 
+	{ 
+		return ptr.get()->buffer;
+	}
+	std::byte const* const get(const clustering_ptr<T>& ptr) const 
+	{ 
+		return ptr.get()->buffer;
+	}
+
+	T* getThis(clustering_ptr<T>& ptr) { return ptr.get(); }
+	T const* const getThis(const clustering_ptr<T>& ptr) const { return ptr.get(); }
+};
+
+template<class T, typename memfn, typename Args>
+struct funcWrapper final
+{
+	mutable clustering_ptr<T> clusterPtr;
+	mutable memfn func;
+	mutable funcWrapperToCluster<T> inter;
+
+	inline funcWrapper(clustering_ptr<T>& ptr, memfn&& fn, Args&& args) noexcept
+		: clusterPtr { ptr }
+		, func{ std::forward<memfn>(fn) }
+	{
+		new (Get()) Args(std::forward<Args>(args));
+	}
+
+	inline funcWrapper(const funcWrapper& other) noexcept
+		: clusterPtr { other.clusterPtr }
+		, func{ std::exchange(other.func, nullptr) }
+	{	
+	}
+
+	inline funcWrapper& operator=(const funcWrapper& other) noexcept
+	{
+		clusterPtr = other.clusterPtr;
+		func = std::exchange(other.func, nullptr);
+		return *this;
+	}
+
+	funcWrapper(funcWrapper&& other) noexcept 
+		: clusterPtr{ other.clusterPtr }
+		, func{ std::exchange(other.func, nullptr) }
+	{
+	}
+	funcWrapper& operator=(funcWrapper&& other)
+	{
+		clusterPtr = other.clusterPtr;
+		func = std::exchange(other.func, nullptr);
+		return *this;
+	}
+
+	inline ~funcWrapper() noexcept
+	{
+		if(func != nullptr)
+		{
+			auto ptr = Get();
+			ptr->~Args();
+			std::memset(ptr, 0, sizeof(ptr));
+		}
+	}
+
+	inline Args* Get() noexcept
+	{
+		return reinterpret_cast<Args*>(inter.get(clusterPtr));
+	}
+
+	inline const Args* Get() const noexcept
+	{
+		return &reinterpret_cast<const Args*>(inter.get(clusterPtr));
+	}
+
+	inline void operator()() noexcept
+	{
+		auto args = std::make_tuple(inter.getThis(clusterPtr) );
+		auto tupArgs = std::tuple_cat(args, std::move(*Get()));
+
+		//works for void(T) and void (T&&)
+		if constexpr (std::is_rvalue_reference<decltype(std::get<1>(arguments(func)))>::value) 
+		{
+			std::apply(std::move(func), std::move(tupArgs));
+		}
+		//works for void(T&)
+		else 
+		{
+			std::apply(func, tupArgs);
+		}
+	}
 };
 
 template<class T>
-struct w_clustering_ptr
-{
-private:
-	clustering_ptr<T> ptr;
-
-public:
-	//ToDo: Write proper constructors
-	bool isValid()	const				{ return ptr.poolHeadPtr != nullptr; }
-
-	void write(T&& other)
-	{
-		auto defferedWrite = [&](T&& other) { *ptr.get() = std::move(other); };
-		(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(defferedWrite);
-	}
-
-	template<typename memfn, typename... Args>
-	void write(memfn&& func, Args&&... args)
-	{
-		auto defferedWrite = [&]() {func(*ptr.get(), std::forward<Args>(args)...); };
-		(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(defferedWrite);
-	}
-};
-
-template<class T>
-struct rw_clustering_ptr
+struct rw_clustering_ptr final
 {
 private:
 	clustering_ptr<T> ptr;
@@ -144,42 +243,72 @@ public:
 	T const* const get() const			{ return ptr.get(); }
 	bool isValid() const				{ return ptr.poolHeadPtr != nullptr; }
 
-	void write(T&& other)
-	{
-		auto defferedWrite = [&](T&& other) { *ptr.get() = std::move(other); };
-		(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(defferedWrite);
-	}
-
-//https://stackoverflow.com/questions/2821223/how-would-one-call-stdforward-on-all-arguments-in-a-variadic-function
 	template<typename memfn, typename... Args>
-	void shallowWrite(memfn&& func, Args&&... args)
+	void oneTimeWrite(memfn&& func, Args&&... args)
 	{
-		//std::invoke(std::forward<memfn>(func), ptr.get(), std::forward<Args>(args)...);
-		
-		auto defferedWrite = [func = std::move(func), args..., this]() mutable
+		//ToDo: check whether all args are of the same reference type(i.e all lvalue or all rvalue)
+		//auto staticCheckForLvalue = [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_lvalue_reference<packArg>::value, "Has lvalue reference please change"); };
+		//(staticCheckForLvalue(std::forward<Args>(args)), ...);
+
+		byte* buf = ptr.get()->buffer;
+		byte testblock[sizeof(buf) / sizeof(*buf)];
+		memset(testblock, 0, sizeof(testblock));
+
+		if (!memcmp(testblock, buf, sizeof(buf) / sizeof(*buf)))
 		{
-			std::invoke(std::forward<memfn>(func), ptr.get(), std::forward<Args>(args)...);
-		};
-		//defferedWrite();
-		(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(std::move(defferedWrite));
+			auto& queue = (*ptr.poolHeadPtr)[ptr.clusterId].taskQueue;
+			auto defferedWrite = funcWrapper(ptr, std::forward<memfn>(func), std::move(std::make_tuple(std::move(args)...)));
+			queue.emplace_back(std::move(defferedWrite));
+		}
 	}
 
-//ToDo: Capture by move thingy https://marcoarena.wordpress.com/2012/11/01/learn-how-to-capture-by-move/
-	template<typename memfn, typename... Args>
-	void write(memfn&& func, Args&&... args)
-	{
-		auto staticCheckForLvalue = [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_lvalue_reference<packArg>::value, "Has lvalue reference please change"); };
+	//template<typename memfn, typename... Args>
+	//void updateWrite (memfn&& func, Args&&... args)
+	//{
+	//	//ToDo: check whether all args are of the same reference type(i.e all lvalue or all rvalue)
+	//	//auto staticCheckForLvalue = [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_lvalue_reference<packArg>::value, "Has lvalue reference please change"); };
+	//	//(staticCheckForLvalue(std::forward<Args>(args)), ...);
 
-		(staticCheckForLvalue(std::forward<Args>(args)), ...);
+	//	//byte* buf = ptr.get()->buffer;
+	//	//byte testblock[sizeof(buf) / sizeof(*buf)];
+	//	//memset(testblock, 0, sizeof(testblock));
 
-		//std::apply(func, forwarder{ ptr.get(), args ... });
-		auto defferedWrite = [func = std::move(func), args = std::move(forwarder{ ptr.get(), args... })]() mutable
-		{
-			std::apply(std::move(func), std::move(args));
-		};
-		//defferedWrite();
-		(*ptr.poolHeadPtr)[ptr.clusterId].taskQueue.emplace_back(std::move(defferedWrite));
-	}
+	//	//ToDo: make a write that deletes existing funcWrapper and overwrites at the same place
+
+	//	//if (!memcmp(testblock, buf, sizeof(buf) / sizeof(*buf)))
+	//	//{
+	//	//	auto& queue = (*ptr.poolHeadPtr)[ptr.clusterId].taskQueue;
+	//	//	auto defferedWrite = funcWrapper(ptr, std::forward<memfn>(func), std::move(std::make_tuple(std::move(args)...)));
+	//	//	queue.emplace_back(std::move(defferedWrite));
+	//	//}
+	//	//else
+	//	//{
+	//	//}
+	//}
+
+	//template<typename memfn, typename... Args>
+	//void stackingWrite(memfn&& func, Args&&... args)
+	//{
+	//	//ToDo: check whether all args are of the same reference type(i.e all lvalue or all rvalue)
+	//	//auto staticCheckForLvalue = [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_lvalue_reference<packArg>::value, "Has lvalue reference please change"); };
+	//	//(staticCheckForLvalue(std::forward<Args>(args)), ...);
+
+	//	//byte* buf = ptr.get()->buffer;
+	//	//byte testblock[sizeof(buf) / sizeof(*buf)];
+	//	//memset(testblock, 0, sizeof(testblock));
+
+	//	//ToDo: make a write that deletes existing funcWrapper and adds a new one at the end
+
+	//	//if (!memcmp(testblock, buf, sizeof(buf) / sizeof(*buf)))
+	//	//{
+	//	//	auto& queue = (*ptr.poolHeadPtr)[ptr.clusterId].taskQueue;
+	//	//	auto defferedWrite = funcWrapper(ptr, std::forward<memfn>(func), std::move(std::make_tuple(std::move(args)...)));
+	//	//	queue.emplace_back(std::move(defferedWrite));
+	//	//}
+	//	//else
+	//	//{
+	//	//}
+	//}
 };
 
 template<class T>
@@ -197,7 +326,7 @@ public:
 		{
 			auto vec = std::vector<T>();
 			vec.reserve(m_block_size);
-			m_memory_pool.emplace_back(std::move(vec));
+			m_memory_pool.emplace_back(DataTaskBlockPair<T>{std::move(vec)});
 			return AddToPool(std::move(obj));
 		}
 		else
@@ -213,7 +342,7 @@ public:
 			{
 				auto vec = std::vector<T>();
 				vec.reserve(m_block_size);
-				m_memory_pool.emplace_back(std::move(vec));
+				m_memory_pool.emplace_back(DataTaskBlockPair<T>{std::move(vec)});
 				return AddToPool(std::move(obj));
 			}
 		}
@@ -223,7 +352,7 @@ public:
 	{
  		for (auto& a : m_memory_pool) 
 		{
-			for (auto &b : a.taskQueue) 
+			for (auto& b : a.taskQueue) 
 			{
 				b();
 			}
@@ -232,8 +361,9 @@ public:
 	}
 
 	~ClusteringMemoryPool() = default;
-private:
+
 	std::vector<DataTaskBlockPair<T>> m_memory_pool;
+private:
 	unsigned int m_block_size;
 };
 
