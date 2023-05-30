@@ -190,8 +190,8 @@ struct PersonHandlerNormal
 
 void TestClustering()
 {
-    ClusteringMemoryPool<NameLog> nameLogPool = ClusteringMemoryPool<NameLog>(100);
-    ClusteringMemoryPool<AgeLog> ageLogPool = ClusteringMemoryPool<AgeLog>(100);
+    ClusteringMemoryPool<NameLog> nameLogPool = ClusteringMemoryPool<NameLog>(10000);
+    ClusteringMemoryPool<AgeLog> ageLogPool = ClusteringMemoryPool<AgeLog>(10000);
     vector<PersonHandler> personHandlers = vector<PersonHandler>();
 
     for (int a = 0; a < 1000; ++a)
