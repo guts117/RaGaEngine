@@ -282,8 +282,8 @@ void TestNormal()
 
 void TestClusteringPoolWriteValidity()
 {
-    ClusteringMemoryPool<AgeLog> ageLogPool = ClusteringMemoryPool<AgeLog>(8);
-    ClusteringMemoryPool<NameLog> nameLogPool = ClusteringMemoryPool<NameLog>(8);
+    ClusteringMemoryPool<NameLog> nameLogPool = ClusteringMemoryPool<NameLog>(1);
+    ClusteringMemoryPool<AgeLog> ageLogPool = ClusteringMemoryPool<AgeLog>(1);
 
     auto rw_ptr1 = nameLogPool.AddToPool(NameLog{ "rabin",  "rabin mom", "rabin dad" });
     auto rw_ptr2 = ageLogPool.AddToPool(AgeLog{ 200,  200, 200 });

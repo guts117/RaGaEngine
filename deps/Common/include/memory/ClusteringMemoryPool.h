@@ -254,11 +254,10 @@ public:
 		byte testblock[sizeof(buf) / sizeof(*buf)];
 		memset(testblock, 0, sizeof(testblock));
 
-		if (!memcmp(testblock, buf, sizeof(buf) / sizeof(*buf)))
+		if (!memcmp(testblock, buf, (sizeof(buf) / sizeof(*buf))))
 		{
 			auto& queue = (*ptr.poolHeadPtr)[ptr.clusterId].taskQueue;
-			auto defferedWrite = funcWrapper(ptr, std::forward<memfn>(func), std::move(std::make_tuple(std::move(args)...)));
-			queue.emplace_back(std::move(defferedWrite));
+			queue.emplace_back(std::move(funcWrapper(ptr, std::forward<memfn>(func), std::move(std::make_tuple(std::move(args)...)))));
 		}
 	}
 
@@ -326,7 +325,9 @@ public:
 		{
 			auto vec = std::vector<T>();
 			vec.reserve(m_block_size);
-			m_memory_pool.emplace_back(DataTaskBlockPair<T>{std::move(vec)});
+			auto vec2 = std::vector<std::move_only_function<void()>>();
+			vec2.reserve(m_block_size);
+			m_memory_pool.emplace_back(DataTaskBlockPair<T>{std::move(vec), std::move(vec2)});
 			return AddToPool(std::move(obj));
 		}
 		else
@@ -342,7 +343,9 @@ public:
 			{
 				auto vec = std::vector<T>();
 				vec.reserve(m_block_size);
-				m_memory_pool.emplace_back(DataTaskBlockPair<T>{std::move(vec)});
+				auto vec2 = std::vector<std::move_only_function<void()>>();
+				vec2.reserve(m_block_size);
+				m_memory_pool.emplace_back(DataTaskBlockPair<T>{std::move(vec), std::move(vec2)});
 				return AddToPool(std::move(obj));
 			}
 		}
