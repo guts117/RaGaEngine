@@ -91,7 +91,7 @@ struct PersonLog
         int momage = 50 + id;
         int dadage = 100 + id;
 
-        for(int i = 0; i< 100; ++i)
+        for(int i = 0; i< 1; ++i)
         {
             //auto addstr = to_string(i);
             //string name = "rabin" + idStr + addstr;
@@ -147,7 +147,7 @@ struct PersonLogNormal
         int momage = 50 + id;
         int dadage = 100 + id;
 
-        for (int i = 0; i < 100; ++i)
+        for (int i = 0; i < 1; ++i)
         {
             //auto addstr = to_string(i);
             //string name = "rabin" + idStr + addstr;
@@ -239,11 +239,11 @@ void TestNormal()
 {
     vector<shared_ptr<NameLog>> nameLogPool = vector<shared_ptr<NameLog>>();
     vector<shared_ptr<AgeLog>> ageLogPool = vector<shared_ptr<AgeLog>>();
-    vector<shared_ptr<PersonHandlerNormal>> personHandlers = std::vector<shared_ptr<PersonHandlerNormal>>();
+    vector<PersonHandlerNormal> personHandlers = std::vector<PersonHandlerNormal>();
 
     for (int a = 0; a < 1000; ++a)
     {
-        auto personHandlr = std::make_shared<PersonHandlerNormal>(PersonHandlerNormal());
+        auto personHandlr = PersonHandlerNormal();
 
         for (int i = 0; i < 10000; ++i)
         {
@@ -251,7 +251,7 @@ void TestNormal()
             nameLogPool.push_back(std::make_shared<NameLog>(NameLog{ "rabin" + id,  "rabin mom" + id, "rabin dad" + id }));
             ageLogPool.push_back(std::make_shared<AgeLog>(AgeLog{ 0 + i, 50 + i, 100 + i }));
             auto personLog = PersonLogNormal{ nameLogPool.back(), ageLogPool.back()};
-            personHandlr->personLogs.push_back(std::move(personLog));
+            personHandlr.personLogs.push_back(std::move(personLog));
         }
 
         personHandlers.push_back(std::move(personHandlr));
@@ -266,8 +266,8 @@ void TestNormal()
 
     for (auto& pH : personHandlers)
     {
-        //pH->Shuffle(g);
-        pH->Update();
+        //pH.Shuffle(g);
+        pH.Update();
     }
 
     auto end = chrono::high_resolution_clock::now();
