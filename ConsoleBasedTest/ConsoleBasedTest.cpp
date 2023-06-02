@@ -192,7 +192,8 @@ void TestClustering()
 {
     ClusteringMemoryPool<NameLog> nameLogPool = ClusteringMemoryPool<NameLog>(10000);
     ClusteringMemoryPool<AgeLog> ageLogPool = ClusteringMemoryPool<AgeLog>(10000);
-    vector<PersonHandler> personHandlers = vector<PersonHandler>();
+    ClusteringMemoryPool<PersonHandler> perHandlerPool = ClusteringMemoryPool<PersonHandler>(100);
+    vector<rw_clustering_ptr<PersonHandler>> personHandlers = vector<rw_clustering_ptr<PersonHandler>>();
 
     for (int a = 0; a < 1000; ++a)
     {
@@ -206,7 +207,7 @@ void TestClustering()
             personHandlr.personLogs.push_back(std::move(personLog));
         }
 
-        personHandlers.push_back(std::move(personHandlr));
+        perHandlerPool.AddToPool(std::move(personHandlr));
     }
 
     std::random_device rd;
@@ -219,9 +220,10 @@ void TestClustering()
     for (auto& pH : personHandlers)
     {
         //pH.Shuffle(g);
-        pH.Update();
+        pH.stackingWrite(&PersonHandler::Update);
     }
 
+    perHandlerPool.ExecuteClusteredTasks();
     nameLogPool.ExecuteClusteredTasks();
     ageLogPool.ExecuteClusteredTasks();
 

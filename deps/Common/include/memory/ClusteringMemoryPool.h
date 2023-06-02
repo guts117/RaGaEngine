@@ -261,6 +261,14 @@ public:
 		}
 	}
 
+	template<typename memfn>
+	void stackingWrite(memfn&& func)
+	{
+		auto& queue = (*ptr.poolHeadPtr)[ptr.clusterId].taskQueue;
+		auto defferedWrite = [func = std::forward<memfn>(func), this]() { std::invoke(func, ptr.get()); };
+		queue.emplace_back(std::move(defferedWrite));
+	}
+
 	//template<typename memfn, typename... Args>
 	//void updateWrite (memfn&& func, Args&&... args)
 	//{
