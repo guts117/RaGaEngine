@@ -372,7 +372,7 @@ public:
 		}
 	}
 
-	void ExecuteClusteredTasks()
+	void ExecuteClusteredTasksParallel()
 	{
 		vector<jthread> threads;
 
@@ -385,6 +385,18 @@ public:
 			auto startId = i * groupCount;
 			auto endId = (i + 1) * groupCount;
 			threads.emplace_back(&ClusteringMemoryPool<T>::ExecuteClusters, this, startId, endId);
+		}
+	}
+
+	void ExecuteClusteredTasksSerial()
+	{
+		for (auto& a : m_memory_pool) 
+		{
+			for (auto& b : a.taskQueue) 
+			{
+				b();
+			}
+			a.taskQueue.clear();
 		}
 	}
 
