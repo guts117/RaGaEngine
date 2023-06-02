@@ -188,6 +188,21 @@ struct PersonHandlerNormal
     }
 };
 
+void ExecutePersonHandlerTasks(ClusteringMemoryPool<PersonHandler> & personPool)
+{
+    personPool.ExecuteClusteredTasks();
+}
+
+void ExecuteNameLogTasks(ClusteringMemoryPool<NameLog>& namePool)
+{
+    namePool.ExecuteClusteredTasks();
+}
+
+void ExecuteAgeLogTasks(ClusteringMemoryPool<AgeLog>& agePool)
+{
+    agePool.ExecuteClusteredTasks();
+}
+
 void TestClustering()
 {
     ClusteringMemoryPool<NameLog> nameLogPool = ClusteringMemoryPool<NameLog>(10000);
@@ -203,11 +218,11 @@ void TestClustering()
         {
             auto iid = i + a;
             auto id = to_string(iid);
-            auto personLog = PersonLog{ nameLogPool.AddToPool(NameLog{ "rabin" + id,  "rabin mom" + id, "rabin dad" + id }), ageLogPool.AddToPool(AgeLog( 0 + iid, 50 + iid, 100 + iid )) };
+            auto personLog = PersonLog{ nameLogPool.AddToPool(NameLog{ "rabin" + id,  "rabin mom" + id, "rabin dad" + id }), ageLogPool.AddToPool(AgeLog(0 + iid, 50 + iid, 100 + iid)) };
             personHandlr.personLogs.push_back(std::move(personLog));
         }
 
-         personHandlers.emplace_back(perHandlerPool.AddToPool(std::move(personHandlr)));
+        personHandlers.emplace_back(perHandlerPool.AddToPool(std::move(personHandlr)));
     }
 
     std::random_device rd;
@@ -223,10 +238,14 @@ void TestClustering()
         pH.stackingWrite(&PersonHandler::Update);
     }
 
-    perHandlerPool.ExecuteClusteredTasks();
-    nameLogPool.ExecuteClusteredTasks();
-    ageLogPool.ExecuteClusteredTasks();
+    {
+        std::jthread perHandlerThread(ExecutePersonHandlerTasks, std::ref(perHandlerPool));
+    }
 
+    {
+        std::jthread nameLogThread(ExecuteNameLogTasks, std::ref(nameLogPool));
+        std::jthread ageLogThread(ExecuteAgeLogTasks, std::ref(ageLogPool));
+    }
     auto end = chrono::high_resolution_clock::now();
 
     // Calculating total time taken by the program.
