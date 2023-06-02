@@ -207,7 +207,7 @@ void TestClustering()
             personHandlr.personLogs.push_back(std::move(personLog));
         }
 
-        perHandlerPool.AddToPool(std::move(personHandlr));
+         personHandlers.emplace_back(perHandlerPool.AddToPool(std::move(personHandlr)));
     }
 
     std::random_device rd;
