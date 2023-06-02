@@ -76,61 +76,6 @@ public:
     int GetAge() const { return age; }
 };
 
-struct PersonLog
-{
-    rw_clustering_ptr<NameLog> nameLog;
-    rw_clustering_ptr<AgeLog> ageLog;
-
-    void Update(unsigned int& id, string& idStr)
-    {
-        string name = "rabin" + idStr;
-        string momname = "rabin mom" + idStr;
-        string dadname = "rabin dad" + idStr;
-
-        int age = 0 + id;
-        int momage = 50 + id;
-        int dadage = 100 + id;
-
-        for(int i = 0; i< 1; ++i)
-        {
-            //auto addstr = to_string(i);
-            //string name = "rabin" + idStr + addstr;
-            //string momname = "rabin mom" + idStr + addstr;
-            //string dadname = "rabin dad" + idStr + addstr;
-
-            nameLog.oneTimeWrite(&NameLog::ChangeNameLvalue, name, momname, dadname);
-
-            //int age = 0 + id + i;
-            //int momage = 50 + id + i;
-            //int dadage = 100 + id + i;
-
-            ageLog.oneTimeWrite(&AgeLog::ChangeAge, age, momage, dadage);
-        }
-    }
-};
-
-struct PersonHandler
-{
-    vector<PersonLog> personLogs;
-
-    void Shuffle(std::mt19937& g)
-    {
-        std::shuffle(personLogs.begin(), personLogs.end(), g);
-    }
-
-    void Update()
-    {
-        std::random_device rd;
-        std::mt19937 g(rd());
-
-        for (auto& pL : personLogs)
-        {
-            unsigned int id = g();
-            string idStr = to_string(id);
-            pL.Update(id, idStr);
-        }
-    }
-};
 
 struct PersonLogNormal
 {
@@ -188,11 +133,82 @@ struct PersonHandlerNormal
     }
 };
 
+struct PersonLog
+{
+    rw_clustering_ptr<NameLog> nameLog;
+    rw_clustering_ptr<AgeLog> ageLog;
+
+    void Update(unsigned int& id, string& idStr)
+    {
+        string name = "valid rabin" + idStr;
+        string momname = "valid rabin mom" + idStr;
+        string dadname = "valid rabin dad" + idStr;
+
+        int age = 0 + id;
+        int momage = 50 + id;
+        int dadage = 100 + id;
+
+        for(int i = 0; i< 1; ++i)
+        {
+            //auto addstr = to_string(i);
+            //string name = "rabin" + idStr + addstr;
+            //string momname = "rabin mom" + idStr + addstr;
+            //string dadname = "rabin dad" + idStr + addstr;
+
+            nameLog.oneTimeWrite(&NameLog::ChangeNameLvalue, name, momname, dadname);
+
+            //int age = 0 + id + i;
+            //int momage = 50 + id + i;
+            //int dadage = 100 + id + i;
+
+            ageLog.oneTimeWrite(&AgeLog::ChangeAge, age, momage, dadage);
+        }
+    }
+};
+
+struct PersonHandler
+{
+    vector<PersonLog> personLogs;
+
+    void Shuffle(std::mt19937& g)
+    {
+        std::shuffle(personLogs.begin(), personLogs.end(), g);
+    }
+
+    void Update()
+    {
+        std::random_device rd;
+        std::mt19937 g(rd());
+
+        for (auto& pL : personLogs)
+        {
+            unsigned int id = g();
+            string idStr = to_string(id);
+            pL.Update(id, idStr);
+        }
+    }
+};
+
+void ExecutePersonHandlerTasks(ClusteringMemoryPool<PersonHandler> & personPool)
+{
+    personPool.ExecuteClusteredTasks();
+}
+
+void ExecuteNameLogTasks(ClusteringMemoryPool<NameLog>& namePool)
+{
+    namePool.ExecuteClusteredTasks();
+}
+
+void ExecuteAgeLogTasks(ClusteringMemoryPool<AgeLog>& agePool)
+{
+    agePool.ExecuteClusteredTasks();
+}
+
 void TestClustering()
 {
     ClusteringMemoryPool<NameLog> nameLogPool = ClusteringMemoryPool<NameLog>(10000);
     ClusteringMemoryPool<AgeLog> ageLogPool = ClusteringMemoryPool<AgeLog>(10000);
-    ClusteringMemoryPool<PersonHandler> perHandlerPool = ClusteringMemoryPool<PersonHandler>(100);
+    ClusteringMemoryPool<PersonHandler> perHandlerPool = ClusteringMemoryPool<PersonHandler>(10);
     vector<rw_clustering_ptr<PersonHandler>> personHandlers = vector<rw_clustering_ptr<PersonHandler>>();
 
     for (int a = 0; a < 1000; ++a)
@@ -203,11 +219,11 @@ void TestClustering()
         {
             auto iid = i + a;
             auto id = to_string(iid);
-            auto personLog = PersonLog{ nameLogPool.AddToPool(NameLog{ "rabin" + id,  "rabin mom" + id, "rabin dad" + id }), ageLogPool.AddToPool(AgeLog( 0 + iid, 50 + iid, 100 + iid )) };
+            auto personLog = PersonLog{ nameLogPool.AddToPool(NameLog{ "rabin" + id,  "rabin mom" + id, "rabin dad" + id }), ageLogPool.AddToPool(AgeLog(0 + iid, 50 + iid, 100 + iid)) };
             personHandlr.personLogs.push_back(std::move(personLog));
         }
 
-         personHandlers.emplace_back(perHandlerPool.AddToPool(std::move(personHandlr)));
+        personHandlers.emplace_back(perHandlerPool.AddToPool(std::move(personHandlr)));
     }
 
     std::random_device rd;
@@ -223,9 +239,9 @@ void TestClustering()
         pH.stackingWrite(&PersonHandler::Update);
     }
 
-    perHandlerPool.ExecuteClusteredTasks();
-    nameLogPool.ExecuteClusteredTasks();
-    ageLogPool.ExecuteClusteredTasks();
+    ExecutePersonHandlerTasks(perHandlerPool);
+    ExecuteNameLogTasks(nameLogPool);
+    ExecuteAgeLogTasks(ageLogPool);
 
     auto end = chrono::high_resolution_clock::now();
 

@@ -7,6 +7,7 @@
 #include <vector>
 #include <algorithm>
 #include <tuple>
+#include <thread>
 
 using namespace std;
 
@@ -359,15 +360,31 @@ public:
 		}
 	}
 	
+	void ExecuteClusters(int startId, int endId)
+	{
+		for (int i = startId; i < endId; ++i)
+		{
+			for (auto& a : m_memory_pool[i].taskQueue)
+			{
+				a();
+			}
+			m_memory_pool[i].taskQueue.clear();
+		}
+	}
+
 	void ExecuteClusteredTasks()
 	{
- 		for (auto& a : m_memory_pool) 
+		vector<jthread> threads;
+
+		unsigned int poolSize = m_memory_pool.size();
+		auto threadCount = std::min(poolSize, std::thread::hardware_concurrency());
+
+		for(int i = 0; i < threadCount; ++i)
 		{
-			for (auto& b : a.taskQueue) 
-			{
-				b();
-			}
-			a.taskQueue.clear();
+			auto groupCount = poolSize / threadCount;
+			auto startId = i * groupCount;
+			auto endId = (i + 1) * groupCount;
+			threads.emplace_back(&ClusteringMemoryPool<T>::ExecuteClusters, this, startId, endId);
 		}
 	}
 
