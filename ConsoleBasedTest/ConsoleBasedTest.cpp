@@ -140,9 +140,9 @@ struct PersonLog
 
     void Update(unsigned int& id, string& idStr)
     {
-        string name = "rabin" + idStr;
-        string momname = "rabin mom" + idStr;
-        string dadname = "rabin dad" + idStr;
+        string name = "valid rabin" + idStr;
+        string momname = "valid rabin mom" + idStr;
+        string dadname = "valid rabin dad" + idStr;
 
         int age = 0 + id;
         int momage = 50 + id;
@@ -208,7 +208,7 @@ void TestClustering()
 {
     ClusteringMemoryPool<NameLog> nameLogPool = ClusteringMemoryPool<NameLog>(10000);
     ClusteringMemoryPool<AgeLog> ageLogPool = ClusteringMemoryPool<AgeLog>(10000);
-    ClusteringMemoryPool<PersonHandler> perHandlerPool = ClusteringMemoryPool<PersonHandler>(100);
+    ClusteringMemoryPool<PersonHandler> perHandlerPool = ClusteringMemoryPool<PersonHandler>(10);
     vector<rw_clustering_ptr<PersonHandler>> personHandlers = vector<rw_clustering_ptr<PersonHandler>>();
 
     for (int a = 0; a < 1000; ++a)

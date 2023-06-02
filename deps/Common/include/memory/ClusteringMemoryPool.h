@@ -374,35 +374,18 @@ public:
 
 	void ExecuteClusteredTasks()
 	{
-
-		//unsigned int n = std::thread::hardware_concurrency();
-
-		//auto clusterCount = m_memory_pool.size()  / 10;
-
-		//std::cout << clusterCount << std::endl;
-
 		vector<jthread> threads;
 
-		int poolSize = m_memory_pool.size();
-
-		auto threadCount = std::min(poolSize, 10);
+		unsigned int poolSize = m_memory_pool.size();
+		auto threadCount = std::min(poolSize, std::thread::hardware_concurrency());
 
 		for(int i = 0; i < threadCount; ++i)
 		{
-			auto startId = i * (m_memory_pool.size() / threadCount);
-			auto endId = (i + 1) * (m_memory_pool.size() / threadCount);
+			auto groupCount = poolSize / threadCount;
+			auto startId = i * groupCount;
+			auto endId = (i + 1) * groupCount;
 			threads.emplace_back(&ClusteringMemoryPool<T>::ExecuteClusters, this, startId, endId);
 		}
-
-		
- 	//	for (auto& a : m_memory_pool) 
-		//{
-		//	for (auto& b : a.taskQueue) 
-		//	{
-		//		b();
-		//	}
-		//	a.taskQueue.clear();
-		//}
 	}
 
 	~ClusteringMemoryPool() = default;
