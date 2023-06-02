@@ -7,6 +7,7 @@
 #include <vector>
 #include <algorithm>
 #include <tuple>
+#include <thread>
 
 using namespace std;
 
@@ -359,16 +360,49 @@ public:
 		}
 	}
 	
+	void ExecuteClusters(int startId, int endId)
+	{
+		for (int i = startId; i < endId; ++i)
+		{
+			for (auto& a : m_memory_pool[i].taskQueue)
+			{
+				a();
+			}
+			m_memory_pool[i].taskQueue.clear();
+		}
+	}
+
 	void ExecuteClusteredTasks()
 	{
- 		for (auto& a : m_memory_pool) 
+
+		//unsigned int n = std::thread::hardware_concurrency();
+
+		//auto clusterCount = m_memory_pool.size()  / 10;
+
+		//std::cout << clusterCount << std::endl;
+
+		vector<jthread> threads;
+
+		int poolSize = m_memory_pool.size();
+
+		auto threadCount = std::min(poolSize, 10);
+
+		for(int i = 0; i < threadCount; ++i)
 		{
-			for (auto& b : a.taskQueue) 
-			{
-				b();
-			}
-			a.taskQueue.clear();
+			auto startId = i * (m_memory_pool.size() / threadCount);
+			auto endId = (i + 1) * (m_memory_pool.size() / threadCount);
+			threads.emplace_back(&ClusteringMemoryPool<T>::ExecuteClusters, this, startId, endId);
 		}
+
+		
+ 	//	for (auto& a : m_memory_pool) 
+		//{
+		//	for (auto& b : a.taskQueue) 
+		//	{
+		//		b();
+		//	}
+		//	a.taskQueue.clear();
+		//}
 	}
 
 	~ClusteringMemoryPool() = default;
