@@ -84,9 +84,9 @@ struct PersonLogNormal
 
     void Update(unsigned int& id, string& idStr)
     {
-        auto name = "rabin" + idStr;
-        auto momname = "rabin mom" + idStr;
-        auto dadname = "rabin dad" + idStr;
+        string name = "valid rabin" + idStr;
+        string momname = "valid rabin mom" + idStr;
+        string dadname = "valid rabin dad" + idStr;
 
         int age = 0 + id;
         int momage = 50 + id;
@@ -189,22 +189,52 @@ struct PersonHandler
     }
 };
 
-void ExecutePersonHandlerTasks(ClusteringMemoryPool<PersonHandler> & personPool)
+void TestNormal()
 {
-    personPool.ExecuteClusteredTasks();
+    vector<shared_ptr<NameLog>> nameLogPool = vector<shared_ptr<NameLog>>();
+    vector<shared_ptr<AgeLog>> ageLogPool = vector<shared_ptr<AgeLog>>();
+    vector<PersonHandlerNormal> personHandlers = std::vector<PersonHandlerNormal>();
+
+    for (int a = 0; a < 1000; ++a)
+    {
+        auto personHandlr = PersonHandlerNormal();
+
+        for (int i = 0; i < 10000; ++i)
+        {
+            auto id = to_string(i);
+            nameLogPool.push_back(std::make_shared<NameLog>(NameLog{ "rabin" + id,  "rabin mom" + id, "rabin dad" + id }));
+            ageLogPool.push_back(std::make_shared<AgeLog>(AgeLog{ 0 + i, 50 + i, 100 + i }));
+            auto personLog = PersonLogNormal{ nameLogPool.back(), ageLogPool.back() };
+            personHandlr.personLogs.push_back(std::move(personLog));
+        }
+
+        personHandlers.push_back(std::move(personHandlr));
+    }
+
+    std::random_device rd;
+    std::mt19937 g(rd());
+
+    auto start = chrono::high_resolution_clock::now();
+
+    //std::shuffle(personHandlers.begin(), personHandlers.end(), g);
+
+    for (auto& pH : personHandlers)
+    {
+        //pH.Shuffle(g);
+        pH.Update();
+    }
+
+    auto end = chrono::high_resolution_clock::now();
+
+    // Calculating total time taken by the program.
+    double time_taken = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
+    time_taken *= 1e-9;
+
+    cout << "Time taken by vector of pointers is : " << fixed << time_taken << setprecision(9);
+    cout << " sec" << endl;
 }
 
-void ExecuteNameLogTasks(ClusteringMemoryPool<NameLog>& namePool)
-{
-    namePool.ExecuteClusteredTasks();
-}
-
-void ExecuteAgeLogTasks(ClusteringMemoryPool<AgeLog>& agePool)
-{
-    agePool.ExecuteClusteredTasks();
-}
-
-void TestClustering()
+void TestSerialClusterExecution()
 {
     ClusteringMemoryPool<NameLog> nameLogPool = ClusteringMemoryPool<NameLog>(10000);
     ClusteringMemoryPool<AgeLog> ageLogPool = ClusteringMemoryPool<AgeLog>(10000);
@@ -239,9 +269,9 @@ void TestClustering()
         pH.stackingWrite(&PersonHandler::Update);
     }
 
-    ExecutePersonHandlerTasks(perHandlerPool);
-    ExecuteNameLogTasks(nameLogPool);
-    ExecuteAgeLogTasks(ageLogPool);
+    perHandlerPool.ExecuteClusteredTasksSerial();
+    nameLogPool.ExecuteClusteredTasksSerial();
+    ageLogPool.ExecuteClusteredTasksSerial();
 
     auto end = chrono::high_resolution_clock::now();
 
@@ -249,30 +279,30 @@ void TestClustering()
     double time_taken = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
     time_taken *= 1e-9;
 
-    cout << "Time taken by clustering memory pool is : " << fixed << time_taken << setprecision(9);
+    cout << "Time taken by (serial) clustering memory pool is : " << fixed << time_taken << setprecision(9);
     cout << " sec" << endl;
 }
 
-void TestNormal()
+void TestParallelClusterExecution()
 {
-    vector<shared_ptr<NameLog>> nameLogPool = vector<shared_ptr<NameLog>>();
-    vector<shared_ptr<AgeLog>> ageLogPool = vector<shared_ptr<AgeLog>>();
-    vector<PersonHandlerNormal> personHandlers = std::vector<PersonHandlerNormal>();
+    ClusteringMemoryPool<NameLog> nameLogPool = ClusteringMemoryPool<NameLog>(10000);
+    ClusteringMemoryPool<AgeLog> ageLogPool = ClusteringMemoryPool<AgeLog>(10000);
+    ClusteringMemoryPool<PersonHandler> perHandlerPool = ClusteringMemoryPool<PersonHandler>(10);
+    vector<rw_clustering_ptr<PersonHandler>> personHandlers = vector<rw_clustering_ptr<PersonHandler>>();
 
     for (int a = 0; a < 1000; ++a)
     {
-        auto personHandlr = PersonHandlerNormal();
+        auto personHandlr = PersonHandler();
 
         for (int i = 0; i < 10000; ++i)
         {
-            auto id = to_string(i);
-            nameLogPool.push_back(std::make_shared<NameLog>(NameLog{ "rabin" + id,  "rabin mom" + id, "rabin dad" + id }));
-            ageLogPool.push_back(std::make_shared<AgeLog>(AgeLog{ 0 + i, 50 + i, 100 + i }));
-            auto personLog = PersonLogNormal{ nameLogPool.back(), ageLogPool.back()};
+            auto iid = i + a;
+            auto id = to_string(iid);
+            auto personLog = PersonLog{ nameLogPool.AddToPool(NameLog{ "rabin" + id,  "rabin mom" + id, "rabin dad" + id }), ageLogPool.AddToPool(AgeLog(0 + iid, 50 + iid, 100 + iid)) };
             personHandlr.personLogs.push_back(std::move(personLog));
         }
 
-        personHandlers.push_back(std::move(personHandlr));
+        personHandlers.emplace_back(perHandlerPool.AddToPool(std::move(personHandlr)));
     }
 
     std::random_device rd;
@@ -285,8 +315,12 @@ void TestNormal()
     for (auto& pH : personHandlers)
     {
         //pH.Shuffle(g);
-        pH.Update();
+        pH.stackingWrite(&PersonHandler::Update);
     }
+
+    perHandlerPool.ExecuteClusteredTasksParallel();
+    nameLogPool.ExecuteClusteredTasksParallel();
+    ageLogPool.ExecuteClusteredTasksParallel();
 
     auto end = chrono::high_resolution_clock::now();
 
@@ -294,7 +328,7 @@ void TestNormal()
     double time_taken = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
     time_taken *= 1e-9;
 
-    cout << "Time taken by vector of pointers is : " << fixed << time_taken << setprecision(9);
+    cout << "Time taken by (parallel) clustering memory pool is : " << fixed << time_taken << setprecision(9);
     cout << " sec" << endl;
 }
 
@@ -322,8 +356,8 @@ void TestClusteringPoolWriteValidity()
     }
     
     {
-        nameLogPool.ExecuteClusteredTasks();
-        ageLogPool.ExecuteClusteredTasks();
+        nameLogPool.ExecuteClusteredTasksParallel();
+        ageLogPool.ExecuteClusteredTasksParallel();
         cout << "After write: " << rw_ptr1.get()->GetName() << endl;
         cout << "After write: " << rw_ptr2.get()->GetAge() << endl;
     }
@@ -332,7 +366,8 @@ void TestClusteringPoolWriteValidity()
 int main()
 {
     TestNormal();
-    TestClustering();
+    TestSerialClusterExecution();
+    TestParallelClusterExecution();
     TestClusteringPoolWriteValidity();
 }
 
