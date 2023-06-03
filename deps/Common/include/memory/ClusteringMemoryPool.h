@@ -1,6 +1,7 @@
 #ifndef CLUSTERING_MEMORY_POOL
 #define CLUSTERING_MEMORY_POOL
 
+#include <functional>
 #include <memory>
 #include <iostream>
 #include <vector>
@@ -440,13 +441,24 @@ public:
 		unsigned int poolSize = m_memory_pool.size();
 		auto threadCount = std::min(poolSize, std::thread::hardware_concurrency());
 
+		std::function<void()> thisThreadTask;
+
 		for (int i = 0; i < threadCount; ++i)
 		{
 			auto groupCount = poolSize / threadCount;
 			auto startId = i * groupCount;
 			auto endId = (i + 1) * groupCount;
-			threads.emplace_back(&ClusteringMemoryPool<T>::ExecuteClusters, this, startId, endId);
+			if(i == 0)
+			{
+				thisThreadTask = [=]() { ExecuteClusters(startId, endId); };
+			}
+			else
+			{
+				threads.emplace_back(&ClusteringMemoryPool<T>::ExecuteClusters, this, startId, endId);
+			}
 		}
+
+		thisThreadTask();
 	}
 
 	void ExecuteClusteredTasksSerial()
