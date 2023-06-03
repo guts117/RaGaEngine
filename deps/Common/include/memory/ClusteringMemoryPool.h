@@ -75,6 +75,9 @@ class move_only_function_32;
 template <typename R, typename... Args>
 class move_only_function_32<R(Args...)>
 {
+	constexpr static auto BUFFER_SIZE = 32;
+	constexpr static auto BUFFER_ALIGNMENT = 8;
+
 	// function pointer types for the type-erasure behaviors
 	// all these std::byte* parameters are actually casted from some functor type
 	typedef R(*invoke_fn_t)(std::byte*, Args&&...);
@@ -101,13 +104,13 @@ class move_only_function_32<R(Args...)>
 
 	// erase the type of any functor and store it into a std::byte*
 	// so the storage size should be obtained as well
-	mutable alignas(8) std::byte data_ptr[32];
+	mutable alignas(BUFFER_ALIGNMENT) std::byte data_ptr[BUFFER_SIZE];
 public:
 	move_only_function_32()
 		: invoke_f(nullptr)
 		, destroy_f(nullptr)
 	{
-		std::memset(this->data_ptr, 0x00, 32);
+		std::memset(this->data_ptr, 0x0, BUFFER_SIZE);
 	}
 
 	// construct from any functor type
@@ -129,8 +132,8 @@ public:
 		, destroy_f(std::exchange(rhs.destroy_f, nullptr))
 	{
 		if (this->invoke_f) {
-			std::memcpy(this->data_ptr, rhs.data_ptr, 32);
-			std::memset(rhs.data_ptr, 0x00, 32);
+			std::memcpy(this->data_ptr, rhs.data_ptr, BUFFER_SIZE);
+			std::memset(rhs.data_ptr, 0x00, BUFFER_SIZE);
 		}
 	}
 
@@ -140,8 +143,8 @@ public:
 		destroy_f = std::exchange(rhs.destroy_f, nullptr);
 
 		if (this->invoke_f) {
-			std::memcpy(this->data_ptr, rhs.data_ptr, 32);
-			std::memset(rhs.data_ptr, 0x00, 32);
+			std::memcpy(this->data_ptr, rhs.data_ptr, BUFFER_SIZE);
+			std::memset(rhs.data_ptr, 0x00, BUFFER_SIZE);
 		}
 		return *this;
 	};
@@ -150,7 +153,7 @@ public:
 	{
 		if (destroy_f != nullptr) {
 			this->destroy_f(this->data_ptr);
-			std::memset(this->data_ptr, 0x00, 32);
+			std::memset(this->data_ptr, 0x00, BUFFER_SIZE);
 		}
 	}
 
