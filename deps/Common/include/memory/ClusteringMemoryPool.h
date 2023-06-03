@@ -244,6 +244,8 @@ public:
 	T const* const get() const			{ return ptr.get(); }
 	bool isValid() const				{ return ptr.poolHeadPtr != nullptr; }
 
+	//Write task only pushed to the queue once and invalidated subsequent push to the queue until the queue has been executed
+	//Sig: Accepts void(T&&...) with all parameters of the same reference type
 	template<typename memfn, typename... Args>
 	void oneTimeWrite(memfn&& func, Args&&... args)
 	{
@@ -262,6 +264,8 @@ public:
 		}
 	}
 
+	//Fast push to the write task queue. Write to the same object can be stacked and will be logically cohorent
+	//Sig: Accepts void()
 	template<typename memfn>
 	void stackingWrite(memfn&& func)
 	{
@@ -269,54 +273,6 @@ public:
 		auto defferedWrite = [func = std::forward<memfn>(func), this]() { std::invoke(func, ptr.get()); };
 		queue.emplace_back(std::move(defferedWrite));
 	}
-
-	//template<typename memfn, typename... Args>
-	//void updateWrite (memfn&& func, Args&&... args)
-	//{
-	//	//ToDo: check whether all args are of the same reference type(i.e all lvalue or all rvalue)
-	//	//auto staticCheckForLvalue = [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_lvalue_reference<packArg>::value, "Has lvalue reference please change"); };
-	//	//(staticCheckForLvalue(std::forward<Args>(args)), ...);
-
-	//	//byte* buf = ptr.get()->buffer;
-	//	//byte testblock[sizeof(buf) / sizeof(*buf)];
-	//	//memset(testblock, 0, sizeof(testblock));
-
-	//	//ToDo: make a write that deletes existing funcWrapper and overwrites at the same place
-
-	//	//if (!memcmp(testblock, buf, sizeof(buf) / sizeof(*buf)))
-	//	//{
-	//	//	auto& queue = (*ptr.poolHeadPtr)[ptr.clusterId].taskQueue;
-	//	//	auto defferedWrite = funcWrapper(ptr, std::forward<memfn>(func), std::move(std::make_tuple(std::move(args)...)));
-	//	//	queue.emplace_back(std::move(defferedWrite));
-	//	//}
-	//	//else
-	//	//{
-	//	//}
-	//}
-
-	//template<typename memfn, typename... Args>
-	//void stackingWrite(memfn&& func, Args&&... args)
-	//{
-	//	//ToDo: check whether all args are of the same reference type(i.e all lvalue or all rvalue)
-	//	//auto staticCheckForLvalue = [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_lvalue_reference<packArg>::value, "Has lvalue reference please change"); };
-	//	//(staticCheckForLvalue(std::forward<Args>(args)), ...);
-
-	//	//byte* buf = ptr.get()->buffer;
-	//	//byte testblock[sizeof(buf) / sizeof(*buf)];
-	//	//memset(testblock, 0, sizeof(testblock));
-
-	//	//ToDo: make a write that deletes existing funcWrapper and adds a new one at the end
-
-	//	//if (!memcmp(testblock, buf, sizeof(buf) / sizeof(*buf)))
-	//	//{
-	//	//	auto& queue = (*ptr.poolHeadPtr)[ptr.clusterId].taskQueue;
-	//	//	auto defferedWrite = funcWrapper(ptr, std::forward<memfn>(func), std::move(std::make_tuple(std::move(args)...)));
-	//	//	queue.emplace_back(std::move(defferedWrite));
-	//	//}
-	//	//else
-	//	//{
-	//	//}
-	//}
 };
 
 template<class T>
