@@ -270,6 +270,7 @@ struct DataTaskBlockPair
 {
 	std::vector<T> dataBlock;
 	std::vector<move_only_function_32<void()>> taskQueue;
+	std::byte padding[16];
 };
 
 template<class T>
@@ -420,22 +421,21 @@ public:
 		}
 	}
 	
-	void ExecuteClusters(int startId, int endId)
+	void ExecuteClusters(std::vector<DataTaskBlockPair<T>*> poolptr)
 	{
-		for (int i = startId; i < endId; ++i)
+		for (auto& a : poolptr)
 		{
-			for (auto& a : m_memory_pool[i].taskQueue)
+			for (auto& b : a->taskQueue)
 			{
-				a();
+				b();
 			}
-			m_memory_pool[i].taskQueue.clear();
+			a->taskQueue.clear();
 		}
 	}
 
 	void ExecuteClusteredTasksParallel()
 	{
 		vector<jthread> threads;
-
 		unsigned int poolSize = m_memory_pool.size();
 		auto threadCount = std::min(poolSize, std::thread::hardware_concurrency());
 
@@ -444,7 +444,12 @@ public:
 			auto groupCount = poolSize / threadCount;
 			auto startId = i * groupCount;
 			auto endId = (i + 1) * groupCount;
-			threads.emplace_back(&ClusteringMemoryPool<T>::ExecuteClusters, this, startId, endId);
+			std::vector<DataTaskBlockPair<T>*> poolptr = vector<DataTaskBlockPair<T>*>();
+			for (int i = startId; i < endId; ++i) 
+			{
+				poolptr.emplace_back(&m_memory_pool[i]);
+			}
+			threads.emplace_back(&ClusteringMemoryPool<T>::ExecuteClusters, this, poolptr);
 		}
 	}
 

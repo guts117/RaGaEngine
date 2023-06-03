@@ -365,9 +365,9 @@ void TestClusteringPoolWriteValidity()
 
 int main()
 {
+    TestParallelClusterExecution();
     TestNormal();
     TestSerialClusterExecution();
-    TestParallelClusterExecution();
     TestClusteringPoolWriteValidity();
 }
 
