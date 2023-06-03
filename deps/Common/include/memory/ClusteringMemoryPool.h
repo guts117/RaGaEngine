@@ -436,29 +436,36 @@ public:
 
 	void ExecuteClusteredTasksParallel()
 	{
-		vector<jthread> threads;
-
 		unsigned int poolSize = m_memory_pool.size();
 		auto threadCount = std::min(poolSize, std::thread::hardware_concurrency());
 
-		std::function<void()> thisThreadTask;
-
-		for (int i = 0; i < threadCount; ++i)
+		if (threadCount == 1)
 		{
-			auto groupCount = poolSize / threadCount;
-			auto startId = i * groupCount;
-			auto endId = (i + 1) * groupCount;
-			if(i == 0)
-			{
-				thisThreadTask = [=]() { ExecuteClusters(startId, endId); };
-			}
-			else
-			{
-				threads.emplace_back(&ClusteringMemoryPool<T>::ExecuteClusters, this, startId, endId);
-			}
+			ExecuteClusteredTasksSerial();
 		}
+		else
+		{
+			vector<jthread> threads;
 
-		thisThreadTask();
+			std::function<void()> thisThreadTask;
+
+			for (int i = 0; i < threadCount; ++i)
+			{
+				auto groupCount = poolSize / threadCount;
+				auto startId = i * groupCount;
+				auto endId = (i + 1) * groupCount;
+				if (i == 0)
+				{
+					thisThreadTask = [=]() { ExecuteClusters(startId, endId); };
+				}
+				else
+				{
+					threads.emplace_back(&ClusteringMemoryPool<T>::ExecuteClusters, this, startId, endId);
+				}
+			}
+
+			thisThreadTask();
+		}
 	}
 
 	void ExecuteClusteredTasksSerial()
