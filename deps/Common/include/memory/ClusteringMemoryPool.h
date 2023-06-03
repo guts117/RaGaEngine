@@ -421,35 +421,31 @@ public:
 		}
 	}
 	
-	void ExecuteClusters(std::vector<DataTaskBlockPair<T>*> poolptr)
+	void ExecuteClusters(int startId, int endId)
 	{
-		for (auto& a : poolptr)
+		for (int i = startId; i < endId; ++i)
 		{
-			for (auto& b : a->taskQueue)
+			for (auto& a : m_memory_pool[i].taskQueue)
 			{
-				b();
+				a();
 			}
-			a->taskQueue.clear();
+			m_memory_pool[i].taskQueue.clear();
 		}
 	}
 
 	void ExecuteClusteredTasksParallel()
 	{
 		vector<jthread> threads;
+
 		unsigned int poolSize = m_memory_pool.size();
 		auto threadCount = std::min(poolSize, std::thread::hardware_concurrency());
 
-		for(int i = 0; i < threadCount; ++i)
+		for (int i = 0; i < threadCount; ++i)
 		{
 			auto groupCount = poolSize / threadCount;
 			auto startId = i * groupCount;
 			auto endId = (i + 1) * groupCount;
-			std::vector<DataTaskBlockPair<T>*> poolptr = vector<DataTaskBlockPair<T>*>();
-			for (int i = startId; i < endId; ++i) 
-			{
-				poolptr.emplace_back(&m_memory_pool[i]);
-			}
-			threads.emplace_back(&ClusteringMemoryPool<T>::ExecuteClusters, this, poolptr);
+			threads.emplace_back(&ClusteringMemoryPool<T>::ExecuteClusters, this, startId, endId);
 		}
 	}
 
