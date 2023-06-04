@@ -182,6 +182,69 @@ public:
 	}
 };
 
+class lock_free_thread_pool
+{
+	std::atomic_bool done;
+	std::atomic_int fullQueueCount;
+	vector<std::function<void()>> work_queue;
+	std::vector<std::jthread> threads;
+
+	void worker_thread(int threadIndex)
+	{
+		while (!done)
+		{
+			if (auto &task = work_queue[threadIndex])
+			{
+				task();
+				task = nullptr;
+				fullQueueCount.store(fullQueueCount - 1, memory_order::memory_order_relaxed);
+			}
+			else
+			{
+				std::this_thread::yield();
+			}
+		}
+	}
+public:
+	lock_free_thread_pool()
+		: done(false)
+		, fullQueueCount{0}
+		, work_queue{ vector<std::function<void()>>(std::thread::hardware_concurrency() - 1)}
+	{
+		unsigned const thread_count = std::thread::hardware_concurrency() - 1;
+		try
+		{
+			for (unsigned i = 0; i < thread_count; ++i)
+			{
+				threads.push_back(std::jthread(&lock_free_thread_pool::worker_thread, this, i));
+			}
+		}
+		catch (...)
+		{
+			done = true;
+			throw;
+		}
+	}
+	~lock_free_thread_pool()
+	{
+		done = true;
+	}
+
+	template<typename FunctionType>
+	void submit(FunctionType f)
+	{
+		if(fullQueueCount.load(memory_order::memory_order_relaxed) >= threads.size())
+		{
+			f();
+		}
+		else
+		{
+			work_queue[fullQueueCount] = f;
+			fullQueueCount.store(fullQueueCount + 1, memory_order::memory_order_relaxed);
+		}
+	}
+};
+
 //---------------------------------------------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------
 
@@ -614,7 +677,7 @@ public:
 		}
 	}
 
-	void ExecuteClusteredTasksParallel(lock_based_thread_pool& pool)
+	void ExecuteClusteredTasksParallel(lock_free_thread_pool& pool)
 	{
 		unsigned int poolSize = m_memory_pool.size();
 		auto threadCount = std::min(poolSize, std::thread::hardware_concurrency());
