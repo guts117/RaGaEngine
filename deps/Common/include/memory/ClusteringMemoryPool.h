@@ -197,7 +197,7 @@ class lock_free_thread_pool
 			{
 				task();
 				task = nullptr;
-				fullQueueCount.store(fullQueueCount - 1, memory_order::memory_order_relaxed);
+				fullQueueCount.store(fullQueueCount - 1, memory_order::memory_order_release);
 			}
 			else
 			{
@@ -209,9 +209,9 @@ public:
 	lock_free_thread_pool()
 		: done(false)
 		, fullQueueCount{0}
-		, work_queue{ vector<std::function<void()>>(std::thread::hardware_concurrency() - 1)}
+		, work_queue{ vector<std::function<void()>>(std::thread::hardware_concurrency())}
 	{
-		unsigned const thread_count = std::thread::hardware_concurrency() - 1;
+		unsigned const thread_count = std::thread::hardware_concurrency();
 		try
 		{
 			for (unsigned i = 0; i < thread_count; ++i)
@@ -233,15 +233,12 @@ public:
 	template<typename FunctionType>
 	void submit(FunctionType f)
 	{
-		if(fullQueueCount.load(memory_order::memory_order_relaxed) >= threads.size())
+		while (fullQueueCount.load(memory_order::memory_order_acquire) >= std::thread::hardware_concurrency()) 
 		{
-			f();
+			std::this_thread::yield;
 		}
-		else
-		{
-			work_queue[fullQueueCount] = f;
-			fullQueueCount.store(fullQueueCount + 1, memory_order::memory_order_relaxed);
-		}
+		work_queue[fullQueueCount] = f;
+		fullQueueCount.store(fullQueueCount + 1, memory_order::memory_order_relaxed);
 	}
 };
 
@@ -688,25 +685,25 @@ public:
 		}
 		else
 		{
-			std::function<void()> thisThreadTask;
+			//std::function<void()> thisThreadTask;
 
 			for (int i = 0; i < threadCount; ++i)
 			{
 				auto groupCount = poolSize / threadCount;
 				auto startId = i * groupCount;
 				auto endId = (i + 1) * groupCount;
-				if (i == 0)
-				{
-					thisThreadTask = [=]() { ExecuteClusters(startId, endId); };
-				}
-				else
-				{
+				//if (i == 0)
+				//{
+				//	thisThreadTask = [=]() { ExecuteClusters(startId, endId); };
+				//}
+				//else
+				//{
 					auto yes = [startId = startId, endId = endId, this]() {std::invoke(&ClusteringMemoryPool<T>::ExecuteClusters, this, startId, endId); };
 					pool.submit(yes);
-				}
+				//}
 			}
 
-			thisThreadTask();
+			//thisThreadTask();
 		}
 	}
 
