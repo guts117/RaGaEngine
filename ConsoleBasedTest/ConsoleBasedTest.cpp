@@ -320,8 +320,19 @@ void TestParallelClusterExecution()
     }
 
     perHandlerPool.ExecuteClusteredTasksParallel(pool);
+    while(!pool.isQueueEmpty())
+    {
+        //std::this_thread::sleep_for(1ms);
+        std::this_thread::yield();
+    }
     nameLogPool.ExecuteClusteredTasksParallel(pool);
     ageLogPool.ExecuteClusteredTasksParallel(pool);
+
+    while(!pool.isQueueEmpty())
+    {
+        //std::this_thread::sleep_for(1ms);
+        std::this_thread::yield();
+    }
 
     auto end = chrono::high_resolution_clock::now();
 
@@ -366,9 +377,9 @@ void TestClusteringPoolWriteValidity()
 
 int main()
 {
-    //TestParallelClusterExecution();
-    //TestNormal();
-    //TestSerialClusterExecution();
+    TestParallelClusterExecution();
+    TestNormal();
+    TestSerialClusterExecution();
     TestClusteringPoolWriteValidity();
 }
 

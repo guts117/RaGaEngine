@@ -191,6 +191,9 @@ public:
 	{
 		done = true;                                                         
 	}
+
+	bool isQueueEmpty() { return work_queue.empty(); }
+
 	template<typename FunctionType>
 	void submit(FunctionType f)
 	{
@@ -648,18 +651,18 @@ public:
 				auto groupCount = poolSize / threadCount;
 				auto startId = i * groupCount;
 				auto endId = (i + 1) * groupCount;
-				//if (i == 0)
-				//{
-					//thisThreadTask = [=]() { ExecuteClusters(startId, endId); };
-				//}
-				//else
-				//{
+				if (i == 0)
+				{
+					thisThreadTask = [=]() { ExecuteClusters(startId, endId); };
+				}
+				else
+				{
 					auto yes = [startId = startId, endId = endId, this]() {std::invoke(&ClusteringMemoryPool<T>::ExecuteClusters, this, startId, endId); };
 					pool.submit(yes);
-				//}
+				}
 			}
 
-			//thisThreadTask();
+			thisThreadTask();
 		}
 	}
 
