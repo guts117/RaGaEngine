@@ -282,7 +282,7 @@ void TestSerialClusterExecution()
     cout << " sec" << endl;
 }
 
-thread_pool pool;
+lock_based_thread_pool pool;
 
 void TestParallelClusterExecution()
 {

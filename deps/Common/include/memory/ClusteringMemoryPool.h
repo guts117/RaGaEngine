@@ -16,7 +16,7 @@ using namespace std;
 //---------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-class threadsafe_queue
+class lock_based_threadsafe_queue
 {
 private:
 	struct node
@@ -80,15 +80,14 @@ private:
 	}
 
 public:
-	threadsafe_queue() :
+	lock_based_threadsafe_queue() :
 		head(new node), tail(head.get())
 	{
 	}
 
-	threadsafe_queue(const threadsafe_queue& rhs) noexcept = delete;
-	threadsafe_queue& operator=(const threadsafe_queue& rhs) noexcept = delete;
+	lock_based_threadsafe_queue(const lock_based_threadsafe_queue& rhs) noexcept = delete;
+	lock_based_threadsafe_queue& operator=(const lock_based_threadsafe_queue& rhs) noexcept = delete;
 
-	template<typename T>
 	void push(T new_value)
 	{
 		std::shared_ptr<T> new_data(std::make_shared<T>(std::move(new_value)));
@@ -130,30 +129,13 @@ public:
 	}
 };
 
-class join_threads
-{
-	std::vector<std::thread>& threads;
-public:
-	explicit join_threads(std::vector<std::thread>& threads_) :
-		threads(threads_)
-	{}
-	~join_threads()
-	{
-		for (unsigned long i = 0; i < threads.size(); ++i)
-		{
-			if (threads[i].joinable())
-				threads[i].join();
-		}
-	}
-};
-
-class thread_pool
+class lock_based_thread_pool
 {
 	std::atomic_bool done;
-	threadsafe_queue<std::function<void()> > work_queue;                   
-		std::vector<std::thread> threads;                                      
-		join_threads joiner;                                                   
-		void worker_thread()
+	lock_based_threadsafe_queue<std::function<void()>> work_queue;
+	std::vector<std::jthread> threads;          
+
+	void worker_thread()
 	{
 		while (!done)                                                       
 		{
@@ -169,16 +151,15 @@ class thread_pool
 		}
 	}
 public:
-	thread_pool()
+	lock_based_thread_pool()
 		: done(false)
-		, joiner(threads)
 	{
 		unsigned const thread_count = std::thread::hardware_concurrency() - 1;   
 		try
 		{
 			for (unsigned i = 0; i < thread_count; ++i)
 			{
-				threads.push_back(std::thread(&thread_pool::worker_thread, this));        
+				threads.push_back(std::jthread(&lock_based_thread_pool::worker_thread, this));
 			}
 		}
 		catch (...)
@@ -187,7 +168,7 @@ public:
 				throw;
 		}
 	}
-	~thread_pool()
+	~lock_based_thread_pool()
 	{
 		done = true;                                                         
 	}
@@ -633,7 +614,7 @@ public:
 		}
 	}
 
-	void ExecuteClusteredTasksParallel(thread_pool& pool)
+	void ExecuteClusteredTasksParallel(lock_based_thread_pool& pool)
 	{
 		unsigned int poolSize = m_memory_pool.size();
 		auto threadCount = std::min(poolSize, std::thread::hardware_concurrency());
