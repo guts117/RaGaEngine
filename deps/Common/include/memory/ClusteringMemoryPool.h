@@ -197,7 +197,7 @@ class lock_free_thread_pool
 			{
 				task();
 				task = nullptr;
-				fullQueueCount.store(fullQueueCount - 1, memory_order::memory_order_release);
+				fullQueueCount.store(fullQueueCount - 1, memory_order::memory_order_relaxed);
 			}
 			else
 			{
@@ -233,7 +233,7 @@ public:
 	template<typename FunctionType>
 	void submit(FunctionType f)
 	{
-		while (fullQueueCount.load(memory_order::memory_order_acquire) >= std::thread::hardware_concurrency()) 
+		while (fullQueueCount.load(memory_order::memory_order_relaxed) >= std::thread::hardware_concurrency())
 		{
 			std::this_thread::yield;
 		}
