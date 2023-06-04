@@ -7,9 +7,196 @@
 #include <vector>
 #include <algorithm>
 #include <tuple>
+#include <mutex>
 #include <thread>
 
 using namespace std;
+
+//---------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
+class threadsafe_queue
+{
+private:
+	struct node
+	{
+		std::shared_ptr<T> data;
+		std::unique_ptr<node> next;
+	};
+	std::mutex head_mutex;
+	std::unique_ptr<node> head;
+	std::mutex tail_mutex;
+	node* tail;
+	std::condition_variable data_cond;
+
+	node* get_tail()
+	{
+		std::lock_guard<std::mutex> tail_lock(tail_mutex);
+		return tail;
+	}
+	std::unique_ptr<node> pop_head()                             
+	{
+		std::unique_ptr<node> old_head = std::move(head);
+		head = std::move(old_head->next);
+		return old_head;
+	}
+	std::unique_lock<std::mutex> wait_for_data()                 
+	{
+		std::unique_lock<std::mutex> head_lock(head_mutex);
+		data_cond.wait(head_lock, [&] {return head.get() != get_tail(); });
+		return std::move(head_lock);                             
+	}
+	std::unique_ptr<node> wait_pop_head()
+	{
+		std::unique_lock<std::mutex> head_lock(wait_for_data()); 
+			return pop_head();
+	}
+	std::unique_ptr<node> wait_pop_head(T& value)
+	{
+		std::unique_lock<std::mutex> head_lock(wait_for_data()); 
+			value = std::move(*head->data);
+		return pop_head();
+	}
+
+	std::unique_ptr<node> try_pop_head()
+	{
+		std::lock_guard<std::mutex> head_lock(head_mutex);
+		if (head.get() == get_tail())
+		{
+			return std::unique_ptr<node>();
+		}
+		return pop_head();
+	}
+	std::unique_ptr<node> try_pop_head(T& value)
+	{
+		std::lock_guard<std::mutex> head_lock(head_mutex);
+		if (head.get() == get_tail())
+		{
+			return std::unique_ptr<node>();
+		}
+		value = std::move(*head->data);
+		return pop_head();
+	}
+
+public:
+	threadsafe_queue() :
+		head(new node), tail(head.get())
+	{
+	}
+
+	threadsafe_queue(const threadsafe_queue& rhs) noexcept = delete;
+	threadsafe_queue& operator=(const threadsafe_queue& rhs) noexcept = delete;
+
+	template<typename T>
+	void push(T new_value)
+	{
+		std::shared_ptr<T> new_data(std::make_shared<T>(std::move(new_value)));
+		std::unique_ptr<node> p(new node);
+		{
+			std::lock_guard<std::mutex> tail_lock(tail_mutex);
+			tail->data = new_data;
+			node* const new_tail = p.get();
+			tail->next = std::move(p);
+			tail = new_tail;
+		}
+		data_cond.notify_one();
+	}
+
+	std::shared_ptr<T> try_pop()
+	{
+		std::unique_ptr<node> old_head = try_pop_head();
+		return old_head ? old_head->data : std::shared_ptr<T>();
+	}
+	bool try_pop(T& value)
+	{
+		std::unique_ptr<node> const old_head = try_pop_head(value);
+		return old_head != nullptr;
+	}
+	bool empty()
+	{
+		std::lock_guard<std::mutex> head_lock(head_mutex);
+		return (head.get() == get_tail());
+	}
+
+	std::shared_ptr<T> wait_and_pop()
+	{
+		std::unique_ptr<node> const old_head = wait_pop_head();
+		return old_head->data;
+	}
+	void wait_and_pop(T& value)
+	{
+		std::unique_ptr<node> const old_head = wait_pop_head(value);
+	}
+};
+
+class join_threads
+{
+	std::vector<std::thread>& threads;
+public:
+	explicit join_threads(std::vector<std::thread>& threads_) :
+		threads(threads_)
+	{}
+	~join_threads()
+	{
+		for (unsigned long i = 0; i < threads.size(); ++i)
+		{
+			if (threads[i].joinable())
+				threads[i].join();
+		}
+	}
+};
+
+class thread_pool
+{
+	std::atomic_bool done;
+	threadsafe_queue<std::function<void()> > work_queue;                   
+		std::vector<std::thread> threads;                                      
+		join_threads joiner;                                                   
+		void worker_thread()
+	{
+		while (!done)                                                       
+		{
+			std::function<void()> task;
+			if (work_queue.try_pop(task))                                   
+			{
+				task();                                                    
+			}
+			else
+			{
+				std::this_thread::yield();                                 
+			}
+		}
+	}
+public:
+	thread_pool()
+		: done(false)
+		, joiner(threads)
+	{
+		unsigned const thread_count = std::thread::hardware_concurrency();   
+		try
+		{
+			for (unsigned i = 0; i < thread_count; ++i)
+			{
+				threads.push_back(std::thread(&thread_pool::worker_thread, this));        
+			}
+		}
+		catch (...)
+		{
+			done = true;                                                     
+				throw;
+		}
+	}
+	~thread_pool()
+	{
+		done = true;                                                         
+	}
+	template<typename FunctionType>
+	void submit(FunctionType f)
+	{
+		work_queue.push(std::function<void()>(f));                         
+	}
+};
 
 //---------------------------------------------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------
@@ -443,7 +630,7 @@ public:
 		}
 	}
 
-	void ExecuteClusteredTasksParallel()
+	void ExecuteClusteredTasksParallel(thread_pool& pool)
 	{
 		unsigned int poolSize = m_memory_pool.size();
 		auto threadCount = std::min(poolSize, std::thread::hardware_concurrency());
@@ -454,8 +641,6 @@ public:
 		}
 		else
 		{
-			vector<jthread> threads;
-
 			std::function<void()> thisThreadTask;
 
 			for (int i = 0; i < threadCount; ++i)
@@ -463,17 +648,18 @@ public:
 				auto groupCount = poolSize / threadCount;
 				auto startId = i * groupCount;
 				auto endId = (i + 1) * groupCount;
-				if (i == 0)
-				{
-					thisThreadTask = [=]() { ExecuteClusters(startId, endId); };
-				}
-				else
-				{
-					threads.emplace_back(&ClusteringMemoryPool<T>::ExecuteClusters, this, startId, endId);
-				}
+				//if (i == 0)
+				//{
+					//thisThreadTask = [=]() { ExecuteClusters(startId, endId); };
+				//}
+				//else
+				//{
+					auto yes = [startId = startId, endId = endId, this]() {std::invoke(&ClusteringMemoryPool<T>::ExecuteClusters, this, startId, endId); };
+					pool.submit(yes);
+				//}
 			}
 
-			thisThreadTask();
+			//thisThreadTask();
 		}
 	}
 
