@@ -370,6 +370,13 @@ void TestClusteringPoolWriteValidity()
     {
         nameLogPool.ExecuteClusteredTasksParallel(pool);
         ageLogPool.ExecuteClusteredTasksParallel(pool);
+
+        while (!pool.isQueueEmpty())
+        {
+            //std::this_thread::sleep_for(1ms);
+            std::this_thread::yield();
+        }
+
         cout << "After write: " << rw_ptr1.get()->GetName() << endl;
         cout << "After write: " << rw_ptr2.get()->GetAge() << endl;
     }
