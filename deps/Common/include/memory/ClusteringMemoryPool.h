@@ -349,6 +349,15 @@ public:
 	T const* const get() const			{ return ptr.get(); }
 	bool isValid() const				{ return ptr.poolHeadPtr != nullptr; }
 
+
+	//Immediate write like a normal function call
+	//Sig: Accepts void(T&&...)
+	template<typename memfn, typename... Args>
+	void invoke(memfn&& func, Args&&... args)
+	{
+		std::invoke(std::forward<memfn>(func), ptr.get(), std::forward<Args>(args)...);
+	}
+
 	//Write task only pushed to the queue once and invalidated subsequent push to the queue until the queue has been executed
 	//Sig: Accepts void(T&&...) with all parameters of the same reference type
 	template<typename memfn, typename... Args>
