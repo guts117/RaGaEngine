@@ -173,7 +173,7 @@ public:
 		: done(false)
 		, joiner(threads)
 	{
-		unsigned const thread_count = std::thread::hardware_concurrency();   
+		unsigned const thread_count = std::thread::hardware_concurrency() - 1;   
 		try
 		{
 			for (unsigned i = 0; i < thread_count; ++i)
