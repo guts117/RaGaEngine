@@ -685,6 +685,7 @@ public:
 		}
 		else
 		{
+			//ToDo Fix: doing something on this thread fixes the out of scope destruction while thread is running issue.
 			//std::function<void()> thisThreadTask;
 
 			for (int i = 0; i < threadCount; ++i)
