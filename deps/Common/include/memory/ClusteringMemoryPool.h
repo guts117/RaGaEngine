@@ -15,6 +15,7 @@ using namespace std;
 //---------------------------------------------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------
 
+//ToDo: Get rid of once waitable task system is implemented for lock based approach.
 template<typename T>
 class lock_based_threadsafe_queue
 {
@@ -238,30 +239,26 @@ public:
 	template<typename FunctionType>
 	void submit(FunctionType f)
 	{
-		while(true)
+		auto cnt = 0;
+
+		for (cnt; cnt < work_queue.size(); ++cnt)
 		{
-			auto cnt = 0;
-
-			for(cnt; cnt < work_queue.size(); ++cnt)
+			if (work_queue[cnt].isDone.test(memory_order::relaxed))
 			{
-				if(work_queue[cnt].isDone.test(memory_order::relaxed))
-				{
-					break;
-				}
-			}
-
-			if(cnt >= work_queue.size())
-			{
-				//std::this_thread::yield();
-				f();
 				break;
 			}
-			else
-			{
-				work_queue[cnt].task = f;
-				work_queue[cnt].isDone.clear(memory_order::relaxed);
-				break;
-			}
+		}
+
+		if (cnt >= work_queue.size())
+		{
+			f();
+			break;
+		}
+		else
+		{
+			work_queue[cnt].task = f;
+			work_queue[cnt].isDone.clear(memory_order::relaxed);
+			break;
 		}
 	}
 
@@ -738,30 +735,19 @@ public:
 		}
 		else
 		{
-			//ToDo Fix: doing something on this thread fixes the out of scope destruction while thread is running issue.
-			//std::function<void()> thisThreadTask;
-
 			for (int i = 0; i < threadCount; ++i)
 			{
 				auto groupCount = poolSize / threadCount;
 				auto startId = i * groupCount;
 				auto endId = (i + 1) * groupCount;
-				//if (i == 0)
-				//{
-				//	thisThreadTask = [=]() { ExecuteClusters(startId, endId); };
-				//}
-				//else
-				//{
-					auto yes = [startId = startId, endId = endId, this]() {std::invoke(&ClusteringMemoryPool<T>::ExecuteClusters, this, startId, endId); };
-					pool.submit(yes);
-				//}
+				auto task = [startId = startId, endId = endId, this]() {std::invoke(&ClusteringMemoryPool<T>::ExecuteClusters, this, startId, endId); };
+				pool.submit(task);
 			}
 
 			if(isWaitTillFinish)
 			{
 				pool.waitForAllTaskToFinish();
 			}
-			//thisThreadTask();
 		}
 	}
 
