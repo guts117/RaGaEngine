@@ -252,7 +252,8 @@ public:
 
 			if(cnt >= work_queue.size())
 			{
-				std::this_thread::yield();
+				f();
+				break;
 			}
 			else
 			{
