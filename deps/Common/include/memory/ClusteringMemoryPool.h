@@ -182,22 +182,27 @@ public:
 	}
 };
 
+struct lock_free_task
+{
+	atomic_flag isDone = ATOMIC_FLAG_INIT;
+	std::function<void()> task = nullptr;
+};
+
 class lock_free_thread_pool
 {
-	std::atomic_bool done;
-	std::atomic_int fullQueueCount;
-	vector<std::function<void()>> work_queue;
+	std::atomic_flag done = ATOMIC_FLAG_INIT;
+	vector<lock_free_task> work_queue;
 	std::vector<std::jthread> threads;
 
 	void worker_thread(int threadIndex)
 	{
-		while (!done)
+		while (!done.test(memory_order::relaxed))
 		{
-			if (auto &task = work_queue[threadIndex])
+			if (!work_queue[threadIndex].isDone.test(memory_order::acquire))
 			{
-				task();
-				task = nullptr;
-				fullQueueCount.store(fullQueueCount - 1, memory_order::memory_order_relaxed);
+				work_queue[threadIndex].task();
+				work_queue[threadIndex].task = nullptr;
+				work_queue[threadIndex].isDone.test_and_set(memory_order::relaxed);
 			}
 			else
 			{
@@ -207,38 +212,84 @@ class lock_free_thread_pool
 	}
 public:
 	lock_free_thread_pool()
-		: done(false)
-		, fullQueueCount{0}
-		, work_queue{ vector<std::function<void()>>(std::thread::hardware_concurrency())}
+		: work_queue{ vector<lock_free_task>(std::thread::hardware_concurrency())}
 	{
+		done.clear(memory_order::release);
 		unsigned const thread_count = std::thread::hardware_concurrency();
 		try
 		{
 			for (unsigned i = 0; i < thread_count; ++i)
 			{
+				work_queue[i].isDone.test_and_set(memory_order::release);
 				threads.push_back(std::jthread(&lock_free_thread_pool::worker_thread, this, i));
 			}
 		}
 		catch (...)
 		{
-			done = true;
+			done.test_and_set(memory_order::release);
 			throw;
 		}
 	}
 	~lock_free_thread_pool()
 	{
-		done = true;
+		done.test_and_set(memory_order::release);
 	}
 
 	template<typename FunctionType>
 	void submit(FunctionType f)
 	{
-		while (fullQueueCount.load(memory_order::memory_order_relaxed) >= std::thread::hardware_concurrency())
+		while(true)
 		{
-			std::this_thread::yield;
+			auto cnt = 0;
+
+			for(cnt; cnt < work_queue.size(); ++cnt)
+			{
+				if(work_queue[cnt].isDone.test(memory_order::relaxed))
+				{
+					break;
+				}
+			}
+
+			if(cnt >= work_queue.size())
+			{
+				std::this_thread::yield();
+			}
+			else
+			{
+				work_queue[cnt].task = f;
+				work_queue[cnt].isDone.clear(memory_order::release);
+				break;
+			}
 		}
-		work_queue[fullQueueCount] = f;
-		fullQueueCount.store(fullQueueCount + 1, memory_order::memory_order_relaxed);
+	}
+
+	void waitForAllTaskToFinish()
+	{
+		while (true)
+		{
+			auto finCnt = 0;
+
+			for (auto cnt = 0; cnt < work_queue.size(); ++cnt)
+			{
+				if (work_queue[cnt].isDone.test(memory_order::relaxed))
+				{
+					++finCnt;
+				}
+				else
+				{
+					break;
+				}
+			}
+
+			if (finCnt >= work_queue.size())
+			{
+				break;
+			}
+			else
+			{
+				std::this_thread::yield();
+			}
+		}
 	}
 };
 
@@ -674,7 +725,7 @@ public:
 		}
 	}
 
-	void ExecuteClusteredTasksParallel(lock_free_thread_pool& pool)
+	void ExecuteClusteredTasksParallel(lock_free_thread_pool& pool, bool isWaitTillFinish)
 	{
 		unsigned int poolSize = m_memory_pool.size();
 		auto threadCount = std::min(poolSize, std::thread::hardware_concurrency());
@@ -704,6 +755,10 @@ public:
 				//}
 			}
 
+			if(isWaitTillFinish)
+			{
+				pool.waitForAllTaskToFinish();
+			}
 			//thisThreadTask();
 		}
 	}
