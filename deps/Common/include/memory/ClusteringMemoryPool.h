@@ -252,13 +252,11 @@ public:
 		if (cnt >= work_queue.size())
 		{
 			f();
-			break;
 		}
 		else
 		{
 			work_queue[cnt].task = f;
 			work_queue[cnt].isDone.clear(memory_order::relaxed);
-			break;
 		}
 	}
 
