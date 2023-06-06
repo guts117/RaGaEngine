@@ -287,9 +287,11 @@ lock_free_thread_pool pool;
 //ToDo: Fix pool getting destroyed before the scope ends causing threads throwing exception bug.
 void TestParallelClusterExecution()
 {
-    ClusteringMemoryPool<NameLog> nameLogPool = ClusteringMemoryPool<NameLog>(10000);
-    ClusteringMemoryPool<AgeLog> ageLogPool = ClusteringMemoryPool<AgeLog>(10000);
-    ClusteringMemoryPool<PersonHandler> perHandlerPool = ClusteringMemoryPool<PersonHandler>(10);
+    auto factor = std::thread::hardware_concurrency() / 10.0f;
+
+    ClusteringMemoryPool<NameLog> nameLogPool = ClusteringMemoryPool<NameLog>(10000 * factor);
+    ClusteringMemoryPool<AgeLog> ageLogPool = ClusteringMemoryPool<AgeLog>(10000 * factor);
+    ClusteringMemoryPool<PersonHandler> perHandlerPool = ClusteringMemoryPool<PersonHandler>(10 * factor);
     vector<rw_clustering_ptr<PersonHandler>> personHandlers = vector<rw_clustering_ptr<PersonHandler>>();
 
     for (int a = 0; a < 1000; ++a)
