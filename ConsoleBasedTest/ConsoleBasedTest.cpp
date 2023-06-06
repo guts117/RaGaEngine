@@ -194,11 +194,11 @@ void TestNormal()
     vector<shared_ptr<AgeLog>> ageLogPool = vector<shared_ptr<AgeLog>>();
     vector<PersonHandlerNormal> personHandlers = std::vector<PersonHandlerNormal>();
 
-    for (int a = 0; a < 100; ++a)
+    for (int a = 0; a < 1000; ++a)
     {
         auto personHandlr = PersonHandlerNormal();
 
-        for (int i = 0; i < 100; ++i)
+        for (int i = 0; i < 10000; ++i)
         {
             auto id = to_string(i);
             nameLogPool.push_back(std::make_shared<NameLog>(NameLog{ "rabin" + id,  "rabin mom" + id, "rabin dad" + id }));
@@ -235,16 +235,16 @@ void TestNormal()
 
 void TestSerialClusterExecution()
 {
-    ClusteringMemoryPool<NameLog> nameLogPool = ClusteringMemoryPool<NameLog>(100);
-    ClusteringMemoryPool<AgeLog> ageLogPool = ClusteringMemoryPool<AgeLog>(100);
+    ClusteringMemoryPool<NameLog> nameLogPool = ClusteringMemoryPool<NameLog>(10000);
+    ClusteringMemoryPool<AgeLog> ageLogPool = ClusteringMemoryPool<AgeLog>(10000);
     ClusteringMemoryPool<PersonHandler> perHandlerPool = ClusteringMemoryPool<PersonHandler>(10);
     vector<rw_clustering_ptr<PersonHandler>> personHandlers = vector<rw_clustering_ptr<PersonHandler>>();
 
-    for (int a = 0; a < 100; ++a)
+    for (int a = 0; a < 1000; ++a)
     {
         auto personHandlr = PersonHandler();
 
-        for (int i = 0; i < 100; ++i)
+        for (int i = 0; i < 10000; ++i)
         {
             auto iid = i + a;
             auto id = to_string(iid);
@@ -287,16 +287,16 @@ lock_free_thread_pool pool;
 //ToDo: Fix pool getting destroyed before the scope ends causing threads throwing exception bug.
 void TestParallelClusterExecution()
 {
-    ClusteringMemoryPool<NameLog> nameLogPool = ClusteringMemoryPool<NameLog>(100);
-    ClusteringMemoryPool<AgeLog> ageLogPool = ClusteringMemoryPool<AgeLog>(100);
+    ClusteringMemoryPool<NameLog> nameLogPool = ClusteringMemoryPool<NameLog>(10000);
+    ClusteringMemoryPool<AgeLog> ageLogPool = ClusteringMemoryPool<AgeLog>(10000);
     ClusteringMemoryPool<PersonHandler> perHandlerPool = ClusteringMemoryPool<PersonHandler>(10);
     vector<rw_clustering_ptr<PersonHandler>> personHandlers = vector<rw_clustering_ptr<PersonHandler>>();
 
-    for (int a = 0; a < 100; ++a)
+    for (int a = 0; a < 1000; ++a)
     {
         auto personHandlr = PersonHandler();
 
-        for (int i = 0; i < 100; ++i)
+        for (int i = 0; i < 10000; ++i)
         {
             auto iid = i + a;
             auto id = to_string(iid);
