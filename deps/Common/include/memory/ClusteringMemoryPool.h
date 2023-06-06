@@ -212,10 +212,10 @@ class lock_free_thread_pool
 	}
 public:
 	lock_free_thread_pool()
-		: work_queue{ vector<lock_free_task>(std::thread::hardware_concurrency())}
+		: work_queue{ vector<lock_free_task>(std::thread::hardware_concurrency() - 1)}
 	{
 		done.clear(memory_order::release);
-		unsigned const thread_count = std::thread::hardware_concurrency();
+		unsigned const thread_count = std::thread::hardware_concurrency() - 1;
 		try
 		{
 			for (unsigned i = 0; i < thread_count; ++i)
@@ -252,6 +252,7 @@ public:
 
 			if(cnt >= work_queue.size())
 			{
+				//std::this_thread::yield();
 				f();
 				break;
 			}

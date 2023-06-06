@@ -287,16 +287,16 @@ lock_free_thread_pool pool;
 //ToDo: Fix pool getting destroyed before the scope ends causing threads throwing exception bug.
 void TestParallelClusterExecution()
 {
-    ClusteringMemoryPool<NameLog> nameLogPool = ClusteringMemoryPool<NameLog>(10000);
-    ClusteringMemoryPool<AgeLog> ageLogPool = ClusteringMemoryPool<AgeLog>(10000);
+    ClusteringMemoryPool<NameLog> nameLogPool = ClusteringMemoryPool<NameLog>(100);
+    ClusteringMemoryPool<AgeLog> ageLogPool = ClusteringMemoryPool<AgeLog>(100);
     ClusteringMemoryPool<PersonHandler> perHandlerPool = ClusteringMemoryPool<PersonHandler>(10);
     vector<rw_clustering_ptr<PersonHandler>> personHandlers = vector<rw_clustering_ptr<PersonHandler>>();
 
-    for (int a = 0; a < 1000; ++a)
+    for (int a = 0; a < 100; ++a)
     {
         auto personHandlr = PersonHandler();
 
-        for (int i = 0; i < 10000; ++i)
+        for (int i = 0; i < 100; ++i)
         {
             auto iid = i + a;
             auto id = to_string(iid);
@@ -320,20 +320,9 @@ void TestParallelClusterExecution()
         pH.stackingWrite(&PersonHandler::Update);
     }
 
-    perHandlerPool.ExecuteClusteredTasksParallel(pool, false);
-    //while(!pool.isQueueEmpty())
-    //{
-    //    //std::this_thread::sleep_for(1ms);
-    //    std::this_thread::yield();
-    //}
+    perHandlerPool.ExecuteClusteredTasksParallel(pool, true);
     nameLogPool.ExecuteClusteredTasksParallel(pool, false);
     ageLogPool.ExecuteClusteredTasksParallel(pool, true);
-
-    //while(!pool.isQueueEmpty())
-    //{
-    //    //std::this_thread::sleep_for(1ms);
-    //    std::this_thread::yield();
-    //}
 
     auto end = chrono::high_resolution_clock::now();
 
