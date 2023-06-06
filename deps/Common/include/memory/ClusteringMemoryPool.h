@@ -198,7 +198,7 @@ class lock_free_thread_pool
 	{
 		while (!done.test(memory_order::relaxed))
 		{
-			if (!work_queue[threadIndex].isDone.test(memory_order::acquire))
+			if (!work_queue[threadIndex].isDone.test(memory_order::relaxed))
 			{
 				work_queue[threadIndex].task();
 				work_queue[threadIndex].task = nullptr;
@@ -214,25 +214,25 @@ public:
 	lock_free_thread_pool()
 		: work_queue{ vector<lock_free_task>(std::thread::hardware_concurrency() - 1)}
 	{
-		done.clear(memory_order::release);
+		done.clear(memory_order::relaxed);
 		unsigned const thread_count = std::thread::hardware_concurrency() - 1;
 		try
 		{
 			for (unsigned i = 0; i < thread_count; ++i)
 			{
-				work_queue[i].isDone.test_and_set(memory_order::release);
+				work_queue[i].isDone.test_and_set(memory_order::relaxed);
 				threads.push_back(std::jthread(&lock_free_thread_pool::worker_thread, this, i));
 			}
 		}
 		catch (...)
 		{
-			done.test_and_set(memory_order::release);
+			done.test_and_set(memory_order::relaxed);
 			throw;
 		}
 	}
 	~lock_free_thread_pool()
 	{
-		done.test_and_set(memory_order::release);
+		done.test_and_set(memory_order::relaxed);
 	}
 
 	template<typename FunctionType>
@@ -259,7 +259,7 @@ public:
 			else
 			{
 				work_queue[cnt].task = f;
-				work_queue[cnt].isDone.clear(memory_order::release);
+				work_queue[cnt].isDone.clear(memory_order::relaxed);
 				break;
 			}
 		}
