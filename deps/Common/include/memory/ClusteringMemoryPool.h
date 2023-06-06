@@ -433,6 +433,8 @@ public:
 	{
 		if (destroy_f != nullptr) {
 			this->destroy_f(this->data_ptr);
+			invoke_f = nullptr;
+			destroy_f = nullptr;
 			std::memset(this->data_ptr, 0x00, BUFFER_SIZE);
 		}
 	}
