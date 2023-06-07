@@ -7,7 +7,6 @@
 #include <iterator>
 #include <iostream>
 #include <chrono>
-#include <thread>
 
 using namespace std;
 
@@ -283,11 +282,16 @@ void TestSerialClusterExecution()
     cout << " sec" << endl;
 }
 
+lock_free_thread_pool pool;
+
+//ToDo: Fix pool getting destroyed before the scope ends causing threads throwing exception bug.
 void TestParallelClusterExecution()
 {
-    ClusteringMemoryPool<NameLog> nameLogPool = ClusteringMemoryPool<NameLog>(10000);
-    ClusteringMemoryPool<AgeLog> ageLogPool = ClusteringMemoryPool<AgeLog>(10000);
-    ClusteringMemoryPool<PersonHandler> perHandlerPool = ClusteringMemoryPool<PersonHandler>(10);
+    auto factor = std::thread::hardware_concurrency() / 10.0f;
+
+    ClusteringMemoryPool<NameLog> nameLogPool = ClusteringMemoryPool<NameLog>(10000 * factor);
+    ClusteringMemoryPool<AgeLog> ageLogPool = ClusteringMemoryPool<AgeLog>(10000 * factor);
+    ClusteringMemoryPool<PersonHandler> perHandlerPool = ClusteringMemoryPool<PersonHandler>(10 * factor);
     vector<rw_clustering_ptr<PersonHandler>> personHandlers = vector<rw_clustering_ptr<PersonHandler>>();
 
     for (int a = 0; a < 1000; ++a)
@@ -318,9 +322,9 @@ void TestParallelClusterExecution()
         pH.stackingWrite(&PersonHandler::Update);
     }
 
-    perHandlerPool.ExecuteClusteredTasksParallel();
-    nameLogPool.ExecuteClusteredTasksParallel();
-    ageLogPool.ExecuteClusteredTasksParallel();
+    perHandlerPool.ExecuteClusteredTasksParallel(pool, true);
+    nameLogPool.ExecuteClusteredTasksParallel(pool, false);
+    ageLogPool.ExecuteClusteredTasksParallel(pool, true);
 
     auto end = chrono::high_resolution_clock::now();
 
@@ -356,8 +360,15 @@ void TestClusteringPoolWriteValidity()
     }
     
     {
-        nameLogPool.ExecuteClusteredTasksParallel();
-        ageLogPool.ExecuteClusteredTasksParallel();
+        nameLogPool.ExecuteClusteredTasksParallel(pool, false);
+        ageLogPool.ExecuteClusteredTasksParallel(pool, true);
+
+        //while (!pool.isQueueEmpty())
+        //{
+        //    //std::this_thread::sleep_for(1ms);
+        //    std::this_thread::yield();
+        //}
+
         cout << "After write: " << rw_ptr1.get()->GetName() << endl;
         cout << "After write: " << rw_ptr2.get()->GetAge() << endl;
     }
@@ -365,9 +376,9 @@ void TestClusteringPoolWriteValidity()
 
 int main()
 {
+    TestParallelClusterExecution();
     TestNormal();
     TestSerialClusterExecution();
-    TestParallelClusterExecution();
     TestClusteringPoolWriteValidity();
 }
 
