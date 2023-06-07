@@ -454,9 +454,10 @@ class clustering_task_queue
 {
 public:
 	inline clustering_task_queue(size_t n) noexcept
-		: arr{ new move_only_invoke_and_destroy_func_32<void()>[n] }
-		, cap{ n }
+		: cap{ n }
 		, elems{ 0 }
+		, arr{ new move_only_invoke_and_destroy_func_32<void()>[n] }
+
 	{
 	};
 
@@ -464,17 +465,18 @@ public:
 	clustering_task_queue& operator= (clustering_task_queue const& rhs) = delete;
 
 	inline clustering_task_queue(clustering_task_queue&& rhs) noexcept
-		: arr(std::exchange(rhs.arr, nullptr))
-		, cap(std::exchange(rhs.cap, 0))
+		: cap(std::exchange(rhs.cap, 0))
 		, elems(std::exchange(rhs.elems, 0))
+		, arr(std::exchange(rhs.arr, nullptr))
 	{
 	}
 
 	inline clustering_task_queue& operator=(clustering_task_queue&& rhs) noexcept
 	{
-		arr = std::exchange(rhs.arr, nullptr);
 		cap = std::exchange(rhs.cap, 0);
 		elems = std::exchange(rhs.elems, 0);
+		arr = std::exchange(rhs.arr, nullptr);
+
 		return *this;
 	};
 
@@ -539,9 +541,9 @@ public:
 		delete[] arr;
 	}
 private:
-	move_only_invoke_and_destroy_func_32<void()>* arr = nullptr;
 	size_t cap;
 	size_t elems;
+	move_only_invoke_and_destroy_func_32<void()>* arr = nullptr;
 };
 
 //----------------------------------------------------------------------------------------------------------------------------------
