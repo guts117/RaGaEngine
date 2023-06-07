@@ -14,443 +14,6 @@ using namespace std;
 
 //---------------------------------------------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------
-//Modified version of: https://github.com/sigerror/fast-vector/blob/master/fast_vector.h
-//Write your own or include the licence
-
-#include <cassert>
-#include <cstdlib>
-#include <cstring> // std::memcpy()
-#include <new>
-#include <type_traits>
-
-// Helper functions
-
-template <class T>
-inline void construct_range(T* begin, T* end)
-{
-	while (begin != end)
-	{
-		new (begin) T;
-		begin++;
-	}
-}
-
-template <class T>
-inline void copy_range(T* begin, T* end, T* dest)
-{
-	while (begin != end)
-	{
-		new (dest) T(std::move(*begin));
-		begin++;
-		dest++;
-	}
-}
-
-template <class T>
-inline void destruct_range(T* begin, T* end)
-{
-	while (begin != end)
-	{
-		begin->~T();
-		begin++;
-	}
-}
-
-template <class T>
-class fast_vector
-{
-public:
-	using size_type = std::size_t;
-
-	fast_vector() = default;
-	fast_vector(const fast_vector& other);
-	fast_vector(fast_vector&& other) noexcept;
-	fast_vector& operator=(const fast_vector& other);
-	fast_vector& operator=(fast_vector&& other) noexcept;
-	~fast_vector();
-
-	// Element access
-
-	T& operator[](size_type pos);
-	const T& operator[](size_type pos) const;
-
-	T& front();
-	const T& front() const;
-
-	T& back();
-	const T& back() const;
-
-	T* data() noexcept;
-	const T* data() const noexcept;
-
-	// Iterators
-
-	T* begin() noexcept;
-	const T* begin() const noexcept;
-
-	T* end() noexcept;
-	const T* end() const noexcept;
-
-	// Capacity
-
-	bool empty() const noexcept;
-	size_type size() const noexcept;
-	void reserve(size_type new_cap);
-	size_type capacity() const noexcept;
-	void shrink_to_fit();
-
-	// Modifiers
-
-	void clear() noexcept;
-
-	void push_back(const T& value);
-	void push_back(T&& value);
-
-	template< class... Args >
-	void emplace_back(Args&&... args);
-
-	void pop_back();
-	void resize(size_type count);
-
-	static constexpr size_type grow_factor = 2;
-
-private:
-	T* m_data = nullptr;
-	size_type m_size = 0;
-	size_type m_capacity = 0;
-};
-
-template <class T>
-fast_vector<T>::fast_vector(const fast_vector& other)
-	: m_size(other.m_size)
-	, m_capacity(other.m_capacity)
-{
-	m_data = reinterpret_cast<T*>(std::malloc(sizeof(T) * other.m_capacity));
-
-	if (std::is_trivial_v<T>)
-	{
-		std::memcpy(m_data, other.m_data, other.m_size);
-	}
-	else
-	{
-		copy_range(other.begin(), other.end(), m_data);
-	}
-}
-
-template <class T>
-fast_vector<T>::fast_vector(fast_vector&& other) noexcept
-	: m_data(other.m_data)
-	, m_size(other.m_size)
-	, m_capacity(other.m_capacity)
-{
-	other.m_data = nullptr;
-}
-
-template <class T>
-fast_vector<T>& fast_vector<T>::operator=(const fast_vector& other)
-{
-	m_size = other.m_size;
-	m_capacity = other.m_capacity;
-
-	m_data = reinterpret_cast<T*>(std::malloc(sizeof(T) * other.m_capacity));
-
-	if (std::is_trivial_v<T>)
-	{
-		std::memcpy(m_data, other.m_data, other.m_size);
-	}
-	else
-	{
-		copy_range(other.begin(), other.end(), m_data);
-	}
-
-	return *this;
-}
-
-template <class T>
-fast_vector<T>& fast_vector<T>::operator=(fast_vector&& other) noexcept
-{
-	m_data = other.m_data;
-	m_size = other.m_size;
-	m_capacity = other.m_capacity;
-
-	other.m_data = nullptr;
-
-	return *this;
-}
-
-template <class T>
-fast_vector<T>::~fast_vector()
-{
-	if (!std::is_trivial_v<T>)
-	{
-		destruct_range(begin(), end());
-	}
-
-	std::free(m_data);
-}
-
-// Element access
-
-template <class T>
-T& fast_vector<T>::operator[](size_type pos)
-{
-	assert(pos < m_size && "Position is out of range");
-	return m_data[pos];
-}
-
-template <class T>
-const T& fast_vector<T>::operator[](size_type pos) const
-{
-	assert(pos < m_size && "Position is out of range");
-	return m_data[pos];
-}
-
-template <class T>
-T& fast_vector<T>::front()
-{
-	assert(m_size > 0 && "Container is empty");
-	return m_data[0];
-}
-
-template <class T>
-const T& fast_vector<T>::front() const
-{
-	assert(m_size > 0 && "Container is empty");
-	return m_data[0];
-}
-
-template <class T>
-T& fast_vector<T>::back()
-{
-	assert(m_size > 0 && "Container is empty");
-	return m_data[m_size - 1];
-}
-
-template <class T>
-const T& fast_vector<T>::back() const
-{
-	assert(m_size > 0 && "Container is empty");
-	return m_data[m_size - 1];
-}
-
-template <class T>
-T* fast_vector<T>::data() noexcept
-{
-	return m_data;
-}
-
-template <class T>
-const T* fast_vector<T>::data() const noexcept
-{
-	return m_data;
-}
-
-// Iterators
-
-template <class T>
-T* fast_vector<T>::begin() noexcept
-{
-	return m_data;
-}
-
-template <class T>
-const T* fast_vector<T>::begin() const noexcept
-{
-	return m_data;
-}
-
-template <class T>
-T* fast_vector<T>::end() noexcept
-{
-	return m_data + m_size;
-}
-
-template <class T>
-const T* fast_vector<T>::end() const noexcept
-{
-	return m_data + m_size;
-}
-
-// Capacity
-
-template <class T>
-bool fast_vector<T>::empty() const noexcept
-{
-	return m_size == 0;
-}
-
-template <class T>
-typename fast_vector<T>::size_type fast_vector<T>::size() const noexcept
-{
-	return m_size;
-}
-
-template <class T>
-void fast_vector<T>::reserve(size_type new_cap)
-{
-	assert(new_cap > m_capacity && "Capacity is already equal to or greater than the passed value");
-
-	if constexpr (std::is_trivial_v<T>)
-	{
-		m_data = reinterpret_cast<T*>(std::realloc(m_data, sizeof(T) * new_cap));
-		assert(m_data != nullptr && "Reallocation failed");
-	}
-	else
-	{
-		T* new_data_location = reinterpret_cast<T*>(std::malloc(sizeof(T) * new_cap));
-		assert(new_data_location != nullptr && "Allocation failed");
-
-		copy_range(begin(), end(), new_data_location);
-		destruct_range(begin(), end());
-
-		std::free(m_data);
-
-		m_data = new_data_location;
-	}
-
-	m_capacity = new_cap;
-}
-
-template <class T>
-typename fast_vector<T>::size_type fast_vector<T>::capacity() const noexcept
-{
-	return m_capacity;
-}
-
-template <class T>
-void fast_vector<T>::shrink_to_fit()
-{
-	if (m_size < m_capacity)
-	{
-		if constexpr (std::is_trivial_v<T>)
-		{
-			m_data = reinterpret_cast<T*>(std::realloc(m_data, sizeof(T) * m_size));
-			assert(m_data != nullptr && "Reallocation failed");
-		}
-		else
-		{
-			T* new_data_location = reinterpret_cast<T*>(std::malloc(sizeof(T) * m_size));
-			assert(new_data_location != nullptr && "Allocation failed");
-
-			copy_range(begin(), end(), new_data_location);
-			destruct_range(begin(), end());
-
-			std::free(m_data);
-
-			m_data = new_data_location;
-		}
-	}
-}
-
-// Modifiers
-
-template <class T>
-void fast_vector<T>::clear() noexcept
-{
-	//if constexpr (!std::is_trivial_v<T>)
-	//{
-	//	destruct_range(begin(), end());
-	//}
-
-	m_size = 0;
-}
-
-template <class T>
-void fast_vector<T>::push_back(const T& value)
-{
-	if (m_size == m_capacity)
-	{
-		reserve(m_capacity * fast_vector::grow_factor + 1);
-	}
-
-	if constexpr (std::is_trivial_v<T>)
-	{
-		m_data[m_size] = value;
-	}
-	else
-	{
-		new (m_data + m_size) T(value);
-	}
-
-	m_size++;
-}
-
-template <class T>
-void fast_vector<T>::push_back(T&& value)
-{
-	if (m_size == m_capacity)
-	{
-		reserve(m_capacity * fast_vector::grow_factor + 1);
-	}
-
-	if constexpr (std::is_trivial_v<T>)
-	{
-		m_data[m_size] = value;
-	}
-	else
-	{
-		new (m_data + m_size) T(std::move(value));
-	}
-
-	m_size++;
-}
-
-template <class T>
-template< class... Args >
-void fast_vector<T>::emplace_back(Args&&... args)
-{
-	static_assert(!std::is_trivial_v<T>, "Use push_back() instead of emplace_back() with trivial types");
-
-	if (m_size == m_capacity)
-	{
-		reserve(m_capacity * fast_vector::grow_factor + 1);
-	}
-
-	new (m_data + m_size) T(std::forward<Args>(args)...);
-
-	m_size++;
-}
-
-template <class T>
-void fast_vector<T>::pop_back()
-{
-	assert(m_size > 0 && "Container is empty");
-
-	if constexpr (!std::is_trivial_v<T>)
-	{
-		m_data[m_size - 1].~T();
-	}
-
-	m_size--;
-}
-
-template <class T>
-void fast_vector<T>::resize(size_type count)
-{
-	assert(count != m_size && "Size is already equal to the passed value");
-
-	if (count > m_capacity)
-	{
-		reserve(count);
-	}
-
-	//if constexpr (!std::is_trivial_v<T>)
-	//{
-	//	if (count > m_size)
-	//	{
-	//		construct_range(m_data + m_size, m_data + count);
-	//	}
-	//	else if (count < m_size)
-	//	{
-	//		destruct_range(m_data + count, m_data + m_size);
-	//	}
-	//}
-
-	m_size = count;
-}
-
-//---------------------------------------------------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------------------------------------------------
 
 //ToDo: Get rid of once waitable task system is implemented for lock based approach.
 template<typename T>
@@ -784,13 +347,13 @@ struct functor {
 //---------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-class move_only_function_32;
+class move_only_invoke_and_destroy_func_32;
 
 // Modified version of: https://stackoverflow.com/questions/18453145/how-is-stdfunction-implemented
 // Uses memcopy and memset so don't use for dynamically allocated members (can cause memory leaks)
 // Warning / Rule: Don't use it to store function objects that have dynamically allocated members
 template <typename R, typename... Args>
-class move_only_function_32<R(Args...)>
+class move_only_invoke_and_destroy_func_32<R(Args...)>
 {
 	constexpr static auto BUFFER_SIZE = 32;
 	constexpr static auto BUFFER_ALIGNMENT = 8;
@@ -823,7 +386,7 @@ class move_only_function_32<R(Args...)>
 	// so the storage size should be obtained as well
 	mutable alignas(BUFFER_ALIGNMENT) std::byte data_ptr[BUFFER_SIZE];
 public:
-	move_only_function_32()
+	move_only_invoke_and_destroy_func_32()
 		: invoke_f(nullptr)
 		, destroy_f(nullptr)
 	{
@@ -832,7 +395,7 @@ public:
 
 	// construct from any functor type
 	template <typename Functor>
-	move_only_function_32(Functor&& f) noexcept
+	move_only_invoke_and_destroy_func_32(Functor&& f) noexcept
 		// specialize functions and erase their type info by casting
 		: invoke_f(reinterpret_cast<invoke_fn_t>(invoke_fn<Functor>))
 		, destroy_f(reinterpret_cast<destroy_fn_t>(destroy_fn<Functor>))
@@ -841,10 +404,10 @@ public:
 		new (this->data_ptr) Functor(std::move(f));
 	}
 
-	move_only_function_32(move_only_function_32 const& rhs) noexcept = delete;
-	move_only_function_32& operator= (move_only_function_32 const& rhs) = delete;
+	move_only_invoke_and_destroy_func_32(move_only_invoke_and_destroy_func_32 const& rhs) noexcept = delete;
+	move_only_invoke_and_destroy_func_32& operator= (move_only_invoke_and_destroy_func_32 const& rhs) = delete;
 
-	move_only_function_32(move_only_function_32&& rhs) noexcept
+	move_only_invoke_and_destroy_func_32(move_only_invoke_and_destroy_func_32&& rhs) noexcept
 		: invoke_f(std::exchange(rhs.invoke_f, nullptr))
 		, destroy_f(std::exchange(rhs.destroy_f, nullptr))
 	{
@@ -854,7 +417,7 @@ public:
 		}
 	}
 
-	move_only_function_32& operator=(move_only_function_32&& rhs) noexcept
+	move_only_invoke_and_destroy_func_32& operator=(move_only_invoke_and_destroy_func_32&& rhs) noexcept
 	{
 		invoke_f = std::exchange(rhs.invoke_f, nullptr);
 		destroy_f = std::exchange(rhs.destroy_f, nullptr);
@@ -866,7 +429,7 @@ public:
 		return *this;
 	};
 
-	~move_only_function_32() noexcept
+	~move_only_invoke_and_destroy_func_32() noexcept
 	{
 		if (destroy_f != nullptr) {
 			this->destroy_f(this->data_ptr);
@@ -876,6 +439,7 @@ public:
 		}
 	}
 
+	//ToDo: Probably get rid of this
 	//R operator()(Args&&... args)
 	//{
 	//	return this->invoke_f(this->data_ptr, std::forward<Args>(args)...);
@@ -884,8 +448,106 @@ public:
 	void operator()(Args&&... args)
 	{
 		this->invoke_f(this->data_ptr, std::forward<Args>(args)...);
-		this->~move_only_function_32();
+		this->~move_only_invoke_and_destroy_func_32();
 	}
+};
+
+//---------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------
+//Modified version of: https://www.delftstack.com/howto/cpp/cpp-vector-implementation/
+
+class clustering_task_queue
+{
+public:
+	inline clustering_task_queue(size_t n) noexcept
+		: arr{ new move_only_invoke_and_destroy_func_32<void()>[n] }
+		, cap{ n }
+		, elems{ 0 }
+	{
+	};
+
+	clustering_task_queue(clustering_task_queue const& rhs) noexcept = delete;
+	clustering_task_queue& operator= (clustering_task_queue const& rhs) = delete;
+
+	inline clustering_task_queue(clustering_task_queue&& rhs) noexcept
+		: arr(std::exchange(rhs.arr, nullptr))
+		, cap(std::exchange(rhs.cap, 0))
+		, elems(std::exchange(rhs.elems, 0))
+	{
+	}
+
+	inline clustering_task_queue& operator=(clustering_task_queue&& rhs) noexcept
+	{
+		arr = std::exchange(rhs.arr, nullptr);
+		cap = std::exchange(rhs.cap, 0);
+		elems = std::exchange(rhs.elems, 0);
+		return *this;
+	};
+
+	inline void resize_and_emplace(move_only_invoke_and_destroy_func_32<void()>&& data) noexcept
+	{
+		if (elems < cap)
+		{
+			new (this->arr + elems) move_only_invoke_and_destroy_func_32<void()>(std::move(data));
+			++elems;
+		}
+		else
+		{
+			auto tmp_arr = new move_only_invoke_and_destroy_func_32<void()>[cap * 2];
+			cap *= 2;
+			for (auto i = 0; i < elems; i++)
+			{
+				tmp_arr[i] = std::move(arr[i]);
+			}
+			delete[] arr;
+			arr = tmp_arr;
+
+			new (this->arr + elems) move_only_invoke_and_destroy_func_32<void()>(std::move(data));
+			++elems;
+		}
+	}
+	inline void clear(bool isCleanUp = false) noexcept
+	{
+		elems = 0;
+
+		if (isCleanUp)
+		{
+			for (auto i = 0; i < elems; i++)
+			{
+				arr[i].~move_only_invoke_and_destroy_func_32<void()>();
+			}
+		}
+	}
+
+	[[nodiscard]] inline bool empty() const noexcept
+	{
+		return elems == 0;
+	}
+	[[nodiscard]] inline size_t size() const noexcept
+	{
+		return elems;
+	}
+	[[nodiscard]] inline size_t capacity() const noexcept
+	{
+		return cap;
+	}
+	move_only_invoke_and_destroy_func_32<void()>& operator[](size_t pos) 
+	{
+		if (pos >= 0 && pos <= elems)
+		{
+			return *(this->arr + pos);
+		}
+		throw std::out_of_range("Out of bounds element access");
+	}
+
+	inline ~clustering_task_queue() noexcept 
+	{
+		delete[] arr;
+	}
+private:
+	move_only_invoke_and_destroy_func_32<void()>* arr = nullptr;
+	size_t cap;
+	size_t elems;
 };
 
 //----------------------------------------------------------------------------------------------------------------------------------
@@ -994,7 +656,7 @@ template<class T>
 struct DataTaskBlockPair
 {
 	std::vector<T> dataBlock;
-	fast_vector<move_only_function_32<void()>> taskQueue;
+	clustering_task_queue taskQueue;
 	std::byte padding[16];
 };
 
@@ -1098,10 +760,11 @@ public:
 		if (!memcmp(testblock, buf, (sizeof(buf) / sizeof(*buf))))
 		{
 			auto& queue = (*ptr.poolHeadPtr)[ptr.clusterId].taskQueue;
-			auto defferedWrite = funcWrapper(ptr, std::forward<memfn>(func), std::move(std::make_tuple(std::move(args)...)));
-			auto size = queue.size();
-			queue.resize(size + 1);
-			new (&queue[size]) move_only_function_32<void()>(std::move(defferedWrite));
+			move_only_invoke_and_destroy_func_32<void()> defferedWrite = funcWrapper(ptr, std::forward<memfn>(func), std::move(std::make_tuple(std::move(args)...)));
+			queue.resize_and_emplace(std::move(defferedWrite));
+			//auto size = queue.size();		
+			//queue.resize(size + 1);
+			//new (&queue[size]) move_only_invoke_and_destroy_func_32<void()>();
 			//queue.emplace_back(std::move(defferedWrite));
 		}
 	}
@@ -1113,10 +776,11 @@ public:
 	void stackingWrite(memfn&& func)
 	{
 		auto& queue = (*ptr.poolHeadPtr)[ptr.clusterId].taskQueue;
-		auto defferedWrite = [func = std::forward<memfn>(func), this]() { std::invoke(func, ptr.get()); };
-		auto size = queue.size();
-		queue.resize(size + 1);
-		new (&queue[size]) move_only_function_32<void()>(std::move(defferedWrite));
+		move_only_invoke_and_destroy_func_32<void()> defferedWrite = [func = std::forward<memfn>(func), this]() { std::invoke(func, ptr.get()); };
+		queue.resize_and_emplace(std::move(defferedWrite));
+		//auto size = queue.size();
+		//queue.resize(size + 1);
+		//new (&queue[size]) move_only_invoke_and_destroy_func_32<void()>(std::move(defferedWrite));
 		//queue.emplace_back(std::move(defferedWrite));
 	}
 };
@@ -1136,8 +800,7 @@ public:
 		{
 			auto vec = std::vector<T>();
 			vec.reserve(m_block_size);
-			auto vec2 = fast_vector<move_only_function_32<void()>>();
-			vec2.reserve(m_block_size);
+			auto vec2 = clustering_task_queue(m_block_size);
 			m_memory_pool.emplace_back(DataTaskBlockPair<T>{std::move(vec), std::move(vec2)});
 			return AddToPool(std::move(obj));
 		}
@@ -1154,8 +817,7 @@ public:
 			{
 				auto vec = std::vector<T>();
 				vec.reserve(m_block_size);
-				auto vec2 = fast_vector<move_only_function_32<void()>>();
-				vec2.reserve(m_block_size);
+				auto vec2 = clustering_task_queue(m_block_size);
 				m_memory_pool.emplace_back(DataTaskBlockPair<T>{std::move(vec), std::move(vec2)});
 				return AddToPool(std::move(obj));
 			}
@@ -1166,9 +828,9 @@ public:
 	{
 		for (int i = startId; i < endId; ++i)
 		{
-			for (auto& a : m_memory_pool[i].taskQueue)
+			for (auto j = 0; j < m_memory_pool[i].taskQueue.size(); ++j)
 			{
-				a();
+				m_memory_pool[i].taskQueue[j]();
 			}
 			m_memory_pool[i].taskQueue.clear();
 		}
@@ -1205,9 +867,9 @@ public:
 	{
 		for (auto& a : m_memory_pool) 
 		{
-			for (auto& b : a.taskQueue) 
+			for (auto j = 0; j < a.taskQueue.size(); ++j)
 			{
-				b();
+				a.taskQueue[j]();
 			}
 			a.taskQueue.clear();
 		}
