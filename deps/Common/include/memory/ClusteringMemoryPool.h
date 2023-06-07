@@ -352,24 +352,24 @@ class move_only_invoke_and_destroy_func_32;
 // Modified version of: https://stackoverflow.com/questions/18453145/how-is-stdfunction-implemented
 // Uses memcopy and memset so don't use for dynamically allocated members (can cause memory leaks)
 // Warning / Rule: Don't use it to store function objects that have dynamically allocated members
-template <typename R, typename... Args>
-class move_only_invoke_and_destroy_func_32<R(Args...)>
+template <typename... Args>
+class move_only_invoke_and_destroy_func_32<void(Args...)>
 {
 	constexpr static auto BUFFER_SIZE = 32;
 	constexpr static auto BUFFER_ALIGNMENT = 8;
 
 	// function pointer types for the type-erasure behaviors
 	// all these std::byte* parameters are actually casted from some functor type
-	typedef R(*invoke_fn_t)(std::byte*, Args&&...);
+	typedef void(*invoke_fn_t)(std::byte*, Args&&...);
 	typedef void (*destroy_fn_t)(std::byte*);
 
 	// type-aware generic functions for invoking
 	// the specialization of these functions won't be capable with
 	// the above function pointer types, so we need some cast
 	template <typename Functor>
-	static R invoke_fn(Functor* fn, Args&&... args)
+	static void invoke_fn(Functor* fn, Args&&... args)
 	{
-		return (*fn)(std::forward<Args>(args)...);
+		(*fn)(std::forward<Args>(args)...);
 	}
 
 	template <typename Functor>
@@ -438,12 +438,6 @@ public:
 			std::memset(this->data_ptr, 0x00, BUFFER_SIZE);
 		}
 	}
-
-	//ToDo: Probably get rid of this
-	//R operator()(Args&&... args)
-	//{
-	//	return this->invoke_f(this->data_ptr, std::forward<Args>(args)...);
-	//}
 
 	void operator()(Args&&... args)
 	{
