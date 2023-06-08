@@ -120,12 +120,9 @@ struct PersonHandlerNormal
 
     void Update()
     {
-        std::random_device rd;
-        std::mt19937 g(rd());
-
         for (auto& pL : personLogs)
         {
-            unsigned int id = g();
+            unsigned int id = 1;
             auto idStr = to_string(id);
             pL.Update(id, idStr);
         }
@@ -176,12 +173,9 @@ struct PersonHandler
 
     void Update()
     {
-        std::random_device rd;
-        std::mt19937 g(rd());
-
         for (auto& pL : personLogs)
         {
-            unsigned int id = g();
+            unsigned int id = 1;
             string idStr = to_string(id);
             pL.Update(id, idStr);
         }
