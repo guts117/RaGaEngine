@@ -1,16 +1,16 @@
 #include <ClusteringMemoryPool.h>
 #include <iostream>
 #include <vector>
-#include <string>
 #include <random>
 #include <algorithm>
 #include <iterator>
 #include <iostream>
 #include <chrono>
+#include <string>
 
 using namespace std;
 
-struct alignas(alignof(std::string)) NameLog
+struct alignas(alignof(string)) NameLog
 {
 private:
     string name;
@@ -18,9 +18,9 @@ private:
     string fatherName;
 public:
     //ToDo: find a way to give compiler error when buffer size is not enough
-    alignas(alignof(std::string)) std::byte buffer[sizeof(std::string) * 3];
+    alignas(alignof(string)) std::byte buffer[sizeof(string) * 3];
 
-    NameLog(std::string _name, std::string _motherName, std::string _fatherName)
+    NameLog(string _name, string _motherName, string _fatherName)
         : name{ _name }
         , motherName{ _motherName }
         , fatherName{ _fatherName }
@@ -29,21 +29,27 @@ public:
         std::memset(buffer, 0, sizeof(buffer));
     }
 
-    void ChangeNameLvalue(string& _name, string& _motherName, string& _fatherName)
+    void ChangeNameLvalue(SimpleString<16>& _name, SimpleString<16>& _motherName, SimpleString<16>& _fatherName)
     {
+        name = _name.toString();
+        motherName = _motherName.toString();
+        fatherName = _fatherName.toString();
+        //name = std::move(_name);
+        //motherName = std::move(_motherName);
+        //fatherName = std::move(_fatherName);
+    }
+
+    void ChangeNameRvalue(string& _name, string&& _motherName, string& _fatherName)
+    {
+        //name = _name.toString();
+        //motherName = _motherName.toString();
+        //fatherName = _fatherName.toString();
         name = std::move(_name);
         motherName = std::move(_motherName);
         fatherName = std::move(_fatherName);
     }
 
-    void ChangeNameRvalue(string&& _name, string&& _motherName, string&& _fatherName)
-    {
-        name = std::move(_name);
-        motherName = std::move(_motherName);
-        fatherName = std::move(_fatherName);
-    }
-
-    std::string GetName() const { return name; }
+    string GetName() const { return name; }
 };
 
 struct alignas(alignof(int)) AgeLog
@@ -83,9 +89,9 @@ struct PersonLogNormal
 
     void Update(unsigned int& id, string& idStr)
     {
-        string name = "valid rabin" + idStr;
-        string momname = "valid rabin mom" + idStr;
-        string dadname = "valid rabin dad" + idStr;
+        SimpleString<16> name = "valid rabin" + idStr;
+        SimpleString<16> momname = "valid rabin mom" + idStr;
+        SimpleString<16> dadname = "valid rabin dad" + idStr;
 
         int age = 0 + id;
         int momage = 50 + id;
@@ -94,9 +100,9 @@ struct PersonLogNormal
         for (int i = 0; i < 1; ++i)
         {
             //auto addstr = to_string(i);
-            //string name = "rabin" + idStr + addstr;
-            //string momname = "rabin mom" + idStr + addstr;
-            //string dadname = "rabin dad" + idStr + addstr;
+            //SimpleString<16> name = "rabin" + idStr + addstr;
+            //SimpleString<16> momname = "rabin mom" + idStr + addstr;
+            //SimpleString<16> dadname = "rabin dad" + idStr + addstr;
 
             nameLog->ChangeNameLvalue(name, momname, dadname);
 
@@ -136,9 +142,9 @@ struct PersonLog
 
     void Update(unsigned int& id, string& idStr)
     {
-        string name = "valid rabin" + idStr;
-        string momname = "valid rabin mom" + idStr;
-        string dadname = "valid rabin dad" + idStr;
+        SimpleString<16> name = "valid rabin" + idStr;
+        SimpleString<16> momname = "valid rabin mom" + idStr;
+        SimpleString<16> dadname = "valid rabin dad" + idStr;
 
         int age = 0 + id;
         int momage = 50 + id;
@@ -147,9 +153,9 @@ struct PersonLog
         for(int i = 0; i< 1; ++i)
         {
             //auto addstr = to_string(i);
-            //string name = "rabin" + idStr + addstr;
-            //string momname = "rabin mom" + idStr + addstr;
-            //string dadname = "rabin dad" + idStr + addstr;
+            //SimpleString<16> name = "rabin" + idStr + addstr;
+            //SimpleString<16> momname = "rabin mom" + idStr + addstr;
+            //SimpleString<16> dadname = "rabin dad" + idStr + addstr;
 
             nameLog.oneTimeWrite(&NameLog::ChangeNameLvalue, name, momname, dadname);
 
@@ -176,7 +182,7 @@ struct PersonHandler
         for (auto& pL : personLogs)
         {
             unsigned int id = 1;
-            string idStr = to_string(id);
+            string idStr = to_string(id).c_str();
             pL.Update(id, idStr);
         }
     }
@@ -342,9 +348,9 @@ void TestClusteringPoolWriteValidity()
     cout << "Before write: " << rw_ptr2.get()->GetAge() << endl;
 
     {
-        string name = "valid write";
-        string momname = "valid write mom";
-        string dadname = "valid write dad";
+        SimpleString<16> name = "valid write";
+        SimpleString<16> momname = "valid write mom";
+        SimpleString<16> dadname = "valid write dad";
         rw_ptr1.oneTimeWrite(&NameLog::ChangeNameLvalue, name, momname, dadname);
 
         int age = 0;
