@@ -40,8 +40,8 @@ public:
 	inline SimpleString& operator= (const SimpleString& buf) noexcept
 	{
 		realSize = buf.realSize;
-		memcpy(buffer, buf, realSize);
-		return this;
+		memcpy(buffer, buf.buffer, realSize);
+		return *this;
 	}
 
 	inline SimpleString(SimpleString&& buf) noexcept
@@ -53,11 +53,11 @@ public:
 	inline SimpleString& operator= (SimpleString&& buf) noexcept
 	{
 		realSize = std::exchange(buf.realSize, 0);
-		memcpy(buffer, buf, realSize);
-		return this;
+		memcpy(buffer, buf.buffer, realSize);
+		return *this;
 	}
 
-	inline string toString() noexcept
+	inline string toString() const noexcept
 	{
 		string retStr = "";
 		retStr.resize(realSize);

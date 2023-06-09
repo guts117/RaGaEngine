@@ -10,20 +10,20 @@
 
 using namespace std;
 
-struct alignas(alignof(string)) NameLog
+struct alignas(alignof(SimpleString<16>)) NameLog
 {
 private:
-    string name;
-    string motherName;
-    string fatherName;
+    SimpleString<16> name;
+    SimpleString<16> motherName;
+    SimpleString<16> fatherName;
 public:
     //ToDo: find a way to give compiler error when buffer size is not enough
-    alignas(alignof(string)) std::byte buffer[sizeof(string) * 3];
+    alignas(alignof(SimpleString<16>)) std::byte buffer[sizeof(SimpleString<16>) * 3];
 
     NameLog(string _name, string _motherName, string _fatherName)
-        : name{ _name }
-        , motherName{ _motherName }
-        , fatherName{ _fatherName }
+        : name{ std::move(_name) }
+        , motherName{ std::move(_motherName) }
+        , fatherName{ std::move(_fatherName) }
     {
         //ToDo: find a way to force people to do this each time a construct is called ? derive from a base class??
         std::memset(buffer, 0, sizeof(buffer));
@@ -31,9 +31,9 @@ public:
 
     void ChangeNameLvalue(SimpleString<16>& _name, SimpleString<16>& _motherName, SimpleString<16>& _fatherName)
     {
-        name = _name.toString();
-        motherName = _motherName.toString();
-        fatherName = _fatherName.toString();
+        name = std::move(_name);
+        motherName = std::move(_motherName);
+        fatherName = std::move(_fatherName);
         //name = std::move(_name);
         //motherName = std::move(_motherName);
         //fatherName = std::move(_fatherName);
@@ -49,7 +49,7 @@ public:
         fatherName = std::move(_fatherName);
     }
 
-    string GetName() const { return name; }
+    string GetName() const { return name.toString(); }
 };
 
 struct alignas(alignof(int)) AgeLog
