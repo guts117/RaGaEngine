@@ -14,12 +14,14 @@ public:
 	
 	inline SimpleString(const char* buf) noexcept
 	{
+		memset(buffer, '\0', size);
 		realSize = strlen(buf);
 		assert(size >= realSize, "Increase the size or reduce the size of the incoming char array");
 		memcpy(buffer, buf, realSize);
 	}
 	inline SimpleString(std::string&& buf) noexcept
 	{
+		memset(buffer, '\0', size);
 		realSize = buf.size();
 		assert(size >= realSize, "Increase the size or reduce the size of the incoming string");
 		memcpy(buffer, &buf[0], realSize);
