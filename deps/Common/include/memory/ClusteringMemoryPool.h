@@ -12,6 +12,17 @@
 
 using namespace std;
 
+template <size_t size = 1, size_t alignment = 1>
+struct ClusterableWithBuffer
+{
+	alignas(alignment) std::byte buffer[size];
+
+	ClusterableWithBuffer() noexcept
+	{
+		std::memset(buffer, 0, size);
+	}
+};
+
 //---------------------------------------------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------
 
@@ -274,7 +285,8 @@ public:
 	void operator()(Args&&... args)
 	{
 		this->invoke_f(this->data_ptr, std::forward<Args>(args)...);
-		this->~move_only_invoke_and_destroy_func_32();
+		//ToDo: Need more test whether this improves performance specially when a class allocates in heap while in heap.
+		//this->~move_only_invoke_and_destroy_func_32();
 	}
 };
 
@@ -334,7 +346,7 @@ public:
 			++elems;
 		}
 	}
-	inline void clear(bool isCleanUp = false) noexcept
+	inline void clear(bool isCleanUp = true) noexcept
 	{
 		elems = 0;
 
@@ -407,11 +419,10 @@ struct funcWrapper final
 	mutable memfn func;
 	mutable funcWrapperToCluster<T> inter;
 
-	inline funcWrapper(clustering_ptr<T>& ptr, memfn&& fn, Args&& args) noexcept
+	inline funcWrapper(clustering_ptr<T>& ptr, memfn&& fn) noexcept
 		: clusterPtr{ ptr }
 		, func{ std::forward<memfn>(fn) }
 	{
-		new (Get()) Args(std::forward<Args>(args));
 	}
 
 	inline funcWrapper(const funcWrapper& other) noexcept
@@ -588,7 +599,9 @@ public:
 		if (!memcmp(testblock, buf, (sizeof(buf) / sizeof(*buf))))
 		{
 			auto& queue = (*ptr.poolHeadPtr)[ptr.clusterId].taskQueue;
-			move_only_invoke_and_destroy_func_32<void()> defferedWrite = funcWrapper(ptr, std::forward<memfn>(func), std::move(std::make_tuple(std::move(args)...)));
+			using t = tuple<decay_t<Args>...>;
+			new (buf) t(std::make_tuple(std::move(args)...));
+			move_only_invoke_and_destroy_func_32<void()> defferedWrite = funcWrapper<T, memfn, t>(ptr, std::forward<memfn>(func));
 			queue.resize_and_emplace(std::move(defferedWrite));
 			//auto size = queue.size();		
 			//queue.resize(size + 1);

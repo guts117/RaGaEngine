@@ -11,23 +11,18 @@
 
 using namespace std;
 
-struct alignas(alignof(SimpleString<16>)) NameLog
+struct alignas(alignof(SimpleString<16>)) NameLog : ClusterableWithBuffer<sizeof(SimpleString<16>) * 3, alignof(SimpleString<16>)>
 {
 private:
     SimpleString<16> name;
     SimpleString<16> motherName;
     SimpleString<16> fatherName;
 public:
-    //ToDo: find a way to give compiler error when buffer size is not enough
-    alignas(alignof(SimpleString<16>)) std::byte buffer[sizeof(SimpleString<16>) * 3];
-
     NameLog(string _name, string _motherName, string _fatherName)
         : name{ std::move(_name) }
         , motherName{ std::move(_motherName) }
         , fatherName{ std::move(_fatherName) }
     {
-        //ToDo: find a way to force people to do this each time a construct is called ? derive from a base class??
-        std::memset(buffer, 0, sizeof(buffer));
     }
 
     void ChangeNameLvalue(SimpleString<16>& _name, SimpleString<16>& _motherName, SimpleString<16>& _fatherName)
@@ -53,23 +48,18 @@ public:
     const char* GetName() const { return name.getBuffer(); }
 };
 
-struct alignas(alignof(int)) AgeLog
+struct alignas(alignof(int)) AgeLog : ClusterableWithBuffer<sizeof(int) * 3, alignof(int)>
 {
 private:
     int age;
     int motherAge;
     int fatherAge;
 public:
-    //ToDo: find a way to give compiler error when buffer size is not enough
-    alignas(alignof(int)) std::byte buffer[sizeof(int) * 3];
-
     AgeLog(int _age, int _motherAge, int _fatherAge)
         : age { _age}
         , motherAge { _motherAge}
         , fatherAge { _fatherAge}
     {
-        //ToDo: find a way to force people to do this each time a construct is called ? derive from a base class??
-        std::memset(buffer, 0, sizeof(buffer));
     }
 
     void ChangeAge(int& _age, int& _motherAge, int& _fatherAge)
