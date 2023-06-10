@@ -3,12 +3,12 @@
 
 #include <cassert>
 
-template<size_t size>
+template<unsigned int size>
 struct SimpleString
 {
 private:
 	char buffer[size];
-	size_t realSize;
+	unsigned int realSize;
 public:
 	inline SimpleString(const char* buf) noexcept
 	{
