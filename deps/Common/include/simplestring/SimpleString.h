@@ -10,6 +10,8 @@ private:
 	char buffer[size];
 	unsigned int realSize;
 public:
+	inline SimpleString() noexcept = delete;
+	
 	inline SimpleString(const char* buf) noexcept
 	{
 		realSize = strlen(buf);
@@ -59,6 +61,8 @@ public:
 	{
 		return buffer;
 	}
+
+	inline ~SimpleString() noexcept = default;
 };
 
 #endif
