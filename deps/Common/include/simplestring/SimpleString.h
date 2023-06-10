@@ -2,6 +2,7 @@
 #define SIMPLE_STRING
 
 #include <cassert>
+#include <string>
 
 template<unsigned int size>
 struct SimpleString
@@ -57,7 +58,7 @@ public:
 		return *this;
 	}
 
-	inline void toString(string& toStr) const noexcept
+	inline void toString(std::string& toStr) const noexcept
 	{
 		toStr.resize(realSize);
 		memcpy(&toStr[0], buffer, realSize);
