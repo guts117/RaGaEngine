@@ -12,60 +12,6 @@
 
 using namespace std;
 
-
-template<size_t size>
-struct SimpleString
-{
-private:
-	char buffer[size];
-	size_t realSize;
-public:
-	inline SimpleString(const char* buf) noexcept
-	{
-		realSize = strlen(buf);
-		memcpy(buffer, buf, realSize);
-	}
-	inline SimpleString(std::string&& buf) noexcept
-	{
-		realSize = buf.size();
-		memcpy(buffer, &buf[0], realSize);
-	}
-
-	inline SimpleString(const SimpleString& buf) noexcept
-		: realSize{ buf.realSize }
-	{
-		memcpy(buffer, buf.buffer, realSize);
-	}
-
-	inline SimpleString& operator= (const SimpleString& buf) noexcept
-	{
-		realSize = buf.realSize;
-		memcpy(buffer, buf.buffer, realSize);
-		return *this;
-	}
-
-	inline SimpleString(SimpleString&& buf) noexcept
-		: realSize{ std::exchange(buf.realSize, 0) }
-	{
-		memcpy(buffer, buf.buffer, realSize);
-	}
-
-	inline SimpleString& operator= (SimpleString&& buf) noexcept
-	{
-		realSize = std::exchange(buf.realSize, 0);
-		memcpy(buffer, buf.buffer, realSize);
-		return *this;
-	}
-
-	inline string toString() const noexcept
-	{
-		string retStr = "";
-		retStr.resize(realSize);
-		memcpy(&retStr[0], buffer, realSize);
-		return retStr;
-	}
-};
-
 //---------------------------------------------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------
 

@@ -7,6 +7,7 @@
 #include <iostream>
 #include <chrono>
 #include <string>
+#include <SimpleString.h>
 
 using namespace std;
 
@@ -49,7 +50,7 @@ public:
         fatherName = std::move(_fatherName);
     }
 
-    string GetName() const { return name.toString(); }
+    const char* GetName() const { return name.getBuffer(); }
 };
 
 struct alignas(alignof(int)) AgeLog
