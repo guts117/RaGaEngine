@@ -399,17 +399,17 @@ struct clustering_ptr;
 template<class T>
 struct funcWrapperToCluster final
 {
-	std::byte* get(clustering_ptr<T>& ptr)
+	inline std::byte* get(clustering_ptr<T>& ptr) noexcept
 	{
 		return ptr.get()->buffer;
 	}
-	std::byte const* const get(const clustering_ptr<T>& ptr) const
+	inline std::byte const* const get(const clustering_ptr<T>& ptr) const noexcept
 	{
 		return ptr.get()->buffer;
 	}
 
-	T* getThis(clustering_ptr<T>& ptr) { return ptr.get(); }
-	T const* const getThis(const clustering_ptr<T>& ptr) const { return ptr.get(); }
+	inline T* getThis(clustering_ptr<T>& ptr) noexcept { return ptr.get(); }
+	inline T const* const getThis(const clustering_ptr<T>& ptr) const noexcept { return ptr.get(); }
 };
 
 template<class T, typename memfn, typename Args>
