@@ -18,13 +18,5 @@
     <ClCompile Include="ConsoleBasedTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SIMDString.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="SIMDString.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>

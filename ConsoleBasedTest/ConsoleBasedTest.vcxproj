@@ -144,10 +144,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ConsoleBasedTest.cpp" />
-    <ClCompile Include="SIMDString.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="SIMDString.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
