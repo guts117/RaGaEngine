@@ -30,12 +30,14 @@ public:
 	inline SimpleString(const SimpleString& buf) noexcept
 		: realSize{ buf.realSize }
 	{
+		memset(buffer, '\0', size);
 		memcpy(buffer, buf.buffer, realSize);
 	}
 
 	inline SimpleString& operator= (const SimpleString& buf) noexcept
 	{
 		realSize = buf.realSize;
+		memset(buffer, '\0', size);
 		memcpy(buffer, buf.buffer, realSize);
 		return *this;
 	}
@@ -43,12 +45,14 @@ public:
 	inline SimpleString(SimpleString&& buf) noexcept
 		: realSize{ std::exchange(buf.realSize, 0) }
 	{
+		memset(buffer, '\0', size);
 		memcpy(buffer, buf.buffer, realSize);
 	}
 
 	inline SimpleString& operator= (SimpleString&& buf) noexcept
 	{
 		realSize = std::exchange(buf.realSize, 0);
+		memset(buffer, '\0', size);
 		memcpy(buffer, buf.buffer, realSize);
 		return *this;
 	}
@@ -64,7 +68,11 @@ public:
 		return buffer;
 	}
 
-	inline ~SimpleString() noexcept = default;
+	inline ~SimpleString() noexcept 
+	{
+		memset(buffer, '\0', size);
+		realSize = 0;
+	}
 };
 
 #endif
