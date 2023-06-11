@@ -30,7 +30,7 @@ void Motion_Blur_Render_Pass_Handler::Update(std::vector<std::vector<Render_Obje
 		auto& shader = m_shaderVec[shaderIndex];
 
 		//shader->ResetTextureUnit(0);
-		shader.write(std::mem_fn(&Shader_Object::ResetTextureUnit), 0);
+		shader.invoke(&Shader_Object::ResetTextureUnit, 0);
 		shader->UseShaderObject();
 
 		shader->SetVariable("uVelocityScale", camParam->fps / 30.0f);
@@ -40,10 +40,10 @@ void Motion_Blur_Render_Pass_Handler::Update(std::vector<std::vector<Render_Obje
 		if (val)
 		{
 			//shader->SetTextureUnit("theTexture");
-			shader.write(std::mem_fn(&Shader_Object::SetTextureUnit), "theTexture");
+			shader.invoke(&Shader_Object::SetTextureUnit, "theTexture");
 			val->AttachFBOToTextureUnit(0, shader->GetTextureUnit(), 0, 0);
 			//shader->SetTextureUnit("motionTexture");
-			shader.write(std::mem_fn(&Shader_Object::SetTextureUnit), "motionTexture");
+			shader.invoke(&Shader_Object::SetTextureUnit, "motionTexture");
 			val->AttachFBOToTextureUnit(0, shader->GetTextureUnit(), 1, 2);
 		}
 

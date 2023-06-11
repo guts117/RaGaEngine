@@ -30,7 +30,7 @@ void Skybox_Render_Pass_Handler::Update(std::vector<std::vector<Render_Object>>&
 		auto prevPV = camParam->PrevProj * glm::mat4(glm::mat3(camParam->PrevView));
 
 		//shader->ResetTextureUnit(0);
-		shader.write(std::mem_fn(&Shader_Object::ResetTextureUnit), 0);
+		shader.invoke(&Shader_Object::ResetTextureUnit, 0);
 		glDepthFunc(GL_LEQUAL); //so that skybox doesn't render on top
 		shader->UseShaderObject();
 
@@ -41,7 +41,7 @@ void Skybox_Render_Pass_Handler::Update(std::vector<std::vector<Render_Object>>&
 		if (auto val = CheckInputDataType<Fbo_Handler*>(*m_inputs->at(0)))
 		{
 			//shader->SetTextureUnit("skybox");
-			shader.write(std::mem_fn(&Shader_Object::SetTextureUnit), "skybox");
+			shader.invoke(&Shader_Object::SetTextureUnit, "skybox");
 			val->AttachFBOToTextureUnit(0, shader->GetTextureUnit(), 0, 0);
 		}
 

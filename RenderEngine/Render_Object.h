@@ -12,7 +12,7 @@ namespace NarakaRenderEngine
 		class Texture;
 		class Shader_Object;
 
-		struct Transform
+		struct Transform : public ClusterableWithBuffer<sizeof(glm::mat4), alignof(glm::mat4)>
 		{
 		private:
 			glm::mat4 modelMatrix;

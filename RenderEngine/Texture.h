@@ -23,7 +23,7 @@ namespace NarakaRenderEngine
 			Max
 		};
 
-		class Texture
+		class Texture : public ClusterableWithBuffer<sizeof(GLuint) * 3, alignof(GLuint)>
 		{
 		public:
 			explicit Texture();

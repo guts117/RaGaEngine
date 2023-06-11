@@ -12,6 +12,17 @@
 
 using namespace std;
 
+template <unsigned int size = 1, unsigned int alignment = 1, unsigned int count = 1>
+struct ClusterableWithBuffer
+{
+	alignas(alignment) std::byte buffer[count][size];
+
+	ClusterableWithBuffer() noexcept
+	{
+		std::memset(buffer, 0, size);
+	}
+};
+
 //---------------------------------------------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------
 
@@ -274,7 +285,8 @@ public:
 	void operator()(Args&&... args)
 	{
 		this->invoke_f(this->data_ptr, std::forward<Args>(args)...);
-		this->~move_only_invoke_and_destroy_func_32();
+		//ToDo: Need more test whether this improves performance specially when a class allocates in heap while in heap.
+		//this->~move_only_invoke_and_destroy_func_32();
 	}
 };
 
@@ -334,7 +346,7 @@ public:
 			++elems;
 		}
 	}
-	inline void clear(bool isCleanUp = false) noexcept
+	inline void clear(bool isCleanUp = true) noexcept
 	{
 		elems = 0;
 
@@ -387,17 +399,19 @@ struct clustering_ptr;
 template<class T>
 struct funcWrapperToCluster final
 {
-	std::byte* get(clustering_ptr<T>& ptr)
+	unsigned int bufferId = 0;
+	
+	inline std::byte* get(clustering_ptr<T>& ptr) noexcept
 	{
-		return ptr.get()->buffer;
+		return ptr.get()->buffer[bufferId];
 	}
-	std::byte const* const get(const clustering_ptr<T>& ptr) const
+	inline std::byte const* const get(const clustering_ptr<T>& ptr) const noexcept
 	{
-		return ptr.get()->buffer;
+		return ptr.get()->buffer[bufferId];
 	}
 
-	T* getThis(clustering_ptr<T>& ptr) { return ptr.get(); }
-	T const* const getThis(const clustering_ptr<T>& ptr) const { return ptr.get(); }
+	inline T* getThis(clustering_ptr<T>& ptr) noexcept { return ptr.get(); }
+	inline T const* const getThis(const clustering_ptr<T>& ptr) const noexcept { return ptr.get(); }
 };
 
 template<class T, typename memfn, typename Args>
@@ -407,16 +421,17 @@ struct funcWrapper final
 	mutable memfn func;
 	mutable funcWrapperToCluster<T> inter;
 
-	inline funcWrapper(clustering_ptr<T>& ptr, memfn&& fn, Args&& args) noexcept
+	inline funcWrapper(clustering_ptr<T>& ptr, memfn& fn, unsigned int& bufferId) noexcept
 		: clusterPtr{ ptr }
-		, func{ std::forward<memfn>(fn) }
+		, func{ fn }
+		, inter{ bufferId }
 	{
-		new (Get()) Args(std::forward<Args>(args));
 	}
 
 	inline funcWrapper(const funcWrapper& other) noexcept
 		: clusterPtr{ other.clusterPtr }
 		, func{ std::exchange(other.func, nullptr) }
+		, inter {std::exchange(other.inter, funcWrapperToCluster<T>())}
 	{
 	}
 
@@ -424,18 +439,21 @@ struct funcWrapper final
 	{
 		clusterPtr = other.clusterPtr;
 		func = std::exchange(other.func, nullptr);
+		inter = std::exchange(other.inter, funcWrapperToCluster<T>());
 		return *this;
 	}
 
 	funcWrapper(funcWrapper&& other) noexcept
 		: clusterPtr{ other.clusterPtr }
 		, func{ std::exchange(other.func, nullptr) }
+		, inter{ std::exchange(other.inter, funcWrapperToCluster<T>()) }
 	{
 	}
 	funcWrapper& operator=(funcWrapper&& other)
 	{
 		clusterPtr = other.clusterPtr;
 		func = std::exchange(other.func, nullptr);
+		inter = std::exchange(other.inter, funcWrapperToCluster<T>());
 		return *this;
 	}
 
@@ -465,7 +483,7 @@ struct funcWrapper final
 		auto tupArgs = std::tuple_cat(args, std::move(*Get()));
 
 		//works for void(T) and void (T&&)
-		if constexpr (std::is_rvalue_reference<decltype(std::get<1>(arguments(func)))>::value)
+		if constexpr (std::is_rvalue_reference<decltype(std::get<0>(arguments(func)))>::value)
 		{
 			std::apply(std::move(func), std::move(tupArgs));
 		}
@@ -575,20 +593,28 @@ public:
 	//Write task only pushed to the queue once and invalidated subsequent push to the queue until the queue has been executed
 	//Sig: Accepts void(T&&...) with all parameters of the same reference type
 	template<typename memfn, typename... Args>
-	void oneTimeWrite(memfn&& func, Args&&... args)
+	void oneTimeWrite(unsigned int bufferId, memfn&& func, Args&&... args)
 	{
+		auto staticCheckForCharArray= [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_same_v<std::decay_t<packArg>, char*> && !std::is_same_v<std::decay_t<packArg>, const char*>, "Has char array!! Use SimpleString instead!"); };
+		(staticCheckForCharArray(std::forward<Args>(args)), ...);
+
+		auto staticCheckForString = [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_same_v<std::decay_t<packArg>, string>, "Has std::string!! Use SimpleString instead!"); };
+		(staticCheckForString(std::forward<Args>(args)), ...);
+
 		//ToDo: check whether all args are of the same reference type(i.e all lvalue or all rvalue)
 		//auto staticCheckForLvalue = [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_lvalue_reference<packArg>::value, "Has lvalue reference please change"); };
 		//(staticCheckForLvalue(std::forward<Args>(args)), ...);
 
-		byte* buf = ptr.get()->buffer;
+		byte* buf = ptr.get()->buffer[bufferId];
 		byte testblock[sizeof(buf) / sizeof(*buf)];
 		memset(testblock, 0, sizeof(testblock));
 
 		if (!memcmp(testblock, buf, (sizeof(buf) / sizeof(*buf))))
 		{
 			auto& queue = (*ptr.poolHeadPtr)[ptr.clusterId].taskQueue;
-			move_only_invoke_and_destroy_func_32<void()> defferedWrite = funcWrapper(ptr, std::forward<memfn>(func), std::move(std::make_tuple(std::move(args)...)));
+			using t = tuple<decay_t<Args>...>;
+			new (buf) t(std::make_tuple(std::move(args)...));
+			move_only_invoke_and_destroy_func_32<void()> defferedWrite = funcWrapper<T, memfn, t>(ptr, func, bufferId);
 			queue.resize_and_emplace(std::move(defferedWrite));
 			//auto size = queue.size();		
 			//queue.resize(size + 1);

@@ -8,7 +8,7 @@ namespace NarakaRenderEngine
 {
 	namespace RenderEngine
 	{
-		class Shader_Object
+		class Shader_Object : public ClusterableWithBuffer<sizeof(std::string), alignof(std::string)>
 		{
 		public:
 			explicit Shader_Object() = delete;
