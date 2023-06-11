@@ -148,13 +148,13 @@ struct PersonLog
             //SimpleString<16> momname = "rabin mom" + idStr + addstr;
             //SimpleString<16> dadname = "rabin dad" + idStr + addstr;
 
-            nameLog.oneTimeWrite(&NameLog::ChangeNameLvalue, name, momname, dadname);
+            nameLog.oneTimeWrite(0, &NameLog::ChangeNameLvalue, name, momname, dadname);
 
             //int age = 0 + id + i;
             //int momage = 50 + id + i;
             //int dadage = 100 + id + i;
 
-            ageLog.oneTimeWrite(&AgeLog::ChangeAge, age, momage, dadage);
+            ageLog.oneTimeWrite(0, &AgeLog::ChangeAge, age, momage, dadage);
         }
     }
 };
@@ -342,12 +342,12 @@ void TestClusteringPoolWriteValidity()
         SimpleString<16> name = "valid write";
         SimpleString<16> momname = "valid write mom";
         SimpleString<16> dadname = "valid write dad";
-        rw_ptr1.oneTimeWrite(&NameLog::ChangeNameLvalue, name, momname, dadname);
+        rw_ptr1.oneTimeWrite(0, &NameLog::ChangeNameLvalue, name, momname, dadname);
 
         int age = 0;
         int momage = 50;
         int dadage = 100;
-        rw_ptr2.oneTimeWrite(&AgeLog::ChangeAge, age, momage, dadage);
+        rw_ptr2.oneTimeWrite(0, &AgeLog::ChangeAge, age, momage, dadage);
     }
     
     {

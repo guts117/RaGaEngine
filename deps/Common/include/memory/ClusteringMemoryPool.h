@@ -12,10 +12,10 @@
 
 using namespace std;
 
-template <size_t size = 1, size_t alignment = 1>
+template <unsigned int size = 1, unsigned int alignment = 1, unsigned int count = 1>
 struct ClusterableWithBuffer
 {
-	alignas(alignment) std::byte buffer[size];
+	alignas(alignment) std::byte buffer[count][size];
 
 	ClusterableWithBuffer() noexcept
 	{
@@ -399,13 +399,15 @@ struct clustering_ptr;
 template<class T>
 struct funcWrapperToCluster final
 {
+	unsigned int bufferId = 0;
+	
 	inline std::byte* get(clustering_ptr<T>& ptr) noexcept
 	{
-		return ptr.get()->buffer;
+		return ptr.get()->buffer[bufferId];
 	}
 	inline std::byte const* const get(const clustering_ptr<T>& ptr) const noexcept
 	{
-		return ptr.get()->buffer;
+		return ptr.get()->buffer[bufferId];
 	}
 
 	inline T* getThis(clustering_ptr<T>& ptr) noexcept { return ptr.get(); }
@@ -419,15 +421,17 @@ struct funcWrapper final
 	mutable memfn func;
 	mutable funcWrapperToCluster<T> inter;
 
-	inline funcWrapper(clustering_ptr<T>& ptr, memfn&& fn) noexcept
+	inline funcWrapper(clustering_ptr<T>& ptr, memfn& fn, unsigned int& bufferId) noexcept
 		: clusterPtr{ ptr }
-		, func{ std::forward<memfn>(fn) }
+		, func{ fn }
+		, inter{ bufferId }
 	{
 	}
 
 	inline funcWrapper(const funcWrapper& other) noexcept
 		: clusterPtr{ other.clusterPtr }
 		, func{ std::exchange(other.func, nullptr) }
+		, inter {std::exchange(other.inter, funcWrapperToCluster<T>())}
 	{
 	}
 
@@ -435,18 +439,21 @@ struct funcWrapper final
 	{
 		clusterPtr = other.clusterPtr;
 		func = std::exchange(other.func, nullptr);
+		inter = std::exchange(other.inter, funcWrapperToCluster<T>());
 		return *this;
 	}
 
 	funcWrapper(funcWrapper&& other) noexcept
 		: clusterPtr{ other.clusterPtr }
 		, func{ std::exchange(other.func, nullptr) }
+		, inter{ std::exchange(other.inter, funcWrapperToCluster<T>()) }
 	{
 	}
 	funcWrapper& operator=(funcWrapper&& other)
 	{
 		clusterPtr = other.clusterPtr;
 		func = std::exchange(other.func, nullptr);
+		inter = std::exchange(other.inter, funcWrapperToCluster<T>());
 		return *this;
 	}
 
@@ -586,13 +593,13 @@ public:
 	//Write task only pushed to the queue once and invalidated subsequent push to the queue until the queue has been executed
 	//Sig: Accepts void(T&&...) with all parameters of the same reference type
 	template<typename memfn, typename... Args>
-	void oneTimeWrite(memfn&& func, Args&&... args)
+	void oneTimeWrite(unsigned int bufferId, memfn&& func, Args&&... args)
 	{
 		//ToDo: check whether all args are of the same reference type(i.e all lvalue or all rvalue)
 		//auto staticCheckForLvalue = [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_lvalue_reference<packArg>::value, "Has lvalue reference please change"); };
 		//(staticCheckForLvalue(std::forward<Args>(args)), ...);
 
-		byte* buf = ptr.get()->buffer;
+		byte* buf = ptr.get()->buffer[bufferId];
 		byte testblock[sizeof(buf) / sizeof(*buf)];
 		memset(testblock, 0, sizeof(testblock));
 
@@ -601,7 +608,7 @@ public:
 			auto& queue = (*ptr.poolHeadPtr)[ptr.clusterId].taskQueue;
 			using t = tuple<decay_t<Args>...>;
 			new (buf) t(std::make_tuple(std::move(args)...));
-			move_only_invoke_and_destroy_func_32<void()> defferedWrite = funcWrapper<T, memfn, t>(ptr, std::forward<memfn>(func));
+			move_only_invoke_and_destroy_func_32<void()> defferedWrite = funcWrapper<T, memfn, t>(ptr, func, bufferId);
 			queue.resize_and_emplace(std::move(defferedWrite));
 			//auto size = queue.size();		
 			//queue.resize(size + 1);
