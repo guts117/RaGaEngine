@@ -595,6 +595,12 @@ public:
 	template<typename memfn, typename... Args>
 	void oneTimeWrite(unsigned int bufferId, memfn&& func, Args&&... args)
 	{
+		auto staticCheckForCharArray= [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_same_v<std::decay_t<packArg>, char*> && !std::is_same_v<std::decay_t<packArg>, const char*>, "Has char array!! Use SimpleString instead!"); };
+		(staticCheckForCharArray(std::forward<Args>(args)), ...);
+
+		auto staticCheckForString = [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_same_v<std::decay_t<packArg>, string>, "Has std::string!! Use SimpleString instead!"); };
+		(staticCheckForString(std::forward<Args>(args)), ...);
+
 		//ToDo: check whether all args are of the same reference type(i.e all lvalue or all rvalue)
 		//auto staticCheckForLvalue = [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_lvalue_reference<packArg>::value, "Has lvalue reference please change"); };
 		//(staticCheckForLvalue(std::forward<Args>(args)), ...);

@@ -141,7 +141,7 @@ struct PersonLog
         int momage = 50 + id;
         int dadage = 100 + id;
 
-        for(int i = 0; i< 1; ++i)
+        for (int i = 0; i < 1; ++i)
         {
             //auto addstr = to_string(i);
             //SimpleString<16> name = "rabin" + idStr + addstr;
