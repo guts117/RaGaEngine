@@ -476,7 +476,7 @@ struct funcWrapper final
 		auto tupArgs = std::tuple_cat(args, std::move(*Get()));
 
 		//works for void(T) and void (T&&)
-		if constexpr (std::is_rvalue_reference<decltype(std::get<1>(arguments(func)))>::value)
+		if constexpr (std::is_rvalue_reference<decltype(std::get<0>(arguments(func)))>::value)
 		{
 			std::apply(std::move(func), std::move(tupArgs));
 		}
