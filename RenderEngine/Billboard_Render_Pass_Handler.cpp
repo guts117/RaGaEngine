@@ -30,7 +30,7 @@ void Billboard_Render_Pass_Handler::Update(std::vector<std::vector<Render_Object
 		auto& shader = m_shaderVec[shaderIndex];
 
 		//shader->ResetTextureUnit(0);
-		shader.oneTimeWrite(&Shader_Object::ResetTextureUnit, 0);
+		shader.invoke(&Shader_Object::ResetTextureUnit, 0);
 		shader->UseShaderObject();
 
 		shader->SetVariable("Projection", camParam->Projection);

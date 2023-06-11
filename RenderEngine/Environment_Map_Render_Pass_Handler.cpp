@@ -38,7 +38,7 @@ void Environment_Map_Render_Pass_Handler::Update(std::vector<std::vector<Render_
 		auto& shader = m_shaderVec[shaderIndex];
 
 		//shader->ResetTextureUnit(0);
-		shader.oneTimeWrite(&Shader_Object::ResetTextureUnit, 0);
+		shader.invoke(&Shader_Object::ResetTextureUnit, 0);
 		shader->UseShaderObject();
 		shader->SetVariable("Projection", captureProjection);
 
@@ -50,7 +50,7 @@ void Environment_Map_Render_Pass_Handler::Update(std::vector<std::vector<Render_
 			shader->ValidateShaderObject();
 
 			//shader->ResetTextureUnit(0);
-			shader.oneTimeWrite(&Shader_Object::ResetTextureUnit, 0);
+			shader.invoke(&Shader_Object::ResetTextureUnit, 0);
 			for (auto roIndex = 0; roIndex < renderObj[shaderIndex].size(); ++roIndex)
 			{
 				renderObj[shaderIndex][roIndex].RenderObject(shader, std::move(RenderObjectParams{false, true}));

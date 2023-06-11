@@ -40,7 +40,7 @@ void Prefilter_Render_Pass_Handler::Update(std::vector<std::vector<Render_Object
 		shader->SetVariable("skybox", 0);
 		shader->SetVariable("Projection", captureProjection);
 		//shader->ResetTextureUnit(0);
-		shader.oneTimeWrite(&Shader_Object::ResetTextureUnit, 0);
+		shader.invoke(&Shader_Object::ResetTextureUnit, 0);
 
 		for (auto mip = 0; mip < maxMipLevels; ++mip)
 		{
@@ -61,7 +61,7 @@ void Prefilter_Render_Pass_Handler::Update(std::vector<std::vector<Render_Object
 				if (auto val = CheckInputDataType<Fbo_Handler*>(*m_inputs->at(0))) 
 				{
 					//shader->SetTextureUnit("skybox");
-					shader.oneTimeWrite(&Shader_Object::SetTextureUnit, "skybox");
+					shader.invoke(&Shader_Object::SetTextureUnit, "skybox");
 					val->AttachFBOToTextureUnit(0, shader->GetTextureUnit(), 0, 0);
 				}
 

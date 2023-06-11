@@ -30,13 +30,13 @@ void Ssao_Blur_Render_Pass_Handler::Update(std::vector<std::vector<Render_Object
 		auto& shader = m_shaderVec[shaderIndex];
 
 		//shader->ResetTextureUnit(0);
-		shader.oneTimeWrite(&Shader_Object::ResetTextureUnit, 0);
+		shader.invoke(&Shader_Object::ResetTextureUnit, 0);
 		shader->UseShaderObject();
 
 		if (auto val = CheckInputDataType<Fbo_Handler*>(*m_inputs->at(0)))
 		{
 			//shader->SetTextureUnit("theTexture");
-			shader.oneTimeWrite(&Shader_Object::SetTextureUnit, "theTexture");
+			shader.invoke(&Shader_Object::SetTextureUnit, "theTexture");
 			val->AttachFBOToTextureUnit(0, shader->GetTextureUnit(), 0, 0);
 		}
 

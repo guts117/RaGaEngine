@@ -62,7 +62,7 @@ struct alignas(alignof(void*)) Render_Object::Impl
 			{
 				shader->SetVariable("prevPVM", *params.prevViewProjection * (m_PrevModelMatrix.get())->GetModelMatrix());
 				//m_PrevModelMatrix->SetModelMatrtix(m_ModelMatrix.get()->GetModelMatrix());
-				m_PrevModelMatrix.oneTimeWrite(&Transform::SetModelMatrtix, m_ModelMatrix.get()->GetModelMatrix());
+				m_PrevModelMatrix.invoke(&Transform::SetModelMatrtix, m_ModelMatrix.get()->GetModelMatrix());
 			}
 		}
 
@@ -100,44 +100,44 @@ struct alignas(alignof(void*)) Render_Object::Impl
 								{
 								case Albedo:
 									//shader->SetTextureUnitStructArr("material", 0, "albedoMap");
-									shader.oneTimeWrite(&Shader_Object::SetTextureUnitStructArr, "material", 0, "albedoMap");
+									shader.invoke(&Shader_Object::SetTextureUnitStructArr, "material", 0, "albedoMap");
 									break;
 								case Metallic:
 									//shader->SetTextureUnitStructArr("material", 0, "metallicMap");
-									shader.oneTimeWrite(&Shader_Object::SetTextureUnitStructArr, "material", 0, "metallicMap");
+									shader.invoke(&Shader_Object::SetTextureUnitStructArr, "material", 0, "metallicMap");
 									break;
 								case Roughness:
 									//shader->SetTextureUnitStructArr("material", 0, "roughnessMap");
-									shader.oneTimeWrite(&Shader_Object::SetTextureUnitStructArr, "material", 0, "roughnessMap");
+									shader.invoke(&Shader_Object::SetTextureUnitStructArr, "material", 0, "roughnessMap");
 									break;
 								case Normal:
 									//shader->SetTextureUnitStructArr("material", 0, "normalMap");
-									shader.oneTimeWrite(&Shader_Object::SetTextureUnitStructArr, "material", 0, "normalMap");
+									shader.invoke(&Shader_Object::SetTextureUnitStructArr, "material", 0, "normalMap");
 									break;
 								case Parallax:
 									//shader->SetTextureUnitStructArr("material", 0, "parallaxMap");
-									shader.oneTimeWrite(&Shader_Object::SetTextureUnitStructArr, "material", 0, "parallaxMap");
+									shader.invoke(&Shader_Object::SetTextureUnitStructArr, "material", 0, "parallaxMap");
 									break;
 								case Glow:
 									//shader->SetTextureUnitStructArr("material", 0, "glowMap");
-									shader.oneTimeWrite(&Shader_Object::SetTextureUnitStructArr, "material", 0, "glowMap");
+									shader.invoke(&Shader_Object::SetTextureUnitStructArr, "material", 0, "glowMap");
 									break;
 								case Displacement:
 									//shader->SetTextureUnit("displacementMap");
-									shader.oneTimeWrite(&Shader_Object::SetTextureUnit, "displacementMap");
+									shader.invoke(&Shader_Object::SetTextureUnit, "displacementMap");
 									//ToDo: Add dispFactor through material or something
 									shader->SetVariable("dispFactor", 0.2f);
 									break;
 								case Noise:
 									//shader->SetTextureUnit("noise");
-									shader.oneTimeWrite(&Shader_Object::SetTextureUnit, "noise");
+									shader.invoke(&Shader_Object::SetTextureUnit, "noise");
 									//ToDo: Add noiseFactor through material or something
 									//shader.SetVariable("noiseFactor", 0.2f);
 									break;
 								case HDR:
 								default:
 									//shader->SetTextureUnit("theTexture");
-									shader.oneTimeWrite(&Shader_Object::SetTextureUnit, "theTexture");
+									shader.invoke(&Shader_Object::SetTextureUnit, "theTexture");
 									break;
 								}
 
@@ -152,7 +152,7 @@ struct alignas(alignof(void*)) Render_Object::Impl
 		}
 		//ToDo: This should go in OnExitStage of RenderObject;
 		//shader->ResetTextureUnit(resetToTexUnit);
-		shader.oneTimeWrite(&Shader_Object::ResetTextureUnit, resetToTexUnit);
+		shader.invoke(&Shader_Object::ResetTextureUnit, resetToTexUnit);
 	}
 
 	bool IsTesselated()
