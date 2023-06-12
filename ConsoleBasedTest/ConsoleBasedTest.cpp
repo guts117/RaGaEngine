@@ -11,6 +11,7 @@
 
 using namespace std;
 
+//Component
 struct alignas(alignof(SimpleString<16>)) NameLog : ClusterableWithBuffer<sizeof(SimpleString<16>) * 3, alignof(SimpleString<16>)>
 {
 private:
@@ -48,6 +49,7 @@ public:
     const char* GetName() const { return name.getBuffer(); }
 };
 
+//Component
 struct alignas(alignof(int)) AgeLog : ClusterableWithBuffer<sizeof(int) * 3, alignof(int)>
 {
 private:
@@ -126,6 +128,7 @@ struct PersonHandlerNormal
     }
 };
 
+//Sub-System
 struct PersonLog
 {
     rw_clustering_ptr<NameLog> nameLog;
@@ -159,6 +162,7 @@ struct PersonLog
     }
 };
 
+//System
 struct PersonHandler
 {
     vector<PersonLog> personLogs;
