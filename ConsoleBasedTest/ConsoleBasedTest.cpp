@@ -17,7 +17,7 @@ using namespace std;
 //Systems are component + logic holders that can be parallelized by the Handlers
 //Handlers are purely there for holding similar systems together and concurrent execution
 
-struct NameLogComponent : ClusterableWithBuffer<sizeof(SimpleString<16>) * 3, alignof(SimpleString<16>)>
+struct NameLogComponent : ClusterableWithBuffer<sizeof(SimpleString<16>) * 3, alignof(SimpleString<16>), 1, mem_func_ptr<NameLogComponent, SimpleString<16>&, SimpleString<16>&, SimpleString<16>&>>
 {
 private:
     SimpleString<16> name;
@@ -25,8 +25,6 @@ private:
     SimpleString<16> fatherName;
 public:
     using memberf_pointer0 = void (NameLogComponent::*)(SimpleString<16>&, SimpleString<16>&, SimpleString<16>&);
-
-    tuple<memberf_pointer0> funcTups;
 
     NameLogComponent(string _name, string _motherName, string _fatherName)
         : name{ std::move(_name) }
@@ -60,7 +58,7 @@ public:
     const char* GetName() const { return name.getBuffer(); }
 };
 
-struct alignas(alignof(int)) AgeLogComponent : ClusterableWithBuffer<sizeof(int) * 3, alignof(int)>
+struct AgeLogComponent : ClusterableWithBuffer<sizeof(int) * 3, alignof(int), 1, mem_func_ptr<AgeLogComponent, int&, int&, int&>>
 {
 private:
     int age;
@@ -72,6 +70,7 @@ public:
         , motherAge { _motherAge}
         , fatherAge { _fatherAge}
     {
+        funcTups = std::make_tuple(&AgeLogComponent::ChangeAge);
     }
 
     void ChangeAge(int& _age, int& _motherAge, int& _fatherAge)
@@ -160,13 +159,13 @@ struct PersonLogSystem
             //SimpleString<16> momname = "rabin mom" + idStr + addstr;
             //SimpleString<16> dadname = "rabin dad" + idStr + addstr;
 
-            nameLog.invoke(&NameLogComponent::ChangeNameLvalue, name, momname, dadname);
+            nameLog.oneTimeWrite(0, &NameLogComponent::ChangeNameLvalue, name, momname, dadname);
 
             //int age = 0 + id + i;
             //int momage = 50 + id + i;
             //int dadage = 100 + id + i;
 
-            ageLog.invoke(&AgeLogComponent::ChangeAge, age, momage, dadage);
+            ageLog.oneTimeWrite(0, &AgeLogComponent::ChangeAge, age, momage, dadage);
 
             //R&D Hint: invoke here is much faster because when oneTimeWrite writes on the buffer that is in nameLog/ageLog 
             //i.e. the nameLog/ageLog itself gets pulled in the cache
@@ -176,16 +175,21 @@ struct PersonLogSystem
     }
 };
 
-struct PersonHandler
+struct PersonHandler : ClusterableWithBuffer<1, 1, 1, mem_func_ptr<PersonHandler>>
 {
     vector<PersonLogSystem> personLogs;
+
+    PersonHandler()
+    {
+        funcTups = std::make_tuple(&PersonHandler::Update);
+    }
 
     void Shuffle(std::mt19937& g)
     {
         std::shuffle(personLogs.begin(), personLogs.end(), g);
     }
 
-    void Update()
+    void Update(void)
     {
         for (auto& pL : personLogs)
         {
