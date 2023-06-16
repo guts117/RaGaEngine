@@ -11,15 +11,20 @@
 
 using namespace std;
 
-//NameLog Component
-struct alignas(alignof(SimpleString<16>)) NameLog : ClusterableWithBuffer<sizeof(SimpleString<16>) * 3, alignof(SimpleString<16>)>
+//Temporary Rule: 
+//Entities are general purpose object that holds anything (To be implemented)
+//Components are private data with setters and getters
+//Systems are component + logic holders that can be parallelized by the Handlers
+//Handlers are purely there for holding similar systems together and concurrent execution
+
+struct alignas(alignof(SimpleString<16>)) NameLogComponent : ClusterableWithBuffer<sizeof(SimpleString<16>) * 3, alignof(SimpleString<16>)>
 {
 private:
     SimpleString<16> name;
     SimpleString<16> motherName;
     SimpleString<16> fatherName;
 public:
-    NameLog(string _name, string _motherName, string _fatherName)
+    NameLogComponent(string _name, string _motherName, string _fatherName)
         : name{ std::move(_name) }
         , motherName{ std::move(_motherName) }
         , fatherName{ std::move(_fatherName) }
@@ -49,15 +54,14 @@ public:
     const char* GetName() const { return name.getBuffer(); }
 };
 
-//AgeLog Component
-struct alignas(alignof(int)) AgeLog : ClusterableWithBuffer<sizeof(int) * 3, alignof(int)>
+struct alignas(alignof(int)) AgeLogComponent : ClusterableWithBuffer<sizeof(int) * 3, alignof(int)>
 {
 private:
     int age;
     int motherAge;
     int fatherAge;
 public:
-    AgeLog(int _age, int _motherAge, int _fatherAge)
+    AgeLogComponent(int _age, int _motherAge, int _fatherAge)
         : age { _age}
         , motherAge { _motherAge}
         , fatherAge { _fatherAge}
@@ -77,8 +81,8 @@ public:
 
 struct PersonLogNormal
 {
-    shared_ptr<NameLog> nameLog;
-    shared_ptr<AgeLog> ageLog;
+    shared_ptr<NameLogComponent> nameLog;
+    shared_ptr<AgeLogComponent> ageLog;
 
     void Update(unsigned int& id, string& idStr)
     {
@@ -128,11 +132,10 @@ struct PersonHandlerNormal
     }
 };
 
-//PersonHandler Sub-System
-struct PersonLog
+struct PersonLogSystem
 {
-    rw_clustering_ptr<NameLog> nameLog;
-    rw_clustering_ptr<AgeLog> ageLog;
+    rw_clustering_ptr<NameLogComponent> nameLog;
+    rw_clustering_ptr<AgeLogComponent> ageLog;
 
     void Update(unsigned int& id, string& idStr)
     {
@@ -151,21 +154,20 @@ struct PersonLog
             //SimpleString<16> momname = "rabin mom" + idStr + addstr;
             //SimpleString<16> dadname = "rabin dad" + idStr + addstr;
 
-            nameLog.oneTimeWrite(0, &NameLog::ChangeNameLvalue, name, momname, dadname);
+            nameLog.oneTimeWrite(0, &NameLogComponent::ChangeNameLvalue, name, momname, dadname);
 
             //int age = 0 + id + i;
             //int momage = 50 + id + i;
             //int dadage = 100 + id + i;
 
-            ageLog.oneTimeWrite(0, &AgeLog::ChangeAge, age, momage, dadage);
+            ageLog.oneTimeWrite(0, &AgeLogComponent::ChangeAge, age, momage, dadage);
         }
     }
 };
 
-//PersonHandler System
 struct PersonHandler
 {
-    vector<PersonLog> personLogs;
+    vector<PersonLogSystem> personLogs;
 
     void Shuffle(std::mt19937& g)
     {
@@ -185,8 +187,8 @@ struct PersonHandler
 
 void TestNormal()
 {
-    vector<shared_ptr<NameLog>> nameLogPool = vector<shared_ptr<NameLog>>();
-    vector<shared_ptr<AgeLog>> ageLogPool = vector<shared_ptr<AgeLog>>();
+    vector<shared_ptr<NameLogComponent>> nameLogPool = vector<shared_ptr<NameLogComponent>>();
+    vector<shared_ptr<AgeLogComponent>> ageLogPool = vector<shared_ptr<AgeLogComponent>>();
     vector<PersonHandlerNormal> personHandlers = std::vector<PersonHandlerNormal>();
 
     for (int a = 0; a < 1000; ++a)
@@ -196,8 +198,8 @@ void TestNormal()
         for (int i = 0; i < 10000; ++i)
         {
             auto id = to_string(i);
-            nameLogPool.push_back(std::make_shared<NameLog>(NameLog{ "rabin" + id,  "rabin mom" + id, "rabin dad" + id }));
-            ageLogPool.push_back(std::make_shared<AgeLog>(AgeLog{ 0 + i, 50 + i, 100 + i }));
+            nameLogPool.push_back(std::make_shared<NameLogComponent>(NameLogComponent{ "rabin" + id,  "rabin mom" + id, "rabin dad" + id }));
+            ageLogPool.push_back(std::make_shared<AgeLogComponent>(AgeLogComponent{ 0 + i, 50 + i, 100 + i }));
             auto personLog = PersonLogNormal{ nameLogPool.back(), ageLogPool.back() };
             personHandlr.personLogs.push_back(std::move(personLog));
         }
@@ -230,8 +232,8 @@ void TestNormal()
 
 void TestSerialClusterExecution()
 {
-    ClusteringMemoryPool<NameLog> nameLogPool = ClusteringMemoryPool<NameLog>(10000);
-    ClusteringMemoryPool<AgeLog> ageLogPool = ClusteringMemoryPool<AgeLog>(10000);
+    ClusteringMemoryPool<NameLogComponent> nameLogPool = ClusteringMemoryPool<NameLogComponent>(10000);
+    ClusteringMemoryPool<AgeLogComponent> ageLogPool = ClusteringMemoryPool<AgeLogComponent>(10000);
     ClusteringMemoryPool<PersonHandler> perHandlerPool = ClusteringMemoryPool<PersonHandler>(10);
     vector<rw_clustering_ptr<PersonHandler>> personHandlers = vector<rw_clustering_ptr<PersonHandler>>();
 
@@ -243,7 +245,7 @@ void TestSerialClusterExecution()
         {
             auto iid = i + a;
             auto id = to_string(iid);
-            auto personLog = PersonLog{ nameLogPool.AddToPool(NameLog{ "rabin" + id,  "rabin mom" + id, "rabin dad" + id }), ageLogPool.AddToPool(AgeLog(0 + iid, 50 + iid, 100 + iid)) };
+            auto personLog = PersonLogSystem{ nameLogPool.AddToPool(NameLogComponent{ "rabin" + id,  "rabin mom" + id, "rabin dad" + id }), ageLogPool.AddToPool(AgeLogComponent(0 + iid, 50 + iid, 100 + iid)) };
             personHandlr.personLogs.push_back(std::move(personLog));
         }
 
@@ -284,8 +286,8 @@ void TestParallelClusterExecution()
 {
     auto factor = std::thread::hardware_concurrency() / 10.0f;
 
-    ClusteringMemoryPool<NameLog> nameLogPool = ClusteringMemoryPool<NameLog>(10000 * factor);
-    ClusteringMemoryPool<AgeLog> ageLogPool = ClusteringMemoryPool<AgeLog>(10000 * factor);
+    ClusteringMemoryPool<NameLogComponent> nameLogPool = ClusteringMemoryPool<NameLogComponent>(10000 * factor);
+    ClusteringMemoryPool<AgeLogComponent> ageLogPool = ClusteringMemoryPool<AgeLogComponent>(10000 * factor);
     ClusteringMemoryPool<PersonHandler> perHandlerPool = ClusteringMemoryPool<PersonHandler>(10 * factor);
     vector<rw_clustering_ptr<PersonHandler>> personHandlers = vector<rw_clustering_ptr<PersonHandler>>();
 
@@ -297,7 +299,7 @@ void TestParallelClusterExecution()
         {
             auto iid = i + a;
             auto id = to_string(iid);
-            auto personLog = PersonLog{ nameLogPool.AddToPool(NameLog{ "rabin" + id,  "rabin mom" + id, "rabin dad" + id }), ageLogPool.AddToPool(AgeLog(0 + iid, 50 + iid, 100 + iid)) };
+            auto personLog = PersonLogSystem{ nameLogPool.AddToPool(NameLogComponent{ "rabin" + id,  "rabin mom" + id, "rabin dad" + id }), ageLogPool.AddToPool(AgeLogComponent(0 + iid, 50 + iid, 100 + iid)) };
             personHandlr.personLogs.push_back(std::move(personLog));
         }
 
@@ -333,11 +335,11 @@ void TestParallelClusterExecution()
 
 void TestClusteringPoolWriteValidity()
 {
-    ClusteringMemoryPool<NameLog> nameLogPool = ClusteringMemoryPool<NameLog>(1);
-    ClusteringMemoryPool<AgeLog> ageLogPool = ClusteringMemoryPool<AgeLog>(1);
+    ClusteringMemoryPool<NameLogComponent> nameLogPool = ClusteringMemoryPool<NameLogComponent>(1);
+    ClusteringMemoryPool<AgeLogComponent> ageLogPool = ClusteringMemoryPool<AgeLogComponent>(1);
 
-    auto rw_ptr1 = nameLogPool.AddToPool(NameLog{ "rabin",  "rabin mom", "rabin dad" });
-    auto rw_ptr2 = ageLogPool.AddToPool(AgeLog{ 200,  200, 200 });
+    auto rw_ptr1 = nameLogPool.AddToPool(NameLogComponent{ "rabin",  "rabin mom", "rabin dad" });
+    auto rw_ptr2 = ageLogPool.AddToPool(AgeLogComponent{ 200,  200, 200 });
 
     cout << "Before write: " << rw_ptr1.get()->GetName() << endl;
     cout << "Before write: " << rw_ptr2.get()->GetAge() << endl;
@@ -346,12 +348,12 @@ void TestClusteringPoolWriteValidity()
         SimpleString<16> name = "valid write";
         SimpleString<16> momname = "valid write mom";
         SimpleString<16> dadname = "valid write dad";
-        rw_ptr1.oneTimeWrite(0, &NameLog::ChangeNameLvalue, name, momname, dadname);
+        rw_ptr1.oneTimeWrite(0, &NameLogComponent::ChangeNameLvalue, name, momname, dadname);
 
         int age = 0;
         int momage = 50;
         int dadage = 100;
-        rw_ptr2.oneTimeWrite(0, &AgeLog::ChangeAge, age, momage, dadage);
+        rw_ptr2.oneTimeWrite(0, &AgeLogComponent::ChangeAge, age, momage, dadage);
     }
     
     {
