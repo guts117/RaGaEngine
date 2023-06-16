@@ -154,13 +154,18 @@ struct PersonLogSystem
             //SimpleString<16> momname = "rabin mom" + idStr + addstr;
             //SimpleString<16> dadname = "rabin dad" + idStr + addstr;
 
-            nameLog.oneTimeWrite(0, &NameLogComponent::ChangeNameLvalue, name, momname, dadname);
+            nameLog.invoke(&NameLogComponent::ChangeNameLvalue, name, momname, dadname);
 
             //int age = 0 + id + i;
             //int momage = 50 + id + i;
             //int dadage = 100 + id + i;
 
-            ageLog.oneTimeWrite(0, &AgeLogComponent::ChangeAge, age, momage, dadage);
+            ageLog.invoke(&AgeLogComponent::ChangeAge, age, momage, dadage);
+
+            //R&D Hint: invoke here is much faster because when oneTimeWrite writes on the buffer that is in nameLog/ageLog 
+            //i.e. the nameLog/ageLog itself gets pulled in the cache
+            //so when nameLogPool.ExecuteClusteredTasksSerial() comes into play it has to pull all again causing worse performance
+            //ToDo: Figure out a way so that systems when they write don't pull the whole object in the cache, maybe seperate out the buffer to it's own contigious memory
         }
     }
 };
