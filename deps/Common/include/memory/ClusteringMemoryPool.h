@@ -414,7 +414,7 @@ struct funcWrapperToCluster final
 	inline T const* const getThis(const clustering_ptr<T>& ptr) const noexcept { return ptr.get(); }
 };
 
-template<class T, typename memfn>
+template<class T, typename memfn, typename Args>
 struct funcWrapper final
 {
 	mutable clustering_ptr<T> clusterPtr;
@@ -462,21 +462,18 @@ struct funcWrapper final
 		if (func != nullptr)
 		{
 			auto ptr = Get();
-			using Args = decltype(arguments(func));
 			ptr->~Args();
 			std::memset(ptr, 0, sizeof(ptr));
 		}
 	}
 
-	inline auto Get() noexcept
+	inline Args* Get() noexcept
 	{
-		using Args = decltype(arguments(func));
 		return reinterpret_cast<Args*>(inter.get(clusterPtr));
 	}
 
-	inline const auto Get() const noexcept
+	inline const Args* Get() const noexcept
 	{
-		using Args = decltype(arguments(func));
 		return &reinterpret_cast<const Args*>(inter.get(clusterPtr));
 	}
 
@@ -617,7 +614,7 @@ public:
 			auto& queue = (*ptr.poolHeadPtr)[ptr.clusterId].taskQueue;
 			using t = tuple<decay_t<Args>...>;
 			new (buf) t(std::make_tuple(std::move(args)...));
-			move_only_invoke_and_destroy_func_32<void()> defferedWrite = funcWrapper<T, memfn>(ptr, func, bufferId);
+			move_only_invoke_and_destroy_func_32<void()> defferedWrite = funcWrapper<T, memfn, t>(ptr, func, bufferId);
 			queue.resize_and_emplace(std::move(defferedWrite));
 			//auto size = queue.size();		
 			//queue.resize(size + 1);
