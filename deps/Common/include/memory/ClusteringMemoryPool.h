@@ -12,6 +12,17 @@
 
 using namespace std;
 
+template <unsigned int size = 1, unsigned int alignment = 1, unsigned int count = 1>
+struct ClusterableWithBuffer
+{
+	alignas(alignment) std::byte buffer[count][size];
+
+	ClusterableWithBuffer() noexcept
+	{
+		std::memset(buffer, 0, size);
+	}
+};
+
 //---------------------------------------------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------
 
@@ -169,22 +180,9 @@ auto arguments(T&& t) -> signature<decay_t<T>>::type;
 
 template<is_mem_fun T>
 auto arguments(const T& t) -> signature<decay_t<T>>::type;
-
-//---------------------------------------------------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------------------------------------------------
-
-template<typename T, typename... Args>
-using mem_func_ptr = void (T::*)(Args&&... args);
-
-template <unsigned int size = 1, unsigned int alignment = 1, unsigned int count = 1, class... Args>
-struct ClusterableWithBuffer
-{
-	alignas(alignment) std::byte buffer[count][size];
-	tuple<Args...> funcTups;
-
-	ClusterableWithBuffer() noexcept
-	{
-		std::memset(buffer, 0, size);
+struct functor {
+	int operator()(const string&, double) {
+		return 0;
 	}
 };
 
@@ -296,17 +294,13 @@ public:
 //---------------------------------------------------------------------------------------------------------------------------------
 //Modified version of: https://www.delftstack.com/howto/cpp/cpp-vector-implementation/
 
-template<class T>
-struct funcWrapper;
-
-template<class T>
 class clustering_task_queue
 {
 public:
 	inline clustering_task_queue(size_t n) noexcept
 		: cap{ n }
 		, elems{ 0 }
-		, arr{ new funcWrapper<T>[n] }
+		, arr{ new move_only_invoke_and_destroy_func_32<void()>[n] }
 
 	{
 	};
@@ -330,15 +324,16 @@ public:
 		return *this;
 	};
 
-	inline void resize() noexcept
+	inline void resize_and_emplace(move_only_invoke_and_destroy_func_32<void()>&& data) noexcept
 	{
 		if (elems < cap)
 		{
+			new (this->arr + elems) move_only_invoke_and_destroy_func_32<void()>(std::move(data));
 			++elems;
 		}
 		else
 		{
-			auto tmp_arr = new funcWrapper<T>[cap * 2];
+			auto tmp_arr = new move_only_invoke_and_destroy_func_32<void()>[cap * 2];
 			cap *= 2;
 			for (auto i = 0; i < elems; i++)
 			{
@@ -347,29 +342,7 @@ public:
 			delete[] arr;
 			arr = tmp_arr;
 
-			++elems;
-		}
-	}
-
-	inline void resize_and_emplace(funcWrapper<T>&& data) noexcept
-	{
-		if (elems < cap)
-		{
-			new (this->arr + elems) funcWrapper<T>(std::move(data));
-			++elems;
-		}
-		else
-		{
-			auto tmp_arr = new funcWrapper<T>[cap * 2];
-			cap *= 2;
-			for (auto i = 0; i < elems; i++)
-			{
-				tmp_arr[i] = std::move(arr[i]);
-			}
-			delete[] arr;
-			arr = tmp_arr;
-
-			new (this->arr + elems) funcWrapper<T>(std::move(data));
+			new (this->arr + elems) move_only_invoke_and_destroy_func_32<void()>(std::move(data));
 			++elems;
 		}
 	}
@@ -381,7 +354,7 @@ public:
 		{
 			for (auto i = 0; i < elems; i++)
 			{
-				arr[i].~funcWrapper<T>();
+				arr[i].~move_only_invoke_and_destroy_func_32<void()>();
 			}
 		}
 	}
@@ -398,7 +371,7 @@ public:
 	{
 		return cap;
 	}
-	funcWrapper<T>& operator[](size_t pos)
+	move_only_invoke_and_destroy_func_32<void()>& operator[](size_t pos) 
 	{
 		if (pos >= 0 && pos <= elems)
 		{
@@ -414,7 +387,7 @@ public:
 private:
 	size_t cap;
 	size_t elems;
-	funcWrapper<T>* arr = nullptr;
+	move_only_invoke_and_destroy_func_32<void()>* arr = nullptr;
 };
 
 //----------------------------------------------------------------------------------------------------------------------------------
@@ -426,7 +399,7 @@ struct clustering_ptr;
 template<class T>
 struct funcWrapperToCluster final
 {
-	short bufferId = -1;
+	unsigned int bufferId = 0;
 	
 	inline std::byte* get(clustering_ptr<T>& ptr) noexcept
 	{
@@ -441,35 +414,23 @@ struct funcWrapperToCluster final
 	inline T const* const getThis(const clustering_ptr<T>& ptr) const noexcept { return ptr.get(); }
 };
 
-template <typename ... Ts>
-constexpr auto decay_types(std::tuple<Ts...> const&)
--> std::tuple<std::remove_cv_t<std::remove_reference_t<Ts>>...>;
-
-template <typename T>
-using decay_tuple = decltype(decay_types(std::declval<T>()));
-
-template<class T>
+template<class T, typename memfn>
 struct funcWrapper final
 {
 	mutable clustering_ptr<T> clusterPtr;
+	mutable memfn func;
 	mutable funcWrapperToCluster<T> inter;
 
-	inline funcWrapper() = default;
-
-	inline funcWrapper(clustering_ptr<T>& ptr) noexcept
+	inline funcWrapper(clustering_ptr<T>& ptr, memfn& fn, unsigned int& bufferId) noexcept
 		: clusterPtr{ ptr }
-		, inter{ funcWrapperToCluster<T>() }
-	{
-	}
-
-	inline funcWrapper(clustering_ptr<T>& ptr, short& bufferId) noexcept
-		: clusterPtr{ ptr }
+		, func{ fn }
 		, inter{ bufferId }
 	{
 	}
 
 	inline funcWrapper(const funcWrapper& other) noexcept
 		: clusterPtr{ other.clusterPtr }
+		, func{ std::exchange(other.func, nullptr) }
 		, inter {std::exchange(other.inter, funcWrapperToCluster<T>())}
 	{
 	}
@@ -477,73 +438,62 @@ struct funcWrapper final
 	inline funcWrapper& operator=(const funcWrapper& other) noexcept
 	{
 		clusterPtr = other.clusterPtr;
+		func = std::exchange(other.func, nullptr);
 		inter = std::exchange(other.inter, funcWrapperToCluster<T>());
 		return *this;
 	}
 
 	funcWrapper(funcWrapper&& other) noexcept
 		: clusterPtr{ other.clusterPtr }
+		, func{ std::exchange(other.func, nullptr) }
 		, inter{ std::exchange(other.inter, funcWrapperToCluster<T>()) }
 	{
 	}
 	funcWrapper& operator=(funcWrapper&& other)
 	{
 		clusterPtr = other.clusterPtr;
+		func = std::exchange(other.func, nullptr);
 		inter = std::exchange(other.inter, funcWrapperToCluster<T>());
 		return *this;
 	}
 
 	inline ~funcWrapper() noexcept
 	{
-		if(clusterPtr.poolHeadPtr != nullptr && inter.bufferId != -1)
+		if (func != nullptr)
 		{
 			auto ptr = Get();
-			auto func = std::get<0>(inter.getThis(clusterPtr)->funcTups);
-			using Args = decay_tuple<decltype(arguments(func))>;
+			using Args = decltype(arguments(func));
 			ptr->~Args();
 			std::memset(ptr, 0, sizeof(ptr));
 		}
-		clusterPtr.poolHeadPtr = nullptr;
-		inter.bufferId = -1;
 	}
 
 	inline auto Get() noexcept
 	{
-		auto func = std::get<0>(inter.getThis(clusterPtr)->funcTups);
-		using Args = decay_tuple<decltype(arguments(func))>;
+		using Args = decltype(arguments(func));
 		return reinterpret_cast<Args*>(inter.get(clusterPtr));
 	}
 
 	inline const auto Get() const noexcept
 	{
-		auto func = std::get<0>(inter.getThis(clusterPtr)->funcTups);
-		using Args = decay_tuple<decltype(arguments(func))>;
+		using Args = decltype(arguments(func));
 		return &reinterpret_cast<const Args*>(inter.get(clusterPtr));
 	}
 
 	inline void operator()() noexcept
 	{
-		auto func = std::get<0>(inter.getThis(clusterPtr)->funcTups);
+		auto args = std::make_tuple(inter.getThis(clusterPtr));
+		auto tupArgs = std::tuple_cat(args, std::move(*Get()));
 
-		if constexpr (std::is_same_v<decltype(func), void(T::*)()>)
+		//works for void(T) and void (T&&)
+		if constexpr (std::is_rvalue_reference<decltype(std::get<0>(arguments(func)))>::value)
 		{
-			std::invoke(func, inter.getThis(clusterPtr));
+			std::apply(std::move(func), std::move(tupArgs));
 		}
+		//works for void(T&)
 		else
 		{
-			auto args = std::make_tuple(inter.getThis(clusterPtr));
-			auto tupArgs = std::tuple_cat(args, std::move(*Get()));
-
-			//works for void(T) and void (T&&)
-			if constexpr (std::is_rvalue_reference_v<decltype(std::get<0>(arguments(func)))>)
-			{
-				std::apply(std::move(func), std::move(tupArgs));
-			}
-			//works for void(T&)
-			else
-			{
-				std::apply(func, tupArgs);
-			}
+			std::apply(func, tupArgs);
 		}
 	}
 };
@@ -555,7 +505,7 @@ template<class T>
 struct DataTaskBlockPair
 {
 	std::vector<T> dataBlock;
-	clustering_task_queue<T> taskQueue;
+	clustering_task_queue taskQueue;
 	std::byte padding[16];
 };
 
@@ -646,7 +596,7 @@ public:
 	//Write task only pushed to the queue once and invalidated subsequent push to the queue until the queue has been executed
 	//Sig: Accepts void(T&&...) with all parameters of the same reference type
 	template<typename memfn, typename... Args>
-	void oneTimeWrite(short bufferId, memfn&& func, Args&&... args)
+	void oneTimeWrite(unsigned int bufferId, memfn&& func, Args&&... args)
 	{
 		auto staticCheckForCharArray= [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_same_v<std::decay_t<packArg>, char*> && !std::is_same_v<std::decay_t<packArg>, const char*>, "Has char array!! Use SimpleString instead!"); };
 		(staticCheckForCharArray(std::forward<Args>(args)), ...);
@@ -667,10 +617,12 @@ public:
 			auto& queue = (*ptr.poolHeadPtr)[ptr.clusterId].taskQueue;
 			using t = tuple<decay_t<Args>...>;
 			new (buf) t(std::make_tuple(std::move(args)...));
-			queue.resize_and_emplace(std::move(funcWrapper<T>(ptr, bufferId)));
+			move_only_invoke_and_destroy_func_32<void()> defferedWrite = funcWrapper<T, memfn>(ptr, func, bufferId);
+			queue.resize_and_emplace(std::move(defferedWrite));
 			//auto size = queue.size();		
-			//queue.resize();
-			//new (&queue[size]) funcWrapper<T>(ptr, bufferId);
+			//queue.resize(size + 1);
+			//new (&queue[size]) move_only_invoke_and_destroy_func_32<void()>();
+			//queue.emplace_back(std::move(defferedWrite));
 		}
 	}
 
@@ -681,10 +633,12 @@ public:
 	void stackingWrite(memfn&& func)
 	{
 		auto& queue = (*ptr.poolHeadPtr)[ptr.clusterId].taskQueue;
-		queue.resize_and_emplace(std::move(funcWrapper<T>(ptr)));
+		move_only_invoke_and_destroy_func_32<void()> defferedWrite = [func = std::forward<memfn>(func), this]() { std::invoke(func, ptr.get()); };
+		queue.resize_and_emplace(std::move(defferedWrite));
 		//auto size = queue.size();
-		//queue.resize();
-		//new (&queue[size]) funcWrapper<T>(ptr);
+		//queue.resize(size + 1);
+		//new (&queue[size]) move_only_invoke_and_destroy_func_32<void()>(std::move(defferedWrite));
+		//queue.emplace_back(std::move(defferedWrite));
 	}
 };
 
@@ -703,7 +657,7 @@ public:
 		{
 			auto vec = std::vector<T>();
 			vec.reserve(m_block_size);
-			auto vec2 = clustering_task_queue<T>(m_block_size);
+			auto vec2 = clustering_task_queue(m_block_size);
 			m_memory_pool.emplace_back(DataTaskBlockPair<T>{std::move(vec), std::move(vec2)});
 			return AddToPool(std::move(obj));
 		}
@@ -720,7 +674,7 @@ public:
 			{
 				auto vec = std::vector<T>();
 				vec.reserve(m_block_size);
-				auto vec2 = clustering_task_queue<T>(m_block_size);
+				auto vec2 = clustering_task_queue(m_block_size);
 				m_memory_pool.emplace_back(DataTaskBlockPair<T>{std::move(vec), std::move(vec2)});
 				return AddToPool(std::move(obj));
 			}
