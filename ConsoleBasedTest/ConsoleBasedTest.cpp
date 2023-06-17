@@ -17,23 +17,18 @@ using namespace std;
 //Systems are component + logic holders that can be parallelized by the Handlers
 //Handlers are purely there for holding similar systems together and concurrent execution
 
-struct NameLogComponent : ClusterableWithBuffer<sizeof(SimpleString<16>) * 3, alignof(SimpleString<16>)>
+struct alignas(alignof(SimpleString<16>)) NameLogComponent : ClusterableWithBuffer<sizeof(SimpleString<16>) * 3, alignof(SimpleString<16>)>
 {
 private:
     SimpleString<16> name;
     SimpleString<16> motherName;
     SimpleString<16> fatherName;
 public:
-    using memberf_pointer0 = void (NameLogComponent::*)(SimpleString<16>&, SimpleString<16>&, SimpleString<16>&);
-
-    tuple<memberf_pointer0> funcTups;
-
     NameLogComponent(string _name, string _motherName, string _fatherName)
         : name{ std::move(_name) }
         , motherName{ std::move(_motherName) }
         , fatherName{ std::move(_fatherName) }
     {
-        funcTups = std::make_tuple(&NameLogComponent::ChangeNameLvalue);
     }
 
     void ChangeNameLvalue(SimpleString<16>& _name, SimpleString<16>& _motherName, SimpleString<16>& _fatherName)
@@ -45,7 +40,6 @@ public:
         //motherName = std::move(_motherName);
         //fatherName = std::move(_fatherName);
     }
-    
 
     void ChangeNameRvalue(string& _name, string&& _motherName, string& _fatherName)
     {
