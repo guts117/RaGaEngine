@@ -19,7 +19,10 @@ struct ClusterableWithBuffer
 
 	ClusterableWithBuffer() noexcept
 	{
-		std::memset(buffer, 0, size);
+		for(auto i = 0; i < count; ++i)
+		{
+			std::memset(&buffer[i], 0, size);
+		}		
 	}
 };
 
@@ -581,7 +584,7 @@ public:
 	T const* const get() const			{ return ptr.get(); }
 	bool isValid() const				{ return ptr.poolHeadPtr != nullptr; }
 
-
+	//Use for tasks that are simple
 	//Immediate write like a normal function call
 	//Sig: Accepts void(T&&...)
 	template<typename memfn, typename... Args>
@@ -590,6 +593,7 @@ public:
 		std::invoke(std::forward<memfn>(func), ptr.get(), std::forward<Args>(args)...);
 	}
 
+	//Don't use for tasks that are simple
 	//Write task only pushed to the queue once and invalidated subsequent push to the queue until the queue has been executed
 	//Sig: Accepts void(T&&...) with all parameters of the same reference type
 	template<typename memfn, typename... Args>
@@ -623,7 +627,7 @@ public:
 		}
 	}
 
-
+	//Prefer this over oneTimeWrite if you can
 	//Fast push to the write task queue. Write to the same object can be stacked and will be logically cohorent
 	//Sig: Accepts void()
 	template<typename memfn>
