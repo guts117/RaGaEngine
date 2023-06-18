@@ -306,6 +306,13 @@ public:
 class clustering_task_queue
 {
 public:
+	inline clustering_task_queue() noexcept
+		: cap{ 0 }
+		, elems{ 0 }
+		, arr{ nullptr }
+	{
+	};
+
 	inline clustering_task_queue(size_t n) noexcept
 		: cap{ n }
 		, elems{ 0 }
@@ -510,9 +517,9 @@ struct funcWrapper final
 template<class T>
 struct DataTaskBlockPair
 {
-	std::vector<T> dataBlock;
-	clustering_task_queue taskQueue;
-	std::byte padding[16];
+	std::vector<T> dataBlock = std::vector<T>();
+	clustering_task_queue taskQueue = clustering_task_queue();
+	atomic_flag isBeingAccessed = ATOMIC_FLAG_INIT;
 };
 
 template<class T>
@@ -524,10 +531,10 @@ template<class T>
 struct clustering_ptr
 {
 private:
-	inline T* operator->()		{ return &((*poolHeadPtr)[clusterId].dataBlock[index]); }
+	inline T* operator->()		{ return &((*poolHeadPtr).m_memory_pool[clusterId].dataBlock[index]); }
 	inline T* get()			
 	{ 
-		return &((*poolHeadPtr)[clusterId].dataBlock[index]); 
+		return &((*poolHeadPtr).m_memory_pool[clusterId].dataBlock[index]);
 	}
 
 public:
@@ -536,7 +543,7 @@ public:
 
 	inline clustering_ptr() = default;
 
-	inline clustering_ptr(std::vector<DataTaskBlockPair<T>>* _poolHeadPtr, unsigned int _clusterId, unsigned int _index)
+	inline clustering_ptr(ClusteringMemoryPool<T>* _poolHeadPtr, unsigned int _clusterId, unsigned int _index)
 		: poolHeadPtr { _poolHeadPtr }
 		, clusterId { _clusterId }
 		, index {_index}
@@ -580,12 +587,12 @@ public:
 		index = 0;
 	}
 
-	std::vector<DataTaskBlockPair<T>>* poolHeadPtr = nullptr;		//size 8
+	ClusteringMemoryPool<T>* poolHeadPtr = nullptr;		//size 8
 	unsigned int clusterId = 0;										//size 4
 	unsigned int index = 0;											//size 4
 
-	T const* const operator-> () const	{ return &((*poolHeadPtr)[clusterId].dataBlock[index]); }
-	T const* const get() const			{ return &((*poolHeadPtr)[clusterId].dataBlock[index]); }
+	T const* const operator-> () const	{ return &((*poolHeadPtr).m_memory_pool[clusterId].dataBlock[index]); }
+	T const* const get() const			{ return &((*poolHeadPtr).m_memory_pool[clusterId].dataBlock[index]); }
 };
 
 template<class T>
@@ -596,7 +603,7 @@ private:
 
 public:
 	explicit rw_clustering_ptr() = default;
-	explicit rw_clustering_ptr(std::vector<DataTaskBlockPair<T>>* poolHeadPtr, unsigned int clusterId, unsigned int index) : ptr{ poolHeadPtr, clusterId, index} {}
+	explicit rw_clustering_ptr(ClusteringMemoryPool<T>* poolHeadPtr, unsigned int clusterId, unsigned int index) : ptr{ poolHeadPtr, clusterId, index} {}
 
 	inline rw_clustering_ptr(const rw_clustering_ptr& rhs) noexcept
 		: ptr{ rhs.ptr }
@@ -649,6 +656,13 @@ public:
 		auto staticCheckForComponent = [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_same_v<std::decay_t<packArg>, string>, "Has std::string!! Use SimpleString instead!"); };
 		(staticCheckForString(std::forward<Args>(args)), ...);
 
+		while ((*ptr.poolHeadPtr)[ptr.clusterId].isBeingAccessed.test(memory_order::relaxed))
+		{
+			std::this_thread::yield();
+		}
+
+		(*ptr.poolHeadPtr)[ptr.clusterId].isBeingAccessed.test_and_set(memory_order::relaxed);
+		
 		//ToDo: check whether all args are of the same reference type(i.e all lvalue or all rvalue)
 		//auto staticCheckForLvalue = [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_lvalue_reference<packArg>::value, "Has lvalue reference please change"); };
 		//(staticCheckForLvalue(std::forward<Args>(args)), ...);
@@ -668,6 +682,8 @@ public:
 			//queue.resize(size + 1);
 			//new (&queue[size]) move_only_invoke_and_destroy_func_32<void()>();
 		}
+
+		(*ptr.poolHeadPtr).m_memory_pool[ptr.clusterId].isBeingAccessed.clear(memory_order::relaxed);
 	}
 
 	//Prefer this over oneTimeWrite if you can for deffered writes
@@ -676,12 +692,21 @@ public:
 	template<typename memfn>
 	void stackingWrite(memfn&& func)
 	{
-		auto& queue = (*ptr.poolHeadPtr)[ptr.clusterId].taskQueue;
+		while ((*ptr.poolHeadPtr).m_memory_pool[ptr.clusterId].isBeingAccessed.test(memory_order::relaxed))
+		{
+			std::this_thread::yield();
+		}
+
+		(*ptr.poolHeadPtr).m_memory_pool[ptr.clusterId].isBeingAccessed.test_and_set(memory_order::relaxed);
+
+		auto& queue = (*ptr.poolHeadPtr).m_memory_pool[ptr.clusterId].taskQueue;
 		move_only_invoke_and_destroy_func_32<void()> defferedWrite = [func = std::forward<memfn>(func), this]() { std::invoke(func, ptr.get()); };
 		queue.resize_and_emplace(std::move(defferedWrite));
 		//auto size = queue.size();
 		//queue.resize(size + 1);
 		//new (&queue[size]) move_only_invoke_and_destroy_func_32<void()>(std::move(defferedWrite));
+
+		(*ptr.poolHeadPtr).m_memory_pool[ptr.clusterId].isBeingAccessed.clear(memory_order::relaxed);
 	}
 };
 
@@ -701,7 +726,7 @@ public:
 			auto vec = std::vector<T>();
 			vec.reserve(m_block_size);
 			auto vec2 = clustering_task_queue(m_block_size);
-			m_memory_pool.emplace_back(DataTaskBlockPair<T>{std::move(vec), std::move(vec2)});
+			m_memory_pool.emplace_back(DataTaskBlockPair<T>(std::move(vec), std::move(vec2)));
 			return AddToPool(std::move(obj));
 		}
 		else
@@ -709,7 +734,7 @@ public:
 			auto& lastPool = m_memory_pool[m_memory_pool.size() - 1];
 			if (lastPool.dataBlock.size() < m_block_size)
 			{
-				auto ptr = rw_clustering_ptr{ &m_memory_pool, static_cast<unsigned int>(m_memory_pool.size() - 1), static_cast<unsigned int>(lastPool.dataBlock.size()) };
+				auto ptr = rw_clustering_ptr{ this, static_cast<unsigned int>(m_memory_pool.size() - 1), static_cast<unsigned int>(lastPool.dataBlock.size()) };
 				lastPool.dataBlock.emplace_back(std::move(obj));
 				return ptr;
 			}
@@ -718,7 +743,7 @@ public:
 				auto vec = std::vector<T>();
 				vec.reserve(m_block_size);
 				auto vec2 = clustering_task_queue(m_block_size);
-				m_memory_pool.emplace_back(DataTaskBlockPair<T>{std::move(vec), std::move(vec2)});
+				m_memory_pool.emplace_back(DataTaskBlockPair<T>(std::move(vec), std::move(vec2)));
 				return AddToPool(std::move(obj));
 			}
 		}
