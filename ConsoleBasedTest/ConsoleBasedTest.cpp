@@ -267,12 +267,8 @@ void TestSerialClusterExecution()
     for (auto& pH : personHandlers)
     {
         //pH.Shuffle(g);
-        pH.stackingWrite(&PersonHandler::Update);
+        pH.invoke(&PersonHandler::Update);
     }
-
-    perHandlerPool.ExecuteClusteredTasksSerial();
-    nameLogPool.ExecuteClusteredTasksSerial();
-    ageLogPool.ExecuteClusteredTasksSerial();
 
     auto end = chrono::high_resolution_clock::now();
 

@@ -712,7 +712,14 @@ public:
 
 		if (threadCount == 1)
 		{
-			ExecuteClusteredTasksSerial();
+			for (auto& a : m_memory_pool)
+			{
+				for (auto j = 0; j < a.taskQueue.size(); ++j)
+				{
+					a.taskQueue[j]();
+				}
+				a.taskQueue.clear();
+			}
 		}
 		else
 		{
@@ -729,18 +736,6 @@ public:
 			{
 				pool.waitForAllTaskToFinish();
 			}
-		}
-	}
-
-	void ExecuteClusteredTasksSerial()
-	{
-		for (auto& a : m_memory_pool) 
-		{
-			for (auto j = 0; j < a.taskQueue.size(); ++j)
-			{
-				a.taskQueue[j]();
-			}
-			a.taskQueue.clear();
 		}
 	}
 
