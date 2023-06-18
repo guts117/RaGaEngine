@@ -12,6 +12,12 @@
 
 using namespace std;
 
+//ToDo: Flesh this class out
+struct Component
+{
+
+};
+
 template <unsigned int size = 1, unsigned int alignment = 1, unsigned int count = 1>
 struct ClusterableWithBuffer
 {
@@ -599,10 +605,15 @@ public:
 	template<typename memfn, typename... Args>
 	void oneTimeWrite(unsigned int bufferId, memfn&& func, Args&&... args)
 	{
+		static_assert(!std::is_base_of<Component, T>::value, "Compenent setters should not be complex, use invoke or stackingWrite instead and don't use ClusterableWithBuffer!!");
+
 		auto staticCheckForCharArray= [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_same_v<std::decay_t<packArg>, char*> && !std::is_same_v<std::decay_t<packArg>, const char*>, "Has char array!! Use SimpleString instead!"); };
 		(staticCheckForCharArray(std::forward<Args>(args)), ...);
 
 		auto staticCheckForString = [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_same_v<std::decay_t<packArg>, string>, "Has std::string!! Use SimpleString instead!"); };
+		(staticCheckForString(std::forward<Args>(args)), ...);
+
+		auto staticCheckForComponent = [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_same_v<std::decay_t<packArg>, string>, "Has std::string!! Use SimpleString instead!"); };
 		(staticCheckForString(std::forward<Args>(args)), ...);
 
 		//ToDo: check whether all args are of the same reference type(i.e all lvalue or all rvalue)

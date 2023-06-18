@@ -17,7 +17,7 @@ using namespace std;
 //Systems are component + logic holders that can be parallelized by the Handlers
 //Handlers are purely there for holding similar systems together and concurrent execution
 
-struct alignas(alignof(SimpleString<16>)) NameLogComponent : ClusterableWithBuffer<sizeof(SimpleString<16>) * 3, alignof(SimpleString<16>)>
+struct alignas(alignof(SimpleString<16>)) NameLogComponent : Component
 {
 private:
     SimpleString<16> name;
@@ -54,7 +54,7 @@ public:
     const char* GetName() const { return name.getBuffer(); }
 };
 
-struct alignas(alignof(int)) AgeLogComponent : ClusterableWithBuffer<sizeof(int) * 3, alignof(int)>
+struct alignas(alignof(int)) AgeLogComponent : Component
 {
 private:
     int age;
@@ -353,12 +353,12 @@ void TestClusteringPoolWriteValidity()
         SimpleString<16> name = "valid write";
         SimpleString<16> momname = "valid write mom";
         SimpleString<16> dadname = "valid write dad";
-        rw_ptr1.oneTimeWrite(0, &NameLogComponent::ChangeNameLvalue, name, momname, dadname);
+        rw_ptr1.invoke(&NameLogComponent::ChangeNameLvalue, name, momname, dadname);
 
         int age = 0;
         int momage = 50;
         int dadage = 100;
-        rw_ptr2.oneTimeWrite(0, &AgeLogComponent::ChangeAge, age, momage, dadage);
+        rw_ptr2.invoke(&AgeLogComponent::ChangeAge, age, momage, dadage);
     }
     
     {
