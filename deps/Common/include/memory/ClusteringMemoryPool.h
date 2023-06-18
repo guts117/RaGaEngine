@@ -634,11 +634,10 @@ public:
 			//auto size = queue.size();		
 			//queue.resize(size + 1);
 			//new (&queue[size]) move_only_invoke_and_destroy_func_32<void()>();
-			//queue.emplace_back(std::move(defferedWrite));
 		}
 	}
 
-	//Prefer this over oneTimeWrite if you can
+	//Prefer this over oneTimeWrite if you can for deffered writes
 	//Fast push to the write task queue. Write to the same object can be stacked and will be logically cohorent
 	//Sig: Accepts void()
 	template<typename memfn>
@@ -650,7 +649,6 @@ public:
 		//auto size = queue.size();
 		//queue.resize(size + 1);
 		//new (&queue[size]) move_only_invoke_and_destroy_func_32<void()>(std::move(defferedWrite));
-		//queue.emplace_back(std::move(defferedWrite));
 	}
 };
 
@@ -695,13 +693,13 @@ public:
 	
 	void ExecuteClusters(int startId, int endId)
 	{
-		for (int i = startId; i < endId; ++i)
+		for (int poolId = startId; poolId < endId; ++poolId)
 		{
-			for (auto j = 0; j < m_memory_pool[i].taskQueue.size(); ++j)
+			for (auto taskId = 0; taskId < m_memory_pool[poolId].taskQueue.size(); ++taskId)
 			{
-				m_memory_pool[i].taskQueue[j]();
+				m_memory_pool[poolId].taskQueue[taskId]();
 			}
-			m_memory_pool[i].taskQueue.clear();
+			m_memory_pool[poolId].taskQueue.clear();
 		}
 	}
 
@@ -712,22 +710,22 @@ public:
 
 		if (threadCount == 1)
 		{
-			for (auto& a : m_memory_pool)
+			for (auto& pool : m_memory_pool)
 			{
-				for (auto j = 0; j < a.taskQueue.size(); ++j)
+				for (auto taskId = 0; taskId < pool.taskQueue.size(); ++taskId)
 				{
-					a.taskQueue[j]();
+					pool.taskQueue[taskId]();
 				}
-				a.taskQueue.clear();
+				pool.taskQueue.clear();
 			}
 		}
 		else
 		{
-			for (int i = 0; i < threadCount; ++i)
+			for (int threadId = 0; threadId < threadCount; ++threadId)
 			{
 				auto groupCount = poolSize / threadCount;
-				auto startId = i * groupCount;
-				auto endId = (i + 1) * groupCount;
+				auto startId = threadId * groupCount;
+				auto endId = (threadId + 1) * groupCount;
 				auto task = [startId = startId, endId = endId, this]() {std::invoke(&ClusteringMemoryPool<T>::ExecuteClusters, this, startId, endId); };
 				pool.submit(task);
 			}
