@@ -17,12 +17,12 @@ using namespace std;
 //Systems are component + logic holders that can be parallelized by the Handlers
 //Handlers are purely there for holding similar systems together and concurrent execution
 
-struct alignas(alignof(SimpleString<16>)) NameLogComponent : Component
+struct alignas(alignof(SimpleString<32>)) NameLogComponent : Component
 {
 private:
-    SimpleString<16> name;
-    SimpleString<16> motherName;
-    SimpleString<16> fatherName;
+    SimpleString<32> name;
+    SimpleString<32> motherName;
+    SimpleString<32> fatherName;
 public:
     NameLogComponent(string _name, string _motherName, string _fatherName)
         : name{ std::move(_name) }
@@ -31,7 +31,7 @@ public:
     {
     }
 
-    void ChangeNameLvalue(SimpleString<16>& _name, SimpleString<16>& _motherName, SimpleString<16>& _fatherName)
+    void ChangeNameLvalue(SimpleString<32>& _name, SimpleString<32>& _motherName, SimpleString<32>& _fatherName)
     {
         name = std::move(_name);
         motherName = std::move(_motherName);
@@ -83,12 +83,14 @@ struct PersonLogNormal
 {
     shared_ptr<NameLogComponent> nameLog;
     shared_ptr<AgeLogComponent> ageLog;
+    int id;
 
-    void Update(unsigned int& id, string& idStr)
+    void Update()
     {
-        SimpleString<16> name = "valid rabin" + idStr;
-        SimpleString<16> momname = "valid rabin mom" + idStr;
-        SimpleString<16> dadname = "valid rabin dad" + idStr;
+        auto idStr = to_string(id);
+        SimpleString<32> name = "valid rabin" + idStr;
+        SimpleString<32> momname = "valid rabin mom" + idStr;
+        SimpleString<32> dadname = "valid rabin dad" + idStr;
 
         int age = 0 + id;
         int momage = 50 + id;
@@ -97,9 +99,9 @@ struct PersonLogNormal
         for (int i = 0; i < 1; ++i)
         {
             //auto addstr = to_string(i);
-            //SimpleString<16> name = "rabin" + idStr + addstr;
-            //SimpleString<16> momname = "rabin mom" + idStr + addstr;
-            //SimpleString<16> dadname = "rabin dad" + idStr + addstr;
+            //SimpleString<32> name = "rabin" + idStr + addstr;
+            //SimpleString<32> momname = "rabin mom" + idStr + addstr;
+            //SimpleString<32> dadname = "rabin dad" + idStr + addstr;
 
             nameLog->ChangeNameLvalue(name, momname, dadname);
 
@@ -114,7 +116,7 @@ struct PersonLogNormal
 
 struct PersonHandlerNormal
 {
-    vector<PersonLogNormal> personLogs;
+    vector<shared_ptr<PersonLogNormal>> personLogs;
 
     void Shuffle(std::mt19937& g)
     {
@@ -125,23 +127,32 @@ struct PersonHandlerNormal
     {
         for (auto& pL : personLogs)
         {
-            unsigned int id = 1;
-            auto idStr = to_string(id);
-            pL.Update(id, idStr);
+            pL->Update();
         }
     }
 };
 
-struct PersonLogSystem
+struct PersonLogBehaviour
 {
+private:
     rw_clustering_ptr<NameLogComponent> nameLog;
     rw_clustering_ptr<AgeLogComponent> ageLog;
+    int id;
+public:
 
-    void Update(unsigned int& id, string& idStr)
+    PersonLogBehaviour(rw_clustering_ptr<NameLogComponent>&& _nameLog, rw_clustering_ptr<AgeLogComponent>&& _ageLog, int& _id)
+        : nameLog{ std::move(_nameLog) }
+        , ageLog{ std::move(_ageLog) }
+        , id{_id}
     {
-        SimpleString<16> name = "valid rabin" + idStr;
-        SimpleString<16> momname = "valid rabin mom" + idStr;
-        SimpleString<16> dadname = "valid rabin dad" + idStr;
+    }
+
+    void Update()
+    {
+        auto idStr = to_string(id);
+        SimpleString<32> name = "valid rabin" + idStr;
+        SimpleString<32> momname = "valid rabin mom" + idStr;
+        SimpleString<32> dadname = "valid rabin dad" + idStr;
 
         int age = 0 + id;
         int momage = 50 + id;
@@ -150,9 +161,9 @@ struct PersonLogSystem
         for (int i = 0; i < 1; ++i)
         {
             //auto addstr = to_string(i);
-            //SimpleString<16> name = "rabin" + idStr + addstr;
-            //SimpleString<16> momname = "rabin mom" + idStr + addstr;
-            //SimpleString<16> dadname = "rabin dad" + idStr + addstr;
+            //SimpleString<32> name = "rabin" + idStr + addstr;
+            //SimpleString<32> momname = "rabin mom" + idStr + addstr;
+            //SimpleString<32> dadname = "rabin dad" + idStr + addstr;
 
             nameLog.invoke(&NameLogComponent::ChangeNameLvalue, name, momname, dadname);
 
@@ -170,22 +181,28 @@ struct PersonLogSystem
     }
 };
 
-struct PersonHandler
+struct PersonSystem
 {
-    vector<PersonLogSystem> personLogs;
+    vector<rw_clustering_ptr<PersonLogBehaviour>> personLogs;
 
     void Shuffle(std::mt19937& g)
     {
         std::shuffle(personLogs.begin(), personLogs.end(), g);
     }
 
-    void Update()
+    void UpdateSerial()
     {
         for (auto& pL : personLogs)
         {
-            unsigned int id = 1;
-            string idStr = to_string(id).c_str();
-            pL.Update(id, idStr);
+            pL.invoke(&PersonLogBehaviour::Update);
+        }
+    }
+
+    void UpdateParallel()
+    {
+        for (auto& pL : personLogs)
+        {
+            pL.stackingWrite(&PersonLogBehaviour::Update);
         }
     }
 };
@@ -194,36 +211,25 @@ void TestNormal()
 {
     vector<shared_ptr<NameLogComponent>> nameLogPool = vector<shared_ptr<NameLogComponent>>();
     vector<shared_ptr<AgeLogComponent>> ageLogPool = vector<shared_ptr<AgeLogComponent>>();
-    vector<PersonHandlerNormal> personHandlers = std::vector<PersonHandlerNormal>();
+    PersonHandlerNormal personSystem = PersonHandlerNormal();
 
-    for (int a = 0; a < 1000; ++a)
+    for (int i = 0; i < 10000000; ++i)
     {
-        auto personHandlr = PersonHandlerNormal();
-
-        for (int i = 0; i < 10000; ++i)
-        {
-            auto id = to_string(i);
-            nameLogPool.push_back(std::make_shared<NameLogComponent>(NameLogComponent{ "rabin" + id,  "rabin mom" + id, "rabin dad" + id }));
-            ageLogPool.push_back(std::make_shared<AgeLogComponent>(AgeLogComponent{ 0 + i, 50 + i, 100 + i }));
-            auto personLog = PersonLogNormal{ nameLogPool.back(), ageLogPool.back() };
-            personHandlr.personLogs.push_back(std::move(personLog));
-        }
-
-        personHandlers.push_back(std::move(personHandlr));
+        auto id = to_string(i);
+        nameLogPool.push_back(std::make_shared<NameLogComponent>(NameLogComponent{ "rabin" + id,  "rabin mom" + id, "rabin dad" + id }));
+        ageLogPool.push_back(std::make_shared<AgeLogComponent>(AgeLogComponent{ 0 + i, 50 + i, 100 + i }));
+        auto personLog = std::make_shared<PersonLogNormal>(nameLogPool.back(), ageLogPool.back(), i);
+        personSystem.personLogs.push_back(std::move(personLog));
     }
 
     std::random_device rd;
     std::mt19937 g(rd());
 
+    personSystem.Shuffle(g);
+
     auto start = chrono::high_resolution_clock::now();
 
-    //std::shuffle(personHandlers.begin(), personHandlers.end(), g);
-
-    for (auto& pH : personHandlers)
-    {
-        //pH.Shuffle(g);
-        pH.Update();
-    }
+    personSystem.Update();
 
     auto end = chrono::high_resolution_clock::now();
 
@@ -239,36 +245,25 @@ void TestSerialClusterExecution()
 {
     ClusteringMemoryPool<NameLogComponent> nameLogPool = ClusteringMemoryPool<NameLogComponent>(10000);
     ClusteringMemoryPool<AgeLogComponent> ageLogPool = ClusteringMemoryPool<AgeLogComponent>(10000);
-    ClusteringMemoryPool<PersonHandler> perHandlerPool = ClusteringMemoryPool<PersonHandler>(10);
-    vector<rw_clustering_ptr<PersonHandler>> personHandlers = vector<rw_clustering_ptr<PersonHandler>>();
+    ClusteringMemoryPool<PersonLogBehaviour> perLogPool = ClusteringMemoryPool<PersonLogBehaviour>(10000);
+    PersonSystem personSystem = PersonSystem();
 
-    for (int a = 0; a < 1000; ++a)
+    for (int i = 0; i < 10000000; ++i)
     {
-        auto personHandlr = PersonHandler();
-
-        for (int i = 0; i < 10000; ++i)
-        {
-            auto iid = i + a;
-            auto id = to_string(iid);
-            auto personLog = PersonLogSystem{ nameLogPool.AddToPool(NameLogComponent{ "rabin" + id,  "rabin mom" + id, "rabin dad" + id }), ageLogPool.AddToPool(AgeLogComponent(0 + iid, 50 + iid, 100 + iid)) };
-            personHandlr.personLogs.push_back(std::move(personLog));
-        }
-
-        personHandlers.emplace_back(perHandlerPool.AddToPool(std::move(personHandlr)));
+        auto id = to_string(i);
+        auto personLog = PersonLogBehaviour{ nameLogPool.AddToPool(NameLogComponent{ "rabin" + id,  "rabin mom" + id, "rabin dad" + id }), ageLogPool.AddToPool(AgeLogComponent(0 + i, 50 + i, 100 + i)) ,  i };
+        personSystem.personLogs.emplace_back(perLogPool.AddToPool(std::move(personLog)));
     }
+
 
     std::random_device rd;
     std::mt19937 g(rd());
 
+    personSystem.Shuffle(g);
+
     auto start = chrono::high_resolution_clock::now();
 
-    //std::shuffle(personHandlers.begin(), personHandlers.end(), g);
-
-    for (auto& pH : personHandlers)
-    {
-        //pH.Shuffle(g);
-        pH.invoke(&PersonHandler::Update);
-    }
+    personSystem.UpdateSerial();
 
     auto end = chrono::high_resolution_clock::now();
 
@@ -276,7 +271,7 @@ void TestSerialClusterExecution()
     double time_taken = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
     time_taken *= 1e-9;
 
-    cout << "Time taken by (serial) clustering memory pool is : " << fixed << time_taken << setprecision(9);
+    cout << "Time taken by (parallel) clustering memory pool is : " << fixed << time_taken << setprecision(9);
     cout << " sec" << endl;
 }
 
@@ -289,38 +284,26 @@ void TestParallelClusterExecution()
 
     ClusteringMemoryPool<NameLogComponent> nameLogPool = ClusteringMemoryPool<NameLogComponent>(10000 * factor);
     ClusteringMemoryPool<AgeLogComponent> ageLogPool = ClusteringMemoryPool<AgeLogComponent>(10000 * factor);
-    ClusteringMemoryPool<PersonHandler> perHandlerPool = ClusteringMemoryPool<PersonHandler>(10 * factor);
-    vector<rw_clustering_ptr<PersonHandler>> personHandlers = vector<rw_clustering_ptr<PersonHandler>>();
+    ClusteringMemoryPool<PersonLogBehaviour> perLogPool = ClusteringMemoryPool<PersonLogBehaviour>(10000 * factor);
+    PersonSystem personSystem = PersonSystem();
 
-    for (int a = 0; a < 1000; ++a)
+    for (int i = 0; i < 10000000; ++i)
     {
-        auto personHandlr = PersonHandler();
-
-        for (int i = 0; i < 10000; ++i)
-        {
-            auto iid = i + a;
-            auto id = to_string(iid);
-            auto personLog = PersonLogSystem{ nameLogPool.AddToPool(NameLogComponent{ "rabin" + id,  "rabin mom" + id, "rabin dad" + id }), ageLogPool.AddToPool(AgeLogComponent(0 + iid, 50 + iid, 100 + iid)) };
-            personHandlr.personLogs.push_back(std::move(personLog));
-        }
-
-        personHandlers.emplace_back(perHandlerPool.AddToPool(std::move(personHandlr)));
+        auto id = to_string(i);
+        auto personLog = PersonLogBehaviour{ nameLogPool.AddToPool(NameLogComponent{ "rabin" + id,  "rabin mom" + id, "rabin dad" + id }), ageLogPool.AddToPool(AgeLogComponent(0 + i, 50 + i, 100 + i)) ,  i };
+        personSystem.personLogs.emplace_back(perLogPool.AddToPool(std::move(personLog)));
     }
 
     std::random_device rd;
     std::mt19937 g(rd());
 
+    personSystem.Shuffle(g);
+
     auto start = chrono::high_resolution_clock::now();
 
-    //std::shuffle(personHandlers.begin(), personHandlers.end(), g);
+    personSystem.UpdateParallel();
 
-    for (auto& pH : personHandlers)
-    {
-        //pH.Shuffle(g);
-        pH.stackingWrite(&PersonHandler::Update);
-    }
-
-    perHandlerPool.ExecuteClusteredTasksParallel(pool, true);
+    perLogPool.ExecuteClusteredTasksParallel(pool, true);
     nameLogPool.ExecuteClusteredTasksParallel(pool, false);
     ageLogPool.ExecuteClusteredTasksParallel(pool, true);
 
@@ -346,9 +329,9 @@ void TestClusteringPoolWriteValidity()
     cout << "Before write: " << rw_ptr2.get()->GetAge() << endl;
 
     {
-        SimpleString<16> name = "valid write";
-        SimpleString<16> momname = "valid write mom";
-        SimpleString<16> dadname = "valid write dad";
+        SimpleString<32> name = "valid write";
+        SimpleString<32> momname = "valid write mom";
+        SimpleString<32> dadname = "valid write dad";
         rw_ptr1.invoke(&NameLogComponent::ChangeNameLvalue, name, momname, dadname);
 
         int age = 0;

@@ -31,6 +31,7 @@ public:
 	inline SimpleString(const SimpleString& buf) noexcept
 		: realSize{ buf.realSize }
 	{
+		assert(size >= realSize, "Increase the size or reduce the size of the SimpleString");
 		memset(buffer, '\0', size);
 		memcpy(buffer, buf.buffer, realSize);
 	}
@@ -38,6 +39,7 @@ public:
 	inline SimpleString& operator= (const SimpleString& buf) noexcept
 	{
 		realSize = buf.realSize;
+		assert(size >= realSize, "Increase the size or reduce the size of the SimpleString");
 		memset(buffer, '\0', size);
 		memcpy(buffer, buf.buffer, realSize);
 		return *this;
@@ -46,6 +48,7 @@ public:
 	inline SimpleString(SimpleString&& buf) noexcept
 		: realSize{ std::exchange(buf.realSize, 0) }
 	{
+		assert(size >= realSize, "Increase the size or reduce the size of the SimpleString");
 		memset(buffer, '\0', size);
 		memcpy(buffer, buf.buffer, realSize);
 	}
@@ -53,6 +56,7 @@ public:
 	inline SimpleString& operator= (SimpleString&& buf) noexcept
 	{
 		realSize = std::exchange(buf.realSize, 0);
+		assert(size >= realSize, "Increase the size or reduce the size of SimpleString");
 		memset(buffer, '\0', size);
 		memcpy(buffer, buf.buffer, realSize);
 		return *this;

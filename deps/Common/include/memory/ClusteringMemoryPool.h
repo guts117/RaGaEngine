@@ -558,8 +558,20 @@ public:
 		return *this;
 	}
 
-	clustering_ptr(clustering_ptr&& rhs) noexcept = delete;
-	clustering_ptr& operator=(clustering_ptr&& rhs) noexcept = delete;
+	inline clustering_ptr(clustering_ptr&& rhs) noexcept
+		: poolHeadPtr{ std::exchange(rhs.poolHeadPtr, nullptr) }
+		, clusterId{ std::exchange(rhs.clusterId, 0) }
+		, index{ std::exchange(rhs.index, 0) }
+	{
+	}
+
+	inline clustering_ptr& operator=(clustering_ptr&& rhs) noexcept
+	{
+		poolHeadPtr = std::exchange(rhs.poolHeadPtr, nullptr);
+		clusterId = std::exchange(rhs.clusterId, 0);
+		index = std::exchange(rhs.index, 0);
+		return *this;
+	}
 
 	inline ~clustering_ptr() noexcept
 	{
@@ -585,6 +597,27 @@ private:
 public:
 	explicit rw_clustering_ptr() = default;
 	explicit rw_clustering_ptr(std::vector<DataTaskBlockPair<T>>* poolHeadPtr, unsigned int clusterId, unsigned int index) : ptr{ poolHeadPtr, clusterId, index} {}
+
+	inline rw_clustering_ptr(const rw_clustering_ptr& rhs) noexcept
+		: ptr{ rhs.ptr }
+	{
+	}
+
+	inline rw_clustering_ptr& operator=(const rw_clustering_ptr& rhs) noexcept
+	{
+		ptr = rhs.ptr;
+		return *this;
+	}
+
+	inline rw_clustering_ptr(rw_clustering_ptr&& rhs) noexcept 
+		: ptr{ std::move(rhs.ptr) }
+	{
+	}
+	inline rw_clustering_ptr& operator=(rw_clustering_ptr&& rhs) noexcept 
+	{
+		ptr = std::move(rhs.ptr);
+		return *this;
+	}
 
 	T const* const operator-> () const	{ return ptr.get(); }
 	T const* const get() const			{ return ptr.get(); }
