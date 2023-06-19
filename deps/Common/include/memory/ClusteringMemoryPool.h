@@ -656,12 +656,10 @@ public:
 		auto staticCheckForComponent = [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_same_v<std::decay_t<packArg>, string>, "Has std::string!! Use SimpleString instead!"); };
 		(staticCheckForString(std::forward<Args>(args)), ...);
 
-		while ((*ptr.poolHeadPtr)[ptr.clusterId].isBeingAccessed->test(memory_order::acquire))
+		while ((*ptr.poolHeadPtr).m_memory_pool[ptr.clusterId].isBeingAccessed->test_and_set(memory_order::acquire))
 		{
 			std::this_thread::yield();
 		}
-
-		(*ptr.poolHeadPtr)[ptr.clusterId].isBeingAccessed->test_and_set(memory_order::relaxed);
 		
 		//ToDo: check whether all args are of the same reference type(i.e all lvalue or all rvalue)
 		//auto staticCheckForLvalue = [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_lvalue_reference<packArg>::value, "Has lvalue reference please change"); };
@@ -692,12 +690,10 @@ public:
 	template<typename memfn>
 	void stackingWrite(memfn&& func)
 	{
-		while ((*ptr.poolHeadPtr).m_memory_pool[ptr.clusterId].isBeingAccessed->test(memory_order::acquire))
+		while ((*ptr.poolHeadPtr).m_memory_pool[ptr.clusterId].isBeingAccessed->test_and_set(memory_order::acquire))
 		{
 			std::this_thread::yield();
 		}
-
-		(*ptr.poolHeadPtr).m_memory_pool[ptr.clusterId].isBeingAccessed->test_and_set(memory_order::relaxed);
 
 		auto& queue = (*ptr.poolHeadPtr).m_memory_pool[ptr.clusterId].taskQueue;
 		move_only_invoke_and_destroy_func_32<void()> defferedWrite = [func = std::forward<memfn>(func), this]() { std::invoke(func, ptr.get()); };
