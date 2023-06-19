@@ -519,7 +519,7 @@ struct DataTaskBlockPair
 {
 	std::vector<T> dataBlock = std::vector<T>();
 	clustering_task_queue taskQueue = clustering_task_queue();
-	atomic_flag isBeingAccessed = ATOMIC_FLAG_INIT;
+	std::unique_ptr<atomic_flag> isBeingAccessed = std::make_unique<atomic_flag>();
 };
 
 template<class T>
@@ -656,12 +656,12 @@ public:
 		auto staticCheckForComponent = [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_same_v<std::decay_t<packArg>, string>, "Has std::string!! Use SimpleString instead!"); };
 		(staticCheckForString(std::forward<Args>(args)), ...);
 
-		while ((*ptr.poolHeadPtr)[ptr.clusterId].isBeingAccessed.test(memory_order::relaxed))
+		while ((*ptr.poolHeadPtr)[ptr.clusterId].isBeingAccessed->test(memory_order::acquire))
 		{
 			std::this_thread::yield();
 		}
 
-		(*ptr.poolHeadPtr)[ptr.clusterId].isBeingAccessed.test_and_set(memory_order::relaxed);
+		(*ptr.poolHeadPtr)[ptr.clusterId].isBeingAccessed->test_and_set(memory_order::relaxed);
 		
 		//ToDo: check whether all args are of the same reference type(i.e all lvalue or all rvalue)
 		//auto staticCheckForLvalue = [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_lvalue_reference<packArg>::value, "Has lvalue reference please change"); };
@@ -683,7 +683,7 @@ public:
 			//new (&queue[size]) move_only_invoke_and_destroy_func_32<void()>();
 		}
 
-		(*ptr.poolHeadPtr).m_memory_pool[ptr.clusterId].isBeingAccessed.clear(memory_order::relaxed);
+		(*ptr.poolHeadPtr).m_memory_pool[ptr.clusterId].isBeingAccessed->clear(memory_order::release);
 	}
 
 	//Prefer this over oneTimeWrite if you can for deffered writes
@@ -692,12 +692,12 @@ public:
 	template<typename memfn>
 	void stackingWrite(memfn&& func)
 	{
-		while ((*ptr.poolHeadPtr).m_memory_pool[ptr.clusterId].isBeingAccessed.test(memory_order::relaxed))
+		while ((*ptr.poolHeadPtr).m_memory_pool[ptr.clusterId].isBeingAccessed->test(memory_order::acquire))
 		{
 			std::this_thread::yield();
 		}
 
-		(*ptr.poolHeadPtr).m_memory_pool[ptr.clusterId].isBeingAccessed.test_and_set(memory_order::relaxed);
+		(*ptr.poolHeadPtr).m_memory_pool[ptr.clusterId].isBeingAccessed->test_and_set(memory_order::relaxed);
 
 		auto& queue = (*ptr.poolHeadPtr).m_memory_pool[ptr.clusterId].taskQueue;
 		move_only_invoke_and_destroy_func_32<void()> defferedWrite = [func = std::forward<memfn>(func), this]() { std::invoke(func, ptr.get()); };
@@ -706,7 +706,7 @@ public:
 		//queue.resize(size + 1);
 		//new (&queue[size]) move_only_invoke_and_destroy_func_32<void()>(std::move(defferedWrite));
 
-		(*ptr.poolHeadPtr).m_memory_pool[ptr.clusterId].isBeingAccessed.clear(memory_order::relaxed);
+		(*ptr.poolHeadPtr).m_memory_pool[ptr.clusterId].isBeingAccessed->clear(memory_order::release);
 	}
 };
 
