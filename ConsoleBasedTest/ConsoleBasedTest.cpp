@@ -255,7 +255,6 @@ void TestSerialClusterExecution()
         personSystem.personLogs.emplace_back(perLogPool.AddToPool(std::move(personLog)));
     }
 
-
     std::random_device rd;
     std::mt19937 g(rd());
 
@@ -285,24 +284,53 @@ void TestParallelClusterExecution()
     ClusteringMemoryPool<NameLogComponent> nameLogPool = ClusteringMemoryPool<NameLogComponent>(10000 * factor);
     ClusteringMemoryPool<AgeLogComponent> ageLogPool = ClusteringMemoryPool<AgeLogComponent>(10000 * factor);
     ClusteringMemoryPool<PersonLogBehaviour> perLogPool = ClusteringMemoryPool<PersonLogBehaviour>(10000 * factor);
-    PersonSystem personSystem = PersonSystem();
+    ClusteringMemoryPool<PersonSystem> personSystemPool = ClusteringMemoryPool<PersonSystem>(100 * factor);
+
+    vector<rw_clustering_ptr<PersonLogBehaviour>> perLogs = vector<rw_clustering_ptr<PersonLogBehaviour>>();
+    vector<rw_clustering_ptr<PersonSystem>> perSystems = vector<rw_clustering_ptr<PersonSystem>>();
 
     for (int i = 0; i < 10000000; ++i)
     {
         auto id = to_string(i);
         auto personLog = PersonLogBehaviour{ nameLogPool.AddToPool(NameLogComponent{ "rabin" + id,  "rabin mom" + id, "rabin dad" + id }), ageLogPool.AddToPool(AgeLogComponent(0 + i, 50 + i, 100 + i)) ,  i };
-        personSystem.personLogs.emplace_back(perLogPool.AddToPool(std::move(personLog)));
+        
+        perLogs.emplace_back(perLogPool.AddToPool(std::move(personLog)));
     }
 
     std::random_device rd;
     std::mt19937 g(rd());
 
-    personSystem.Shuffle(g);
+    std::shuffle(perLogs.begin(), perLogs.end(), g);
+
+    for(int i = 0; i < 1000; ++i)
+    {
+        auto tempPerVec = vector<rw_clustering_ptr<PersonLogBehaviour>>();
+        for(int j = 0; j < 10000; ++j)
+        {
+            tempPerVec.emplace_back(perLogs[i * 10000 + j]);
+        }
+        perSystems.emplace_back(personSystemPool.AddToPool(std::move(PersonSystem(std::move(tempPerVec)))));
+    }
+
+    //perLogs.clear();
+    //perLogs.shrink_to_fit();
+
+    for(auto& sys: perSystems)
+    {
+        sys.invoke(&PersonSystem::Shuffle, g);
+    }
 
     auto start = chrono::high_resolution_clock::now();
 
-    personSystem.UpdateParallel();
+    for (auto& sys : perSystems)
+    {
+        sys.stackingWrite(&PersonSystem::UpdateParallel);
+    }
 
+    //perSystems.clear();
+    //perSystems.shrink_to_fit();
+
+    personSystemPool.ExecuteClusteredTasksParallel(pool, true);
     perLogPool.ExecuteClusteredTasksParallel(pool, true);
     nameLogPool.ExecuteClusteredTasksParallel(pool, false);
     ageLogPool.ExecuteClusteredTasksParallel(pool, true);
