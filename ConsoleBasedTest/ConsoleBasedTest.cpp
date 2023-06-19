@@ -243,9 +243,9 @@ void TestNormal()
 
 void TestSerialClusterExecution()
 {
-    ClusteringMemoryPool<NameLogComponent> nameLogPool = ClusteringMemoryPool<NameLogComponent>(10000);
-    ClusteringMemoryPool<AgeLogComponent> ageLogPool = ClusteringMemoryPool<AgeLogComponent>(10000);
-    ClusteringMemoryPool<PersonLogBehaviour> perLogPool = ClusteringMemoryPool<PersonLogBehaviour>(10000);
+    ClusteringMemoryPool<NameLogComponent> nameLogPool = ClusteringMemoryPool<NameLogComponent>(10000000);
+    ClusteringMemoryPool<AgeLogComponent> ageLogPool = ClusteringMemoryPool<AgeLogComponent>(10000000);
+    ClusteringMemoryPool<PersonLogBehaviour> perLogPool = ClusteringMemoryPool<PersonLogBehaviour>(10000000);
     PersonSystem personSystem = PersonSystem();
 
     for (int i = 0; i < 10000000; ++i)
