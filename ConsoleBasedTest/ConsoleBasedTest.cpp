@@ -307,13 +307,13 @@ void TestParallelClusterExecution()
         auto tempPerVec = vector<rw_clustering_ptr<PersonLogBehaviour>>();
         for(int j = 0; j < 10000; ++j)
         {
-            tempPerVec.emplace_back(perLogs[i * 10000 + j]);
+            tempPerVec.emplace_back(std::move(perLogs[i * 10000 + j]));
         }
         perSystems.emplace_back(personSystemPool.AddToPool(std::move(PersonSystem(std::move(tempPerVec)))));
     }
 
-    //perLogs.clear();
-    //perLogs.shrink_to_fit();
+    perLogs.clear();
+    perLogs.shrink_to_fit();
 
     for(auto& sys: perSystems)
     {
@@ -327,8 +327,8 @@ void TestParallelClusterExecution()
         sys.stackingWrite(&PersonSystem::UpdateParallel);
     }
 
-    //perSystems.clear();
-    //perSystems.shrink_to_fit();
+    perSystems.clear();
+    perSystems.shrink_to_fit();
 
     personSystemPool.ExecuteClusteredTasksParallel(pool, true);
     perLogPool.ExecuteClusteredTasksParallel(pool, true);

@@ -511,6 +511,59 @@ struct funcWrapper final
 	}
 };
 
+template<class T>
+struct funcWrapperToClusterVoid final
+{
+	inline T* getThis(clustering_ptr<T>& ptr) noexcept { return ptr.get(); }
+	inline T const* const getThis(const clustering_ptr<T>& ptr) const noexcept { return ptr.get(); }
+};
+
+template<class T, typename memfn>
+struct funcWrapperVoid final
+{
+	mutable clustering_ptr<T> clusterPtr;
+	mutable memfn func;
+	mutable funcWrapperToClusterVoid<T> inter;
+
+	inline funcWrapperVoid(clustering_ptr<T>& ptr, memfn& fn) noexcept
+		: clusterPtr{ ptr }
+		, func{ fn }
+	{
+	}
+
+	inline funcWrapperVoid(const funcWrapperVoid& other) noexcept
+		: clusterPtr{ other.clusterPtr }
+		, func{ std::exchange(other.func, nullptr) }
+	{
+	}
+
+	inline funcWrapperVoid& operator=(const funcWrapperVoid& other) noexcept
+	{
+		clusterPtr = other.clusterPtr;
+		func = std::exchange(other.func, nullptr);
+		return *this;
+	}
+
+	funcWrapperVoid(funcWrapperVoid&& other) noexcept
+		: clusterPtr{ other.clusterPtr }
+		, func{ std::exchange(other.func, nullptr) }
+	{
+	}
+	funcWrapperVoid& operator=(funcWrapperVoid&& other)
+	{
+		clusterPtr = other.clusterPtr;
+		func = std::exchange(other.func, nullptr);
+		return *this;
+	}
+
+	inline ~funcWrapperVoid() noexcept = default;
+
+	inline void operator()() noexcept
+	{
+		std::invoke(func, inter.getThis(clusterPtr));
+	}
+};
+
 //----------------------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------------------
 
@@ -540,6 +593,7 @@ private:
 public:
 	friend struct rw_clustering_ptr<T>;
 	friend struct funcWrapperToCluster<T>;
+	friend struct funcWrapperToClusterVoid<T>;
 
 	inline clustering_ptr() = default;
 
@@ -696,7 +750,7 @@ public:
 		}
 
 		auto& queue = (*ptr.poolHeadPtr).m_memory_pool[ptr.clusterId].taskQueue;
-		move_only_invoke_and_destroy_func_32<void()> defferedWrite = [func = std::forward<memfn>(func), this]() { std::invoke(func, ptr.get()); };
+		move_only_invoke_and_destroy_func_32<void()> defferedWrite = funcWrapperVoid<T, memfn>(ptr, func);
 		queue.resize_and_emplace(std::move(defferedWrite));
 		//auto size = queue.size();
 		//queue.resize(size + 1);
