@@ -211,7 +211,9 @@ void TestNormal()
 {
     vector<shared_ptr<NameLogComponent>> nameLogPool = vector<shared_ptr<NameLogComponent>>();
     vector<shared_ptr<AgeLogComponent>> ageLogPool = vector<shared_ptr<AgeLogComponent>>();
-    PersonHandlerNormal personSystem = PersonHandlerNormal();
+    vector<shared_ptr<PersonHandlerNormal>> personSystemPool = vector<shared_ptr<PersonHandlerNormal>>();
+
+    vector<shared_ptr<PersonLogNormal>> perLogs = vector<shared_ptr<PersonLogNormal>>();
 
     for (int i = 0; i < 10000000; ++i)
     {
@@ -219,17 +221,38 @@ void TestNormal()
         nameLogPool.push_back(std::make_shared<NameLogComponent>(NameLogComponent{ "rabin" + id,  "rabin mom" + id, "rabin dad" + id }));
         ageLogPool.push_back(std::make_shared<AgeLogComponent>(AgeLogComponent{ 0 + i, 50 + i, 100 + i }));
         auto personLog = std::make_shared<PersonLogNormal>(nameLogPool.back(), ageLogPool.back(), i);
-        personSystem.personLogs.push_back(std::move(personLog));
+        perLogs.push_back(std::move(personLog));
     }
 
     std::random_device rd;
     std::mt19937 g(rd());
 
-    personSystem.Shuffle(g);
+    std::shuffle(perLogs.begin(), perLogs.end(), g);
+
+    for (int i = 0; i < 1000; ++i)
+    {
+        auto tempPerVec = vector<shared_ptr<PersonLogNormal>>();
+        for (int j = 0; j < 10000; ++j)
+        {
+            tempPerVec.emplace_back(std::move(perLogs[i * 10000 + j]));
+        }
+        personSystemPool.emplace_back(std::move(std::make_shared<PersonHandlerNormal>(tempPerVec)));
+    }
+
+    perLogs.clear();
+    perLogs.shrink_to_fit();
+
+    for (auto& sys : personSystemPool)
+    {
+        sys->Shuffle(g);
+    }
 
     auto start = chrono::high_resolution_clock::now();
 
-    personSystem.Update();
+    for (auto& sys : personSystemPool)
+    {
+        sys->Update();
+    }
 
     auto end = chrono::high_resolution_clock::now();
 
@@ -246,23 +269,51 @@ void TestSerialClusterExecution()
     ClusteringMemoryPool<NameLogComponent> nameLogPool = ClusteringMemoryPool<NameLogComponent>(10000000);
     ClusteringMemoryPool<AgeLogComponent> ageLogPool = ClusteringMemoryPool<AgeLogComponent>(10000000);
     ClusteringMemoryPool<PersonLogBehaviour> perLogPool = ClusteringMemoryPool<PersonLogBehaviour>(10000000);
-    PersonSystem personSystem = PersonSystem();
+    ClusteringMemoryPool<PersonSystem> personSystemPool = ClusteringMemoryPool<PersonSystem>(1000);
+
+    vector<rw_clustering_ptr<PersonLogBehaviour>> perLogs = vector<rw_clustering_ptr<PersonLogBehaviour>>();
+    vector<rw_clustering_ptr<PersonSystem>> perSystems = vector<rw_clustering_ptr<PersonSystem>>();
 
     for (int i = 0; i < 10000000; ++i)
     {
         auto id = to_string(i);
         auto personLog = PersonLogBehaviour{ nameLogPool.AddToPool(NameLogComponent{ "rabin" + id,  "rabin mom" + id, "rabin dad" + id }), ageLogPool.AddToPool(AgeLogComponent(0 + i, 50 + i, 100 + i)) ,  i };
-        personSystem.personLogs.emplace_back(perLogPool.AddToPool(std::move(personLog)));
+
+        perLogs.emplace_back(perLogPool.AddToPool(std::move(personLog)));
     }
 
     std::random_device rd;
     std::mt19937 g(rd());
 
-    personSystem.Shuffle(g);
+    std::shuffle(perLogs.begin(), perLogs.end(), g);
+
+    for (int i = 0; i < 1000; ++i)
+    {
+        auto tempPerVec = vector<rw_clustering_ptr<PersonLogBehaviour>>();
+        for (int j = 0; j < 10000; ++j)
+        {
+            tempPerVec.emplace_back(std::move(perLogs[i * 10000 + j]));
+        }
+        perSystems.emplace_back(personSystemPool.AddToPool(std::move(PersonSystem(std::move(tempPerVec)))));
+    }
+
+    perLogs.clear();
+    perLogs.shrink_to_fit();
+
+    for (auto& sys : perSystems)
+    {
+        sys.invoke(&PersonSystem::Shuffle, g);
+    }
 
     auto start = chrono::high_resolution_clock::now();
 
-    personSystem.UpdateSerial();
+    for (auto& sys : perSystems)
+    {
+        sys.invoke(&PersonSystem::UpdateSerial);
+    }
+
+    perSystems.clear();
+    perSystems.shrink_to_fit();
 
     auto end = chrono::high_resolution_clock::now();
 
