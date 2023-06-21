@@ -11,11 +11,24 @@
 
 using namespace std;
 
-//Temporary Rule: 
+//Rule: 
 //Entities are general purpose object that holds anything (To be implemented)
 //Components are private data with setters and getters
-//Systems are component + logic holders that can be parallelized by the Handlers
-//Handlers are purely there for holding similar systems together and concurrent execution
+//Behaviours are logic handlers that work on the components that can be parallalized
+//Systems are Behaviour handlers that can be parallelized
+
+//There can be multiple components
+//Components can't hold other components
+//There can be multiple behaviours of a certain system
+//Behaviours can hold other behaviours
+//Ideally there is only one instanc of any system
+
+//In conclusion: 
+//System holds various types of related behaviours
+//Behaviour holds various types of components
+//Components hold private data with public setters and getter
+//Entity is just a unique id to point towards the right logic and data
+
 
 struct alignas(alignof(SimpleString<32>)) NameLogComponent : Component
 {
