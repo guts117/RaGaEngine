@@ -145,7 +145,7 @@ struct PersonHandlerNormal
     }
 };
 
-struct PersonLogBehaviour
+struct PersonLogBehaviour : Behaviour
 {
 private:
     rw_clustering_ptr<NameLogComponent> nameLog;
@@ -194,9 +194,11 @@ public:
     }
 };
 
-struct PersonSystem
+struct PersonSystem : System
 {
     vector<rw_clustering_ptr<PersonLogBehaviour>> personLogs;
+
+    PersonSystem(vector<rw_clustering_ptr<PersonLogBehaviour>>&& _personLogs) : personLogs{std::move(_personLogs)} {}
 
     void Shuffle(std::mt19937& g)
     {

@@ -9,14 +9,160 @@
 #include <tuple>
 #include <mutex>
 #include <thread>
+#include <bitset>
 
 using namespace std;
+
+//---------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------
+//https://www.david-colson.com/2020/02/09/making-a-simple-ecs.html#:~:text=Entity%2DComponent%2DSystem%20(ECS,ECS%20frameworks%20are%20not%20trivial.
+
+typedef unsigned long long EntityID;
+const int MAX_COMPONENTS = 32;
+typedef std::bitset<MAX_COMPONENTS> ComponentMask;
+
+typedef unsigned int EntityIndex;
+typedef unsigned int EntityVersion;
+typedef unsigned long long EntityID;
+
+extern int s_componentCounter;
+template <class T>
+int GetId()
+{
+	static int s_componentId = s_componentCounter++;
+	return s_componentId;
+}
 
 //ToDo: Flesh this class out
 struct Component
 {
 
 };
+
+struct Behaviour
+{
+
+};
+
+struct System
+{
+
+};
+
+struct Stage
+{
+
+};
+
+struct LogicStage : Stage
+{
+	//ClusteringMemoryPool<>
+
+};
+
+struct Scene
+{
+	struct EntityDesc
+	{
+		EntityID id;
+		ComponentMask mask;
+	};
+	std::vector<EntityDesc> entities;
+	std::vector<Stage*> stagePool;
+	std::vector<EntityIndex> freeEntities;
+
+	//EntityID NewEntity()
+	//{
+	//	if (!freeEntities.empty())
+	//	{
+	//		EntityIndex newIndex = freeEntities.back();
+	//		freeEntities.pop_back();
+	//		EntityID newID = CreateEntityId(newIndex, GetEntityVersion(entities[newIndex].id));
+	//		entities[newIndex].id = newID;
+	//		return entities[newIndex].id;
+	//	}
+	//	entities.push_back({ CreateEntityId(EntityIndex(entities.size()), 0), ComponentMask() });
+	//	return entities.back().id;
+	//}
+
+	//template<typename T>
+	//T* Assign(EntityID id)
+	//{
+	//	int componentId = GetId<T>();
+
+	//	if (componentPools.size() <= componentId) // Not enough component pool
+	//	{
+	//		componentPools.resize(componentId + 1, nullptr);
+	//	}
+	//	if (componentPools[componentId] == nullptr) // New component, make a new pool
+	//	{
+	//		componentPools[componentId] = new ComponentPool(sizeof(T));
+	//	}
+
+	//	// Looks up the component in the pool, and initializes it with placement new
+	//	T* pComponent = new (componentPools[componentId]->get(id)) T();
+
+	//	// Set the bit for this component to true and return the created component
+	//	entities[id].mask.set(componentId);
+	//	return pComponent;
+	//}
+
+	//template<typename T>
+	//void Remove(EntityID id)
+	//{
+	//	// ensures you're not accessing an entity that has been deleted
+	//	if (entities[GetEntityIndex(id)].id != id)
+	//		return;
+
+	//	int componentId = GetId<T>();
+	//	entities[GetEntityIndex(id)].mask.reset(componentId);
+	//}
+
+	//void DestroyEntity(EntityID id)
+	//{
+	//	EntityID newID = CreateEntityId(EntityIndex(-1), GetEntityVersion(id) + 1);
+	//	entities[GetEntityIndex(id)].id = newID;
+	//	entities[GetEntityIndex(id)].mask.reset();
+	//	freeEntities.push_back(GetEntityIndex(id));
+	//}
+
+	//template<typename T>
+	//T* Get(EntityID id)
+	//{
+	//	int componentId = GetId<T>();
+	//	if (!entities[id].mask.test(componentId))
+	//		return nullptr;
+
+	//	T* pComponent = static_cast<T*>(componentPools[componentId]->get(id));
+	//	return pComponent;
+	//}
+};
+
+inline EntityID CreateEntityId(EntityIndex index, EntityVersion version)
+{
+	// Shift the index up 32, and put the version in the bottom
+	return ((EntityID)index << 32) | ((EntityID)version);
+}
+inline EntityIndex GetEntityIndex(EntityID id)
+{
+	// Shift down 32 so we lose the version and get our index
+	return id >> 32;
+}
+inline EntityVersion GetEntityVersion(EntityID id)
+{
+	// Cast to a 32 bit int to get our version number (loosing the top 32 bits)
+	return (EntityVersion)id;
+}
+inline bool IsEntityValid(EntityID id)
+{
+	// Check if the index is our invalid index
+	return (id >> 32) != EntityIndex(-1);
+}
+
+#define INVALID_ENTITY CreateEntityId(EntityIndex(-1), 0)
+
+//---------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------
 
 template <unsigned int size = 1, unsigned int alignment = 1, unsigned int count = 1>
 struct ClusterableWithBuffer
