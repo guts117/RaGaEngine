@@ -30,7 +30,7 @@ using namespace std;
 //Entity is just a unique id to point towards the right logic and data
 
 
-struct alignas(alignof(SimpleString<32>)) NameLogComponent : Component
+struct alignas(alignof(SimpleString<32>)) NameLogComponent : POD
 {
 private:
     SimpleString<32> name;
@@ -67,7 +67,7 @@ public:
     const char* GetName() const { return name.getBuffer(); }
 };
 
-struct alignas(alignof(int)) AgeLogComponent : Component
+struct alignas(alignof(int)) AgeLogComponent : POD
 {
 private:
     int age;

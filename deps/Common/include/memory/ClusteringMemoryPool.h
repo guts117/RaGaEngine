@@ -13,156 +13,12 @@
 
 using namespace std;
 
-//---------------------------------------------------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------------------------------------------------
-//https://www.david-colson.com/2020/02/09/making-a-simple-ecs.html#:~:text=Entity%2DComponent%2DSystem%20(ECS,ECS%20frameworks%20are%20not%20trivial.
-
-typedef unsigned long long EntityID;
-const int MAX_COMPONENTS = 32;
-typedef std::bitset<MAX_COMPONENTS> ComponentMask;
-
-typedef unsigned int EntityIndex;
-typedef unsigned int EntityVersion;
-typedef unsigned long long EntityID;
-
-extern int s_componentCounter;
-template <class T>
-int GetId()
-{
-	static int s_componentId = s_componentCounter++;
-	return s_componentId;
-}
-
 //ToDo: Flesh this class out
-struct Component
-{
-
-};
-
-struct Behaviour
-{
-
-};
-
-struct System
-{
-
-};
-
-struct Stage
-{
-
-};
-
-struct LogicStage : Stage
-{
-	//ClusteringMemoryPool<>
-
-};
-
-struct Scene
-{
-	struct EntityDesc
-	{
-		EntityID id;
-		ComponentMask mask;
-	};
-	std::vector<EntityDesc> entities;
-	std::vector<Stage*> stagePool;
-	std::vector<EntityIndex> freeEntities;
-
-	//EntityID NewEntity()
-	//{
-	//	if (!freeEntities.empty())
-	//	{
-	//		EntityIndex newIndex = freeEntities.back();
-	//		freeEntities.pop_back();
-	//		EntityID newID = CreateEntityId(newIndex, GetEntityVersion(entities[newIndex].id));
-	//		entities[newIndex].id = newID;
-	//		return entities[newIndex].id;
-	//	}
-	//	entities.push_back({ CreateEntityId(EntityIndex(entities.size()), 0), ComponentMask() });
-	//	return entities.back().id;
-	//}
-
-	//template<typename T>
-	//T* Assign(EntityID id)
-	//{
-	//	int componentId = GetId<T>();
-
-	//	if (componentPools.size() <= componentId) // Not enough component pool
-	//	{
-	//		componentPools.resize(componentId + 1, nullptr);
-	//	}
-	//	if (componentPools[componentId] == nullptr) // New component, make a new pool
-	//	{
-	//		componentPools[componentId] = new ComponentPool(sizeof(T));
-	//	}
-
-	//	// Looks up the component in the pool, and initializes it with placement new
-	//	T* pComponent = new (componentPools[componentId]->get(id)) T();
-
-	//	// Set the bit for this component to true and return the created component
-	//	entities[id].mask.set(componentId);
-	//	return pComponent;
-	//}
-
-	//template<typename T>
-	//void Remove(EntityID id)
-	//{
-	//	// ensures you're not accessing an entity that has been deleted
-	//	if (entities[GetEntityIndex(id)].id != id)
-	//		return;
-
-	//	int componentId = GetId<T>();
-	//	entities[GetEntityIndex(id)].mask.reset(componentId);
-	//}
-
-	//void DestroyEntity(EntityID id)
-	//{
-	//	EntityID newID = CreateEntityId(EntityIndex(-1), GetEntityVersion(id) + 1);
-	//	entities[GetEntityIndex(id)].id = newID;
-	//	entities[GetEntityIndex(id)].mask.reset();
-	//	freeEntities.push_back(GetEntityIndex(id));
-	//}
-
-	//template<typename T>
-	//T* Get(EntityID id)
-	//{
-	//	int componentId = GetId<T>();
-	//	if (!entities[id].mask.test(componentId))
-	//		return nullptr;
-
-	//	T* pComponent = static_cast<T*>(componentPools[componentId]->get(id));
-	//	return pComponent;
-	//}
-};
-
-inline EntityID CreateEntityId(EntityIndex index, EntityVersion version)
-{
-	// Shift the index up 32, and put the version in the bottom
-	return ((EntityID)index << 32) | ((EntityID)version);
-}
-inline EntityIndex GetEntityIndex(EntityID id)
-{
-	// Shift down 32 so we lose the version and get our index
-	return id >> 32;
-}
-inline EntityVersion GetEntityVersion(EntityID id)
-{
-	// Cast to a 32 bit int to get our version number (loosing the top 32 bits)
-	return (EntityVersion)id;
-}
-inline bool IsEntityValid(EntityID id)
-{
-	// Check if the index is our invalid index
-	return (id >> 32) != EntityIndex(-1);
-}
-
-#define INVALID_ENTITY CreateEntityId(EntityIndex(-1), 0)
-
-//---------------------------------------------------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------------------------------------------------
+struct POD {};
+struct Behaviour {};
+struct System {};
+struct Stage {};
+struct LogicStage : Stage {};
 
 template <unsigned int size = 1, unsigned int alignment = 1, unsigned int count = 1>
 struct ClusterableWithBuffer
@@ -845,15 +701,12 @@ public:
 	template<typename memfn, typename... Args>
 	void oneTimeWrite(unsigned int bufferId, memfn&& func, Args&&... args)
 	{
-		static_assert(!std::is_base_of<Component, T>::value, "Compenent setters should not be complex, use invoke or stackingWrite instead and don't use ClusterableWithBuffer!!");
+		static_assert(!std::is_base_of<POD, T>::value, "Plain old data setters should not be complex, use invoke or stackingWrite instead and don't use ClusterableWithBuffer!!");
 
 		auto staticCheckForCharArray= [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_same_v<std::decay_t<packArg>, char*> && !std::is_same_v<std::decay_t<packArg>, const char*>, "Has char array!! Use SimpleString instead!"); };
 		(staticCheckForCharArray(std::forward<Args>(args)), ...);
 
 		auto staticCheckForString = [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_same_v<std::decay_t<packArg>, string>, "Has std::string!! Use SimpleString instead!"); };
-		(staticCheckForString(std::forward<Args>(args)), ...);
-
-		auto staticCheckForComponent = [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_same_v<std::decay_t<packArg>, string>, "Has std::string!! Use SimpleString instead!"); };
 		(staticCheckForString(std::forward<Args>(args)), ...);
 
 		while ((*ptr.poolHeadPtr).m_memory_pool[ptr.clusterId].isBeingAccessed->test_and_set(memory_order::acquire))
@@ -906,12 +759,14 @@ public:
 	}
 };
 
+struct MemoryPool {};
+
 template<class T>
-class ClusteringMemoryPool
+class ClusteringMemoryPool : MemoryPool
 {
 public:
 	explicit ClusteringMemoryPool() = delete;
-	explicit ClusteringMemoryPool(unsigned int block_size) : m_memory_pool {std::vector<DataTaskBlockPair<T>>()}, m_block_size{block_size}
+	explicit ClusteringMemoryPool(unsigned int block_size) : m_memory_pool{ std::vector<DataTaskBlockPair<T>>() }, m_block_size{ block_size }
 	{
 	}
 
@@ -997,5 +852,144 @@ public:
 private:
 	unsigned int m_block_size;
 };
+
+//---------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------
+//https://www.david-colson.com/2020/02/09/making-a-simple-ecs.html#:~:text=Entity%2DComponent%2DSystem%20(ECS,ECS%20frameworks%20are%20not%20trivial.
+
+typedef unsigned long long EntityID;
+const int MAX_COMPONENTS = 32;
+typedef std::bitset<MAX_COMPONENTS> ComponentMask;
+
+typedef unsigned int EntityIndex;
+typedef unsigned int EntityVersion;
+typedef unsigned long long EntityID;
+
+std::atomic<int> s_poolCounter;
+template <class T>
+int GetId()
+{
+	static int s_poolId = s_poolCounter++;
+	return s_poolId;
+}
+
+struct Scene
+{
+	struct Entity
+	{
+		struct Component
+		{
+			int poolId;
+			int clusterId;
+			int componentId;
+		};
+
+		template<typename T>
+		rw_clustering_ptr<T> ComponentToPtr(MemoryPool* pool, int index)
+		{
+			auto poolHead = (static_cast<ClusteringMemoryPool<T>*>(pool));
+			auto component = components[index];
+			return rw_clustering_ptr<T>(poolHead, component.clusterId, component.componentId);
+		}
+
+		std::vector<Component> components;
+	};
+
+	std::vector<Entity> entities;
+	std::vector<MemoryPool*> memoryPool;
+	std::vector<EntityIndex> freeEntities;
+
+	//EntityID NewEntity()
+	//{
+	//	if (!freeEntities.empty())
+	//	{
+	//		EntityIndex newIndex = freeEntities.back();
+	//		freeEntities.pop_back();
+	//		EntityID newID = CreateEntityId(newIndex, GetEntityVersion(entities[newIndex].id));
+	//		entities[newIndex].id = newID;
+	//		return entities[newIndex].id;
+	//	}
+	//	entities.push_back({ CreateEntityId(EntityIndex(entities.size()), 0), ComponentMask() });
+	//	return entities.back().id;
+	//}
+
+	//template<typename T>
+	//rw_clustering_ptr<T> Assign(T&& data, unsigned int poolSize = 1000)
+	//{
+	//	int poolId = GetId<T>();
+
+	//	if (memoryPool.size() <= poolId) // Not enough component pool
+	//	{
+	//		memoryPool.resize(poolId + 1, nullptr);
+	//	}
+	//	if (memoryPool[poolId] == nullptr) // New component, make a new pool
+	//	{
+	//		memoryPool[poolId] = new ClusteringMemoryPool<T>(poolSize);
+	//	}
+
+	//	// Looks up the component in the pool, and initializes it with placement new
+	//	rw_clustering_ptr<T> pData = memoryPool[poolId]->AddToPool(std::move(data));
+
+	//	// Set the bit for this component to true and return the created component
+	//	entities[id].mask.set(poolId);
+	//	return pData;
+	//}
+
+	//template<typename T>
+	//void Remove(rw_clustering_ptr<T> ptr)
+	//{
+	//	// ensures you're not accessing an entity that has been deleted
+	//	if (entities[GetEntityIndex(id)].id != id)
+	//		return;
+
+	//	int componentId = GetId<T>();
+	//	entities[GetEntityIndex(id)].mask.reset(componentId);
+	//}
+
+	//void DestroyEntity(EntityID id)
+	//{
+	//	EntityID newID = CreateEntityId(EntityIndex(-1), GetEntityVersion(id) + 1);
+	//	entities[GetEntityIndex(id)].id = newID;
+	//	entities[GetEntityIndex(id)].mask.reset();
+	//	freeEntities.push_back(GetEntityIndex(id));
+	//}
+
+	//template<typename T>
+	//rw_clustering_ptr<T> Get(EntityID id)
+	//{
+	//	int componentId = GetId<T>();
+	//	if (!entities[id].mask.test(componentId))
+	//		return nullptr;
+
+	//	T* pComponent = static_cast<T*>(componentPools[componentId]->get(id));
+	//	return pComponent;
+	//}
+};
+
+inline EntityID CreateEntityId(EntityIndex index, EntityVersion version)
+{
+	// Shift the index up 32, and put the version in the bottom
+	return ((EntityID)index << 32) | ((EntityID)version);
+}
+inline EntityIndex GetEntityIndex(EntityID id)
+{
+	// Shift down 32 so we lose the version and get our index
+	return id >> 32;
+}
+inline EntityVersion GetEntityVersion(EntityID id)
+{
+	// Cast to a 32 bit int to get our version number (loosing the top 32 bits)
+	return (EntityVersion)id;
+}
+inline bool IsEntityValid(EntityID id)
+{
+	// Check if the index is our invalid index
+	return (id >> 32) != EntityIndex(-1);
+}
+
+#define INVALID_ENTITY CreateEntityId(EntityIndex(-1), 0)
+
+//---------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------
 
 #endif
