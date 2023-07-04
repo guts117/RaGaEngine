@@ -15,13 +15,14 @@ using namespace std;
 //Entities are general purpose object that holds anything (To be implemented)
 //Components are private data with setters and getters
 //Behaviours are logic handlers that work on the components that can be parallalized
-//Systems are Behaviour handlers that can be parallelized
+//Systems are Behaviour handlers and has only one instance per type
+//Stages have multiple unique Systems
+//There is only one instance of engine
 
 //There can be multiple components
 //Components can't hold other components
 //There can be multiple behaviours of a certain system
 //Behaviours can hold other behaviours
-//Ideally there is only one instanc of any system
 
 //In conclusion: 
 //System holds various types of related behaviours
