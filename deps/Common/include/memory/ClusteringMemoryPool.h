@@ -17,8 +17,6 @@ using namespace std;
 struct POD {};
 struct Behaviour {};
 struct System {};
-struct Stage {};
-struct LogicStage : Stage {};
 
 template <unsigned int size = 1, unsigned int alignment = 1, unsigned int count = 1>
 struct ClusterableWithBuffer
@@ -726,7 +724,7 @@ public:
 
 		if (!memcmp(testblock, buf, (sizeof(buf) / sizeof(*buf))))
 		{
-			auto& queue = (*ptr.poolHeadPtr)[ptr.clusterId].taskQueue;
+			auto& queue = (*ptr.poolHeadPtr).m_memory_pool[ptr.clusterId].taskQueue;
 			using t = tuple<decay_t<Args>...>;
 			new (buf) t(std::make_tuple(std::move(args)...));
 			move_only_invoke_and_destroy_func_32<void()> defferedWrite = funcWrapper<T, memfn, t>(ptr, func, bufferId);
@@ -764,7 +762,7 @@ public:
 struct MemoryPool {};
 
 template<class T>
-class ClusteringMemoryPool : MemoryPool
+class ClusteringMemoryPool : public MemoryPool
 {
 public:
 	explicit ClusteringMemoryPool() = delete;
@@ -880,21 +878,21 @@ private:
 
 	struct Entity;
 	ClusteringMemoryPool<Entity> entities;
-	std::vector<MemoryPool*> memoryPool;
+	std::vector<MemoryPool*> memoryPools;
 	std::vector<rw_clustering_ptr<Entity>> freeEntities;
 
 	template<typename T>
 	rw_clustering_ptr<T> ComponentToPtr(Component& component)
 	{
 		int poolId = GetPoolId<T>();
-		auto poolHead = (static_cast<ClusteringMemoryPool<T>*>(memoryPool[poolId]));		//warning: may cause ub
+		auto poolHead = (static_cast<ClusteringMemoryPool<T>*>(memoryPools[poolId]));		//warning: may cause undefined behaviour
 		return rw_clustering_ptr<T>(poolHead, component.clusterId, component.componentId);
 	}
 
 	template<typename T>
 	rw_clustering_ptr<T> ComponentToPtr(rw_clustering_ptr<Entity> entity, int index)
 	{
-		auto component = entity->GetComponents()[index];
+		auto component = entity->GetComponent(index);
 		return ComponentToPtr<T>(component);
 	}
 
@@ -906,20 +904,34 @@ private:
 	}
 
 public:
-	struct Entity : POD
+	struct Entity : ClusterableWithBuffer<sizeof(Component), alignof(Component)>
 	{
-		std::vector<Component> const * const GetComponents() const
+		friend class Scene;
+		std::vector<Component> const * GetAllComponents() const
 		{
 			return &components;
 		}
 
+		Component GetComponent(int index) const
+		{
+			return components[index];
+		}
+
+	private:
 		void AddComponent(Component&& component)
 		{
 			components.emplace_back(std::move(component));
 		}
-	private:
+
 		std::vector<Component> components;
 	};
+
+	Scene(unsigned int entityBlockSize) 
+		: entities{ ClusteringMemoryPool<Entity>(entityBlockSize) }
+		, memoryPools{ std::vector<MemoryPool*>() }
+		, freeEntities{ std::vector<rw_clustering_ptr<Entity>>() }
+	{}
+	~Scene() = default;
 
 	rw_clustering_ptr<Entity> NewEntity()
 	{
@@ -933,25 +945,40 @@ public:
 	}
 
 	template<typename T>
-	rw_clustering_ptr<T> Assign(rw_clustering_ptr<Entity> entity, T&& data, unsigned int poolSize = 1000)
+	rw_clustering_ptr<T> AssignComponent(rw_clustering_ptr<Entity> entity, T&& data, unsigned int poolSize = 1000)
 	{
 		int poolId = GetPoolId<T>();
 
-		if (memoryPool.size() <= poolId) // Not enough component pool
+		if (memoryPools.size() <= poolId) // Not enough component pool
 		{
-			memoryPool.resize(poolId + 1, nullptr);
+			memoryPools.resize(poolId + 1, nullptr);
 		}
-		if (memoryPool[poolId] == nullptr) // New component, make a new pool
+		if (memoryPools[poolId] == nullptr) // New component, make a new pool
 		{
-			memoryPool[poolId] = new ClusteringMemoryPool<T>(poolSize);
+			memoryPools[poolId] = new ClusteringMemoryPool<T>(poolSize);
 		}
 
 		// Looks up the component in the pool, and initializes it with placement new
-		rw_clustering_ptr<T> pData = (static_cast<ClusteringMemoryPool<T>*>(memoryPool[poolId]))->AddToPool(std::move(data)); //warning: may cause ub
-		entity.oneTimeWrite(&Entity::AddComponent, PtrToComponent(pData));
+		rw_clustering_ptr<T> pData = (static_cast<ClusteringMemoryPool<T>*>(memoryPools[poolId]))->AddToPool(std::move(data)); //warning: may cause undefined behaviour
+		entity.oneTimeWrite(0, &Entity::AddComponent, PtrToComponent<T>(pData));
 		return pData;
 	}
 
+	template<typename T>
+	void ExecuteClusteredTasksParallel(lock_free_thread_pool& pool, bool isWaitrForFinish)
+	{
+		if constexpr (std::is_same_v<T, Entity>)
+		{
+			entities.ExecuteClusteredTasksParallel(pool, isWaitrForFinish);
+		}
+		else
+		{
+			int poolId = GetPoolId<T>();
+			(static_cast<ClusteringMemoryPool<T>*>(memoryPools[poolId]))->ExecuteClusteredTasksParallel(pool, isWaitrForFinish);
+		}
+	}
+
+	//ToDo: Finish later
 	//template<typename T>
 	//void Remove(rw_clustering_ptr<T> ptr)
 	//{
@@ -981,6 +1008,12 @@ public:
 	//	T* pComponent = static_cast<T*>(componentPools[componentId]->get(id));
 	//	return pComponent;
 	//}
+};
+
+struct Stage 
+{
+	//memory pool for the systems
+	std::vector<System*> systemPool;	
 };
 
 //---------------------------------------------------------------------------------------------------------------------------------
