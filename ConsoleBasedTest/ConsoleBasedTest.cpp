@@ -244,7 +244,7 @@ struct PersonSystem : public System
                 personBehaviour.AddPersonLog(std::move(allPersonLogs[i * 10000 + j]));
             }
             auto entity = scene->NewEntity();
-            auto personBehaviourPtr = scene->AssignComponent(entity, std::move(personBehaviour), 10);
+            auto personBehaviourPtr = scene->AssignComponent(entity, std::move(personBehaviour), 100);
             personLogs.emplace_back(std::move(personBehaviourPtr));
         }
 
