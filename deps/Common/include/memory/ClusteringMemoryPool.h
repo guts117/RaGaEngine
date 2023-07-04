@@ -17,7 +17,12 @@ using namespace std;
 //ToDo: Flesh this class out
 struct POD {};
 struct Behaviour {};
-struct System {};
+
+struct System 
+{
+	virtual void UpdateParallel() {}
+	virtual ~System() = 0 {}
+};
 
 template <unsigned int size = 1, unsigned int alignment = 1, unsigned int count = 1>
 struct ClusterableWithBuffer
@@ -1013,10 +1018,55 @@ public:
 	//}
 };
 
-struct Stage 
+struct Stage
 {
+	virtual void OnInit(Scene* scene) {}
+	virtual void OnUpdate(Scene* scene) {}
+	virtual ~Stage() = 0 {}
+
+protected:
 	//memory pool for the systems
-	std::vector<System*> systemPool;	
+	std::vector<shared_ptr<System>> systems;
+
+	void AddSystem(shared_ptr<System>&& system_ptr)
+	{
+		systems.emplace_back(std::move(system_ptr));
+	}
+
+	void UpdateSystems(Scene* scene)
+	{
+		for (auto& system : systems)
+		{
+			system->UpdateParallel();
+		}
+	}
+};
+
+struct Engine final
+{
+	void AddStage(std::unique_ptr<Stage>&& stage)
+	{
+		stages.emplace_back(std::move(stage));
+	}
+
+	void InitStages(Scene* scene)
+	{
+		for (auto& stage : stages)
+		{
+			stage->OnInit(scene);
+		}
+	}
+
+	void UpdateStages(Scene* scene)
+	{
+		for (auto& stage : stages)
+		{
+			stage->OnUpdate(scene);
+		}
+	}
+
+private:
+	std::vector<std::unique_ptr<Stage>> stages;
 };
 
 //---------------------------------------------------------------------------------------------------------------------------------

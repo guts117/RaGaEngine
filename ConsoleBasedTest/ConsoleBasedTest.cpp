@@ -249,6 +249,8 @@ struct PersonSystem : public System
         }
 
         scene->ExecuteClusteredTasksParallel<Scene::Entity>(pool, true);
+
+        Shuffle();
     }
 
     void Shuffle()
@@ -277,6 +279,8 @@ struct PersonSystem : public System
         scene->ExecuteClusteredTasksParallel<NameLogComponent>(pool, false);
         scene->ExecuteClusteredTasksParallel<AgeLogComponent>(pool, true);
     }
+
+    ~PersonSystem() = default;
 };
 
 void TestNormal()
@@ -397,31 +401,49 @@ void TestSerialClusterExecution()
     //cout << " sec" << endl;
 }
 
+struct PersonLogStage final : public Stage
+{
+    PersonLogStage() = default;
+
+    virtual void OnInit(Scene* scene) override
+    {
+        auto personSystem = std::make_shared<PersonSystem>();
+        personSystem->OnInit(scene);
+        AddSystem(std::move(personSystem));
+    }
+
+    virtual void OnUpdate(Scene* scene) override
+    {
+        auto start = chrono::high_resolution_clock::now();
+
+        UpdateSystems(scene);
+
+        auto end = chrono::high_resolution_clock::now();
+
+        // Calculating total time taken by the program.
+        double time_taken = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
+        time_taken *= 1e-9;
+
+        cout << "Time taken by (parallel) clustering memory pool is : " << fixed << time_taken << setprecision(9);
+        cout << " sec" << endl;
+    }
+
+    ~PersonLogStage() = default;
+};
+
 //ToDo: Fix pool getting destroyed before the scope ends causing threads throwing exception bug.
 void TestParallelClusterExecution()
 {
     //auto factor = std::thread::hardware_concurrency() / 10.0f;
 
     Scene scene = Scene(100);
-    Stage personStage = Stage();
-    PersonSystem personSystem = PersonSystem();
-    //personStage.systemPool.push_back(&personSystem);
+    Engine loggingEngine;
+
+    loggingEngine.AddStage(std::make_unique<PersonLogStage>());
     
-    personSystem.OnInit(&scene);
-    personSystem.Shuffle();
-
-    auto start = chrono::high_resolution_clock::now();
-
-    personSystem.UpdateParallel(&scene);
-
-    auto end = chrono::high_resolution_clock::now();
-
-    // Calculating total time taken by the program.
-    double time_taken = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
-    time_taken *= 1e-9;
-
-    cout << "Time taken by (parallel) clustering memory pool is : " << fixed << time_taken << setprecision(9);
-    cout << " sec" << endl;
+    loggingEngine.InitStages(&scene);
+   
+    loggingEngine.UpdateStages(&scene);
 }
 
 void TestClusteringPoolWriteValidity()
