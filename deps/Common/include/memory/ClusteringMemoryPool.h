@@ -18,12 +18,6 @@ using namespace std;
 struct POD {};
 struct Behaviour {};
 
-struct System 
-{
-	virtual void UpdateParallel() {}
-	virtual ~System() = 0 {}
-};
-
 template <unsigned int size = 1, unsigned int alignment = 1, unsigned int count = 1>
 struct ClusterableWithBuffer
 {
@@ -1018,6 +1012,12 @@ public:
 	//}
 };
 
+struct System
+{
+	virtual void UpdateParallel(Scene* scene) {}
+	virtual ~System() = 0 {}
+};
+
 struct Stage
 {
 	virtual void OnInit(Scene* scene) {}
@@ -1037,7 +1037,7 @@ protected:
 	{
 		for (auto& system : systems)
 		{
-			system->UpdateParallel();
+			system->UpdateParallel(scene);
 		}
 	}
 };

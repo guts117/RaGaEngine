@@ -269,7 +269,7 @@ struct PersonSystem : public System
         }
     }
 
-    void UpdateParallel(Scene* scene)
+    virtual void UpdateParallel(Scene* scene) override
     {
         for (auto& pL : personLogs)
         {
