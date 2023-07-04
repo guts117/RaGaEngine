@@ -158,14 +158,14 @@ private:
     std::vector<PersonLog> personLogs;
 public:
 
-    void AddPersonLog(PersonLog& _personLog)
+    void AddPersonLog(PersonLog&& _personLog)
     {
-        personLogs.push_back(std::move(_personLog));
+        personLogs.emplace_back(std::move(_personLog));
     }
 
     void AddPersonLog(rw_clustering_ptr<NameLogComponent>&& _nameLog, rw_clustering_ptr<AgeLogComponent>&& _ageLog, int& _id)
     {
-        personLogs.push_back(PersonLog{std::move(_nameLog), std::move(_ageLog), _id});
+        personLogs.emplace_back(PersonLog{std::move(_nameLog), std::move(_ageLog), _id});
     }
 
     void Update()
@@ -224,9 +224,9 @@ struct PersonSystem : public System
             auto id = to_string(i);
 
             auto entity = scene->NewEntity();
-            auto nameLogPtr = scene->AssignComponent(entity, NameLogComponent("rabin" + id, "rabin mom" + id, "rabin dad" + id), 10000 * factor);
-            auto ageLogPtr = scene->AssignComponent(entity, AgeLogComponent(0 + i, 50 + i, 100 + i), 10000 * factor);
-            allPersonLogs.emplace_back(PersonLog(std::move(nameLogPtr), std::move(ageLogPtr), i));
+            auto nameLogPtr = scene->AssignComponent(entity, NameLogComponent("rabin" + id, "rabin mom" + id, "rabin dad" + id), 10000);
+            auto ageLogPtr = scene->AssignComponent(entity, AgeLogComponent(0 + i, 50 + i, 100 + i), 10000);
+            allPersonLogs.emplace_back(std::move(PersonLog(std::move(nameLogPtr), std::move(ageLogPtr), i)));
         }
 
         scene->ExecuteClusteredTasksParallel<Scene::Entity>(pool, true);
@@ -238,15 +238,15 @@ struct PersonSystem : public System
 
         for (int i = 0; i < 1000; ++i)
         {
-            auto tempPerBehaviour = PersonBehaviour();
+            auto personBehaviour = PersonBehaviour();
             for (int j = 0; j < 10000; ++j)
             {
-                tempPerBehaviour.AddPersonLog(allPersonLogs[i * 10000 + j]);
+                personBehaviour.AddPersonLog(std::move(allPersonLogs[i * 10000 + j]));
             }
             auto entity = scene->NewEntity();
-            auto personBehaviour = scene->AssignComponent(entity, std::move(tempPerBehaviour), 10 * factor);
-            personLogs.emplace_back(std::move(personBehaviour));
-        }    
+            auto personBehaviourPtr = scene->AssignComponent(entity, std::move(personBehaviour), 10);
+            personLogs.emplace_back(std::move(personBehaviourPtr));
+        }
 
         scene->ExecuteClusteredTasksParallel<Scene::Entity>(pool, true);
     }
@@ -385,9 +385,9 @@ void TestSerialClusterExecution()
 //ToDo: Fix pool getting destroyed before the scope ends causing threads throwing exception bug.
 void TestParallelClusterExecution()
 {
-    auto factor = std::thread::hardware_concurrency() / 10.0f;
+    //auto factor = std::thread::hardware_concurrency() / 10.0f;
 
-    Scene scene = Scene(100 * factor);
+    Scene scene = Scene(100);
     Stage personStage = Stage();
     PersonSystem personSystem = PersonSystem();
     //personStage.systemPool.push_back(&personSystem);

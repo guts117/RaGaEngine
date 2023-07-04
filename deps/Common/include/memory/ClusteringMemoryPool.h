@@ -945,7 +945,7 @@ public:
 	}
 
 	template<typename T>
-	rw_clustering_ptr<T> AssignComponent(rw_clustering_ptr<Entity> entity, T&& data, unsigned int poolSize = 1000)
+	rw_clustering_ptr<T> AssignComponent(rw_clustering_ptr<Entity>& entity, T&& data, unsigned int poolSize = 1000)
 	{
 		int poolId = GetPoolId<T>();
 
