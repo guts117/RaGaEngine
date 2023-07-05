@@ -891,11 +891,11 @@ struct RenderEngineMain::Impl
 
 		glUseProgram(0);
 
-		modelMatrixPool.ExecuteClusteredTasksSerial();
-		prevModelMatrixPool.ExecuteClusteredTasksSerial();
-		texturePool.ExecuteClusteredTasksSerial();
-		shaderObjPool.ExecuteClusteredTasksSerial();
-		meshPool.ExecuteClusteredTasksSerial();
+		//modelMatrixPool.ExecuteClusteredTasksSerial();
+		//prevModelMatrixPool.ExecuteClusteredTasksSerial();
+		//texturePool.ExecuteClusteredTasksSerial();
+		//shaderObjPool.ExecuteClusteredTasksSerial();
+		//meshPool.ExecuteClusteredTasksSerial();
 	}
 
 	void EndUpdate() 

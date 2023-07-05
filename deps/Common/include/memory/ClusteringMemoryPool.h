@@ -9,8 +9,14 @@
 #include <tuple>
 #include <mutex>
 #include <thread>
+#include <bitset>
+#include <cmath>
 
 using namespace std;
+
+//ToDo: Flesh this class out
+struct POD {};
+struct Behaviour {};
 
 template <unsigned int size = 1, unsigned int alignment = 1, unsigned int count = 1>
 struct ClusterableWithBuffer
@@ -19,7 +25,10 @@ struct ClusterableWithBuffer
 
 	ClusterableWithBuffer() noexcept
 	{
-		std::memset(buffer, 0, size);
+		for(auto i = 0; i < count; ++i)
+		{
+			std::memset(&buffer[i], 0, size);
+		}		
 	}
 };
 
@@ -297,6 +306,13 @@ public:
 class clustering_task_queue
 {
 public:
+	inline clustering_task_queue() noexcept
+		: cap{ 0 }
+		, elems{ 0 }
+		, arr{ nullptr }
+	{
+	};
+
 	inline clustering_task_queue(size_t n) noexcept
 		: cap{ n }
 		, elems{ 0 }
@@ -495,15 +511,68 @@ struct funcWrapper final
 	}
 };
 
+template<class T>
+struct funcWrapperToClusterVoid final
+{
+	inline T* getThis(clustering_ptr<T>& ptr) noexcept { return ptr.get(); }
+	inline T const* const getThis(const clustering_ptr<T>& ptr) const noexcept { return ptr.get(); }
+};
+
+template<class T, typename memfn>
+struct funcWrapperVoid final
+{
+	mutable clustering_ptr<T> clusterPtr;
+	mutable memfn func;
+	mutable funcWrapperToClusterVoid<T> inter;
+
+	inline funcWrapperVoid(clustering_ptr<T>& ptr, memfn& fn) noexcept
+		: clusterPtr{ ptr }
+		, func{ fn }
+	{
+	}
+
+	inline funcWrapperVoid(const funcWrapperVoid& other) noexcept
+		: clusterPtr{ other.clusterPtr }
+		, func{ std::exchange(other.func, nullptr) }
+	{
+	}
+
+	inline funcWrapperVoid& operator=(const funcWrapperVoid& other) noexcept
+	{
+		clusterPtr = other.clusterPtr;
+		func = std::exchange(other.func, nullptr);
+		return *this;
+	}
+
+	funcWrapperVoid(funcWrapperVoid&& other) noexcept
+		: clusterPtr{ other.clusterPtr }
+		, func{ std::exchange(other.func, nullptr) }
+	{
+	}
+	funcWrapperVoid& operator=(funcWrapperVoid&& other)
+	{
+		clusterPtr = other.clusterPtr;
+		func = std::exchange(other.func, nullptr);
+		return *this;
+	}
+
+	inline ~funcWrapperVoid() noexcept = default;
+
+	inline void operator()() noexcept
+	{
+		std::invoke(func, inter.getThis(clusterPtr));
+	}
+};
+
 //----------------------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------------------
 
 template<class T>
 struct DataTaskBlockPair
 {
-	std::vector<T> dataBlock;
-	clustering_task_queue taskQueue;
-	std::byte padding[16];
+	std::vector<T> dataBlock = std::vector<T>();
+	clustering_task_queue taskQueue = clustering_task_queue();
+	std::unique_ptr<atomic_flag> isBeingAccessed = std::make_unique<atomic_flag>();
 };
 
 template<class T>
@@ -515,19 +584,20 @@ template<class T>
 struct clustering_ptr
 {
 private:
-	inline T* operator->()		{ return &((*poolHeadPtr)[clusterId].dataBlock[index]); }
+	inline T* operator->()		{ return &((*poolHeadPtr).m_memory_pool[clusterId].dataBlock[index]); }
 	inline T* get()			
 	{ 
-		return &((*poolHeadPtr)[clusterId].dataBlock[index]); 
+		return &((*poolHeadPtr).m_memory_pool[clusterId].dataBlock[index]);
 	}
 
 public:
 	friend struct rw_clustering_ptr<T>;
 	friend struct funcWrapperToCluster<T>;
+	friend struct funcWrapperToClusterVoid<T>;
 
 	inline clustering_ptr() = default;
 
-	inline clustering_ptr(std::vector<DataTaskBlockPair<T>>* _poolHeadPtr, unsigned int _clusterId, unsigned int _index)
+	inline clustering_ptr(ClusteringMemoryPool<T>* _poolHeadPtr, unsigned int _clusterId, unsigned int _index)
 		: poolHeadPtr { _poolHeadPtr }
 		, clusterId { _clusterId }
 		, index {_index}
@@ -549,8 +619,20 @@ public:
 		return *this;
 	}
 
-	clustering_ptr(clustering_ptr&& rhs) noexcept = delete;
-	clustering_ptr& operator=(clustering_ptr&& rhs) noexcept = delete;
+	inline clustering_ptr(clustering_ptr&& rhs) noexcept
+		: poolHeadPtr{ std::exchange(rhs.poolHeadPtr, nullptr) }
+		, clusterId{ std::exchange(rhs.clusterId, 0) }
+		, index{ std::exchange(rhs.index, 0) }
+	{
+	}
+
+	inline clustering_ptr& operator=(clustering_ptr&& rhs) noexcept
+	{
+		poolHeadPtr = std::exchange(rhs.poolHeadPtr, nullptr);
+		clusterId = std::exchange(rhs.clusterId, 0);
+		index = std::exchange(rhs.index, 0);
+		return *this;
+	}
 
 	inline ~clustering_ptr() noexcept
 	{
@@ -559,12 +641,12 @@ public:
 		index = 0;
 	}
 
-	std::vector<DataTaskBlockPair<T>>* poolHeadPtr = nullptr;		//size 8
+	ClusteringMemoryPool<T>* poolHeadPtr = nullptr;		//size 8
 	unsigned int clusterId = 0;										//size 4
 	unsigned int index = 0;											//size 4
 
-	T const* const operator-> () const	{ return &((*poolHeadPtr)[clusterId].dataBlock[index]); }
-	T const* const get() const			{ return &((*poolHeadPtr)[clusterId].dataBlock[index]); }
+	T const* const operator-> () const	{ return &((*poolHeadPtr).m_memory_pool[clusterId].dataBlock[index]); }
+	T const* const get() const			{ return &((*poolHeadPtr).m_memory_pool[clusterId].dataBlock[index]); }
 };
 
 template<class T>
@@ -575,13 +657,36 @@ private:
 
 public:
 	explicit rw_clustering_ptr() = default;
-	explicit rw_clustering_ptr(std::vector<DataTaskBlockPair<T>>* poolHeadPtr, unsigned int clusterId, unsigned int index) : ptr{ poolHeadPtr, clusterId, index} {}
+	explicit rw_clustering_ptr(ClusteringMemoryPool<T>* poolHeadPtr, unsigned int clusterId, unsigned int index) : ptr{ poolHeadPtr, clusterId, index} {}
+
+	inline rw_clustering_ptr(const rw_clustering_ptr& rhs) noexcept
+		: ptr{ rhs.ptr }
+	{
+	}
+
+	inline rw_clustering_ptr& operator=(const rw_clustering_ptr& rhs) noexcept
+	{
+		ptr = rhs.ptr;
+		return *this;
+	}
+
+	inline rw_clustering_ptr(rw_clustering_ptr&& rhs) noexcept 
+		: ptr{ std::move(rhs.ptr) }
+	{
+	}
+	inline rw_clustering_ptr& operator=(rw_clustering_ptr&& rhs) noexcept 
+	{
+		ptr = std::move(rhs.ptr);
+		return *this;
+	}
 
 	T const* const operator-> () const	{ return ptr.get(); }
 	T const* const get() const			{ return ptr.get(); }
 	bool isValid() const				{ return ptr.poolHeadPtr != nullptr; }
+	int getClusterId() const			{ return ptr.clusterId; }
+	int getIndex() const				{ return ptr.index; }
 
-
+	//Use for tasks that are simple
 	//Immediate write like a normal function call
 	//Sig: Accepts void(T&&...)
 	template<typename memfn, typename... Args>
@@ -590,17 +695,25 @@ public:
 		std::invoke(std::forward<memfn>(func), ptr.get(), std::forward<Args>(args)...);
 	}
 
+	//Don't use for tasks that are simple
 	//Write task only pushed to the queue once and invalidated subsequent push to the queue until the queue has been executed
 	//Sig: Accepts void(T&&...) with all parameters of the same reference type
 	template<typename memfn, typename... Args>
 	void oneTimeWrite(unsigned int bufferId, memfn&& func, Args&&... args)
 	{
+		static_assert(!std::is_base_of<POD, T>::value, "Plain old data setters should not be complex, use invoke or stackingWrite instead and don't use ClusterableWithBuffer!!");
+
 		auto staticCheckForCharArray= [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_same_v<std::decay_t<packArg>, char*> && !std::is_same_v<std::decay_t<packArg>, const char*>, "Has char array!! Use SimpleString instead!"); };
 		(staticCheckForCharArray(std::forward<Args>(args)), ...);
 
 		auto staticCheckForString = [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_same_v<std::decay_t<packArg>, string>, "Has std::string!! Use SimpleString instead!"); };
 		(staticCheckForString(std::forward<Args>(args)), ...);
 
+		while ((*ptr.poolHeadPtr).m_memory_pool[ptr.clusterId].isBeingAccessed->test_and_set(memory_order::acquire))
+		{
+			std::this_thread::yield();
+		}
+		
 		//ToDo: check whether all args are of the same reference type(i.e all lvalue or all rvalue)
 		//auto staticCheckForLvalue = [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_lvalue_reference<packArg>::value, "Has lvalue reference please change"); };
 		//(staticCheckForLvalue(std::forward<Args>(args)), ...);
@@ -611,7 +724,7 @@ public:
 
 		if (!memcmp(testblock, buf, (sizeof(buf) / sizeof(*buf))))
 		{
-			auto& queue = (*ptr.poolHeadPtr)[ptr.clusterId].taskQueue;
+			auto& queue = (*ptr.poolHeadPtr).m_memory_pool[ptr.clusterId].taskQueue;
 			using t = tuple<decay_t<Args>...>;
 			new (buf) t(std::make_tuple(std::move(args)...));
 			move_only_invoke_and_destroy_func_32<void()> defferedWrite = funcWrapper<T, memfn, t>(ptr, func, bufferId);
@@ -619,32 +732,41 @@ public:
 			//auto size = queue.size();		
 			//queue.resize(size + 1);
 			//new (&queue[size]) move_only_invoke_and_destroy_func_32<void()>();
-			//queue.emplace_back(std::move(defferedWrite));
 		}
+
+		(*ptr.poolHeadPtr).m_memory_pool[ptr.clusterId].isBeingAccessed->clear(memory_order::release);
 	}
 
-
+	//Prefer this over oneTimeWrite if you can for deffered writes
 	//Fast push to the write task queue. Write to the same object can be stacked and will be logically cohorent
 	//Sig: Accepts void()
 	template<typename memfn>
 	void stackingWrite(memfn&& func)
 	{
-		auto& queue = (*ptr.poolHeadPtr)[ptr.clusterId].taskQueue;
-		move_only_invoke_and_destroy_func_32<void()> defferedWrite = [func = std::forward<memfn>(func), this]() { std::invoke(func, ptr.get()); };
+		while ((*ptr.poolHeadPtr).m_memory_pool[ptr.clusterId].isBeingAccessed->test_and_set(memory_order::acquire))
+		{
+			std::this_thread::yield();
+		}
+
+		auto& queue = (*ptr.poolHeadPtr).m_memory_pool[ptr.clusterId].taskQueue;
+		move_only_invoke_and_destroy_func_32<void()> defferedWrite = funcWrapperVoid<T, memfn>(ptr, func);
 		queue.resize_and_emplace(std::move(defferedWrite));
 		//auto size = queue.size();
 		//queue.resize(size + 1);
 		//new (&queue[size]) move_only_invoke_and_destroy_func_32<void()>(std::move(defferedWrite));
-		//queue.emplace_back(std::move(defferedWrite));
+
+		(*ptr.poolHeadPtr).m_memory_pool[ptr.clusterId].isBeingAccessed->clear(memory_order::release);
 	}
 };
 
+struct MemoryPool {};
+
 template<class T>
-class ClusteringMemoryPool
+class ClusteringMemoryPool : public MemoryPool
 {
 public:
 	explicit ClusteringMemoryPool() = delete;
-	explicit ClusteringMemoryPool(unsigned int block_size) : m_memory_pool {std::vector<DataTaskBlockPair<T>>()}, m_block_size{block_size}
+	explicit ClusteringMemoryPool(unsigned int block_size) : m_memory_pool{ std::vector<DataTaskBlockPair<T>>() }, m_block_size{ block_size }
 	{
 	}
 
@@ -655,7 +777,7 @@ public:
 			auto vec = std::vector<T>();
 			vec.reserve(m_block_size);
 			auto vec2 = clustering_task_queue(m_block_size);
-			m_memory_pool.emplace_back(DataTaskBlockPair<T>{std::move(vec), std::move(vec2)});
+			m_memory_pool.emplace_back(DataTaskBlockPair<T>(std::move(vec), std::move(vec2)));
 			return AddToPool(std::move(obj));
 		}
 		else
@@ -663,7 +785,7 @@ public:
 			auto& lastPool = m_memory_pool[m_memory_pool.size() - 1];
 			if (lastPool.dataBlock.size() < m_block_size)
 			{
-				auto ptr = rw_clustering_ptr{ &m_memory_pool, static_cast<unsigned int>(m_memory_pool.size() - 1), static_cast<unsigned int>(lastPool.dataBlock.size()) };
+				auto ptr = rw_clustering_ptr{ this, static_cast<unsigned int>(m_memory_pool.size() - 1), static_cast<unsigned int>(lastPool.dataBlock.size()) };
 				lastPool.dataBlock.emplace_back(std::move(obj));
 				return ptr;
 			}
@@ -672,7 +794,7 @@ public:
 				auto vec = std::vector<T>();
 				vec.reserve(m_block_size);
 				auto vec2 = clustering_task_queue(m_block_size);
-				m_memory_pool.emplace_back(DataTaskBlockPair<T>{std::move(vec), std::move(vec2)});
+				m_memory_pool.emplace_back(DataTaskBlockPair<T>(std::move(vec), std::move(vec2)));
 				return AddToPool(std::move(obj));
 			}
 		}
@@ -680,13 +802,15 @@ public:
 	
 	void ExecuteClusters(int startId, int endId)
 	{
-		for (int i = startId; i < endId; ++i)
+		for (int poolId = startId; poolId < endId; ++poolId)
 		{
-			for (auto j = 0; j < m_memory_pool[i].taskQueue.size(); ++j)
+			if (poolId >= m_memory_pool.size()) { break; }
+
+			for (auto taskId = 0; taskId < m_memory_pool[poolId].taskQueue.size(); ++taskId)
 			{
-				m_memory_pool[i].taskQueue[j]();
+				m_memory_pool[poolId].taskQueue[taskId]();
 			}
-			m_memory_pool[i].taskQueue.clear();
+			m_memory_pool[poolId].taskQueue.clear();
 		}
 	}
 
@@ -697,15 +821,22 @@ public:
 
 		if (threadCount == 1)
 		{
-			ExecuteClusteredTasksSerial();
+			for (auto& pool : m_memory_pool)
+			{
+				for (auto taskId = 0; taskId < pool.taskQueue.size(); ++taskId)
+				{
+					pool.taskQueue[taskId]();
+				}
+				pool.taskQueue.clear();
+			}
 		}
 		else
 		{
-			for (int i = 0; i < threadCount; ++i)
+			for (int threadId = 0; threadId < threadCount; ++threadId)
 			{
-				auto groupCount = poolSize / threadCount;
-				auto startId = i * groupCount;
-				auto endId = (i + 1) * groupCount;
+				auto groupCount = static_cast<unsigned int>(ceilf((float)poolSize / threadCount));
+				auto startId = threadId * groupCount;
+				auto endId = (threadId + 1) * groupCount;
 				auto task = [startId = startId, endId = endId, this]() {std::invoke(&ClusteringMemoryPool<T>::ExecuteClusters, this, startId, endId); };
 				pool.submit(task);
 			}
@@ -717,23 +848,228 @@ public:
 		}
 	}
 
-	void ExecuteClusteredTasksSerial()
-	{
-		for (auto& a : m_memory_pool) 
-		{
-			for (auto j = 0; j < a.taskQueue.size(); ++j)
-			{
-				a.taskQueue[j]();
-			}
-			a.taskQueue.clear();
-		}
-	}
-
 	~ClusteringMemoryPool() = default;
 
 	std::vector<DataTaskBlockPair<T>> m_memory_pool;
 private:
 	unsigned int m_block_size;
 };
+
+//---------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------
+//https://www.david-colson.com/2020/02/09/making-a-simple-ecs.html#:~:text=Entity%2DComponent%2DSystem%20(ECS,ECS%20frameworks%20are%20not%20trivial
+//https://austinmorlan.com/posts/entity_component_system/
+
+std::atomic<int> s_poolCounter;
+template <class T>
+int GetPoolId()
+{
+	static int s_poolId = s_poolCounter++;
+	return s_poolId;
+}
+
+class Scene
+{
+private:
+	struct Component
+	{
+		int poolId;
+		int clusterId;
+		int componentId;
+	};
+
+	struct Entity;
+	ClusteringMemoryPool<Entity> entities;
+	std::vector<MemoryPool*> memoryPools;
+	std::vector<rw_clustering_ptr<Entity>> freeEntities;
+
+	template<typename T>
+	rw_clustering_ptr<T> ComponentToPtr(Component& component)
+	{
+		int poolId = GetPoolId<T>();
+		auto poolHead = (static_cast<ClusteringMemoryPool<T>*>(memoryPools[poolId]));		//warning: may cause undefined behaviour
+		return rw_clustering_ptr<T>(poolHead, component.clusterId, component.componentId);
+	}
+
+	template<typename T>
+	rw_clustering_ptr<T> ComponentToPtr(rw_clustering_ptr<Entity> entity, int index)
+	{
+		auto component = entity->GetComponent(index);
+		return ComponentToPtr<T>(component);
+	}
+
+	template<typename T>
+	Component PtrToComponent(rw_clustering_ptr<T>& ptr_data)
+	{
+		int poolId = GetPoolId<T>();
+		return Component{ poolId, ptr_data.getClusterId(), ptr_data.getIndex() };
+	}
+
+public:
+	struct Entity : ClusterableWithBuffer<sizeof(Component), alignof(Component)>
+	{
+		friend class Scene;
+		std::vector<Component> const * GetAllComponents() const
+		{
+			return &components;
+		}
+
+		Component GetComponent(int index) const
+		{
+			return components[index];
+		}
+
+	private:
+		void AddComponent(Component&& component)
+		{
+			components.emplace_back(std::move(component));
+		}
+
+		std::vector<Component> components;
+	};
+
+	Scene(unsigned int entityBlockSize) 
+		: entities{ ClusteringMemoryPool<Entity>(entityBlockSize) }
+		, memoryPools{ std::vector<MemoryPool*>() }
+		, freeEntities{ std::vector<rw_clustering_ptr<Entity>>() }
+	{}
+	~Scene() = default;
+
+	rw_clustering_ptr<Entity> NewEntity()
+	{
+		if (!freeEntities.empty())
+		{
+			auto newIndex = freeEntities.back();
+			freeEntities.pop_back();
+			return newIndex;
+		}
+		return entities.AddToPool(Entity());
+	}
+
+	template<typename T>
+	rw_clustering_ptr<T> AssignComponent(rw_clustering_ptr<Entity>& entity, T&& data, unsigned int poolSize = 1000)
+	{
+		int poolId = GetPoolId<T>();
+
+		if (memoryPools.size() <= poolId) // Not enough component pool
+		{
+			memoryPools.resize(poolId + 1, nullptr);
+		}
+		if (memoryPools[poolId] == nullptr) // New component, make a new pool
+		{
+			memoryPools[poolId] = new ClusteringMemoryPool<T>(poolSize);
+		}
+
+		// Looks up the component in the pool, and initializes it with placement new
+		rw_clustering_ptr<T> pData = (static_cast<ClusteringMemoryPool<T>*>(memoryPools[poolId]))->AddToPool(std::move(data)); //warning: may cause undefined behaviour
+		entity.oneTimeWrite(0, &Entity::AddComponent, PtrToComponent<T>(pData));
+		return pData;
+	}
+
+	template<typename T>
+	void ExecuteClusteredTasksParallel(lock_free_thread_pool& pool, bool isWaitrForFinish)
+	{
+		if constexpr (std::is_same_v<T, Entity>)
+		{
+			entities.ExecuteClusteredTasksParallel(pool, isWaitrForFinish);
+		}
+		else
+		{
+			int poolId = GetPoolId<T>();
+			(static_cast<ClusteringMemoryPool<T>*>(memoryPools[poolId]))->ExecuteClusteredTasksParallel(pool, isWaitrForFinish);
+		}
+	}
+
+	//ToDo: Finish later
+	//template<typename T>
+	//void Remove(rw_clustering_ptr<T> ptr)
+	//{
+	//	// ensures you're not accessing an entity that has been deleted
+	//	if (entities[GetEntityIndex(id)].id != id)
+	//		return;
+
+	//	int componentId = GetId<T>();
+	//	entities[GetEntityIndex(id)].mask.reset(componentId);
+	//}
+
+	//void DestroyEntity(EntityID id)
+	//{
+	//	EntityID newID = CreateEntityId(EntityIndex(-1), GetEntityVersion(id) + 1);
+	//	entities[GetEntityIndex(id)].id = newID;
+	//	entities[GetEntityIndex(id)].mask.reset();
+	//	freeEntities.push_back(GetEntityIndex(id));
+	//}
+
+	//template<typename T>
+	//rw_clustering_ptr<T> Get(EntityID id)
+	//{
+	//	int componentId = GetId<T>();
+	//	if (!entities[id].mask.test(componentId))
+	//		return nullptr;
+
+	//	T* pComponent = static_cast<T*>(componentPools[componentId]->get(id));
+	//	return pComponent;
+	//}
+};
+
+struct System
+{
+	virtual void UpdateParallel(Scene* scene) {}
+	virtual ~System() = 0 {}
+};
+
+struct Stage
+{
+	virtual void OnInit(Scene* scene) {}
+	virtual void OnUpdate(Scene* scene) {}
+	virtual ~Stage() = 0 {}
+
+protected:
+	//memory pool for the systems
+	std::vector<shared_ptr<System>> systems;
+
+	void AddSystem(shared_ptr<System>&& system_ptr)
+	{
+		systems.emplace_back(std::move(system_ptr));
+	}
+
+	void UpdateSystems(Scene* scene)
+	{
+		for (auto& system : systems)
+		{
+			system->UpdateParallel(scene);
+		}
+	}
+};
+
+struct Engine final
+{
+	void AddStage(std::unique_ptr<Stage>&& stage)
+	{
+		stages.emplace_back(std::move(stage));
+	}
+
+	void InitStages(Scene* scene)
+	{
+		for (auto& stage : stages)
+		{
+			stage->OnInit(scene);
+		}
+	}
+
+	void UpdateStages(Scene* scene)
+	{
+		for (auto& stage : stages)
+		{
+			stage->OnUpdate(scene);
+		}
+	}
+
+private:
+	std::vector<std::unique_ptr<Stage>> stages;
+};
+
+//---------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------
 
 #endif
