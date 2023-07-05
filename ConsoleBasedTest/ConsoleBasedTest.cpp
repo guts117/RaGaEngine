@@ -299,6 +299,21 @@ void TestNormal()
     std::random_device rd;
     std::mt19937 g(rd());
 
+    std::shuffle(perLogs.begin(), perLogs.end(), g);
+
+    for (int i = 0; i < 1000; ++i)
+    {
+        auto tempPerVec = vector<shared_ptr<PersonLogNormal>>();
+        for (int j = 0; j < 10000; ++j)
+        {
+            tempPerVec.emplace_back(std::move(perLogs[i * 10000 + j]));
+        }
+        personSystemPool.emplace_back(std::move(std::make_shared<PersonHandlerNormal>(tempPerVec)));
+    }
+
+    perLogs.clear();
+    perLogs.shrink_to_fit();
+
     for (auto& sys : personSystemPool)
     {
         sys->Shuffle(g);
