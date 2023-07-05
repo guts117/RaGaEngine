@@ -10,6 +10,7 @@
 #include <mutex>
 #include <thread>
 #include <bitset>
+#include <cmath>
 
 using namespace std;
 
@@ -804,6 +805,8 @@ public:
 	{
 		for (int poolId = startId; poolId < endId; ++poolId)
 		{
+			if (poolId >= m_memory_pool.size()) { break; }
+
 			for (auto taskId = 0; taskId < m_memory_pool[poolId].taskQueue.size(); ++taskId)
 			{
 				m_memory_pool[poolId].taskQueue[taskId]();
@@ -832,7 +835,7 @@ public:
 		{
 			for (int threadId = 0; threadId < threadCount; ++threadId)
 			{
-				auto groupCount = poolSize / threadCount;
+				auto groupCount = static_cast<unsigned int>(ceilf((float)poolSize / threadCount));
 				auto startId = threadId * groupCount;
 				auto endId = (threadId + 1) * groupCount;
 				auto task = [startId = startId, endId = endId, this]() {std::invoke(&ClusteringMemoryPool<T>::ExecuteClusters, this, startId, endId); };
