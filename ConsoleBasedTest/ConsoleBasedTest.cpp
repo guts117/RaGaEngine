@@ -71,7 +71,7 @@ public:
 };
 
 
-//SERIALIZE_THIS(NameLogComponent, d->name, d->motherName, d->fatherName)
+SERIALIZE_THIS(NameLogComponent, d->name, d->motherName, d->fatherName)
 
 struct alignas(alignof(int)) AgeLogComponent : POD<AgeLogComponent>
 {

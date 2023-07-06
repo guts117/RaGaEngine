@@ -24,7 +24,7 @@ struct POD
 };
 
 #define SERIALIZE_THIS(Derived, ...) \
-template<typename Derived> \
+template<> \
 template<class Archive> \
 void POD<Derived>::serialize(Archive& archive) \
 {\
