@@ -444,7 +444,9 @@ void TestSceneSerialization()
 
 int main()
 {
+    cout << "Serialization Started\n\n" << endl;
     TestSceneSerialization();
+    cout << "\n\nSerialization Finished" << endl;
     TestParallelClusterExecution();
     TestNormal();
     TestClusteringPoolWriteValidity();
