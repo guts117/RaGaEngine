@@ -34,12 +34,13 @@ using namespace std;
 
 struct alignas(alignof(SimpleString<32>)) NameLogComponent : POD<NameLogComponent>
 {
+friend class POD<NameLogComponent>;
+
 private:
     SimpleString<32> name;
     SimpleString<32> motherName;
     SimpleString<32> fatherName;
 public:
-    friend class POD<NameLogComponent>;
     NameLogComponent(string _name, string _motherName, string _fatherName)
         : name{ std::move(_name) }
         , motherName{ std::move(_motherName) }
@@ -75,6 +76,8 @@ SERIALIZE_THIS(NameLogComponent, d->name, d->motherName, d->fatherName)
 
 struct alignas(alignof(int)) AgeLogComponent : POD<AgeLogComponent>
 {
+friend class POD<AgeLogComponent>;
+
 private:
     int age;
     int motherAge;
@@ -97,6 +100,7 @@ public:
     int GetAge() const { return age; }
 };
 
+SERIALIZE_THIS(AgeLogComponent, d->age, d->motherAge, d->fatherAge)
 
 struct PersonLogNormal
 {
@@ -429,21 +433,13 @@ void TestClusteringPoolWriteValidity()
     }
 }
 
-struct MyClass : POD<MyClass>
-{
-    int x, y, z;
-};
-
-SERIALIZE_THIS(MyClass, d->x, d->y, d->z)
-
 void TestSceneSerialization()
 {
-    auto test = NameLogComponent{ "yes", "dog", "man" };
-
-    MyClass m1;
+    auto testName = NameLogComponent( "yes", "dog", "man" );
+    auto testAge = AgeLogComponent( 0, 50, 100 );
 
     cereal::JSONOutputArchive ar(std::cout);
-    ar(m1);
+    ar(testName, testAge);
 }
 
 int main()

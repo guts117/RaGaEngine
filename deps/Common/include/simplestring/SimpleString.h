@@ -73,6 +73,15 @@ public:
 		return buffer;
 	}
 
+	template<class Archive>
+	void serialize(Archive& archive)
+	{
+		auto toStr = string();
+		toStr.resize(realSize);
+		memcpy(&toStr[0], buffer, realSize);
+		archive(toStr);
+	}
+
 	inline ~SimpleString() noexcept 
 	{
 		memset(buffer, '\0', size);
