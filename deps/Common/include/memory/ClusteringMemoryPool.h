@@ -11,11 +11,27 @@
 #include <thread>
 #include <bitset>
 #include <cmath>
+#include <cereal/archives/json.hpp>
 
 using namespace std;
 
 //ToDo: Flesh this class out
-struct POD {};
+template<class Derived>
+struct POD
+{
+	template<class Archive>
+	void serialize(Archive& archive);
+};
+
+#define SERIALIZE_THIS(Derived, ...) \
+template<typename Derived> \
+template<class Archive> \
+void POD<Derived>::serialize(Archive& archive) \
+{\
+	auto d = static_cast<Derived*>(this);\
+	archive(__VA_ARGS__); \
+}\
+
 struct Behaviour {};
 
 template <unsigned int size = 1, unsigned int alignment = 1, unsigned int count = 1>
@@ -701,7 +717,7 @@ public:
 	template<typename memfn, typename... Args>
 	void oneTimeWrite(unsigned int bufferId, memfn&& func, Args&&... args)
 	{
-		static_assert(!std::is_base_of<POD, T>::value, "Plain old data setters should not be complex, use invoke or stackingWrite instead and don't use ClusterableWithBuffer!!");
+		static_assert(!std::is_base_of<POD<T>, T>::value, "Plain old data setters should not be complex, use invoke or stackingWrite instead and don't use ClusterableWithBuffer!!");
 
 		auto staticCheckForCharArray= [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_same_v<std::decay_t<packArg>, char*> && !std::is_same_v<std::decay_t<packArg>, const char*>, "Has char array!! Use SimpleString instead!"); };
 		(staticCheckForCharArray(std::forward<Args>(args)), ...);

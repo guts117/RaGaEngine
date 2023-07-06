@@ -4,10 +4,11 @@
 #include <random>
 #include <algorithm>
 #include <iterator>
-#include <iostream>
 #include <chrono>
 #include <string>
 #include <SimpleString.h>
+#include <cereal/cereal.hpp>
+#include <cereal/archives/json.hpp>
 
 using namespace std;
 
@@ -31,13 +32,14 @@ using namespace std;
 //Entity is just a unique id to point towards the right logic and data
 
 
-struct alignas(alignof(SimpleString<32>)) NameLogComponent : POD
+struct alignas(alignof(SimpleString<32>)) NameLogComponent : POD<NameLogComponent>
 {
 private:
     SimpleString<32> name;
     SimpleString<32> motherName;
     SimpleString<32> fatherName;
 public:
+    friend class POD<NameLogComponent>;
     NameLogComponent(string _name, string _motherName, string _fatherName)
         : name{ std::move(_name) }
         , motherName{ std::move(_motherName) }
@@ -68,7 +70,10 @@ public:
     const char* GetName() const { return name.getBuffer(); }
 };
 
-struct alignas(alignof(int)) AgeLogComponent : POD
+
+//SERIALIZE_THIS(NameLogComponent, d->name, d->motherName, d->fatherName)
+
+struct alignas(alignof(int)) AgeLogComponent : POD<AgeLogComponent>
 {
 private:
     int age;
@@ -284,6 +289,36 @@ struct PersonSystem : public System
     ~PersonSystem() = default;
 };
 
+struct PersonLogStage final : public Stage
+{
+    PersonLogStage() = default;
+
+    virtual void OnInit(Scene* scene) override
+    {
+        auto personSystem = std::make_shared<PersonSystem >();
+        personSystem->OnInit(scene);
+        AddSystem(std::move(personSystem));
+    }
+
+    virtual void OnUpdate(Scene* scene) override
+    {
+        auto start = chrono::high_resolution_clock::now();
+
+        UpdateSystems(scene);
+
+        auto end = chrono::high_resolution_clock::now();
+
+        // Calculating total time taken by the program.
+        double time_taken = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
+        time_taken *= 1e-9;
+
+        cout << "Time taken by (parallel) clustering memory pool is : " << fixed << time_taken << setprecision(9);
+        cout << " sec" << endl;
+    }
+
+    ~PersonLogStage() = default;
+};
+
 void TestNormal()
 {
     vector<shared_ptr<NameLogComponent>> nameLogPool = vector<shared_ptr<NameLogComponent>>();
@@ -341,97 +376,6 @@ void TestNormal()
     cout << " sec" << endl;
 }
 
-void TestSerialClusterExecution()
-{   
-    //ClusteringMemoryPool<NameLogComponent> nameLogPool = ClusteringMemoryPool<NameLogComponent>(10000000);
-    //ClusteringMemoryPool<AgeLogComponent> ageLogPool = ClusteringMemoryPool<AgeLogComponent>(10000000);
-    //ClusteringMemoryPool<PersonLogBehaviour> perLogPool = ClusteringMemoryPool<PersonLogBehaviour>(10000000);
-    //ClusteringMemoryPool<PersonSubSystem> personSystemPool = ClusteringMemoryPool<PersonSubSystem>(1000);
-
-    //vector<rw_clustering_ptr<PersonLogBehaviour>> perLogs = vector<rw_clustering_ptr<PersonLogBehaviour>>();
-    //vector<rw_clustering_ptr<PersonSubSystem>> perSystems = vector<rw_clustering_ptr<PersonSubSystem>>();
-
-    //for (int i = 0; i < 10000000; ++i)
-    //{
-    //    auto id = to_string(i);
-    //    auto personLog = PersonLogBehaviour{ nameLogPool.AddToPool(NameLogComponent{ "rabin" + id,  "rabin mom" + id, "rabin dad" + id }), ageLogPool.AddToPool(AgeLogComponent(0 + i, 50 + i, 100 + i)) ,  i };
-
-    //    perLogs.emplace_back(perLogPool.AddToPool(std::move(personLog)));
-    //}
-
-    //std::random_device rd;
-    //std::mt19937 g(rd());
-
-    //std::shuffle(perLogs.begin(), perLogs.end(), g);
-
-    //for (int i = 0; i < 1000; ++i)
-    //{
-    //    auto tempPerVec = vector<rw_clustering_ptr<PersonLogBehaviour>>();
-    //    for (int j = 0; j < 10000; ++j)
-    //    {
-    //        tempPerVec.emplace_back(std::move(perLogs[i * 10000 + j]));
-    //    }
-    //    perSystems.emplace_back(personSystemPool.AddToPool(std::move(PersonSystem(std::move(tempPerVec)))));
-    //}
-
-    //perLogs.clear();
-    //perLogs.shrink_to_fit();
-
-    //for (auto& sys : perSystems)
-    //{
-    //    sys.invoke(&PersonSystem::Shuffle, g);
-    //}
-
-    //auto start = chrono::high_resolution_clock::now();
-
-    //for (auto& sys : perSystems)
-    //{
-    //    sys.invoke(&PersonSystem::UpdateSerial);
-    //}
-
-    //perSystems.clear();
-    //perSystems.shrink_to_fit();
-
-    //auto end = chrono::high_resolution_clock::now();
-
-    //// Calculating total time taken by the program.
-    //double time_taken = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
-    //time_taken *= 1e-9;
-
-    //cout << "Time taken by (parallel) clustering memory pool is : " << fixed << time_taken << setprecision(9);
-    //cout << " sec" << endl;
-}
-
-struct PersonLogStage final : public Stage
-{
-    PersonLogStage() = default;
-
-    virtual void OnInit(Scene* scene) override
-    {
-        auto personSystem = std::make_shared<PersonSystem>();
-        personSystem->OnInit(scene);
-        AddSystem(std::move(personSystem));
-    }
-
-    virtual void OnUpdate(Scene* scene) override
-    {
-        auto start = chrono::high_resolution_clock::now();
-
-        UpdateSystems(scene);
-
-        auto end = chrono::high_resolution_clock::now();
-
-        // Calculating total time taken by the program.
-        double time_taken = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
-        time_taken *= 1e-9;
-
-        cout << "Time taken by (parallel) clustering memory pool is : " << fixed << time_taken << setprecision(9);
-        cout << " sec" << endl;
-    }
-
-    ~PersonLogStage() = default;
-};
-
 //ToDo: Fix pool getting destroyed before the scope ends causing threads throwing exception bug.
 void TestParallelClusterExecution()
 {
@@ -485,11 +429,28 @@ void TestClusteringPoolWriteValidity()
     }
 }
 
+struct MyClass : POD<MyClass>
+{
+    int x, y, z;
+};
+
+SERIALIZE_THIS(MyClass, d->x, d->y, d->z)
+
+void TestSceneSerialization()
+{
+    auto test = NameLogComponent{ "yes", "dog", "man" };
+
+    MyClass m1;
+
+    cereal::JSONOutputArchive ar(std::cout);
+    ar(m1);
+}
+
 int main()
 {
+    TestSceneSerialization();
     TestParallelClusterExecution();
     TestNormal();
-    TestSerialClusterExecution();
     TestClusteringPoolWriteValidity();
 }
 
