@@ -7,8 +7,8 @@
 #include <chrono>
 #include <string>
 #include <SimpleString.h>
-#include <cereal/cereal.hpp>
 #include <cereal/archives/json.hpp>
+#include <cereal/types/vector.hpp>
 
 using namespace std;
 
@@ -72,7 +72,7 @@ public:
 };
 
 
-SERIALIZE_THIS(NameLogComponent, d->name, d->motherName, d->fatherName)
+SERIALIZE_THIS(POD, NameLogComponent, d->name, d->motherName, d->fatherName)
 
 struct alignas(alignof(int)) AgeLogComponent : POD<AgeLogComponent>
 {
@@ -100,7 +100,7 @@ public:
     int GetAge() const { return age; }
 };
 
-SERIALIZE_THIS(AgeLogComponent, d->age, d->motherAge, d->fatherAge)
+SERIALIZE_THIS(POD, AgeLogComponent, d->age, d->motherAge, d->fatherAge)
 
 struct PersonLogNormal
 {
@@ -155,15 +155,24 @@ struct PersonHandlerNormal
     }
 };
 
-struct PersonLog
+struct PersonLog : POD<PersonLog>
 {
     rw_clustering_ptr<NameLogComponent> nameLog;
     rw_clustering_ptr<AgeLogComponent> ageLog;
     int id;
+
+    PersonLog(rw_clustering_ptr<NameLogComponent>&& _nameLog, rw_clustering_ptr<AgeLogComponent> _ageLog, int& id)
+        : nameLog{ std::move(_nameLog) }
+        , ageLog{ std::move(ageLog) }
+        , id { std::move(id) }
+    {}
 };
 
-struct PersonBehaviour : Behaviour
+SERIALIZE_THIS(POD, PersonLog, d->nameLog, d->ageLog, d->id)
+
+struct PersonBehaviour : Behaviour<PersonBehaviour>
 {
+friend class Behaviour<PersonBehaviour>;
 private:
     std::vector<PersonLog> personLogs;
 public:
@@ -175,7 +184,7 @@ public:
 
     void AddPersonLog(rw_clustering_ptr<NameLogComponent>&& _nameLog, rw_clustering_ptr<AgeLogComponent>&& _ageLog, int& _id)
     {
-        personLogs.emplace_back(PersonLog{std::move(_nameLog), std::move(_ageLog), _id});
+        personLogs.emplace_back(PersonLog(std::move(_nameLog), std::move(_ageLog), _id));
     }
 
     void Update()
@@ -216,6 +225,8 @@ public:
         }
     }
 };
+
+SERIALIZE_THIS(Behaviour, PersonBehaviour, d->personLogs)
 
 lock_free_thread_pool pool;
 
@@ -437,9 +448,10 @@ void TestSceneSerialization()
 {
     auto testName = NameLogComponent( "yes", "dog", "man" );
     auto testAge = AgeLogComponent( 0, 50, 100 );
+    auto personBehaviour = PersonBehaviour();
 
     cereal::JSONOutputArchive ar(std::cout);
-    ar(testName, testAge);
+    ar(testName, testAge, personBehaviour);
 }
 
 int main()

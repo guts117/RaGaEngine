@@ -12,6 +12,7 @@
 #include <bitset>
 #include <cmath>
 #include <cereal/archives/json.hpp>
+#include <cereal/types/vector.hpp>
 
 using namespace std;
 
@@ -23,16 +24,21 @@ struct POD
 	void serialize(Archive& archive);
 };
 
-#define SERIALIZE_THIS(Derived, ...) \
+template<class Derived>
+struct Behaviour 
+{
+	template<class Archive>
+	void serialize(Archive& archive);
+};
+
+#define SERIALIZE_THIS(Base, Derived, ...) \
 template<> \
 template<class Archive> \
-void POD<Derived>::serialize(Archive& archive) \
+void Base<Derived>::serialize(Archive& archive) \
 {\
 	auto d = static_cast<Derived*>(this);\
 	archive(__VA_ARGS__); \
 }\
-
-struct Behaviour {};
 
 template <unsigned int size = 1, unsigned int alignment = 1, unsigned int count = 1>
 struct ClusterableWithBuffer
@@ -657,6 +663,13 @@ public:
 		index = 0;
 	}
 
+	template<class Archive>
+	void serialize(Archive& archive)
+	{
+		//ToDo: Serialize poolHeadPtr as well to build dependency graph
+		archive(/*poolHeadPtr, */clusterId, index);
+	}
+
 	ClusteringMemoryPool<T>* poolHeadPtr = nullptr;		//size 8
 	unsigned int clusterId = 0;										//size 4
 	unsigned int index = 0;											//size 4
@@ -772,6 +785,12 @@ public:
 		//new (&queue[size]) move_only_invoke_and_destroy_func_32<void()>(std::move(defferedWrite));
 
 		(*ptr.poolHeadPtr).m_memory_pool[ptr.clusterId].isBeingAccessed->clear(memory_order::release);
+	}
+
+	template<class Archive>
+	void serialize(Archive& archive)
+	{
+		archive(ptr);
 	}
 };
 
