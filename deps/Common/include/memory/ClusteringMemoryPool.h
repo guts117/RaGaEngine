@@ -31,6 +31,9 @@ struct Behaviour
 	void serialize(Archive& archive);
 };
 
+//Usage: This is used to specialize serialize function for each derived type of POD
+//Step 1: Add POD<Derived> as a friend class if you want to serialize the private members
+//Step 2: Define this macro outside the class scope with the types you want to serialize with "d->" prefix (E.g. d->name)
 #define SERIALIZE_THIS(Base, Derived, ...) \
 template<> \
 template<class Archive> \

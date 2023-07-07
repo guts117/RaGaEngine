@@ -71,7 +71,6 @@ public:
     const char* GetName() const { return name.getBuffer(); }
 };
 
-
 SERIALIZE_THIS(POD, NameLogComponent, d->name, d->motherName, d->fatherName)
 
 struct alignas(alignof(int)) AgeLogComponent : POD<AgeLogComponent>
