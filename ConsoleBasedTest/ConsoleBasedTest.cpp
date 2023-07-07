@@ -160,9 +160,9 @@ struct PersonLog : POD<PersonLog>
     rw_clustering_ptr<AgeLogComponent> ageLog;
     int id;
 
-    PersonLog(rw_clustering_ptr<NameLogComponent>&& _nameLog, rw_clustering_ptr<AgeLogComponent> _ageLog, int& id)
+    PersonLog(rw_clustering_ptr<NameLogComponent>&& _nameLog, rw_clustering_ptr<AgeLogComponent>&& _ageLog, int& id)
         : nameLog{ std::move(_nameLog) }
-        , ageLog{ std::move(ageLog) }
+        , ageLog{ std::move(_ageLog) }
         , id { std::move(id) }
     {}
 };
