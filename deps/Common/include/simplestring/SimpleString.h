@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <string>
+#include <cereal/types/string.hpp>
 
 template<unsigned int size>
 struct SimpleString
@@ -71,6 +72,12 @@ public:
 	inline const char* getBuffer() const noexcept
 	{
 		return buffer;
+	}
+
+	template<class Archive>
+	void serialize(Archive& archive)
+	{
+		archive(buffer, realSize);
 	}
 
 	inline ~SimpleString() noexcept 

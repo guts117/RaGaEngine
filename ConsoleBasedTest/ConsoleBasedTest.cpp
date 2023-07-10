@@ -4,10 +4,12 @@
 #include <random>
 #include <algorithm>
 #include <iterator>
-#include <iostream>
 #include <chrono>
 #include <string>
 #include <SimpleString.h>
+#include <cereal/archives/json.hpp>
+#include <cereal/types/vector.hpp>
+#include <fstream>
 
 using namespace std;
 
@@ -31,8 +33,10 @@ using namespace std;
 //Entity is just a unique id to point towards the right logic and data
 
 
-struct alignas(alignof(SimpleString<32>)) NameLogComponent : POD
+struct alignas(alignof(SimpleString<32>)) NameLogComponent : POD<NameLogComponent>
 {
+friend class POD<NameLogComponent>;
+
 private:
     SimpleString<32> name;
     SimpleString<32> motherName;
@@ -68,8 +72,12 @@ public:
     const char* GetName() const { return name.getBuffer(); }
 };
 
-struct alignas(alignof(int)) AgeLogComponent : POD
+SERIALIZE_THIS(POD, NameLogComponent, d->name, d->motherName, d->fatherName)
+
+struct alignas(alignof(int)) AgeLogComponent : POD<AgeLogComponent>
 {
+friend class POD<AgeLogComponent>;
+
 private:
     int age;
     int motherAge;
@@ -92,6 +100,7 @@ public:
     int GetAge() const { return age; }
 };
 
+SERIALIZE_THIS(POD, AgeLogComponent, d->age, d->motherAge, d->fatherAge)
 
 struct PersonLogNormal
 {
@@ -146,15 +155,24 @@ struct PersonHandlerNormal
     }
 };
 
-struct PersonLog
+struct PersonLog : POD<PersonLog>
 {
     rw_clustering_ptr<NameLogComponent> nameLog;
     rw_clustering_ptr<AgeLogComponent> ageLog;
     int id;
+
+    PersonLog(rw_clustering_ptr<NameLogComponent>&& _nameLog, rw_clustering_ptr<AgeLogComponent>&& _ageLog, int& id)
+        : nameLog{ std::move(_nameLog) }
+        , ageLog{ std::move(_ageLog) }
+        , id { std::move(id) }
+    {}
 };
 
-struct PersonBehaviour : Behaviour
+SERIALIZE_THIS(POD, PersonLog, d->nameLog, d->ageLog, d->id)
+
+struct PersonBehaviour : Behaviour<PersonBehaviour>
 {
+friend class Behaviour<PersonBehaviour>;
 private:
     std::vector<PersonLog> personLogs;
 public:
@@ -166,7 +184,7 @@ public:
 
     void AddPersonLog(rw_clustering_ptr<NameLogComponent>&& _nameLog, rw_clustering_ptr<AgeLogComponent>&& _ageLog, int& _id)
     {
-        personLogs.emplace_back(PersonLog{std::move(_nameLog), std::move(_ageLog), _id});
+        personLogs.emplace_back(PersonLog(std::move(_nameLog), std::move(_ageLog), _id));
     }
 
     void Update()
@@ -208,6 +226,8 @@ public:
     }
 };
 
+SERIALIZE_THIS(Behaviour, PersonBehaviour, d->personLogs)
+
 lock_free_thread_pool pool;
 
 struct PersonSystem : public System
@@ -220,13 +240,13 @@ struct PersonSystem : public System
 
         std::vector<PersonLog> allPersonLogs;
 
-        for (int i = 0; i < 10000000; ++i)
+        for (int i = 0; i < 100; ++i)
         {
             auto id = to_string(i);
 
             auto entity = scene->NewEntity();
-            auto nameLogPtr = scene->AssignComponent(entity, NameLogComponent("rabin" + id, "rabin mom" + id, "rabin dad" + id), 10000);
-            auto ageLogPtr = scene->AssignComponent(entity, AgeLogComponent(0 + i, 50 + i, 100 + i), 10000);
+            auto nameLogPtr = scene->AssignComponent(entity, NameLogComponent("rabin" + id, "rabin mom" + id, "rabin dad" + id), 10);
+            auto ageLogPtr = scene->AssignComponent(entity, AgeLogComponent(0 + i, 50 + i, 100 + i), 10);
             allPersonLogs.emplace_back(std::move(PersonLog(std::move(nameLogPtr), std::move(ageLogPtr), i)));
         }
 
@@ -237,12 +257,12 @@ struct PersonSystem : public System
 
         std::shuffle(allPersonLogs.begin(), allPersonLogs.end(), g);
 
-        for (int i = 0; i < 1000; ++i)
+        for (int i = 0; i < 10; ++i)
         {
             auto personBehaviour = PersonBehaviour();
-            for (int j = 0; j < 10000; ++j)
+            for (int j = 0; j < 10; ++j)
             {
-                personBehaviour.AddPersonLog(std::move(allPersonLogs[i * 10000 + j]));
+                personBehaviour.AddPersonLog(std::move(allPersonLogs[i * 10 + j]));
             }
             auto entity = scene->NewEntity();
             auto personBehaviourPtr = scene->AssignComponent(entity, std::move(personBehaviour), 10);
@@ -284,6 +304,36 @@ struct PersonSystem : public System
     ~PersonSystem() = default;
 };
 
+struct PersonLogStage final : public Stage
+{
+    PersonLogStage() = default;
+
+    virtual void OnInit(Scene* scene) override
+    {
+        auto personSystem = std::make_shared<PersonSystem >();
+        personSystem->OnInit(scene);
+        AddSystem(std::move(personSystem));
+    }
+
+    virtual void OnUpdate(Scene* scene) override
+    {
+        auto start = chrono::high_resolution_clock::now();
+
+        UpdateSystems(scene);
+
+        auto end = chrono::high_resolution_clock::now();
+
+        // Calculating total time taken by the program.
+        double time_taken = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
+        time_taken *= 1e-9;
+
+        cout << "Time taken by (parallel) clustering memory pool is : " << fixed << time_taken << setprecision(9);
+        cout << " sec" << endl;
+    }
+
+    ~PersonLogStage() = default;
+};
+
 void TestNormal()
 {
     vector<shared_ptr<NameLogComponent>> nameLogPool = vector<shared_ptr<NameLogComponent>>();
@@ -292,7 +342,7 @@ void TestNormal()
 
     vector<shared_ptr<PersonLogNormal>> perLogs = vector<shared_ptr<PersonLogNormal>>();
 
-    for (int i = 0; i < 10000000; ++i)
+    for (int i = 0; i < 100; ++i)
     {
         auto id = to_string(i);
         nameLogPool.push_back(std::make_shared<NameLogComponent>(NameLogComponent{ "rabin" + id,  "rabin mom" + id, "rabin dad" + id }));
@@ -306,12 +356,12 @@ void TestNormal()
 
     std::shuffle(perLogs.begin(), perLogs.end(), g);
 
-    for (int i = 0; i < 1000; ++i)
+    for (int i = 0; i < 10; ++i)
     {
         auto tempPerVec = vector<shared_ptr<PersonLogNormal>>();
-        for (int j = 0; j < 10000; ++j)
+        for (int j = 0; j < 10; ++j)
         {
-            tempPerVec.emplace_back(std::move(perLogs[i * 10000 + j]));
+            tempPerVec.emplace_back(std::move(perLogs[i * 10 + j]));
         }
         personSystemPool.emplace_back(std::move(std::make_shared<PersonHandlerNormal>(tempPerVec)));
     }
@@ -341,103 +391,12 @@ void TestNormal()
     cout << " sec" << endl;
 }
 
-void TestSerialClusterExecution()
-{   
-    //ClusteringMemoryPool<NameLogComponent> nameLogPool = ClusteringMemoryPool<NameLogComponent>(10000000);
-    //ClusteringMemoryPool<AgeLogComponent> ageLogPool = ClusteringMemoryPool<AgeLogComponent>(10000000);
-    //ClusteringMemoryPool<PersonLogBehaviour> perLogPool = ClusteringMemoryPool<PersonLogBehaviour>(10000000);
-    //ClusteringMemoryPool<PersonSubSystem> personSystemPool = ClusteringMemoryPool<PersonSubSystem>(1000);
-
-    //vector<rw_clustering_ptr<PersonLogBehaviour>> perLogs = vector<rw_clustering_ptr<PersonLogBehaviour>>();
-    //vector<rw_clustering_ptr<PersonSubSystem>> perSystems = vector<rw_clustering_ptr<PersonSubSystem>>();
-
-    //for (int i = 0; i < 10000000; ++i)
-    //{
-    //    auto id = to_string(i);
-    //    auto personLog = PersonLogBehaviour{ nameLogPool.AddToPool(NameLogComponent{ "rabin" + id,  "rabin mom" + id, "rabin dad" + id }), ageLogPool.AddToPool(AgeLogComponent(0 + i, 50 + i, 100 + i)) ,  i };
-
-    //    perLogs.emplace_back(perLogPool.AddToPool(std::move(personLog)));
-    //}
-
-    //std::random_device rd;
-    //std::mt19937 g(rd());
-
-    //std::shuffle(perLogs.begin(), perLogs.end(), g);
-
-    //for (int i = 0; i < 1000; ++i)
-    //{
-    //    auto tempPerVec = vector<rw_clustering_ptr<PersonLogBehaviour>>();
-    //    for (int j = 0; j < 10000; ++j)
-    //    {
-    //        tempPerVec.emplace_back(std::move(perLogs[i * 10000 + j]));
-    //    }
-    //    perSystems.emplace_back(personSystemPool.AddToPool(std::move(PersonSystem(std::move(tempPerVec)))));
-    //}
-
-    //perLogs.clear();
-    //perLogs.shrink_to_fit();
-
-    //for (auto& sys : perSystems)
-    //{
-    //    sys.invoke(&PersonSystem::Shuffle, g);
-    //}
-
-    //auto start = chrono::high_resolution_clock::now();
-
-    //for (auto& sys : perSystems)
-    //{
-    //    sys.invoke(&PersonSystem::UpdateSerial);
-    //}
-
-    //perSystems.clear();
-    //perSystems.shrink_to_fit();
-
-    //auto end = chrono::high_resolution_clock::now();
-
-    //// Calculating total time taken by the program.
-    //double time_taken = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
-    //time_taken *= 1e-9;
-
-    //cout << "Time taken by (parallel) clustering memory pool is : " << fixed << time_taken << setprecision(9);
-    //cout << " sec" << endl;
-}
-
-struct PersonLogStage final : public Stage
-{
-    PersonLogStage() = default;
-
-    virtual void OnInit(Scene* scene) override
-    {
-        auto personSystem = std::make_shared<PersonSystem>();
-        personSystem->OnInit(scene);
-        AddSystem(std::move(personSystem));
-    }
-
-    virtual void OnUpdate(Scene* scene) override
-    {
-        auto start = chrono::high_resolution_clock::now();
-
-        UpdateSystems(scene);
-
-        auto end = chrono::high_resolution_clock::now();
-
-        // Calculating total time taken by the program.
-        double time_taken = chrono::duration_cast<chrono::nanoseconds>(end - start).count();
-        time_taken *= 1e-9;
-
-        cout << "Time taken by (parallel) clustering memory pool is : " << fixed << time_taken << setprecision(9);
-        cout << " sec" << endl;
-    }
-
-    ~PersonLogStage() = default;
-};
-
 //ToDo: Fix pool getting destroyed before the scope ends causing threads throwing exception bug.
 void TestParallelClusterExecution()
 {
     //auto factor = std::thread::hardware_concurrency() / 10.0f;
 
-    Scene scene = Scene(100);
+    Scene scene = Scene(10);
     Engine loggingEngine;
 
     loggingEngine.AddStage(std::make_unique<PersonLogStage>());
@@ -485,12 +444,42 @@ void TestClusteringPoolWriteValidity()
     }
 }
 
+void TestSceneSerialization()
+{
+    {
+        std::ofstream os("data.json");
+        cereal::JSONOutputArchive archive(os);
+
+        auto testName = NameLogComponent("yes", "dog", "man");
+        auto testAge = AgeLogComponent(0, 50, 100);
+        //auto personBehaviour = PersonBehaviour();
+
+        archive(testName, testAge);
+    }
+
+    {
+        std::ifstream is("data.json");
+        cereal::JSONInputArchive archive(is);
+
+        auto testName = NameLogComponent("", "", "");
+        auto testAge = AgeLogComponent(0, 0, 0);
+        //auto personBehaviour = PersonBehaviour();
+
+        archive(testName, testAge); // NVPs not strictly necessary when loading
+        // but could be used (even out of order)
+
+        cout << testName.GetName() << endl;
+    }
+}
+
 int main()
 {
+    cout << "Serialization Started\n\n" << endl;
+    TestSceneSerialization();
+    cout << "\n\nSerialization Finished" << endl;
     TestParallelClusterExecution();
     TestNormal();
-    TestSerialClusterExecution();
-    TestClusteringPoolWriteValidity();
+    //TestClusteringPoolWriteValidity();
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu

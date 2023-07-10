@@ -11,12 +11,37 @@
 #include <thread>
 #include <bitset>
 #include <cmath>
+#include <cereal/archives/json.hpp>
+#include <cereal/types/vector.hpp>
 
 using namespace std;
 
 //ToDo: Flesh this class out
-struct POD {};
-struct Behaviour {};
+template<class Derived>
+struct POD
+{
+	template<class Archive>
+	void serialize(Archive& archive);
+};
+
+template<class Derived>
+struct Behaviour 
+{
+	template<class Archive>
+	void serialize(Archive& archive);
+};
+
+//Usage: This is used to specialize serialize function for each derived type of POD
+//Step 1: Add POD<Derived> as a friend class if you want to serialize the private members
+//Step 2: Define this macro outside the class scope with the types you want to serialize with "d->" prefix (E.g. d->name)
+#define SERIALIZE_THIS(Base, Derived, ...) \
+template<> \
+template<class Archive> \
+void Base<Derived>::serialize(Archive& archive) \
+{\
+	auto d = static_cast<Derived*>(this);\
+	archive(__VA_ARGS__); \
+}\
 
 template <unsigned int size = 1, unsigned int alignment = 1, unsigned int count = 1>
 struct ClusterableWithBuffer
@@ -573,6 +598,12 @@ struct DataTaskBlockPair
 	std::vector<T> dataBlock = std::vector<T>();
 	clustering_task_queue taskQueue = clustering_task_queue();
 	std::unique_ptr<atomic_flag> isBeingAccessed = std::make_unique<atomic_flag>();
+
+	template<class Archive>
+	void serialize(Archive& archive)
+	{
+		archive(dataBlock);
+	}
 };
 
 template<class T>
@@ -641,6 +672,13 @@ public:
 		index = 0;
 	}
 
+	template<class Archive>
+	void serialize(Archive& archive)
+	{
+		//ToDo: Serialize poolHeadPtr as well to build dependency graph
+		archive(/*poolHeadPtr, */clusterId, index);
+	}
+
 	ClusteringMemoryPool<T>* poolHeadPtr = nullptr;		//size 8
 	unsigned int clusterId = 0;										//size 4
 	unsigned int index = 0;											//size 4
@@ -701,7 +739,7 @@ public:
 	template<typename memfn, typename... Args>
 	void oneTimeWrite(unsigned int bufferId, memfn&& func, Args&&... args)
 	{
-		static_assert(!std::is_base_of<POD, T>::value, "Plain old data setters should not be complex, use invoke or stackingWrite instead and don't use ClusterableWithBuffer!!");
+		static_assert(!std::is_base_of<POD<T>, T>::value, "Plain old data setters should not be complex, use invoke or stackingWrite instead and don't use ClusterableWithBuffer!!");
 
 		auto staticCheckForCharArray= [] <typename packArg> (packArg&&) mutable { static_assert(!std::is_same_v<std::decay_t<packArg>, char*> && !std::is_same_v<std::decay_t<packArg>, const char*>, "Has char array!! Use SimpleString instead!"); };
 		(staticCheckForCharArray(std::forward<Args>(args)), ...);
@@ -756,6 +794,12 @@ public:
 		//new (&queue[size]) move_only_invoke_and_destroy_func_32<void()>(std::move(defferedWrite));
 
 		(*ptr.poolHeadPtr).m_memory_pool[ptr.clusterId].isBeingAccessed->clear(memory_order::release);
+	}
+
+	template<class Archive>
+	void serialize(Archive& archive)
+	{
+		archive(ptr);
 	}
 };
 
@@ -848,6 +892,12 @@ public:
 		}
 	}
 
+	template<class Archive>
+	void serialize(Archive& archive)
+	{
+		archive(m_memory_pool, m_block_size);
+	}
+
 	~ClusteringMemoryPool() = default;
 
 	std::vector<DataTaskBlockPair<T>> m_memory_pool;
@@ -876,6 +926,12 @@ private:
 		int poolId;
 		int clusterId;
 		int componentId;
+
+		template<class Archive>
+		void serialize(Archive& archive)
+		{
+			archive(poolId, clusterId, componentId);
+		}
 	};
 
 	struct Entity;
@@ -917,6 +973,12 @@ public:
 		Component GetComponent(int index) const
 		{
 			return components[index];
+		}
+
+		template<class Archive>
+		void serialize(Archive& archive)
+		{
+			archive(components);
 		}
 
 	private:
@@ -1010,6 +1072,12 @@ public:
 	//	T* pComponent = static_cast<T*>(componentPools[componentId]->get(id));
 	//	return pComponent;
 	//}
+
+	template<class Archive>
+	void serialize(Archive& archive)
+	{
+		archive(entities);
+	}
 };
 
 struct System

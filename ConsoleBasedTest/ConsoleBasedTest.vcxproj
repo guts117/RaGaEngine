@@ -71,16 +71,16 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)deps/Common/include/memory;$(SolutionDir)deps/Common/include/simplestring;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)deps/Common/include/memory;$(SolutionDir)deps/Common/include/simplestring;$(SolutionDir)deps/Common/include/cereal;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(SolutionDir)deps/Common/include/memory;$(SolutionDir)deps/Common/include/simplestring;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)deps/Common/include/memory;$(SolutionDir)deps/Common/include/simplestring;$(SolutionDir)deps/Common/include/cereal;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(SolutionDir)deps/Common/include/memory;$(SolutionDir)deps/Common/include/simplestring;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)deps/Common/include/memory;$(SolutionDir)deps/Common/include/simplestring;$(SolutionDir)deps/Common/include/cereal;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir)deps/Common/include/memory;$(SolutionDir)deps/Common/include/simplestring;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)deps/Common/include/memory;$(SolutionDir)deps/Common/include/simplestring;$(SolutionDir)deps/Common/include/cereal;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -144,6 +144,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ConsoleBasedTest.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cpp.hint" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
