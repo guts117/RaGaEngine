@@ -9,6 +9,7 @@
 #include <SimpleString.h>
 #include <cereal/archives/json.hpp>
 #include <cereal/types/vector.hpp>
+#include <fstream>
 
 using namespace std;
 
@@ -445,12 +446,30 @@ void TestClusteringPoolWriteValidity()
 
 void TestSceneSerialization()
 {
-    auto testName = NameLogComponent( "yes", "dog", "man" );
-    auto testAge = AgeLogComponent( 0, 50, 100 );
-    auto personBehaviour = PersonBehaviour();
+    {
+        std::ofstream os("data.json");
+        cereal::JSONOutputArchive archive(os);
 
-    cereal::JSONOutputArchive ar(std::cout);
-    ar(testName, testAge, personBehaviour);
+        auto testName = NameLogComponent("yes", "dog", "man");
+        auto testAge = AgeLogComponent(0, 50, 100);
+ /*       auto personBehaviour = PersonBehaviour();*/
+
+        archive(testName, testAge);
+    }
+
+    {
+        std::ifstream is("data.json");
+        cereal::JSONInputArchive archive(is);
+
+        auto testName = NameLogComponent("", "", "");
+        auto testAge = AgeLogComponent(0, 0, 0);
+        //auto personBehaviour = PersonBehaviour();
+
+        archive(testName, testAge); // NVPs not strictly necessary when loading
+        // but could be used (even out of order)
+
+        cout << testName.GetName() << endl;
+    }
 }
 
 int main()

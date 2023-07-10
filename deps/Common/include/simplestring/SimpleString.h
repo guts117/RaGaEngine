@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <string>
+#include <cereal/types/string.hpp>
 
 template<unsigned int size>
 struct SimpleString
@@ -76,10 +77,7 @@ public:
 	template<class Archive>
 	void serialize(Archive& archive)
 	{
-		auto toStr = string();
-		toStr.resize(realSize);
-		memcpy(&toStr[0], buffer, realSize);
-		archive(toStr);
+		archive(buffer, realSize);
 	}
 
 	inline ~SimpleString() noexcept 
