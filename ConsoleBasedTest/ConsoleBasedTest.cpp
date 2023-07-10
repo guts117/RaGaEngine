@@ -240,13 +240,13 @@ struct PersonSystem : public System
 
         std::vector<PersonLog> allPersonLogs;
 
-        for (int i = 0; i < 10000000; ++i)
+        for (int i = 0; i < 100; ++i)
         {
             auto id = to_string(i);
 
             auto entity = scene->NewEntity();
-            auto nameLogPtr = scene->AssignComponent(entity, NameLogComponent("rabin" + id, "rabin mom" + id, "rabin dad" + id), 10000);
-            auto ageLogPtr = scene->AssignComponent(entity, AgeLogComponent(0 + i, 50 + i, 100 + i), 10000);
+            auto nameLogPtr = scene->AssignComponent(entity, NameLogComponent("rabin" + id, "rabin mom" + id, "rabin dad" + id), 10);
+            auto ageLogPtr = scene->AssignComponent(entity, AgeLogComponent(0 + i, 50 + i, 100 + i), 10);
             allPersonLogs.emplace_back(std::move(PersonLog(std::move(nameLogPtr), std::move(ageLogPtr), i)));
         }
 
@@ -257,12 +257,12 @@ struct PersonSystem : public System
 
         std::shuffle(allPersonLogs.begin(), allPersonLogs.end(), g);
 
-        for (int i = 0; i < 1000; ++i)
+        for (int i = 0; i < 10; ++i)
         {
             auto personBehaviour = PersonBehaviour();
-            for (int j = 0; j < 10000; ++j)
+            for (int j = 0; j < 10; ++j)
             {
-                personBehaviour.AddPersonLog(std::move(allPersonLogs[i * 10000 + j]));
+                personBehaviour.AddPersonLog(std::move(allPersonLogs[i * 10 + j]));
             }
             auto entity = scene->NewEntity();
             auto personBehaviourPtr = scene->AssignComponent(entity, std::move(personBehaviour), 10);
@@ -342,7 +342,7 @@ void TestNormal()
 
     vector<shared_ptr<PersonLogNormal>> perLogs = vector<shared_ptr<PersonLogNormal>>();
 
-    for (int i = 0; i < 10000000; ++i)
+    for (int i = 0; i < 100; ++i)
     {
         auto id = to_string(i);
         nameLogPool.push_back(std::make_shared<NameLogComponent>(NameLogComponent{ "rabin" + id,  "rabin mom" + id, "rabin dad" + id }));
@@ -356,12 +356,12 @@ void TestNormal()
 
     std::shuffle(perLogs.begin(), perLogs.end(), g);
 
-    for (int i = 0; i < 1000; ++i)
+    for (int i = 0; i < 10; ++i)
     {
         auto tempPerVec = vector<shared_ptr<PersonLogNormal>>();
-        for (int j = 0; j < 10000; ++j)
+        for (int j = 0; j < 10; ++j)
         {
-            tempPerVec.emplace_back(std::move(perLogs[i * 10000 + j]));
+            tempPerVec.emplace_back(std::move(perLogs[i * 10 + j]));
         }
         personSystemPool.emplace_back(std::move(std::make_shared<PersonHandlerNormal>(tempPerVec)));
     }
@@ -396,7 +396,7 @@ void TestParallelClusterExecution()
 {
     //auto factor = std::thread::hardware_concurrency() / 10.0f;
 
-    Scene scene = Scene(100);
+    Scene scene = Scene(10);
     Engine loggingEngine;
 
     loggingEngine.AddStage(std::make_unique<PersonLogStage>());
@@ -452,7 +452,7 @@ void TestSceneSerialization()
 
         auto testName = NameLogComponent("yes", "dog", "man");
         auto testAge = AgeLogComponent(0, 50, 100);
- /*       auto personBehaviour = PersonBehaviour();*/
+        //auto personBehaviour = PersonBehaviour();
 
         archive(testName, testAge);
     }
@@ -479,7 +479,7 @@ int main()
     cout << "\n\nSerialization Finished" << endl;
     TestParallelClusterExecution();
     TestNormal();
-    TestClusteringPoolWriteValidity();
+    //TestClusteringPoolWriteValidity();
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu

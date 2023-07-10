@@ -598,6 +598,12 @@ struct DataTaskBlockPair
 	std::vector<T> dataBlock = std::vector<T>();
 	clustering_task_queue taskQueue = clustering_task_queue();
 	std::unique_ptr<atomic_flag> isBeingAccessed = std::make_unique<atomic_flag>();
+
+	template<class Archive>
+	void serialize(Archive& archive)
+	{
+		archive(dataBlock);
+	}
 };
 
 template<class T>
@@ -886,6 +892,12 @@ public:
 		}
 	}
 
+	template<class Archive>
+	void serialize(Archive& archive)
+	{
+		archive(m_memory_pool, m_block_size);
+	}
+
 	~ClusteringMemoryPool() = default;
 
 	std::vector<DataTaskBlockPair<T>> m_memory_pool;
@@ -914,6 +926,12 @@ private:
 		int poolId;
 		int clusterId;
 		int componentId;
+
+		template<class Archive>
+		void serialize(Archive& archive)
+		{
+			archive(poolId, clusterId, componentId);
+		}
 	};
 
 	struct Entity;
@@ -955,6 +973,12 @@ public:
 		Component GetComponent(int index) const
 		{
 			return components[index];
+		}
+
+		template<class Archive>
+		void serialize(Archive& archive)
+		{
+			archive(components);
 		}
 
 	private:
@@ -1048,6 +1072,12 @@ public:
 	//	T* pComponent = static_cast<T*>(componentPools[componentId]->get(id));
 	//	return pComponent;
 	//}
+
+	template<class Archive>
+	void serialize(Archive& archive)
+	{
+		archive(entities);
+	}
 };
 
 struct System
