@@ -141,8 +141,11 @@ struct PersonHandlerNormal
 {
     vector<shared_ptr<PersonLogNormal>> personLogs;
 
-    void Shuffle(std::mt19937& g)
+    void Shuffle()
     {
+        std::random_device rd;
+        std::mt19937 g(rd());
+
         std::shuffle(personLogs.begin(), personLogs.end(), g);
     }
 
@@ -175,24 +178,11 @@ struct PersonBehaviour : Behaviour<PersonBehaviour>
 friend class Behaviour<PersonBehaviour>;
 private:
     std::vector<PersonLog> personLogs;
-public:
 
-    void AddPersonLog(PersonLog&& _personLog)
+    void OnUpdate()
     {
-        personLogs.emplace_back(std::move(_personLog));
-    }
-
-    void AddPersonLog(rw_clustering_ptr<NameLogComponent>&& _nameLog, rw_clustering_ptr<AgeLogComponent>&& _ageLog, int& _id)
-    {
-        personLogs.emplace_back(PersonLog(std::move(_nameLog), std::move(_ageLog), _id));
-    }
-
-    void Update()
-    {
-        for(auto personLogIndex = 0; personLogIndex < personLogs.size(); ++personLogIndex)
+        for(auto& personLog : personLogs)
         {
-            auto& personLog = personLogs[personLogIndex];
-
             auto idStr = to_string(personLog.id);
             SimpleString<32> name = "valid rabin" + idStr;
             SimpleString<32> momname = "valid rabin mom" + idStr;
@@ -224,6 +214,17 @@ public:
             }
         }
     }
+public:
+
+    void AddPersonLog(PersonLog&& _personLog)
+    {
+        personLogs.emplace_back(std::move(_personLog));
+    }
+
+    void AddPersonLog(rw_clustering_ptr<NameLogComponent>&& _nameLog, rw_clustering_ptr<AgeLogComponent>&& _ageLog, int& _id)
+    {
+        personLogs.emplace_back(PersonLog(std::move(_nameLog), std::move(_ageLog), _id));
+    }
 };
 
 SERIALIZE_THIS(Behaviour, PersonBehaviour, d->personLogs)
@@ -245,8 +246,8 @@ struct PersonSystem : public System
             auto id = to_string(i);
 
             auto entity = scene->NewEntity();
-            auto nameLogPtr = scene->AssignComponent(entity, NameLogComponent("rabin" + id, "rabin mom" + id, "rabin dad" + id), 10);
-            auto ageLogPtr = scene->AssignComponent(entity, AgeLogComponent(0 + i, 50 + i, 100 + i), 10);
+            auto nameLogPtr = scene->AssignComponent(entity, NameLogComponent("rabin" + id, "rabin mom" + id, "rabin dad" + id), 100);
+            auto ageLogPtr = scene->AssignComponent(entity, AgeLogComponent(0 + i, 50 + i, 100 + i), 100);
             allPersonLogs.emplace_back(std::move(PersonLog(std::move(nameLogPtr), std::move(ageLogPtr), i)));
         }
 
@@ -285,7 +286,7 @@ struct PersonSystem : public System
     {
         for (auto& pL : personLogs)
         {
-            pL.invoke(&PersonBehaviour::Update);
+            pL.invoke(&Behaviour<PersonBehaviour>::OnUpdate);
         }
     }
 
@@ -293,7 +294,7 @@ struct PersonSystem : public System
     {
         for (auto& pL : personLogs)
         {
-            pL.stackingWrite(&PersonBehaviour::Update);
+            pL.stackingWrite(&Behaviour<PersonBehaviour>::OnUpdate);
         }
 
         scene->ExecuteClusteredTasksParallel<PersonBehaviour>(pool, true);
@@ -371,7 +372,7 @@ void TestNormal()
 
     for (auto& sys : personSystemPool)
     {
-        sys->Shuffle(g);
+        sys->Shuffle();
     }
 
     auto start = chrono::high_resolution_clock::now();

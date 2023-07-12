@@ -27,6 +27,60 @@ struct POD
 template<class Derived>
 struct Behaviour 
 {
+	void OnInit()
+	{
+		auto d = static_cast<Derived*>(this);
+		d->OnInit();
+	}
+
+	void OnEnterStage()
+	{
+		auto d = static_cast<Derived*>(this);
+		d->OnEnterStage();
+	}
+
+	void OnEnable()
+	{
+		auto d = static_cast<Derived*>(this);
+		d->OnEnable();
+	}
+
+	void OnDisable()
+	{
+		auto d = static_cast<Derived*>(this);
+		d->OnDisable();
+	}
+
+	void OnPreUpdate()
+	{
+		auto d = static_cast<Derived*>(this);
+		d->OnPreUpdate();
+	}
+
+	void OnUpdate()
+	{
+		auto d = static_cast<Derived*>(this);
+		d->OnUpdate();
+	}
+
+	void OnPostUpdate()
+	{
+		auto d = static_cast<Derived*>(this);
+		d->OnPostUpdate();
+	}
+
+	void OnExitStage()
+	{
+		auto d = static_cast<Derived*>(this);
+		d->OnExitStage();
+	}
+
+	void OnDestroy()
+	{
+		auto d = static_cast<Derived*>(this);
+		d->OnDestory();
+	}
+
 	template<class Archive>
 	void serialize(Archive& archive);
 };
@@ -1082,6 +1136,7 @@ public:
 
 struct System
 {
+	virtual void UpdateSerial(Scene* scene) {}
 	virtual void UpdateParallel(Scene* scene) {}
 	virtual ~System() = 0 {}
 };
