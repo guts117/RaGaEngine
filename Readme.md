@@ -1,11 +1,11 @@
 # License and copyright disclaimer:
 
->**Copyright (C) 2019-2026 Rabin Gajmer - All Rights Reserved.**
->
->**Licensed under the MIT License. See LICENSE file for details**
->
->**Written by Rabin Gajmer <rabingajmer_189@hotmail.com>, August 2019**
+Copyright (c) 2019–2026 Rabin Gajmer
 
+Licensed under the MIT License.
+See the LICENSE file for details.
+
+Written by Rabin Gajmer (rabingajmer_189@hotmail.com)
 
 ## To the contributors:
 
